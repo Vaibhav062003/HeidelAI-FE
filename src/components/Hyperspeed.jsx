@@ -1,3 +1,5 @@
+/* eslint-disable prefer-const */
+
 import { useEffect, useRef } from "react";
 import * as THREE from 'three';
 import { BloomEffect, EffectComposer, EffectPass, RenderPass, SMAAEffect, SMAAPreset } from 'postprocessing';
@@ -43,6 +45,51 @@ const Hyperspeed = ({ effectOptions = {
 } }) => {
   const hyperspeed = useRef(null);
   useEffect(() => {
+
+    if (typeof window === 'undefined') return;
+
+    try {
+      const container = hyperspeed.current;
+      if (!container) return;
+
+      
+        // Check WebGL support with less demanding options
+        const renderer = new THREE.WebGLRenderer({
+          canvas: container,
+          antialias: false,
+          alpha: true,
+          powerPreference: "default",
+          failIfMajorPerformanceCaveat: false,
+          precision: "lowp",
+          depth: false,
+          stencil: false
+        });
+
+      // Handle context loss
+      renderer.domElement.addEventListener('webglcontextlost', (event) => {
+        event.preventDefault();
+        if (app.current) {
+          app.current.dispose();
+        }
+      }, false);
+
+      // Handle context restoration
+      renderer.domElement.addEventListener('webglcontextrestored', () => {
+        if (app.current) {
+          app.current.init();
+        }
+      }, false);
+
+      return () => {
+        if (app.current) {
+          app.current.dispose();
+        }
+        renderer.dispose();
+      };
+    } catch (error) {
+      console.error('Three.js initialization failed:', error);
+    }
+
     const mountainUniforms = {
       uFreq: { value: new THREE.Vector3(3, 6, 10) },
       uAmp: { value: new THREE.Vector3(30, 30, 20) }

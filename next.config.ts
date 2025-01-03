@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'assets.aceternity.com',
+        hostname: 'bootdey.com',
       },
       {
         protocol: 'https',
@@ -35,7 +35,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com',
+        hostname: 'example.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pagedone.io',
       },
     ],
   }
