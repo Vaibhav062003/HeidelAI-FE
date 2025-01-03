@@ -15,10 +15,10 @@ import PricingSection from '@/components/PricingSection';
 
 
 
-const Hyperspeed = dynamic(() => import('@/components/Hyperspeed'), {
+//const Hyperspeed = dynamic(() => import('@/components/Hyperspeed'), {
   // ssr:false,
-  loading: () => <div className="w-full h-full bg-black" />
-});
+  //loading: () => <div className="w-full h-full bg-black" />
+//});
 
 export default function Home() {
 
