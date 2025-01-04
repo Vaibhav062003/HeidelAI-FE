@@ -6,7 +6,6 @@ import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 
-import { usePathname } from 'next/navigation';
 
 
 const inter = Inter({ subsets: ['latin'] })
@@ -22,20 +21,19 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
 
-  const pathname = usePathname();
 
-  const hideNavbarAndFooter = pathname.startsWith('/dashboard');
+  const childMetadata = children?.type?.metadata as Partial<Metadata> | undefined;
 
   
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body className={`${inter.className} bg-black text-white`} suppressHydrationWarning>
         {/* Navbar */}
-        {!hideNavbarAndFooter && <Navbar />}
+        {!childMetadata?.layoutExclusion && <Navbar />}
         
         <main>{children}</main>
         
-        {!hideNavbarAndFooter && <Footer />}
+        {!childMetadata?.layoutExclusion && <Footer />}
                                             
                                             
       </body>
