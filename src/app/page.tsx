@@ -13,12 +13,12 @@ import TestimonialSection from '@/components/TestimonialSection';
 import PricingSection from '@/components/PricingSection';
 // import PricingSection2 from '@/components/PricingSection2';
 
+import Hyperspeed from '@/components/Hyperspeed';
 
-
-const Hyperspeed = dynamic(() => import('@/components/Hyperspeed'), {
-  ssr:false,
-  loading: () => <div className="w-full h-full bg-black" />
-});
+// const Hyperspeed = dynamic(() => import('@/components/Hyperspeed'), {
+//   ssr:false,
+//   loading: () => <div className="w-full h-full bg-black" />
+// });
 
 export default function Home() {
 
