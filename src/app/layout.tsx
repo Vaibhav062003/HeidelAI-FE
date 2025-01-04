@@ -22,18 +22,17 @@ export default function RootLayout({
 }) {
 
 
-  const childMetadata = children?.type?.metadata as Partial<Metadata> | undefined;
 
   
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body className={`${inter.className} bg-black text-white`} suppressHydrationWarning>
         {/* Navbar */}
-        {!childMetadata?.layoutExclusion && <Navbar />}
+        {<Navbar />}
         
         <main>{children}</main>
         
-        {!childMetadata?.layoutExclusion && <Footer />}
+        {<Footer />}
                                             
                                             
       </body>
