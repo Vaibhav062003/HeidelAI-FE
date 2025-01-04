@@ -11,7 +11,7 @@ export default function PricingSection() {
                     <div className="flex flex-col mx-auto max-w-sm text-white/[0.8] rounded-2xl bg-black border border-white/[0.4] p-6 xl:py-9 xl:px-12 transition-all duration-500 hover:bg-white/[0.1]">
                         <h3 className="font-manrope text-2xl font-bold mb-3">Basic</h3>
                         <div className="flex items-center mb-6">
-                            <span className="font-manrope mr-2 text-6xl text-white/[0.8] font-semibold">€50</span>
+                            <span className=" mr-2 text-6xl text-white/[0.8] font-medium">€50</span>
                             <span className="text-xl text-neutral-400 ">/ month</span>
                         </div>
                         <ul className="mb-4 space-y-6 text-left text-lg text-neutral-400">
@@ -48,7 +48,7 @@ export default function PricingSection() {
                         <div className="p-6 xl:py-9 xl:px-12">
                         <h3 className="font-manrope text-2xl font-bold mb-3">Standard</h3>
                         <div className="flex items-center mb-6">
-                            <span className="font-manrope mr-2 text-6xl font-semibold  text-white">€100</span>
+                            <span className=" mr-2 text-6xl font-medium  text-white">€100</span>
                             <span className="text-xl text-neutral-400 ">/ month</span>
                         </div>
                         <ul className="mb-4 space-y-6 text-left text-lg ">
@@ -88,7 +88,7 @@ export default function PricingSection() {
                     <div className="flex flex-col mx-auto max-w-sm text-white/[0.8] rounded-2xl bg-black border border-white/[0.4] p-6 xl:py-9 xl:px-12 transition-all duration-500 hover:bg-white/[0.1]">
                         <h3 className="font-manrope text-2xl font-bold mb-3">Professional</h3>
                         <div className="flex items-center mb-6">
-                            <span className="font-manrope mr-2 text-6xl font-semibold">€400</span>
+                            <span className="mr-2 text-6xl font-medium">€400</span>
                             <span className="text-xl text-neutral-400 ">/ month</span>
                         </div>
                         <ul className="mb-4 space-y-6 text-left text-lg text-neutral-400">

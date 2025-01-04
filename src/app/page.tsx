@@ -2,7 +2,7 @@
 
 // import { motion } from 'framer-motion'
 import Image from 'next/image'
-import dynamic from 'next/dynamic'
+// import dynamic from 'next/dynamic'
 import { FlipWords } from '@/components/ui/flip-words';
 // import { TimelineDemo } from '@/components/TimelineDemo';
 import { BentoGridThirdDemo } from '@/components/BentoGridDemo';
@@ -11,6 +11,7 @@ import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import TestimonialSection from '@/components/TestimonialSection';
 import PricingSection from '@/components/PricingSection';
+import CTASection from '@/components/CTASection';
 // import PricingSection2 from '@/components/PricingSection2';
 
 // import Hyperspeed from '@/components/Hyperspeed';
@@ -155,6 +156,8 @@ export default function Home() {
         <TestimonialSection />
 
         <PricingSection />
+
+        {/* <CTASection /> */}
 
         {/* <PricingSection2 /> */}
 
