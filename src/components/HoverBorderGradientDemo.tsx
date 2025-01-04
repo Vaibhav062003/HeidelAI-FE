@@ -86,7 +86,7 @@ export function HoverBorderGradientDemo() {
         </Drawer.Content>
       </Drawer.Portal>
       <div
-        containerClassName="rounded-full"
+        
         as="button"
         className="bg-black hover:cursor-pointer border border-white/[0.2] py-2 px-4 rounded-full text-white flex items-center space-x-2"
       >
