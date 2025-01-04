@@ -15,8 +15,8 @@ import Image from "next/image";
 export function BentoGridThirdDemo() {
   return (
     <>
-    <div id="features" className="px-8 my-20">
-        <h4 className="text-3xl lg:text-5xl lg:leading-tight max-w-5xl mx-auto text-center tracking-tight font-medium text-white">
+    <div id="features" className=" my-20">
+        <h4 className="text-3xl lg:text-5xl lg:leading-tight max-w-5xl mx-auto px-4 text-center tracking-tight font-medium text-white">
           Packed with <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent thousands">thousands</span> of features
         </h4>
 

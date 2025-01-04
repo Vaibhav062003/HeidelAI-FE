@@ -8,7 +8,7 @@ import { FlipWords } from '@/components/ui/flip-words';
 import { BentoGridThirdDemo } from '@/components/BentoGridDemo';
 import { HoverBorderGradientDemo } from '@/components/HoverBorderGradientDemo';
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import TestimonialSection from '@/components/TestimonialSection';
 import PricingSection from '@/components/PricingSection';
 // import PricingSection2 from '@/components/PricingSection2';
@@ -22,16 +22,34 @@ import PricingSection from '@/components/PricingSection';
 
 export default function Home() {
 
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    setWindowSize({
+      width: window.innerWidth,
+      height: window.innerHeight
+    });
+
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    setMousePos({ x: e.clientX, y: e.clientY })
-  }
+    setMousePos({ x: e.clientX, y: e.clientY });
+  };
 
   const offset = (factor: number) => ({
-    x: (mousePos.x - window.innerWidth / 2) * factor,
-    y: (mousePos.y - window.innerHeight / 2) * factor,
-  })
+    x: (mousePos.x - windowSize.width / 2) * factor,
+    y: (mousePos.y - windowSize.height / 2) * factor,
+  });
 
 
   const words = ["engage", "optimize", "predict", "innovate", "grow"];
@@ -68,7 +86,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className='bg-black my-6 lg:mt-12'>
+      <section className='bg-black px-4 my-6 lg:mt-12'>
         <BentoGridThirdDemo />
       </section>
 
