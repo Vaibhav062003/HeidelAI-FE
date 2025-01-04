@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input2";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/components/supabase/client";
 import { useToast } from "@/components/hooks/use-toast";
-import ParticleBackground from "@/components/ParticleBackground";
 import { systemPrompt } from "@/components/config/chatSystemPrompt";
 import { Message, storeMessage } from "@/components/services/chatService";
 import ReactMarkdown from "react-markdown";
@@ -100,7 +99,6 @@ const Chat = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-black/90 text-white relative">
-      <ParticleBackground />
       
       {/* Header */}
       <div className="relative z-10 p-6 border-b border-heidel-turquoise/20 bg-black/40 backdrop-blur-sm">
