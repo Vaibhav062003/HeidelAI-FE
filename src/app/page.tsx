@@ -13,7 +13,7 @@ import TestimonialSection from '@/components/TestimonialSection';
 import PricingSection from '@/components/PricingSection';
 // import PricingSection2 from '@/components/PricingSection2';
 
-import Hyperspeed from '@/components/Hyperspeed';
+// import Hyperspeed from '@/components/Hyperspeed';
 
 // const Hyperspeed = dynamic(() => import('@/components/Hyperspeed'), {
 //   ssr:false,
@@ -81,7 +81,7 @@ export default function Home() {
 
         {/* Hyperspeed Background */}
         <div className="absolute bottom-0 h-[60vh] w-full">
-          <Hyperspeed />
+          {/* <Hyperspeed /> */}
         </div>
       </section>
 
