@@ -14,7 +14,7 @@ import { format } from "date-fns";
 interface ReminderDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onSave?: (reminder: any) => void;
+  onSave?: (reminder: unknown) => void;
 }
 
 const ReminderDialog = ({

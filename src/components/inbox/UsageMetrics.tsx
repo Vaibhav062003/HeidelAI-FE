@@ -129,7 +129,7 @@ const UsageMetrics = ({
           <div className="flex items-center gap-2 p-3 bg-yellow-50 rounded-lg">
             <AlertCircle className="h-5 w-5 text-yellow-500" />
             <p className="text-sm text-yellow-700">
-              You're approaching your WhatsApp message limit. Consider upgrading
+              You&apos;re approaching your WhatsApp message limit. Consider upgrading
               your plan.
             </p>
           </div>

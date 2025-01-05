@@ -13,7 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Plus, Trash2 } from "lucide-react";
 
 interface TemplateBuilderProps {
-  onSave?: (template: any) => void;
+  onSave?: (template: unknown) => void;
 }
 
 const TemplateBuilder = ({ onSave = () => {} }: TemplateBuilderProps) => {
