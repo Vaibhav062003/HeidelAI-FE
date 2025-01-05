@@ -13,7 +13,7 @@ import {
   IconBrandGoogle,
 } from "@tabler/icons-react";
 
-export default function SignupFormDemo() {
+export default function LoginPage() {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

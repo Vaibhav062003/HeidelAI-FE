@@ -1,0 +1,279 @@
+import React, { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
+import {
+  Send,
+  Paperclip,
+  Globe,
+  Bot,
+  MoreVertical,
+  Phone,
+  Video,
+  UserPlus,
+  Smile,
+  Mic,
+  Clock,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import ReminderDialog from "./ReminderDialog";
+
+interface Message {
+  id: string;
+  content: string;
+  timestamp: string;
+  sender: "user" | "agent";
+  translated?: boolean;
+  status?: "sent" | "delivered" | "read";
+  type?: "text" | "image" | "file" | "voice" | "audio";
+  fileUrl?: string;
+}
+
+interface ChatViewProps {
+  messages?: Message[];
+  customerName?: string;
+  avatarUrl?: string;
+  isAIEnabled?: boolean;
+  suggestedResponses?: string[];
+}
+
+const ChatView = ({
+  messages = [
+    {
+      id: "1",
+      content: "Hello! How can I help you today?",
+      timestamp: "10:00 AM",
+      sender: "agent",
+      status: "read",
+    },
+    {
+      id: "2",
+      content: "I need help with my recent order",
+      timestamp: "10:01 AM",
+      sender: "user",
+      status: "delivered",
+    },
+  ],
+  customerName = "John Doe",
+  avatarUrl = "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
+  isAIEnabled = false,
+  suggestedResponses = [
+    "Could you please provide more details?",
+    "I understand your concern. Let me help you with that.",
+    "Thank you for bringing this to our attention.",
+  ],
+}: ChatViewProps) => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [showReminder, setShowReminder] = useState(false);
+  const [checked, setChecked] = useState(false)
+
+
+  const handleMicClick = () => {
+    setIsRecording(!isRecording);
+  };
+
+  return (
+    <TooltipProvider>
+      <Card className="h-full flex flex-col bg-white max-h-[94vh]">
+        <div className="p-4 border-b flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <img src={avatarUrl} alt={customerName} />
+            </Avatar>
+            <div>
+              <h3 className="font-medium">{customerName}</h3>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  Active
+                </Badge>
+                <span className="text-xs text-gray-500">Last seen 2m ago</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Phone className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Start voice call</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Video className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Start video call</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowReminder(true)}
+                >
+                  <Clock className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Set reminder</TooltipContent>
+            </Tooltip>
+
+            <div className="flex items-center gap-2">
+              <span className="AI text-xs">AI</span>
+              <Switch checked={isAIEnabled} />
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>View Customer Info</DropdownMenuItem>
+                <DropdownMenuItem>Block Contact</DropdownMenuItem>
+                <DropdownMenuItem>Clear Chat</DropdownMenuItem>
+                <DropdownMenuItem>Export Chat</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        <ScrollArea className="flex-1  p-4">
+          <div className="space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.sender === "agent" ? "justify-start" : "justify-end"}`}
+              >
+                <div
+                  className={`max-w-[70%] rounded-lg p-3 ${
+                    message.sender === "agent"
+                      ? "bg-gray-100"
+                      : "bg-blue-500 text-white"
+                  }`}
+                >
+                  {message.type === "image" && message.fileUrl && (
+                    <img
+                      src={message.fileUrl}
+                      alt="Shared image"
+                      className="rounded-lg mb-2"
+                    />
+                  )}
+                  {message.type === "audio" && message.fileUrl && (
+                    <audio controls src={message.fileUrl} className="w-full" />
+                  )}
+                  {(message.type === "text" || !message.type) && (
+                    <p>{message.content}</p>
+                  )}
+                  <div className="flex items-center gap-2 mt-1">
+                    <span
+                      className={`text-xs ${message.sender === "agent" ? "text-gray-500" : "text-blue-100"}`}
+                    >
+                      {message.timestamp}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+
+        <div className="p-4 border-t">
+          <div className="flex gap-2 mb-4 overflow-x-auto">
+            {suggestedResponses.map((response, index) => (
+              <Button
+                key={index}
+                variant="secondary"
+                className="whitespace-nowrap"
+                size="sm"
+              >
+                {response}
+              </Button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Smile className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Add emoji</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Paperclip className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Attach file</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleMicClick}
+                  className={isRecording ? "bg-red-100" : ""}
+                >
+                  <Mic
+                    className={`h-4 w-4 ${isRecording ? "text-red-500" : ""}`}
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isRecording ? "Stop recording" : "Record voice message"}
+              </TooltipContent>
+            </Tooltip>
+
+            <Input placeholder="Type your message..." className="flex-1" />
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon">
+                  <Send className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Send message</TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+
+        <ReminderDialog
+          open={showReminder}
+          onOpenChange={setShowReminder}
+          onSave={(reminder) => {
+            console.log("Reminder saved:", reminder);
+            setShowReminder(false);
+          }}
+        />
+      </Card>
+    </TooltipProvider>
+  );
+};
+
+export default ChatView;
