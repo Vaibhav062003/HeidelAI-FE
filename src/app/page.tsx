@@ -2,7 +2,7 @@
 
 // import { motion } from 'framer-motion'
 import Image from 'next/image'
-// import dynamic from 'next/dynamic'
+import dynamic from 'next/dynamic'
 import { FlipWords } from '@/components/ui/flip-words';
 // import { TimelineDemo } from '@/components/TimelineDemo';
 import { BentoGridThirdDemo } from '@/components/BentoGridDemo';
@@ -16,10 +16,10 @@ import CTASection from '@/components/CTASection';
 
 // import Hyperspeed from '@/components/Hyperspeed';
 
-// const Hyperspeed = dynamic(() => import('@/components/Hyperspeed'), {
-//   ssr:false,
-//   loading: () => <div className="w-full h-full bg-black" />
-// });
+const Hyperspeed = dynamic(() => import('@/components/Hyperspeed'), {
+  ssr:true,
+  loading: () => <div className="w-full h-full bg-black" />
+});
 
 export default function Home() {
 
@@ -82,7 +82,7 @@ export default function Home() {
 
         {/* Hyperspeed Background */}
         <div className="absolute bottom-0 h-[60vh] w-full">
-          {/* <Hyperspeed /> */}
+          <Hyperspeed />
         </div>
       </section>
 
