@@ -34,11 +34,11 @@ export function HoverBorderGradientDemo() {
     }
 
     try {
-      // await fetch('/api/sendEmail', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ name: userName, email: userEmail })
-      // });
+      await fetch('/api/sendEmail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: userName, email: userEmail })
+      });
       sonnerToast.success('Request received! We will contact you shortly.');
     } catch (error) {
       sonnerToast.error('Failed to submit demo request. Please try again.');
@@ -245,7 +245,7 @@ export function HoverBorderGradientDemo() {
       </ScrollArea>
 
       {/* Input Area */}
-      <form onSubmit={handleSubmit} className="sticky bg-white w-full z-10 py-6  bottom-0 ">
+      <form onSubmit={handleSubmit} className="sticky bg-white w-full z-10 pt-6  bottom-0 ">
         <div className="w-full lg:max-w-3xl mx-auto flex gap-2">
           <Input
             value={input}
