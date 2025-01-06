@@ -2,84 +2,92 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { MessageCircle, AlertCircle, ThumbsUp } from "lucide-react";
+import { MessageCircle, AlertCircle, ThumbsUp, Bot, User2 } from "lucide-react";
+import { getRelativeTime } from '@/components/utils/dateUtils';
+
 
 interface ConversationPreviewProps {
-  channelType?: "telegram" | "whatsapp" | "instagram" | "web";
-  priority?: "high" | "medium" | "low";
-  sentiment?: "positive" | "neutral" | "negative";
-  customerName?: string;
-  lastMessage?: string;
-  timestamp?: string;
-  unreadCount?: number;
-  avatarUrl?: string;
+  id: string;
+  channelType: "telegram" | "whatsapp" | "instagram" | "web";
+  priority: "high" | "medium" | "low";
+  sentiment: "positive" | "neutral" | "negative";
+  customerName: string;
+  lastMessage: string;
+  timestamp: string;
+  unreadCount: number;
+  avatarUrl: string;
   isSelected?: boolean;
   onClick?: () => void;
+  isAiEnabled?: boolean;
+  assignedAgentId?: string | null;
 }
 
 const ConversationPreview = ({
-  channelType = "telegram",
-  priority = "medium",
-  sentiment = "neutral",
-  customerName = "John Doe",
-  lastMessage = "Hey there! I need help with my order...",
-  timestamp = "5m ago",
-  unreadCount = 2,
-  avatarUrl = "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
+  id,
+  channelType,
+  priority,
+  sentiment,
+  customerName,
+  lastMessage,
+  timestamp,
+  unreadCount,
+  avatarUrl,
   isSelected = false,
   onClick,
+  isAiEnabled = true,
+  assignedAgentId
 }: ConversationPreviewProps) => {
-  const channelColors = {
-    telegram: "bg-blue-100 text-blue-600",
-    whatsapp: "bg-green-100 text-green-600",
-    instagram: "bg-purple-100 text-purple-600",
-    web: "bg-gray-100 text-gray-600",
-  };
-
-  const priorityColors = {
-    high: "bg-red-100 text-red-600",
-    medium: "bg-yellow-100 text-yellow-600",
-    low: "bg-green-100 text-green-600",
-  };
-
-  const sentimentIcons = {
-    positive: <ThumbsUp className="h-4 w-4 text-green-500" />,
-    neutral: <MessageCircle className="h-4 w-4 text-gray-500" />,
-    negative: <AlertCircle className="h-4 w-4 text-red-500" />,
-  };
-
+  console.log("ConversationPreview", customerName);
   return (
     <Card
-      className={`w-full h-20 p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-        isSelected ? "bg-gray-100" : "bg-white"
+      className={`p-4 cursor-pointer transition-colors ${
+        isSelected ? "bg-gray-100" : "hover:bg-gray-50"
       }`}
+      onClick={onClick}
     >
-      <Avatar className="h-12 w-12">
-        <img src={avatarUrl} alt={customerName} className="object-cover" />
-      </Avatar>
-
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="font-medium truncate">{customerName}</span>
-            <Badge variant="secondary" className={channelColors[channelType]}>
-              {channelType}
-            </Badge>
+      <div className="flex items-start gap-4">
+        <Avatar>
+        {channelType === "whatsapp" && (
+              <img src="/features/whatsapp.png" alt="" />
+            )}
+            {channelType === "telegram" && (
+              <img src="/features/telegram.png" alt="" />
+            )}
+            {channelType === "instagram" && (
+              <img src="/features/instagram.png" alt="" />
+            )}
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-black truncate">{customerName}</span>
+              {isAiEnabled ? (
+                <Bot className="h-4 w-4 text-blue-500" />
+              ) : assignedAgentId ? (
+                <User2 className="h-4 w-4 text-green-500" />
+              ) : null}
+            </div>
+            <span className="text-sm text-gray-500">{getRelativeTime(timestamp)}</span>
           </div>
-          <span className="text-xs text-gray-500">{timestamp}</span>
-        </div>
-
-        <div className="flex items-center justify-between mt-1">
           <p className="text-sm text-gray-600 truncate">{lastMessage}</p>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className={priorityColors[priority]}>
-              {priority}
-            </Badge>
-            {sentimentIcons[sentiment]}
-            {unreadCount > 0 && (
-              <Badge variant="secondary" className="bg-blue-500 text-white">
-                {unreadCount}
+          <div className="flex items-center gap-2 mt-2">
+            {channelType === "whatsapp" && (
+              <Badge variant="outline" className="bg-green-50">
+                WhatsApp
               </Badge>
+            )}
+            {channelType === "telegram" && (
+              <Badge variant="outline" className="bg-blue-50">
+                Telegram
+              </Badge>
+            )}
+            {channelType === "instagram" && (
+              <Badge variant="outline" className="bg-purple-50">
+                Instagram
+              </Badge>
+            )}
+            {unreadCount > 0 && (
+              <Badge variant="destructive">{unreadCount}</Badge>
             )}
           </div>
         </div>

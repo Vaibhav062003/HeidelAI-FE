@@ -25,7 +25,7 @@ export default function RootLayout({
         <meta property="og:title" content="HeidelAI - AI-Powered Customer Engagement & Analytics Platform" />
         <meta property="og:description" content="Transform your business with HeidelAI's AI-powered tools for customer engagement, real-time analytics, and smart chatbots." />
         <meta property="og:image" content="/heidelai_mockup.png" />
-        <meta property="og:url" content="https://yourwebsite.com" />
+        <meta property="og:url" content="https://heidelai.com" />
         <meta name="twitter:card" content="/heidelai_mockup.png" />
         <meta name="twitter:title" content="HeidelAI - AI-Powered Customer Engagement & Analytics Platform" />
         <meta name="twitter:description" content="Transform your business with HeidelAI's AI-powered tools for customer engagement, real-time analytics, and smart chatbots." />

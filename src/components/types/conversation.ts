@@ -1,0 +1,12 @@
+export interface Conversation {
+  id: string;
+  platform: string;
+  customer_id: string;
+  customer_name: string;
+  last_message: string;
+  timestamp: string;
+  unread_count: number;
+  avatar_url: string;
+  is_ai_enabled: boolean;
+  assigned_agent_id: string | null;
+}

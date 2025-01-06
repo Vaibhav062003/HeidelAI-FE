@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,8 @@ import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { format, parseISO } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import {
   Tooltip,
   TooltipContent,
@@ -37,46 +39,56 @@ interface Message {
   id: string;
   content: string;
   timestamp: string;
-  sender: "user" | "agent";
-  translated?: boolean;
+  role: "customer" | "ai" | "agent";
+  sender_id: string;
+  conversation_id: string;
   status?: "sent" | "delivered" | "read";
-  type?: "text" | "image" | "file" | "voice" | "audio";
+  type?: "text" | "image" | "file" | "voice";
   fileUrl?: string;
 }
 
+// interface ChatViewProps {
+//   messages?: Message[];
+//   customerName?: string;
+//   avatarUrl?: string;
+//   isAIEnabled?: boolean;
+//   suggestedResponses?: string[];
+// }
+
 interface ChatViewProps {
-  messages?: Message[];
+  selectedConversationId?: string;
   customerName?: string;
   avatarUrl?: string;
-  isAIEnabled?: boolean;
-  suggestedResponses?: string[];
 }
 
 const ChatView = ({
-  messages = [
-    {
-      id: "1",
-      content: "Hello! How can I help you today?",
-      timestamp: "10:00 AM",
-      sender: "agent",
-      status: "read",
-    },
-    {
-      id: "2",
-      content: "I need help with my recent order",
-      timestamp: "10:01 AM",
-      sender: "user",
-      status: "delivered",
-    },
-  ],
-  customerName = "John Doe",
-  avatarUrl = "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
-  isAIEnabled = false,
-  suggestedResponses = [
-    "Could you please provide more details?",
-    "I understand your concern. Let me help you with that.",
-    "Thank you for bringing this to our attention.",
-  ],
+  selectedConversationId,
+  customerName = "Unknown",
+  avatarUrl = "/default-avatar.png"
+  // messages = [
+  //   {
+  //     id: "1",
+  //     content: "Hello! How can I help you today?",
+  //     timestamp: "10:00 AM",
+  //     sender: "agent",
+  //     status: "read",
+  //   },
+  //   {
+  //     id: "2",
+  //     content: "I need help with my recent order",
+  //     timestamp: "10:01 AM",
+  //     sender: "user",
+  //     status: "delivered",
+  //   },
+  // ],
+  // customerName = "John Doe",
+  // avatarUrl = "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
+  // isAIEnabled = false,
+  // suggestedResponses = [
+  //   "Could you please provide more details?",
+  //   "I understand your concern. Let me help you with that.",
+  //   "Thank you for bringing this to our attention.",
+  // ],
 }: ChatViewProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
@@ -86,6 +98,37 @@ const ChatView = ({
   const handleMicClick = () => {
     setIsRecording(!isRecording);
   };
+
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!selectedConversationId) return;
+
+    const fetchMessages = async () => {
+      try {
+        const response = await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/messages`);
+        const data = await response.json();
+        setMessages(data);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/client-${Date.now()}`);
+    
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
+        setMessages(prev => [...prev, data.message]);
+      }
+    };
+
+    fetchMessages();
+    return () => ws.close();
+  }, [selectedConversationId]);
 
   return (
     <TooltipProvider>
@@ -140,7 +183,7 @@ const ChatView = ({
 
             <div className="flex items-center gap-2">
               <span className="AI text-xs">AI</span>
-              <Switch checked={isAIEnabled} />
+              <Switch checked={false} />
             </div>
 
             <DropdownMenu>
@@ -164,12 +207,12 @@ const ChatView = ({
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex ${message.sender === "agent" ? "justify-start" : "justify-end"}`}
+                className={`flex ${message.role === "customer" ? "justify-start" : "justify-end"}`}
               >
                 <div
                   className={`max-w-[70%] rounded-lg p-3 ${
-                    message.sender === "agent"
-                      ? "bg-gray-100"
+                    message.role === "customer"
+                      ? "bg-gray-100 text-black"
                       : "bg-blue-500 text-white"
                   }`}
                 >
@@ -180,7 +223,7 @@ const ChatView = ({
                       className="rounded-lg mb-2"
                     />
                   )}
-                  {message.type === "audio" && message.fileUrl && (
+                  {message.type === "voice" && message.fileUrl && (
                     <audio controls src={message.fileUrl} className="w-full" />
                   )}
                   {(message.type === "text" || !message.type) && (
@@ -188,9 +231,9 @@ const ChatView = ({
                   )}
                   <div className="flex items-center gap-2 mt-1">
                     <span
-                      className={`text-xs ${message.sender === "agent" ? "text-gray-500" : "text-blue-100"}`}
+                      className={`text-xs ${message.role === "customer" ? "text-gray-500" : "text-blue-100"}`}
                     >
-                      {message.timestamp}
+                      {formatMessageTime(message.timestamp)}
                     </span>
                   </div>
                 </div>
@@ -201,7 +244,7 @@ const ChatView = ({
 
         <div className="p-4 border-t">
           <div className="flex gap-2 mb-4 overflow-x-auto">
-            {suggestedResponses.map((response, index) => (
+            {/* {suggestedResponses.map((response, index) => (
               <Button
                 key={index}
                 variant="secondary"
@@ -210,7 +253,7 @@ const ChatView = ({
               >
                 {response}
               </Button>
-            ))}
+            ))} */}
           </div>
 
           <div className="flex items-center gap-2">
@@ -274,6 +317,22 @@ const ChatView = ({
       </Card>
     </TooltipProvider>
   );
+};
+
+const formatMessageTime = (timestamp: string): string => {
+  try {
+    // Parse the UTC timestamp
+    const date = parseISO(timestamp);
+    
+    // Convert to IST (UTC+5:30)
+    const istDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+    
+    // Format to 12-hour time with lowercase am/pm
+    return format(istDate, 'h:mma').toLowerCase();
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return '';
+  }
 };
 
 export default ChatView;
