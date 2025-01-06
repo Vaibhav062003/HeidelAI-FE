@@ -1,10 +1,10 @@
 'use client';
-import {toast, Toaster} from 'sonner';
+// import {toast, Toaster} from 'sonner';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/components/firebase';
 import React, { useState } from "react";
-import TopNavigation from "@/components/inbox/TopNavigation";
+// import TopNavigation from "@/components/inbox/TopNavigation";
 import ConversationList from "@/components/inbox/ConversationList";
 import ChatView from "@/components/inbox/ChatView";
 import Sidebar from "@/components/inbox/Sidebar";
@@ -16,7 +16,7 @@ import BillingPlans from "@/components/inbox/BillingPlans";
 import TeamCollaboration from "@/components/inbox/TeamCollaboration";
 import AutomationRules from "@/components/inbox/AutomationRules";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -27,29 +27,24 @@ import {
   BarChart2,
   CreditCard,
   Settings,
-  Wand2,
-  Users,
+  // Wand2,
+  // Users,
 } from "lucide-react";
 
-interface DashboardPageProps {
-  selectedChannels?: string[]
-  selectedConversationId?: string
-  isAIEnabled?: boolean
-}
+
+
 
 // const Home = ({
 //   selectedChannels = ["all"],
 //   selectedConversationId = "",
 //   isTranslationEnabled = false,
 // }: HomeProps) => {
-  export default function DashboardPage({
-    selectedChannels = ["all"],
-    selectedConversationId = "",
-    isAIEnabled = false,
-  }: DashboardPageProps) {
+  export default function DashboardPage(){
     const router = useRouter()
     const [activeView, setActiveView] = useState<"inbox" | "analytics" | "billing" | "settings">("inbox")
     const [showTeamPanel, setShowTeamPanel] = useState(true)
+    const [selectedConversationId, setSelectedConversationId] = useState<string>("");
+    const [isAIEnabled, setIsAIEnabled] = useState(false);
   
     useEffect(() => {
       const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -59,6 +54,10 @@ interface DashboardPageProps {
       })
       return () => unsubscribe()
     }, [router])
+
+    const handleConversationSelect = (id: string) => {
+      setSelectedConversationId(id);
+    };
 
   return (
     <>
@@ -96,6 +95,7 @@ interface DashboardPageProps {
             <ResizablePanel defaultSize={20} minSize={15}>
               <ConversationList
                 selectedConversationId={selectedConversationId}
+                onConversationSelect={handleConversationSelect}
               />
             </ResizablePanel>
 

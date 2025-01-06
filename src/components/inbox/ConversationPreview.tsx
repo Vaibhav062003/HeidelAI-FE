@@ -14,6 +14,7 @@ interface ConversationPreviewProps {
   unreadCount?: number;
   avatarUrl?: string;
   isSelected?: boolean;
+  onClick?: () => void;
 }
 
 const ConversationPreview = ({
@@ -26,6 +27,7 @@ const ConversationPreview = ({
   unreadCount = 2,
   avatarUrl = "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
   isSelected = false,
+  onClick,
 }: ConversationPreviewProps) => {
   const channelColors = {
     telegram: "bg-blue-100 text-blue-600",

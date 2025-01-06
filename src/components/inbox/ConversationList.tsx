@@ -15,6 +15,8 @@ interface Conversation {
   timestamp: string;
   unreadCount: number;
   avatarUrl: string;
+  isSelected?: boolean;
+  onClick?: () => void;
 }
 
 interface ConversationListProps {
