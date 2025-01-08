@@ -72,11 +72,11 @@ export default function LoginPage() {
         
         <LabelInputContainer className=" mb-4">
           <Label htmlFor="email">Email Address</Label>
-          <Input value={email} onChange={(e) => {setEmail(e.target.value)}} className="border border-white/[0.1] rounded-[0.5rem] h-[45px] bg-zinc-800 text-zinc-400" placeholder="projectmayhem@fc.com"  type="email" />
+          <Input value={email} onChange={(e) => {setEmail(e.target.value)}} className="border border-white/[0.1] rounded-[0.5rem] h-[45px] bg-zinc-800 placeholder:text-zinc-400 text-white" placeholder="projectmayhem@fc.com"  type="email" />
         </LabelInputContainer>
         <LabelInputContainer className="mb-4">
           <Label htmlFor="password">Password</Label>
-          <Input  value={password} onChange={(e) => {setPassword(e.target.value)}} className="border border-white/[0.2] rounded-[0.5rem] h-[45px] bg-zinc-800 text-zinc-400" placeholder="••••••••" type="password" />
+          <Input  value={password} onChange={(e) => {setPassword(e.target.value)}} className="border border-white/[0.2] rounded-[0.5rem] h-[45px] bg-zinc-800 placeholder:text-zinc-400 text-white" placeholder="••••••••" type="password" />
         </LabelInputContainer>
         
 

@@ -26,6 +26,7 @@ import {
   Link,
 } from "lucide-react";
 import TemplateBuilder from "./TemplateBuilder";
+import ConversationSummary from "./ConversationSummary";
 
 interface SidebarProps {
   templates?: Array<{ id: string; title: string; category: string }>;
@@ -85,9 +86,13 @@ const Sidebar = ({
 
   return (
     <TooltipProvider>
-      <Card className="h-full w-[360px] bg-white border-l">
-        <Tabs defaultValue="templates" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+      <Card className="h-[550px] w-[360px] bg-white border-l">
+        <Tabs defaultValue="summary" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="summary">
+              <FileText className="h-4 w-4 mr-2" />
+              Summary
+            </TabsTrigger>
             <TabsTrigger value="templates">
               <FileText className="h-4 w-4 mr-2" />
               Templates
@@ -101,6 +106,12 @@ const Sidebar = ({
               Analytics
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="summary" className="p-4 h-full">
+          <div className="h-full">
+            <ConversationSummary />
+          </div>
+          </TabsContent>
 
           <TabsContent value="templates" className="p-4">
             {showTemplateBuilder ? (

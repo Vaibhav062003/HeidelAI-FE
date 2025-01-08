@@ -107,9 +107,7 @@ export default function DashboardPage(){
       <ResizablePanel defaultSize={50} minSize={30}>
         <div className="flex-1 flex flex-col h-full">
           <ChatView selectedConversationId={selectedConversationId}  />
-          <div className="h-[200px] border-t">
-            <ConversationSummary />
-          </div>
+          
         </div>
       </ResizablePanel>
 

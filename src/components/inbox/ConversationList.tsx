@@ -8,77 +8,13 @@ import { useConversations } from '../hooks/useConversations';
 import { Conversation } from '@/components/types/conversation';
 
 
-// interface Conversation {
-//   id: string;
-//   channelType: "telegram" | "whatsapp" | "instagram" | "web";
-//   priority: "high" | "medium" | "low";
-//   sentiment: "positive" | "neutral" | "negative";
-//   customerName: string;
-//   lastMessage: string;
-//   timestamp: string;
-//   unreadCount: number;
-//   avatarUrl: string;
-//   isSelected?: boolean;
-//   onClick?: () => void;
-// }
-
-// interface Conversation {
-//   id: string;
-//   platform: string;
-//   customer_id: string;
-//   customer_name: string;
-//   last_message: string;
-//   timestamp: string;
-//   unread_count: number;
-//   avatar_url: string;
-//   is_ai_enabled: boolean;
-//   assigned_agent_id: string | null;
-// }
 
 interface ConversationListProps {
   selectedConversationId?: string;
   onConversationSelect?: (id: string) => void;
 }
 
-// const ConversationList = ({
-//   conversations = [
-//     {
-//       id: "1",
-//       channelType: "telegram",
-//       priority: "high",
-//       sentiment: "positive",
-//       customerName: "Alice Johnson",
-//       lastMessage: "Thank you for your help!",
-//       timestamp: "2m ago",
-//       unreadCount: 3,
-//       avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alice",
-//     },
-//     {
-//       id: "2",
-//       channelType: "whatsapp",
-//       priority: "medium",
-//       sentiment: "neutral",
-//       customerName: "Bob Smith",
-//       lastMessage: "When will my order arrive?",
-//       timestamp: "15m ago",
-//       unreadCount: 1,
-//       avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob",
-//     },
-//     {
-//       id: "3",
-//       channelType: "instagram",
-//       priority: "low",
-//       sentiment: "negative",
-//       customerName: "Carol White",
-//       lastMessage: "I'm still waiting for a response",
-//       timestamp: "1h ago",
-//       unreadCount: 0,
-//       avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carol",
-//     },
-//   ],
-//   selectedConversationId = "",
-//   onConversationSelect = () => {},
-// }: ConversationListProps) => {
+
 
 const ConversationList = ({
   selectedConversationId,

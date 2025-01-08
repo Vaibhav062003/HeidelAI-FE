@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
+import { Conversation } from '../types/conversation';
 import {
   Tooltip,
   TooltipContent,
@@ -47,48 +48,12 @@ interface Message {
   fileUrl?: string;
 }
 
-// interface ChatViewProps {
-//   messages?: Message[];
-//   customerName?: string;
-//   avatarUrl?: string;
-//   isAIEnabled?: boolean;
-//   suggestedResponses?: string[];
-// }
-
 interface ChatViewProps {
   selectedConversationId?: string;
-  customerName?: string;
-  avatarUrl?: string;
 }
 
 const ChatView = ({
   selectedConversationId,
-  customerName = "Unknown",
-  avatarUrl = "/default-avatar.png"
-  // messages = [
-  //   {
-  //     id: "1",
-  //     content: "Hello! How can I help you today?",
-  //     timestamp: "10:00 AM",
-  //     sender: "agent",
-  //     status: "read",
-  //   },
-  //   {
-  //     id: "2",
-  //     content: "I need help with my recent order",
-  //     timestamp: "10:01 AM",
-  //     sender: "user",
-  //     status: "delivered",
-  //   },
-  // ],
-  // customerName = "John Doe",
-  // avatarUrl = "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
-  // isAIEnabled = false,
-  // suggestedResponses = [
-  //   "Could you please provide more details?",
-  //   "I understand your concern. Let me help you with that.",
-  //   "Thank you for bringing this to our attention.",
-  // ],
 }: ChatViewProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
@@ -101,9 +66,32 @@ const ChatView = ({
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const lastMessageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Scroll to the bottom when new messages are added
+    if (lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [messages]);
+
 
   useEffect(() => {
     if (!selectedConversationId) return;
+
+    // Fetch conversation details
+    const fetchConversation = async () => {
+      try {
+        const response = await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}`);
+        const data = await response.json();
+        setConversation(data);
+        console.log("conversation data", data);
+      } catch (error) {
+        console.error("Error fetching conversation:", error);
+      }
+    };
 
     const fetchMessages = async () => {
       try {
@@ -126,9 +114,21 @@ const ChatView = ({
       }
     };
 
+    fetchConversation();
     fetchMessages();
+
     return () => ws.close();
   }, [selectedConversationId]);
+
+  // Decide on avatar source
+  let avatarSource = "/default-avatar.png";
+  if (conversation?.platform === "whatsapp") {
+    avatarSource = "/features/whatsapp.png";
+  } else if (conversation?.platform === "telegram") {
+    avatarSource = "/features/telegram.png";
+  } else if (conversation?.platform === "instagram") {
+    avatarSource = "/features/instagram.png";
+  }
 
   return (
     <TooltipProvider>
@@ -136,10 +136,10 @@ const ChatView = ({
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <img src={avatarUrl} alt={customerName} />
+              <img src={avatarSource} alt="Platform avatar" />
             </Avatar>
             <div>
-              <h3 className="font-medium">{customerName}</h3>
+              <h3 className="font-medium">{conversation?.customer_name}</h3>
               <div className="flex items-center gap-2">
                 <Badge variant="secondary" className="text-xs">
                   Active
@@ -202,45 +202,51 @@ const ChatView = ({
           </div>
         </div>
 
-        <ScrollArea className="flex-1  p-4">
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === "customer" ? "justify-start" : "justify-end"}`}
-              >
-                <div
-                  className={`max-w-[70%] rounded-lg p-3 ${
-                    message.role === "customer"
-                      ? "bg-gray-100 text-black"
-                      : "bg-blue-500 text-white"
+        <ScrollArea ref={scrollAreaRef} className="flex-1 h-full p-4">
+      <div className="space-y-4">
+        {messages.map((message, index) => (
+          <div
+            key={message.id}
+            className={`flex ${
+              message.role === "customer" ? "justify-start" : "justify-end"
+            }`}
+          >
+            <div
+              className={`max-w-[70%] rounded-lg p-3 ${
+                message.role === "customer"
+                  ? "bg-gray-100 text-black"
+                  : "bg-blue-500 text-white"
+              }`}
+            >
+              {message.type === "image" && message.fileUrl && (
+                <img
+                  src={message.fileUrl}
+                  alt="Shared image"
+                  className="rounded-lg mb-2"
+                />
+              )}
+              {message.type === "voice" && message.fileUrl && (
+                <audio controls src={message.fileUrl} className="w-full" />
+              )}
+              {(message.type === "text" || !message.type) && (
+                <p>{message.content}</p>
+              )}
+              <div className="flex items-center gap-2 mt-1">
+                <span
+                  className={`text-xs ${
+                    message.role === "customer" ? "text-gray-500" : "text-blue-100"
                   }`}
                 >
-                  {message.type === "image" && message.fileUrl && (
-                    <img
-                      src={message.fileUrl}
-                      alt="Shared image"
-                      className="rounded-lg mb-2"
-                    />
-                  )}
-                  {message.type === "voice" && message.fileUrl && (
-                    <audio controls src={message.fileUrl} className="w-full" />
-                  )}
-                  {(message.type === "text" || !message.type) && (
-                    <p>{message.content}</p>
-                  )}
-                  <div className="flex items-center gap-2 mt-1">
-                    <span
-                      className={`text-xs ${message.role === "customer" ? "text-gray-500" : "text-blue-100"}`}
-                    >
-                      {formatMessageTime(message.timestamp)}
-                    </span>
-                  </div>
-                </div>
+                  {formatMessageTime(message.timestamp)}
+                </span>
               </div>
-            ))}
+            </div>
           </div>
-        </ScrollArea>
+        ))}
+        {/* Empty div for scrolling */}
+        <div ref={lastMessageRef} />
+      </div>
+    </ScrollArea>
 
         <div className="p-4 border-t">
           <div className="flex gap-2 mb-4 overflow-x-auto">
