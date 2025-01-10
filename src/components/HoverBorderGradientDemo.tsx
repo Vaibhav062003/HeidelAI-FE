@@ -24,27 +24,43 @@ export function HoverBorderGradientDemo() {
 
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
+  const [userPhone, setUserPhone] = useState('');
+  const [companyName, setCompanyName] = useState('');
 
   const handleDemoRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Demo request submitted", { userName, userEmail });
-    if (!userName.trim() || !userEmail.trim()) {
-      sonnerToast.error('Please enter your name and email.');  
+  
+    if (!userName.trim() || !userEmail.trim() || !userPhone.trim() || !companyName.trim()) {
+      sonnerToast.error('Please fill all the details.');
       return;
     }
-
+  
+    // Create form data to match Google Form's expected format
+    const formData = new FormData();
+    formData.append('entry.545040562', userName);       // Name
+    formData.append('entry.1231199003', userEmail);     // Email
+    formData.append('entry.1154213412', userPhone);     // Phone
+    formData.append('entry.1081121699', companyName);   // Company
+  
     try {
-      await fetch('/api/sendEmail', {
+      await fetch("https://docs.google.com/forms/d/e/1FAIpQLSdB_mtDsubutUM_y1draxzdbfzcsqcIz9Ok_hTwPayBukJPNg/formResponse", {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: userName, email: userEmail })
+        mode: 'no-cors',  // Required to bypass CORS errors
+        body: formData,
       });
+  
       sonnerToast.success('Request received! We will contact you shortly.');
+  
+      // Clear the form after successful submission
+      setUserName('');
+      setUserEmail('');
+      setUserPhone('');
+      setCompanyName('');
     } catch (error) {
-      sonnerToast.error('Failed to submit demo request. Please try again.');
-      console.error('Error submitting demo request:', error);
+      sonnerToast.error('Failed to submit the form. Please try again.');
+      console.error('Error:', error);
     }
-  }
+  };
 
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -148,7 +164,7 @@ export function HoverBorderGradientDemo() {
       </Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40" />
-        <Drawer.Content className="bg-white flex flex-col  fixed bottom-0  left-0 right-0 max-h-[82vh] rounded-t-[10px] z-[999]">
+        <Drawer.Content className="bg-white flex flex-col  fixed bottom-0  left-0 right-0 max-h-[85vh] rounded-t-[10px] z-[999]">
           <div className="max-w-md flex justify-center flex-col w-full mx-auto overflow-auto p-4 mb-4 rounded-t-[10px]">
             <div aria-hidden className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-4" />
 
@@ -158,7 +174,7 @@ export function HoverBorderGradientDemo() {
             <p className="text-neutral-600 px-4 lg:px-0 text-xs lg:text-base text-center mt-2">
             We will contact you based on the below information
           </p>
-            <form onSubmit={handleDemoRequest}>
+            <form method="POST" action={"https://docs.google.com/forms/d/e/1FAIpQLSdB_mtDsubutUM_y1draxzdbfzcsqcIz9Ok_hTwPayBukJPNg/formResponse"} onSubmit={handleDemoRequest}>
             <label htmlFor="fname" className="font-medium text-gray-900 text-sm mt-8 mb-2 block">
               Name
             </label>
@@ -166,17 +182,39 @@ export function HoverBorderGradientDemo() {
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
               id="name"
-              type="fname"
-              className="border border-gray-200 bg-white w-full px-3 h-9 rounded-lg outline-none focus:ring-2 focus:ring-black/5 text-gray-900"
+              name="entry.545040562"
+              type="text"
+              className="border border-gray-200 bg-white w-full text-sm p-3 py-2 h-9 rounded-xl outline-none focus:ring-2 focus:ring-black/5 text-gray-900"
             />
-            <label htmlFor="name" className="font-medium text-gray-900 text-sm mt-8 mb-2 block">
+            <label htmlFor="email" className="font-medium text-gray-900 text-sm mt-4 mb-2 block">
               Email ID
             </label>
             <input
               value={userEmail}
               onChange={(e) => setUserEmail(e.target.value)}
-              type="email"
-              className="border border-gray-200 bg-white w-full resize-none rounded-lg p-3 pt-2.5 text-gray-900 outline-none focus:ring-2 focus:ring-black/5 focus:ring-offset-0"
+              type="text"
+              name="entry.1231199003"
+              className="border border-gray-200 bg-white w-full resize-none rounded-xl p-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-black/5 focus:ring-offset-0"
+            />
+            <label htmlFor="number" className="font-medium text-gray-900 text-sm mt-4 mb-2 block">
+              Phone Number
+            </label>
+            <input
+              value={userPhone}
+              onChange={(e) => setUserPhone(e.target.value)}
+              type="number"
+              name="entry.1154213412"
+              className="border border-gray-200 bg-white w-full resize-none rounded-xl p-3 py-2  text-gray-900 outline-none focus:ring-2 focus:ring-black/5 focus:ring-offset-0"
+            />
+            <label htmlFor="name" className="font-medium text-gray-900 text-sm mt-4 mb-2 block">
+              Company name
+            </label>
+            <input
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              type="text"
+              name="entry.1081121699"
+              className="border border-gray-200 bg-white w-full resize-none  p-3 rounded-xl py-2 text-gray-900 outline-none focus:ring-2 focus:ring-black/5 focus:ring-offset-0"
             />
             <p className="text-neutral-600  text-xs  mt-2 mb-8">
             By submitting you agree to our Terms & Conditions.

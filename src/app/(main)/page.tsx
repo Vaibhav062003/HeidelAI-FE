@@ -21,6 +21,16 @@ import CTASection from '@/components/CTASection';
 //   loading: () => <div className="w-full h-full bg-black" />
 // });
 
+// const ShaderGradientCanvas = dynamic(
+//   () => import('@shadergradient/react').then((mod) => mod.ShaderGradientCanvas),
+//   { ssr: false }
+// )
+
+// const ShaderGradient = dynamic(
+//   () => import('@shadergradient/react').then((mod) => mod.ShaderGradient),
+//   { ssr: false }
+// )
+
 export default function Home() {
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -56,6 +66,7 @@ export default function Home() {
   const words = ["engage", "optimize", "predict", "innovate", "grow"];
   return (
     <main className="min-h-screen relative">
+       
       {/* Hero Section */}
       <section className="h-screen relative flex flex-col mt-10 justify-center" id="home">
         {/* Hero Content */}
