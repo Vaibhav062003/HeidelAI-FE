@@ -157,7 +157,7 @@ export function HoverBorderGradientDemo() {
     </div>
     <div className=" flex justify-center space-x-2 text-center">
       <Drawer.Root repositionInputs={false} open={isOpen} onOpenChange={setIsOpen}>
-      <Drawer.Trigger className="bg-black hover:cursor-pointer border border-white/[0.2] py-2 px-4 rounded-full text-white flex items-center space-x-2">
+      <Drawer.Trigger className="bg-black/50 backdrop-blur-sm hover:cursor-pointer border border-white/[0.2] py-2 px-4 rounded-full text-white flex items-center space-x-2">
       
         <span>Request Demo</span>
       
@@ -308,7 +308,7 @@ export function HoverBorderGradientDemo() {
       <HoverBorderGradient
         containerClassName="rounded-full"
         
-        className="bg-black text-white flex items-center space-x-2"
+        className="bg-black/50 backdrop-blur-sm text-white flex items-center space-x-2"
       >
         <Drawer.Trigger className="focus-visible:border-none">
         <span >Pitch Deck</span>

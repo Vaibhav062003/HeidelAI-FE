@@ -25,6 +25,24 @@ export default function MainLayout({
         <meta name="twitter:image" content="/heidelai_mockup.png" />
       </head>
     <body className={` bg-black text-white`}>
+      <div className="h-[100vh] w-full absolute top-0">
+        <video 
+          autoPlay 
+          muted 
+          loop 
+          playsInline
+          className="hidden lg:block md:block w-full h-full object-cover"
+          src="/desktop.mp4"
+        ></video>
+        <video 
+          autoPlay 
+          muted 
+          loop 
+          playsInline
+          className="w-full lg:hidden md:hidden h-full object-cover"
+          src="/mobile.mp4"
+        ></video>
+      </div>
       <Navbar />
       {/* <div style={{ height: "100vh", width: "100vw", position: "absolute", top: 0, zIndex: 10000000 }}>
             <iframe

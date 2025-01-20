@@ -1,5 +1,5 @@
 'use client'
-
+import { useState, useEffect } from 'react';
 import Image from 'next/image'
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -8,8 +8,21 @@ import { useRouter } from 'next/navigation';
 export default function Navbar() {
   const router = useRouter();
 
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const viewportHeight = 30;
+      setHasScrolled(window.scrollY > viewportHeight);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
     return(
-        <nav className="fixed top-0 w-full backdrop-blur-sm bg-black/30 border-b border-neutral-800/50 z-50">
+      <nav className={`fixed top-0 w-full   z-50 
+        ${hasScrolled ? 'backdrop-blur-sm bg-black/30 border-b border-neutral-800/50' : 'bg-transparent'}`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div className="flex-shrink-0">

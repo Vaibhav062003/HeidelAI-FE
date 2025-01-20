@@ -290,6 +290,17 @@ button:hover, button:hover::before {
   color: rgb(31 41 55 / var(--tw-text-opacity));
 }
 
+@layer base {}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
 
 
 

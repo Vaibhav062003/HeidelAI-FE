@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react'
 import TestimonialSection from '@/components/TestimonialSection';
 import PricingSection from '@/components/PricingSection';
 import CTASection from '@/components/CTASection';
+import { InView } from '@/components/ui/in-view';
 // import PricingSection2 from '@/components/PricingSection2';
 
 // import Hyperspeed from '@/components/Hyperspeed';
@@ -68,10 +69,11 @@ export default function Home() {
     <main className="min-h-screen relative">
        
       {/* Hero Section */}
-      <section className="h-screen relative flex flex-col mt-10 justify-center" id="home">
+      <section className="h-screen relative flex flex-col lg:mt-12  " id="home">
         {/* Hero Content */}
-        <div className="flex flex-col items-center  relative z-10   mb-72">
-          <div className="h-[40rem] flex flex-col text-center justify-center mt-10 items-center px-4">
+        <div className="flex flex-col items-center  relative z-10   ">
+          <div className="h-[40rem] flex flex-col text-center justify-center  items-center px-4">
+            
             <div className="text-2xl lg:text-6xl lg:w-[75%] w-full lg:leading-tight leading-8 mb-5 lg:mb-10 mx-auto lg:font-medium font-semibold text-neutral-100">
             AI Solutions to Revolutionize Your Business
             </div>
