@@ -1,12 +1,21 @@
+import { AnimateInView } from "./AnimateInView";
+import { InViewTextEffect } from "./InViewTextEffect";
+
 export default function PricingSection() {
     return (
         <section className="py-24 mb-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" id="pricing">
             <div className="mb-12">
-                <h2 className="font-manrope text-4xl text-center font-medium text-white mb-4">Affordable Pricing For Everyone </h2>
+                <h2 className="font-manrope text-4xl text-center font-medium text-white mb-4">
+                    <InViewTextEffect preset='fade-in-blur' per='char' speedReveal={4} speedSegment={1}>
+                    Affordable Pricing For Everyone 
+                    </InViewTextEffect>
+                    </h2>
+                    <AnimateInView delay={0.2}>
                 <p className="text-neutral-400 text-center leading-6 mb-20">Experience the full potential with our flexible plans. No hidden fees, No commitments!</p>
-                
+                </AnimateInView>
             </div>
+                <AnimateInView delay={0.7}>
                 <div className="space-y-8 lg:grid lg:grid-cols-3 sm:gap-6 xl:gap-8 lg:space-y-0 lg:items-center">
                     <div className="flex flex-col mx-auto max-w-sm text-white/[0.8] rounded-2xl bg-black border border-white/[0.4] p-6 xl:py-9 xl:px-12 transition-all duration-500 hover:bg-white/[0.1]">
                         <h3 className="font-manrope text-2xl font-bold mb-3">Basic</h3>
@@ -126,6 +135,7 @@ export default function PricingSection() {
                     </div> 
                 </div>
             
+                </AnimateInView>
         </div>
         </section>
     )

@@ -3,6 +3,7 @@
 // import { useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
+import { AnimateInView } from './AnimateInView';
 
 import Image from 'next/image';
 
@@ -58,11 +59,16 @@ export default function TestimonialSection() {
   return (
     <section className="py-24 mb-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <AnimateInView>
         <div className="mb-16">
-          <span className="text-sm text-neutral-400 font-medium text-center block mb-2">FEEDBACK</span>
+          <span className="text-sm text-neutral-400 font-medium text-center block mb-2">
+            FEEDBACK
+            </span>
           <h2 className="text-4xl text-center font-medium text-white">What our happy users say!</h2>
         </div>
+        </AnimateInView>
 
+        <AnimateInView delay={0.2}>
         <Swiper
           modules={[Pagination, Autoplay]}
           spaceBetween={32}
@@ -115,6 +121,7 @@ export default function TestimonialSection() {
             </SwiperSlide>
           ))}
         </Swiper>
+        </AnimateInView>
       </div>
     </section>
   );

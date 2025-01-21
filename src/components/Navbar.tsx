@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image'
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 
 
 export default function Navbar() {
@@ -21,6 +22,13 @@ export default function Navbar() {
   }, []);
 
     return(
+      <motion.div
+      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+      exit={{ opacity: 0, filter: "blur(20px)", y: -20 }}
+      initial={{ opacity: 0, filter: "blur(10px)", y: -20 }}
+      transition={{ duration: 0.6,delay:1.5, type: "ease" }}
+      className='fixed top-0 w-full z-50'
+    >
       <nav className={`fixed top-0 w-full   z-50 
         ${hasScrolled ? 'backdrop-blur-sm bg-black/30 border-b border-neutral-800/50' : 'bg-transparent'}`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -65,6 +73,7 @@ export default function Navbar() {
             
           </div>
         </nav>
+        </motion.div>
     )
 }
 

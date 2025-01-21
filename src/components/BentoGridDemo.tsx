@@ -11,12 +11,15 @@ import {
 } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { AnimateInView } from "./AnimateInView";
 
 export function BentoGridThirdDemo() {
   return (
     <>
     <div id="features" className=" my-20">
+      <AnimateInView>
         <h4 className="text-3xl lg:text-5xl lg:leading-tight max-w-5xl mx-auto px-4 text-center tracking-tight font-medium text-white">
+          
           Packed with <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent thousands">thousands</span> of features
         </h4>
 
@@ -24,7 +27,9 @@ export function BentoGridThirdDemo() {
           From AI-Chatbot to Insightful Ads Targeting, Heidel AI has solutions for
           literally everything. It can help you identify leads and convert them more quickly.
         </p>
+        </AnimateInView>
       </div>
+      <AnimateInView delay={0.2}>
     <BentoGrid className="max-w-4xl mx-auto md:auto-rows-[20rem]">
       {items.map((item, i) => (
         <BentoGridItem
@@ -37,6 +42,7 @@ export function BentoGridThirdDemo() {
         />
       ))}
     </BentoGrid>
+      </AnimateInView>
     </>
   );
 }

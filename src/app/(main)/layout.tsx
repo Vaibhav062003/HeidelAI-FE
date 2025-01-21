@@ -43,6 +43,7 @@ export default function MainLayout({
           src="/mobile.mp4"
         ></video>
       </div>
+      
       <Navbar />
       {/* <div style={{ height: "100vh", width: "100vw", position: "absolute", top: 0, zIndex: 10000000 }}>
             <iframe

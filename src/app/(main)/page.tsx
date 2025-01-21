@@ -8,11 +8,16 @@ import { FlipWords } from '@/components/ui/flip-words';
 import { BentoGridThirdDemo } from '@/components/BentoGridDemo';
 import { HoverBorderGradientDemo } from '@/components/HoverBorderGradientDemo';
 import { motion } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import TestimonialSection from '@/components/TestimonialSection';
 import PricingSection from '@/components/PricingSection';
 import CTASection from '@/components/CTASection';
 import { InView } from '@/components/ui/in-view';
+import { TextEffect } from '@/components/ui/text-effect';
+import { VariableFontCursorProximity } from '@/components/ui/variable-font-proximity';
+import { cn } from '@/components/cn/index';
+import { InViewTextEffect } from '@/components/InViewTextEffect';
+import { AnimateInView } from '@/components/AnimateInView';
 // import PricingSection2 from '@/components/PricingSection2';
 
 // import Hyperspeed from '@/components/Hyperspeed';
@@ -62,6 +67,7 @@ export default function Home() {
     x: (mousePos.x - windowSize.width / 2) * factor,
     y: (mousePos.y - windowSize.height / 2) * factor,
   });
+  const containerRef = useRef<HTMLDivElement>(null);
 
 
   const words = ["engage", "optimize", "predict", "innovate", "grow"];
@@ -74,14 +80,38 @@ export default function Home() {
         <div className="flex flex-col items-center  relative z-10   ">
           <div className="h-[40rem] flex flex-col text-center justify-center  items-center px-4">
             
-            <div className="text-2xl lg:text-6xl lg:w-[75%] w-full lg:leading-tight leading-8 mb-5 lg:mb-10 mx-auto lg:font-medium font-semibold text-neutral-100">
+            <div ref={containerRef} className="text-4xl lg:text-7xl lg:w-[75%] w-full lg:leading-tight  mb-5 lg:mb-10 mx-auto lg:font-medium font-semibold text-neutral-100">
+            {/* <VariableFontCursorProximity
+        className={cn("text-2xl md:text-3xl lg:text-4xl")}
+        radiusZoomingZone={200}
+        containerRef={containerRef}
+      > */}
+            <TextEffect preset='fade-in-blur' per='char' speedReveal={2} speedSegment={0.3}>
             AI Solutions to Revolutionize Your Business
+            </TextEffect>
+            {/* </VariableFontCursorProximity> */}
             </div>
-            <div className='lg:text-xl text-base font-medium  lg:font-normal text-neutral-400 lg:mb-10 mb-5'>Empower your brand to
+            <div className='lg:text-xl text-base font-medium  lg:font-normal text-neutral-400 lg:mb-10 mb-5'>
+            <motion.div
+      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+      exit={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+      initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
+      transition={{ duration: 0.6,delay:1.5, type: "ease" }}
+    >
+              Empower your brand to
+              
               <FlipWords words={words} /> <br />
               with AI-driven insights.
+              </motion.div>
             </div>
+            <motion.div
+      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+      exit={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+      initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
+      transition={{ duration: 0.6,delay:2, type: "ease" }}
+    >
           <HoverBorderGradientDemo />
+          </motion.div>
           {/* <button className="chronicle-button ">
             <span>
               <em>Request Demo.</em>
@@ -114,10 +144,14 @@ export default function Home() {
           >
             <div className='relative py-8 flex flex-col items-center w-[80vw] h-[50%]'>
               <h4 className="text-3xl lg:text-5xl lg:leading-tight max-w-5xl mx-auto text-center tracking-tight font-medium text-white">
+              <InViewTextEffect preset='fade-in-blur' per='char' speedReveal={4} speedSegment={1}>
                 Seamlessly Integrate Your Preferred Applications
+                </InViewTextEffect>
               </h4>
               <p className="text-sm lg:text-base max-w-2xl my-4 mx-auto text-center font-normal text-neutral-300">
+                <AnimateInView delay={0.5}>
               Easily connect across platforms, with features accessible on messaging apps and your e-commerce site, ensuring a consistent experience for your customers.
+              </AnimateInView>
               </p>
 
               <motion.div
@@ -160,6 +194,7 @@ export default function Home() {
                 style={offset(0.025)}
               >
                 <Image src="/logos/instagram.svg" alt="Docker" width={50} height={50} />
+                
               </motion.div>
             </div>
           </section>
