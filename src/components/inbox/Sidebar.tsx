@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -25,11 +25,13 @@ import {
   ExternalLink,
   Link,
 } from "lucide-react";
-import TemplateBuilder from "./TemplateBuilder";
 import ConversationSummary from "./ConversationSummary";
+import { WhatsAppTemplate } from "../types/template";
+import TemplateBuilders from "./TemplateBuilders";
+import TemplateBuilder from "./TemplateBuilder";
+
 
 interface SidebarProps {
-  templates?: Array<{ id: string; title: string; category: string }>;
   products?: Array<{
     id: string;
     name: string;
@@ -45,11 +47,12 @@ interface SidebarProps {
 }
 
 const Sidebar = ({
-  templates = [
-    { id: "1", title: "Order Status Update", category: "Support" },
-    { id: "2", title: "Product Information", category: "Sales" },
-    { id: "3", title: "Welcome Message", category: "Greeting" },
-  ],
+  // templates = [
+  //   { id: "1", title: "Order Status Update", category: "Support" },
+  //   { id: "2", title: "Product Information", category: "Sales" },
+  //   { id: "3", title: "Welcome Message", category: "Greeting" },
+  // ],
+
   products = [
     {
       id: "1",
@@ -75,18 +78,56 @@ const Sidebar = ({
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
   const [searchProduct, setSearchProduct] = useState("");
   const [searchTemplate, setSearchTemplate] = useState("");
+  const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchProduct.toLowerCase()),
   );
 
-  const filteredTemplates = templates.filter((template) =>
-    template.title.toLowerCase().includes(searchTemplate.toLowerCase()),
-  );
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        setLoading(true);
+        console.log("Fetching templates...");
+  
+        const response = await fetch('/api/fetchTemplate');
+        console.log("Response:", response);
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+  
+        const result = await response.json();
+        
+        if (result && result.data){
+          setTemplates(result.data);
+          console.log("Templates loaded:", result.data);
+        }else {
+          console.error("Invalid response format:", result);
+          setError("Invalid response format from server");
+        }
+        
+      } catch (err) {
+        console.error("Error in fetch:", err);
+        setError(err instanceof Error ? err.message : "Fetch error");
+      } finally {
+        setLoading(false);
+        console.log("Fetch finished.");
+      }
+    };
+    loadTemplates();
+  }, []);
+
+  const filteredTemplates = (templates || []).filter((template) =>
+    template.name.toLowerCase().includes(searchTemplate.toLowerCase()) && template.status === 'APPROVED' //added condition
+);
 
   return (
     <TooltipProvider>
-      <Card className="h-[550px] w-[360px] bg-white border-l">
+      <Card className="h-[550px] w-[430px] bg-white border-l">
         <Tabs defaultValue="summary" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="summary">
@@ -115,7 +156,7 @@ const Sidebar = ({
 
           <TabsContent value="templates" className="p-4">
             {showTemplateBuilder ? (
-              <div className="space-y-4">
+              <div className=" space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-medium">Create Template</h3>
                   <Button
@@ -126,12 +167,20 @@ const Sidebar = ({
                     Back
                   </Button>
                 </div>
-                <TemplateBuilder
+                <TemplateBuilders 
+                isOpen={showTemplateBuilder} 
+                setIsOpen={setShowTemplateBuilder}
+                onSave={(template) => {
+                  console.log("Template saved:", template);
+                  setShowTemplateBuilder(false);
+                }}
+                />
+                {/* <TemplateBuilder
                   onSave={(template) => {
                     console.log("Template saved:", template);
                     setShowTemplateBuilder(false);
                   }}
-                />
+                /> */}
               </div>
             ) : (
               <>
@@ -155,18 +204,49 @@ const Sidebar = ({
                     <TooltipContent>Create new template</TooltipContent>
                   </Tooltip>
                 </div>
-                <ScrollArea className="h-[700px]">
-                  {filteredTemplates.map((template) => (
-                    <Card
-                      key={template.id}
-                      className="p-3 mb-3 cursor-pointer hover:bg-gray-50"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{template.title}</span>
-                        <Badge variant="secondary">{template.category}</Badge>
+                <ScrollArea className="h-[400px]">
+                    {loading ?(
+                      <div className="flex items-center justify-center h-20">
+                        <p>Loading templates...</p>
                       </div>
-                    </Card>
-                  ))}
+                    ): error ?(
+                      <div className="flex items-center justify-center h-20 text-red-500">
+                      {error}
+                    </div>
+                    ):(
+                      filteredTemplates.map((template) => (
+                        <Card
+                        key={template.id}
+                        className="p-3 mb-3 cursor-pointer hover:bg-gray-50">
+                          <div className="flex items-center justify-between">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="font-medium truncate max-w-[150px] block">
+                                {template.name.length > 15
+                                  ? `${template.name.slice(0, 15)}...`
+                                  : template.name}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>{template.name}</TooltipContent>
+                          </Tooltip>
+                          <div className="flex gap-2">
+                            <Badge variant="secondary">{template.category}</Badge>
+                            <Badge
+                              variant={
+                                template.status === 'APPROVED'
+                                  ? 'success'
+                                  : template.status === 'REJECTED'
+                                  ? 'REJECTED'
+                                  : 'destructive'
+                              }
+                            >
+                              {template.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        </Card>
+                      )
+                    ))}
                 </ScrollArea>
               </>
             )}
@@ -181,7 +261,7 @@ const Sidebar = ({
                 className="w-full"
               />
             </div>
-            <ScrollArea className="h-[700px]">
+            <ScrollArea className="h-[400px]">
               {filteredProducts.map((product) => (
                 <Card key={product.id} className="p-3 mb-3">
                   <div className="flex items-center gap-3">
@@ -227,6 +307,7 @@ const Sidebar = ({
                   </div>
                 </Card>
               ))}
+
             </ScrollArea>
           </TabsContent>
 

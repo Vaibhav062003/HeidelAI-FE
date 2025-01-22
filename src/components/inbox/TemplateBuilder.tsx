@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Plus, Trash2 } from "lucide-react";
+import { ScrollArea } from "@radix-ui/react-scroll-area";
+import { ScrollBar } from "../ui/scroll-area";
 
 interface TemplateBuilderProps {
   onSave?: (template: unknown) => void;
@@ -18,6 +20,7 @@ interface TemplateBuilderProps {
 
 const TemplateBuilder = ({ onSave = () => {} }: TemplateBuilderProps) => {
   return (
+    <ScrollArea className="h-[400px] w-full border overflow-auto">
     <Card className="p-6 space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-4">Create Message Template</h3>
@@ -98,6 +101,8 @@ const TemplateBuilder = ({ onSave = () => {} }: TemplateBuilderProps) => {
         <Button>Save Template</Button>
       </div>
     </Card>
+    <ScrollBar />
+    </ScrollArea>
   );
 };
 
