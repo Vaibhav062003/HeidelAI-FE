@@ -90,7 +90,6 @@ const Sidebar = ({
     const loadTemplates = async () => {
       try {
         setLoading(true);
-        console.log("Fetching templates...");
   
         const response = await fetch('/api/fetchTemplate');
         console.log("Response:", response);
@@ -104,7 +103,6 @@ const Sidebar = ({
         
         if (result && result.data){
           setTemplates(result.data);
-          console.log("Templates loaded:", result.data);
         }else {
           console.error("Invalid response format:", result);
           setError("Invalid response format from server");
@@ -115,7 +113,7 @@ const Sidebar = ({
         setError(err instanceof Error ? err.message : "Fetch error");
       } finally {
         setLoading(false);
-        console.log("Fetch finished.");
+      
       }
     };
     loadTemplates();
@@ -170,17 +168,9 @@ const Sidebar = ({
                 <TemplateBuilders 
                 isOpen={showTemplateBuilder} 
                 setIsOpen={setShowTemplateBuilder}
-                onSave={(template) => {
-                  console.log("Template saved:", template);
-                  setShowTemplateBuilder(false);
-                }}
+                templates={templates}
+                setTemplates={setTemplates}
                 />
-                {/* <TemplateBuilder
-                  onSave={(template) => {
-                    console.log("Template saved:", template);
-                    setShowTemplateBuilder(false);
-                  }}
-                /> */}
               </div>
             ) : (
               <>

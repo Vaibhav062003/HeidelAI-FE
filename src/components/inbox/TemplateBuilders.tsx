@@ -1,947 +1,907 @@
-import { Info, Key, MapPin, MessageSquare, Plus, ShieldCheck, Trash, Trash2, Upload, Wrench, X } from "lucide-react";
+import { Copy, Link, Link2, X } from "lucide-react";
 import { WhatsAppTemplate } from "../types/template";
-import { useState } from "react";
-import { ScrollArea } from "../ui/scroll-area";
+import { useEffect, useState } from "react";
 
-  interface Variable {
-    id: string;
-    name: string;
-    type: 'text' | 'number' | 'date' | 'currency' | 'datetime';
-    example: string;
-    section: 'header' | 'body';
-  }
+import { TemplateSetup } from "./templateUI/TemplateSetup";
+import { TemplateEditor } from "./templateUI/TemplateEditor";
+import { TemplatePreview } from "./templateUI/TemplatePreview";
+import { VariableModal } from "./templateUI/Variablemodal";
+import { ButtonModal } from "./templateUI/ButtonModal";
+import { Button } from "../types/button";
+import Catlog from "./templateUI/Catlog";
+import AuthTemplate from "./templateUI/AuthTemplate";
+import { AuthPreview } from "./templateUI/AuthPreview";
+import { Card } from "../ui/card";
+import { Tooltip,TooltipContent,TooltipTrigger } from "../ui/tooltip";
+import { Badge } from "../ui/badge";
+import { Input } from "../ui/input";
 
-  interface Button {
-    id: string;
-    type: string;
-    text: string;
-    content: string;
-    value?: string;
-  }
-  
-  export interface Header {
-    type: 'none' | 'text';
-    content: string;
-  }
-  
-  export interface Footer {
-    type: 'none' | 'text';
-    content: string;
-  }
+interface Variable {
+  id: string;
+  name: string;
+  type: "text" | "number" | "date" | "currency" | "datetime";
+  example: string;
+  section: "header" | "body";
+}
 
-  interface Component {
-    type: string;
-    format?: string;
-    text?: string;
-    example?: Record<string, any>;
-    buttons?: { type: string; text: string }[];
-  }
-  
-  type ComponentType = 
+export interface Header {
+  type: "none" | "text";
+  content: string;
+}
 
-  | { type: "HEADER"; format: string; text: string; example: { header_text: (string[] | undefined)[] } }
+export interface Footer {
+  type: "none" | "text";
+  content: string;
+}
 
-  | { type: "BODY"; text: string; example: { body_text: (string[] | undefined)[] } }
+interface Component {
+  type: string;
+  format?: string;
+  text?: string;
+  example?: Record<string, any>;
+  buttons?: { type: string; text: string }[];
+}
 
-  | { type: "FOOTER"; text: string }
-
-  | { type: "BUTTONS"; buttons: { type: string; text: string }[] };
-
-
-  interface FormattedData {
-    components: ComponentType[];
-  }
-
-  interface FormattedTemplate {
-    name: string;
-    language: string;
-    category: string;
-    components: ComponentType[];
-  }
-
-  interface TemplateBuildersProps {
-    isOpen: boolean;
-    setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    templates: WhatsAppTemplate[];
-    setTemplates: React.Dispatch<React.SetStateAction<WhatsAppTemplate[]>>;
-    onSave?: (template: unknown) => void;
-  }
-
-  const TemplateBuilders = ({
-    isOpen,
-    setIsOpen,
-    onSave = () => {},
-  }: TemplateBuildersProps) => {
-    const [template, setTemplate] = useState<WhatsAppTemplate>({
-      name: '',
-      category: 'MARKETING', 
-      language: '',
-      body: '',
-      header: {
-        type: 'none', 
-        content: '',
-      },
-      template: 'custom',
-      footer: '',
-      button: {
-        id: '',
-        type: 'reply',
-        text: '',
-        content: '',
-      },
-      status: 'PENDING',
-      variable: [{
-        id: '',
-        name: '',
-        type: 'text',
-        example: '',
-        section: 'body'
-      }],
-    });
-    const [step, setStep] = useState(1);
-    const [activeTab, setActiveTab] = useState('marketing');
-    const [templateType, setTemplateType]= useState('custom')
-    const [templateName, setTemplateName]=useState('')
-    const [language, setlanguage] =useState('English')
-    const [variables, setVariables] = useState<Variable[]>([])
-    const [showVariableModal, setShowVariableModal] = useState(false);
-    const [messageBody, setMessageBody] = useState('')
-    const [header, setHeader] =useState('')
-    const [newVariable, setNewVariable] = useState<Variable>({
-      id: '',
-      name: '',
-      type: 'text',
-      example: '',
-      section: 'body'
-    });
-    const [footer,setFooter] = useState('')
-    const [button, setButton] = useState<Button[]>([])
-    const [showButtonModal, setShowButtonModal] = useState(false);
-    const [newButton, setNewButton] = useState<Button>({
-      id: '',
-      type: 'reply',
-      text: '',
-      content: '',
-      value: ''
-    });
-    const [headerType, setHeaderType] = useState('none');
-    const [headerContent, setHeaderContent] = useState<string | null>(null);
-    const [previewFile, setPreviewFile] = useState<string | null>(null);
-    const formattedData = {
-      name: template.name?.toLowerCase().replace(/\s+/g, '_') || '',
-      language: template.language?.toLowerCase().replace(/-/g, '_') || '',
-      category: template.category || '',
-      components: [] // Ensure this is initialized as an array
-    };
-    
-    
-
-    const headerTypes = [
-      { value: 'none', label: 'None' },
-      { value: 'text', label: 'Text' },
-      { value: 'image', label: 'Image' },
-      { value: 'video', label: 'Video' },
-      { value: 'document', label: 'Document' },
-      { value: 'location', label: 'Location' }
-    ];
-
-    const removeVariable = (id: string) => {
-      setVariables(variables.filter(variable => variable.id !== id));
-    };
-  
-    const insertVariable = (variable: Variable) => {
-      const variableText = `{{${variable.name}}}`;
-      if (variable.section === 'header') {
-        setHeader(header + variableText);
-      } else {
-        setMessageBody(messageBody + variableText);
-      }
-    };
-  
-
-    const removeButton =(id:string)=>{
-      setButton(button.filter(button=>button.id !== id))
-    }
-
-    const handleback =()=>{
-      step ===2 ?setStep(1):setIsOpen(false),setStep(1);
-    }
-
-    const handleNext= ()=>{
-      if (step ===1 ){
-        setStep(2)
-      }
-    }
-
-    const exportData = () => {
-      // Explicitly define the structure of formattedData
-      const formattedData: {
-        name: string;
-        language: string;
-        category: string;
-        components: Component[];
-      } = {
-        name: template.name?.toLowerCase().replace(/\s+/g, '_') || '',
-        language: template.language?.toLowerCase().replace(/-/g, '_') || '',
-        category: template.category || '',
-        components: [] // Initialize as an empty array of Component[]
-      };
-    
-      // Add header component if it exists
-      if (template?.header?.content) {
-        const headerExamples = template.variable
-          ?.filter((v: Variable) => v.section === 'header')
-          .map((v) => v.example) || [];
-    
-        formattedData.components.push({
-          type: "HEADER",
-          format: "TEXT",
-          text: template.header.content,
-          example: {
-            header_text: [headerExamples]
-          }
-        });
-      }
-    
-      // Add body component if it exists
-      if (template?.body) {
-        const bodyExamples = template.variable
-          ?.filter((v) => v.section === 'body')
-          .map((v) => v.example) || [];
-    
-        formattedData.components.push({
-          type: "BODY",
-          text: template.body,
-          example: {
-            body_text: [bodyExamples]
-          }
-        });
-      }
-    
-      // Add footer component if it exists
-      if (template.footer) {
-        formattedData.components.push({
-          type: "FOOTER",
-          text: template.footer
-        });
-      }
-    
-      // Add buttons component if buttons exist
-      if (button.length > 0) {
-        formattedData.components.push({
-          type: "BUTTONS",
-          buttons: button.map((btn) => ({
-            type: btn.type === 'reply' ? 'QUICK_REPLY' : btn.type.toUpperCase(),
-            text: btn.text
-          }))
-        });
-      }
-    
-      // Log the final formatted data as JSON
-      console.log(JSON.stringify(formattedData, null, 2));
-    };
-    
-
-    const getFormatedText =(text:string, section: 'header' | 'body')=>{
-      let formattedText = text;
-      variables 
-        .filter(v => v.section === section)
-        .forEach(variable => {
-          const regex = new RegExp(`{{${variable.name}}}`, 'g');
-          formattedText=formattedText.replace(regex, variable.example)
-        })
-        return formattedText;
-    }
-
-    const addButton = () => {
-      if (button.length < 10) {
-        const newBtn: Button = {
-          ...newButton,
-          id: Math.random().toString(36).substr(2, 9)
-        };
-        setButton([...button, newBtn]);
-        setShowButtonModal(false);
-        setNewButton({ id: '', type: 'reply', text: '', content: '', value: '' });
-      }
-    };
-
-    const addVariable = () => {
-      if (variables.length < 10) {
-        const variable: Variable = {
-          ...newVariable,
-          id: Math.random().toString(36).substr(2, 9)
-        };
-        setVariables([...variables, variable]);
-        setShowVariableModal(false);
-        setNewVariable({ id: '', name: '', type: 'text', example: '', section: 'body' });
-      }
-    };
-
-    const languages = [
-      'Afrikaans', 'Albanian', 'Arabic', 'Azerbaijani', 'Bengali', 'Bulgarian', 'Catalan',
-      'Chinese (CHN)', 'Chinese (HKG)', 'Chinese (TAIWAN)', 'Croatian', 'Czech', 'Danish',
-      'Dutch', 'English', 'English (UK)', 'English (US)', 'Estonian', 'Filipino', 'Finnish',
-      'French', 'Georgian', 'German', 'Greek', 'Gujarati', 'Hausa', 'Hebrew', 'Hindi',
-      'Hungarian', 'Indonesian', 'Irish', 'Italian', 'Japanese', 'Kannada', 'Kazakh',
-      'Kinyarwanda', 'Korean', 'Kyrgyz (Kyrgyzstan)', 'Lao', 'Latvian', 'Lithuanian',
-      'Macedonian', 'Malay', 'Malayalam', 'Marathi', 'Norwegian', 'Persian', 'Polish',
-      'Portuguese (BR)', 'Portuguese (POR)', 'Punjabi', 'Romanian', 'Russian', 'Serbian',
-      'Slovak', 'Slovenian', 'Spanish', 'Spanish (ARG)', 'Spanish (MEX)', 'Spanish (SPA)',
-      'Swahili', 'Swedish', 'Tamil', 'Telugu', 'Thai', 'Turkish', 'Ukrainian', 'Urdu',
-      'Uzbek', 'Vietnamese', 'Zulu'
-    ];
-
-  
-    const headerVariables = variables.filter(v => v.section === 'header');
-    const bodyVariables = variables.filter(v => v.section === 'body');
-    
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPreviewFile(reader.result as string);
-          setHeaderContent(file.name);
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-    if (!isOpen) return null;
-
-    return (
-      <div className="relative">
-        {isOpen && (
-          <div className=" fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
-            <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-              {/* header */}
-              <div className="border-b p-4">
-                  <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                          <span className="font-semibold">Set up a template</span>
-                      </div>
-                      <button onClick={()=>setIsOpen(false)}
-                        className="text-gray-500 hover:text-gray-700">
-                        <X size={20} />
-                      </button>
-                  </div>  
-                  <div className="flex gap-4">  
-                    <div className="flex items-center gap-2">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center 
-                      ${step === 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}>
-                      1
-                    </div>
-                    <span className={step === 1 ? 'text-blue-500' : 'text-gray-500'}>
-                      Set up a template
-                    </span>
-                    </div>
-                      
-                    <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        step === 2 ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}>
-                        2
-                      </div>
-                      <span className={step === 2 ? 'text-blue-500' : 'text-gray-500'}>
-                        Edit template
-                      </span>
-                    </div>
-                  </div>
-              </div>
-
-              {/* content */}
-              <div className="grid grid-cols-2 gap-4 p-4">
-                  <div className="p-6">
-                    {step === 1 ? (
-                      <>
-                        <h2 className="text-xl font-semibold mb-4">Set up your template</h2>
-                        <p className="text-gray-600 mb-6">Choose the category that best describes your message template. Then, choose the type of message you want to send.</p>
-                      
-                      {/* Template Type Tabs */}
-                      <div className="grid grid-cols-3 gap-4 mb-8">
-                        <button className={`flex items-center justify-center gap-2 p-4 rounded-lg border ${
-                            activeTab ==='marketing' ? 'border-blue-500' : 'border-gray-200'}`}
-                            onClick={()=> setActiveTab('marketing')}>
-                              <MessageSquare size={20} />
-                              <span >Marketing</span>
-                        </button>
-                        <button className={`flex items-center justify-center gap-2 p-4 rounded-lg border ${
-                          activeTab === 'utility' ? 'border-blue-500' : 'border-gray-200'}`}
-                          onClick={()=>setActiveTab('utility')}>
-                            <Wrench size={20} />
-                            <span>Utility</span>
-                          </button>
-
-                          <button className={`flex items-center justify-center gap-2 p-4 rounded-lg border ${
-                            activeTab === 'verification' ? "border-blue-500" :"border-gray-200"}`} 
-                            onClick={()=>setActiveTab('verification')}>
-                              <ShieldCheck size={20} />
-                              <span>Verification</span>
-                            </button>
-                      </div>
-
-                      {/* template type selection */}
-                      
-                      <div className="space-y-4">
-                          <div className={`p-4 rounded--lg border ${
-                            templateType === 'custom'? 'border-blue-500 bg-blue-50':'border-gray-200'}`}
-                            onClick={()=>setTemplateType('custom')}>
-                              <div className="flex items-center gap-2">
-                                <div className={`w-4 h-4 rounded-lg border ${
-                                  templateType==='custom' ? "border-4 border-blue-500" : "border-gray-300"}`}>                                    
-                                  </div>
-                                  <h3 className="font-semibold">Custom</h3>
-                              </div>
-                              <p className="text-gray-500 ml-6">Send promotions or announcements to increase awareness and engagement.</p>
-                          </div>
-                          <div className={`p-4 rounded-lg border ${
-                            templateType === 'catalogue'? 'border-blue-500 bg-blue-50':'border-gray-200'}`}
-                            onClick={()=>setTemplateType('catalogue')}>
-                              <div className="flex items-center gap-2">
-                                <div className={`w-4 h-4 rounded-lg border ${
-                                  templateType ==='catalogue'? "border-4 border-blue-500":'border-gray-300'}`}></div>
-                                  <h3 className="font-semibold">Catalogue</h3>
-                              </div>
-                              <p className="text-gray-500 ml-6">Send messages about your entire catalog or just a few of its products.</p>
-                          </div>
-                      </div>
-                      </>
-                    ) : (
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Template Name
-                            </label>
-                            <input
-                              type="text"
-                              value={templateName}
-                              onChange={(e)=> setTemplateName(e.target.value)}
-                              placeholder="Enter template name"
-                              className="w-full p-2 border rounded-md"
-                              maxLength={512}
-                            />
-                            <div className="text-sm text-gray-500 mt-1">
-                              {templateName.length} /512
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Language
-                            </label>
-                            <select
-                             value={language}
-                             onChange={(e)=>setlanguage(e.target.value)}
-                             className="w-full p-2 border rounded-md"
-                            >
-                             {languages.map((lang) => (
-                              <option key={lang} value={lang}>{lang}</option>
-                             ))}
-                            </select>
-                          </div>
-                        </div>
+interface AppSetup {
+  packageName: string;
+  signatureHash: string;
+}
 
 
-                          {/* Header Section with Variables */}
-                      <div className="border p-4 rounded-lg bg-gray-50">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-semibold">Header (Optional)</h3>
-                          <button
-                            onClick={() => {
-                              setNewVariable({ ...newVariable, section: 'header' });
-                              setShowVariableModal(true);
-                            }}
-                            disabled={headerVariables.length >= 5}
-                            className="text-blue-500 hover:text-blue-600 disabled:text-gray-400 text-sm flex items-center gap-1"
-                          >
-                            <Plus size={16} />
-                            Add Header Variable
-                          </button>
-                        </div>
+type TemplateBuildersProps ={
+  isOpen: boolean;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  templates: WhatsAppTemplate[];
+  setTemplates: React.Dispatch<React.SetStateAction<WhatsAppTemplate[]>>;
+  searchTemplate: string;
+  setSearchTemplate: React.Dispatch<React.SetStateAction<string>>;
+}
 
-                      {/* Header Variables */}
-                      <div className="space-y-2 mb-4">
-                        {headerVariables.map((variable) => (
-                          <div
-                            key={variable.id}
-                            className="flex items-center justify-between p-2 border rounded-md bg-white"
-                          >
-                            <div>
-                              <span className="text-sm font-medium">{variable.name}</span>
-                              <p className="text-sm text-gray-600">Type: {variable.type}</p>
-                              <p className="text-sm text-gray-600">Example: {variable.example}</p>
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => insertVariable(variable)}
-                                className="text-blue-500 hover:text-blue-600 text-sm"
-                              >
-                                Insert
-                              </button>
-                              <button
-                                onClick={() => removeVariable(variable.id)}
-                                className="text-red-500 hover:text-red-600"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+// Helper function to format template name
 
-                      {/* Header Input */}
-                      <div>
-                        <div className="mb-6">
-                            <select
-                              value={headerType}
-                              onChange={(e) => {
-                                setHeaderType(e.target.value);
-                                setHeaderContent(null);
-                                setPreviewFile(null);
-                              }}
-                              className="w-full p-2 border rounded-md mb-4"
-                            >
-                              {headerTypes.map((type) => (
-                                <option key={type.value} value={type.value}>{type.label}</option>
-                              ))}
-                            </select>
-
-                            {headerType === 'text' && (
-                              <input
-                                type="text"
-                                value={headerContent || ''}
-                                onChange={(e) => setHeaderContent(e.target.value)}
-                                className="w-full p-2 border rounded-md"
-                                placeholder="Enter header text"
-                              />
-                            )}
-
-                            {(headerType === 'image' || headerType === 'video' || headerType === 'document') && (
-                              <div className="border-2 border-dashed rounded-lg p-4 text-center">
-                                <input
-                                  type="file"
-                                  accept={headerType === 'image' ? 'image/*' : headerType === 'video' ? 'video/*' : '*'}
-                                  onChange={handleFileUpload}
-                                  className="hidden"
-                                  id="file-upload"
-                                />
-                                <label htmlFor="file-upload" className="cursor-pointer">
-                                  <Upload className="mx-auto w-8 h-8 mb-2" />
-                                  <p>Click to upload {headerType}</p>
-                                </label>
-                              </div>
-                            )}
-
-                            {headerType === 'location' && (
-                              <div className="border rounded-lg p-4">
-                                <MapPin className="w-6 h-6 mb-2" />
-                                <p>Location will be requested when sending</p>
-                              </div>
-                            )}
-                          </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {header.length} / 60
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Body Section with Variables */}
-                    <div className="border p-4 rounded-lg bg-gray-50">
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold">Message Body Section</h3>
-                            <button
-                              onClick={() => {
-                                setNewVariable({ ...newVariable, section: 'body' });
-                                setShowVariableModal(true);
-                              }}
-                              disabled={bodyVariables.length >= 5}
-                              className="text-blue-500 hover:text-blue-600 disabled:text-gray-400 text-sm flex items-center gap-1"
-                            >
-                              <Plus size={16} />
-                              Add Body Variable
-                            </button>
-                          </div>
-
-                      {/* Body Variables */}
-                          <div className="space-y-2 mb-4">
-                            {bodyVariables.map((variable) => (
-                              <div
-                                key={variable.id}
-                                className="flex items-center justify-between p-2 border rounded-md bg-white"
-                              >
-                                <div>
-                                  <span className="text-sm font-medium">{variable.name}</span>
-                                  <p className="text-sm text-gray-600">Type: {variable.type}</p>
-                                  <p className="text-sm text-gray-600">Example: {variable.example}</p>
-                                </div>
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => insertVariable(variable)}
-                                    className="text-blue-500 hover:text-blue-600 text-sm"
-                                  >
-                                    Insert
-                                  </button>
-                                  <button
-                                    onClick={() => removeVariable(variable.id)}
-                                    className="text-red-500 hover:text-red-600"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-
-                      {/* Message Body Input */}
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Message Body
-                            </label>
-                            <div className="relative">
-                              <textarea
-                                value={messageBody}
-                                onChange={(e) => setMessageBody(e.target.value)}
-                                placeholder="Enter your message"
-                                className="w-full p-2 border rounded-md h-32 bg-white"
-                                maxLength={1024}
-                              />
-                              <div className="absolute bottom-2 right-2 flex gap-2">
-                                <button className="p-1 text-gray-500 hover:text-gray-700">
-                                  <span className="font-bold">B</span>
-                                </button>
-                                <button className="p-1 text-gray-500 hover:text-gray-700">
-                                  <span className="italic">I</span>
-                                </button>
-                                <button className="p-1 text-gray-500 hover:text-gray-700">
-                                  <span className="line-through">S</span>
-                                </button>
-                                <button className="p-1 text-gray-500 hover:text-gray-700">
-                                  <code>&lt;/&gt;</code>
-                                </button>
-                              </div>
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              {messageBody.length} / 1024
-                            </div>
-                          </div>
-                    </div>
+const TemplateBuilders = ({ isOpen, setIsOpen, templates, setTemplates,searchTemplate,setSearchTemplate }: TemplateBuildersProps) => {
  
+    // name: "",
+    // category: "MARKETING",
+    // language: "",
+    // body: "",
+    // header: {
+    //   type: "none",
+    //   content: "",
+    // },
+    // template: "custom",
+    // footer: "",
+    // button: {
+    //   id: "",
+    //   type: "reply",
+    //   text: "",
+    //   content: "",
+    // },
+    // status: "PENDING",
+    // variable: [
+    //   {
+    //     id: "",
+    //     name: "",
+    //     type: "text",
+    //     example: "",
+    //     section: "body",
+    //   },
+    //],
 
-                              {/* Footer */}
-                          <div className="">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Footer (Optional)
-                              </label>
-                              <input
-                              type="text"
-                              placeholder="Enter footer text"
-                              className="w-full p-2 border rounded-md"
-                              value={footer}
-                              onChange={(e)=>setFooter(e.target.value)}
-                              maxLength={60}
-                              />
-                              <div className="text-sm text-gray-500 mt-1">
-                                  {footer.length}/10
-                              </div>
-                          </div>  
+  const [step, setStep] = useState(1);
+  const [activeTab, setActiveTab] = useState("marketing");
+  const [templateType, setTemplateType] = useState("custom");
+  const [templateName, setTemplateName] = useState("");
+  const [language, setlanguage] = useState("English");
+  const [variables, setVariables] = useState<Variable[]>([]);
+  const [showVariableModal, setShowVariableModal] = useState(false);
+  const [messageBody, setMessageBody] = useState("");
+  const [header, setHeader] = useState("");
+  const [newVariable, setNewVariable] = useState<Variable>({
+    id: "",
+    name: "",
+    type: "text",
+    example: "",
+    section: "body",
+  });
+  const [footer, setFooter] = useState("");
+  const [button, setButton] = useState<Button[]>([]);
+  const [showButtonModal, setShowButtonModal] = useState(false);
+  const [newButton, setNewButton] = useState<Button>({
+    id: "",
+    type: "reply",
+    text: "",
+    content: "",
+    value: "",
+  });
+  const [headerType, setHeaderType] = useState<
+    "none" | "text" | "image" | "video" | "document" | "location"
+  >("none");
+  const [headerContent, setHeaderContent] = useState<string | null>(null);
+  const [previewFile, setPreviewFile] = useState<string | null>(null);
+  const [codeDeliveryMethod, setCodeDeliveryMethod] = useState<
+    "zero-tap" | "one-tap" | "copy"
+  >("zero-tap");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [apps, setApps] = useState<AppSetup[]>([
+    { packageName: "", signatureHash: "" },
+  ]);
+  const [addSecurityRecommendation, setAddSecurityRecommendation] =
+    useState(true);
+  const [addExpirationTime, setAddExpirationTime] = useState(false);
+  const [customValidityPeriod, setCustomValidityPeriod] = useState(false);
+  const [validityPeriod, setValidityPeriod] = useState("10 minutes");
+  const [autofillText, setAutofillText] = useState("Autofill");
+  const [copyCodeText, setCopyCodeText] = useState("Copy code");
+  const [stepButton, setStepButton] = useState<any>(null);
 
-                          {/* button*/}
-                          <div >
-                              <div className="flex items-center justify-between mb-2">
-                                <label className="block text-sm font-medium text-gray-700">
-                                  Button {button.length}/10
-                                </label>
-                                <button
-                                onClick={()=>setShowButtonModal(true)}
-                                disabled={button.length >=10}
-                                className="text-blue-500 hover:text-blue-600 disabled:text-gray-400 text-sm flex items-center gap-1">
-                                  <Plus size={16}/>
-                                  Add Button
-                                </button>
-                              </div>
+  const headerTypes = [
+    { value: "none", label: "None" },
+    { value: "text", label: "Text" },
+    { value: "image", label: "Image" },
+    { value: "video", label: "Video" },
+    { value: "document", label: "Document" },
+    { value: "location", label: "Location" },
+  ];
 
-                              <div className="space-y-2">
-                                {button.map((buttons)=>(
-                                  <div key={buttons.id}
-                                  className="flex items-center justify-between p-2 border rounded-md">
-                                    <div>
-                                        <span className="text-sm font-medium capitalize"> {buttons.type}</span>
-                                        <p className="text-sm text-gray-600">{buttons.text}</p>
-                                    </div>
+  const removeVariable = (id: string) => {
+    setVariables(variables.filter((variable) => variable.id !== id));
+  };
 
-                                    <button
-                                    onClick={()=>removeButton(buttons.id)}
-                                    className="text-red-500 hover:text-red-600"
-                                    >
-                                      <Trash2 size={16}/>
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                          </div>
+  const insertVariable = (variable: Variable) => {
+    const variableText = `{{${variable.name}}}`;
+    if (variable.section === "header") {
+      const updatedHeader = (header || "") + variableText;
+      setHeader(updatedHeader);
+      setHeaderContent(updatedHeader); // Sync headerContent
+    } else {
+      setMessageBody((messageBody || "") + variableText);
+    }
+  };
 
-                          {/* Sample Content Section */}
-                          <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Info size={16} className="text-blue-500"/>
-                                    <h4 className="font-medium">Sample Content</h4>
-                                </div>
-                                <p className="text-sm text-gray-600">
-                                  To help us review your message template, please add an example of each variable to your body text. Do not use real customer information. Meta's hosted cloud API reviews template and variable parameters to protect the security and integrity of our services.
-                                </p>
-                          </div>
-                    </div>
-                    )}
+  const removeButton = (id: string) => {
+    setButton(button.filter((button) => button.id !== id));
+  };
 
-                    {/* Action button */}
-                    <div className="flex justify-end gap-4 mt-8">
-                      <button
-                      onClick={handleback}
-                      className="px-4 py-2 border rounded-md hover:bg-gray-50">
-                        {step === 1 ? 'Go Back' : 'Previous'}
-                      </button>
-                      <button
-                      onClick={step ===1 ?handleNext : exportData}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-                         {step === 1 ? 'Next' : 'Export Template'}
-                      </button>
-                      </div>
+  const handleback = () => {
+    step === 2 ? setStep(1) : setIsOpen(false), setStep(1);
+  };
+
+  const handleNext = () => {
+    if (step === 1) {
+      if (templateType === "custom") {
+        setStepButton("next");
+        setStep(2);
+      } else if (templateType === "catalog") {
+        setStepButton("editor2");
+        setStep(2);
+      } else if (templateType === 'one-time_Passcode') {
+        setStepButton("editor3");
+        setStep(2);
+      } else if (templateType === 'pre-approved_utility') {
+        setStepButton("editor4");
+        setStep(2);
+      }else if (templateType === 'pre-approved_auth') {
+        setStepButton("editor5");
+        setStep(2);
+      }
+    }
+  };
+
+  const formatTemplateName = (name: string): string => {
+    return name.toLowerCase().replace(/\s+/g, "_");
+  };
+  
+  // Helper function to format language code
+  const formatLanguageCode = (language: string): string => {
+    const languageMap: { [key: string]: string } = {
+      English: "en_US",
+      "English (UK)": "en_GB",
+      "English (US)": "en_US",
+      // Add more mappings as needed
+    };
+    return languageMap[language] || "en_US";
+  };
+  
+  // Helper function to format category
+  const formatCategory = (category: string): string => {
+    const categoryMap: { [key: string]: string } = {
+      marketing: "MARKETING",
+      utility: "UTILITY",
+      verification: "AUTHENTICATION",
+    };
+    return categoryMap[category] || "MARKETING";
+  };
+  
+  // Helper function to format button type
+  const formatButtonType = (type: string): string => {
+    const buttonTypeMap: { [key: string]: string } = {
+      reply: "QUICK_REPLY",
+      url: "URL",
+      phone: "PHONE_NUMBER",
+      copy: "COPY_CODE",
+    };
+    return buttonTypeMap[type] || "QUICK_REPLY";
+  };
+
+  const exportData = () => {
+    // Get variables for header and body
+    const headerVars = variables.filter((v) => v.section === "header");
+    const bodyVars = variables.filter((v) => v.section === "body");
+
+    // Format header variables for example
+    const headerExamples = headerVars.map((v) => v.example);
+
+    // Format body variables for example
+    const bodyExamples = bodyVars.map((v) => v.example);
+
+    // Replace variable names with placeholders
+    let headerText = header;
+    headerVars.forEach((v, index) => {
+      headerText = headerText.replace(`{{${v.name}}}`, `{{${index + 1}}}`);
+    });
+
+    let bodyText = messageBody;
+    bodyVars.forEach((v, index) => {
+      bodyText = bodyText.replace(`{{${v.name}}}`, `{{${index + 1}}}`);
+    });
+
+    // Format buttons
+    const formattedButtons = button.map((button) => ({
+      type: formatButtonType(button.type),
+      text: button.text,
+      ...(button.value && button.type === "url" && { url: button.value }),
+      ...(button.value &&
+        button.type === "phone" && { phone_number: button.value }),
+    }));
+
+    // Create the template data structure
+    const templateData = {
+      name: formatTemplateName(templateName),
+      language: formatLanguageCode(language),
+      category: formatCategory(activeTab),
+      components: [
+        ...(header
+          ? [
+              {
+                type: "HEADER",
+                format: "TEXT",
+                text: headerText,
+                example: {
+                  header_text: [headerExamples],
+                },
+              },
+            ]
+          : []),
+        {
+          type: "BODY",
+          text: bodyText,
+          example: {
+            body_text: [bodyExamples],
+          },
+        },
+        ...(footer
+          ? [
+              {
+                type: "FOOTER",
+                text: footer,
+              },
+            ]
+          : []),
+        ...(button.length > 0
+          ? [
+              {
+                type: "BUTTONS",
+                buttons: formattedButtons,
+              },
+            ]
+          : []),
+      ],
+    };
+
+    // Log the formatted data
+    console.log(JSON.stringify(templateData, null, 2));
+
+    // Create downloadable JSON file
+    const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
+      JSON.stringify(templateData, null, 2)
+    )}`;
+  };
+
+  const getFormatedText = (text: string, type: string) => {
+    let formattedText = text;
+    variables
+      .filter((v) => v.section === type)
+      .forEach((variable) => {
+        const regex = new RegExp(`{{${variable.name}}}`, "g");
+        formattedText = formattedText.replace(regex, variable.example);
+      });
+    return formattedText;
+  };
+
+  const addButton = () => {
+    if (button.length < 10) {
+      const newBtn: Button = {
+        ...newButton,
+        id: Math.random().toString(36).substr(2, 9),
+      };
+      setButton([...button, newBtn]);
+      setShowButtonModal(false);
+      setNewButton({ id: "", type: "reply", text: "", content: "", value: "" });
+    }
+  };
+
+  const addVariable = () => {
+    if (variables.length < 10) {
+      const variable: Variable = {
+        ...newVariable,
+        id: Math.random().toString(36).substr(2, 9),
+      };
+      setVariables([...variables, variable]);
+      setShowVariableModal(false);
+      setNewVariable({
+        id: "",
+        name: "",
+        type: "text",
+        example: "",
+        section: "body",
+      });
+    }
+  };
+  const [loading, setLoading] = useState(false);
+  const [error, setError] =useState<string | null>(null);
+  
+  useEffect(() => {
+      const loadTemplates = async () => {
+        try {
+          setLoading(true);
+    
+          const response = await fetch('/api/fetchTemplate');
+          console.log("Response:", response);
+    
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+          }
+    
+          const result = await response.json();
+          
+          if (result && result.data){
+            setTemplates(result.data);
+          }else {
+            console.error("Invalid response format:", result);
+            setError("Invalid response format from server");
+          }
+          
+        } catch (err) {
+          console.error("Error in fetch:", err);
+          setError(err instanceof Error ? err.message : "Fetch error");
+        } finally {
+          setLoading(false);
+        
+        }
+      };
+      loadTemplates();
+    }, []);
+
+
+ 
+  const languages = [
+    "Afrikaans",
+    "Albanian",
+    "Arabic",
+    "Azerbaijani",
+    "Bengali",
+    "Bulgarian",
+    "Catalan",
+    "Chinese (CHN)",
+    "Chinese (HKG)",
+    "Chinese (TAIWAN)",
+    "Croatian",
+    "Czech",
+    "Danish",
+    "Dutch",
+    "English",
+    "English (UK)",
+    "English (US)",
+    "Estonian",
+    "Filipino",
+    "Finnish",
+    "French",
+    "Georgian",
+    "German",
+    "Greek",
+    "Gujarati",
+    "Hausa",
+    "Hebrew",
+    "Hindi",
+    "Hungarian",
+    "Indonesian",
+    "Irish",
+    "Italian",
+    "Japanese",
+    "Kannada",
+    "Kazakh",
+    "Kinyarwanda",
+    "Korean",
+    "Kyrgyz (Kyrgyzstan)",
+    "Lao",
+    "Latvian",
+    "Lithuanian",
+    "Macedonian",
+    "Malay",
+    "Malayalam",
+    "Marathi",
+    "Norwegian",
+    "Persian",
+    "Polish",
+    "Portuguese (BR)",
+    "Portuguese (POR)",
+    "Punjabi",
+    "Romanian",
+    "Russian",
+    "Serbian",
+    "Slovak",
+    "Slovenian",
+    "Spanish",
+    "Spanish (ARG)",
+    "Spanish (MEX)",
+    "Spanish (SPA)",
+    "Swahili",
+    "Swedish",
+    "Tamil",
+    "Telugu",
+    "Thai",
+    "Turkish",
+    "Ukrainian",
+    "Urdu",
+    "Uzbek",
+    "Vietnamese",
+    "Zulu",
+  ];
+
+  const headerVariables = variables.filter((v) => v.section === "header");
+  const bodyVariables = variables.filter((v) => v.section === "body");
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewFile(reader.result as string);
+        setHeaderContent(file.name);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const filteredTemplates = (templates || []).filter((template) => 
+    template?.name?.toLocaleLowerCase().includes(searchTemplate.toLocaleLowerCase()) &&
+    template.status === 'APPROVED' &&
+    template.type === 'utility'
+  );
+  
+  if (!isOpen) return null;
+
+
+  
+  return (
+    <div className="relative">
+      {isOpen && (
+        <div className=" fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
+          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            {/* header */}
+            <div className="border-b p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span className="font-semibold">Set up a template</span>
+                </div>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center 
+                      ${step === 1 ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+                  >
+                    1
                   </div>
+                  <span
+                    className={step === 1 ? "text-blue-500" : "text-gray-500"}
+                  >
+                    Set up a template
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                      step === 2 ? "bg-blue-500 text-white" : "bg-gray-200"
+                    }`}
+                  >
+                    2
+                  </div>
+                  <span
+                    className={step === 2 ? "text-blue-500" : "text-gray-500"}
+                  >
+                    Edit template
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* content */}
+            <div className="grid grid-cols-2 gap-4 p-4">
+              <div className="p-6">
+                {
+                  step === 1 ? (
+                    <TemplateSetup
+                      activeTab={activeTab}
+                      setActiveTab={setActiveTab}
+                      templateType={templateType}
+                      setTemplateType={setTemplateType}
+                      newVariable={newVariable}
+                      setNewVariable={setNewVariable}
+                      bodyVariables={bodyVariables}
+                    />
+                  ) : step === 2 && templateType === "custom" && stepButton === "next" &&(
+                    <TemplateEditor
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    templateName={templateName}
+                    setTemplateName={setTemplateName}
+                    language={language}
+                    setLanguage={setlanguage}
+                    variables={variables}
+                    setVariables={setVariables}
+                    showVariableModal={showVariableModal}
+                    setShowVariableModal={setShowVariableModal}
+                    messageBody={messageBody}
+                    setMessageBody={setMessageBody}
+                    header={header}
+                    setHeader={setHeader}
+                    footer={footer}
+                    setFooter={setFooter}
+                    button={button}
+                    showButtonModal={showButtonModal}
+                    setShowButtonModal={setShowButtonModal}
+                    newButton={newButton}
+                    headerType={headerType}
+                    setHeaderType={(type: string) =>
+                      setHeaderType(
+                        type as
+                          | "none"
+                          | "text"
+                          | "image"
+                          | "video"
+                          | "document"
+                          | "location"
+                      )
+                    }
+                    headerContent={headerContent}
+                    setHeaderContent={setHeaderContent}
+                    previewFile={previewFile}
+                    setPreviewFile={setPreviewFile}
+                    handleFileUpload={handleFileUpload}
+                    insertVariable={insertVariable}
+                    removeVariable={removeVariable}
+                    removeButton={removeButton}
+                    languages={languages}
+                    headerVariables={headerVariables}
+                    onAddVariable={(variable: Variable) => {
+                      setNewVariable(variable);
+                      setShowVariableModal(true);
+                    }}
+                    newVariable={newVariable}
+                    setNewVariable={setNewVariable}
+                    bodyVariables={bodyVariables}
+                    templateType={templateType}
+                  />)
+                }
+
+                {step === 2 && templateType === "catalog" && stepButton === "editor2" && (
+                  <Catlog
+                    templateName={templateName}
+                    setTemplateName={setTemplateName}
+                    language={language}
+                    setLanguage={setlanguage}
+                    messageBody={messageBody}
+                    setMessageBody={setMessageBody}
+                    header={header}
+                    button={button}
+                    headerType={headerType}                  
+                    headerContent={headerContent}                   
+                    previewFile={previewFile}
+                    setPreviewFile={setPreviewFile}
+                    languages={languages}
+                    headerVariables={headerVariables}
+                    bodyVariables={bodyVariables}
+                    footer={footer}
+                    setFooter={setFooter}
+                    insertVariable={insertVariable}
+                    removeVariable={removeVariable}
+                  />
+                ) }
+
+                {step === 2 && templateType === "one-time_Passcode" && stepButton === "editor3" && (
+                    <AuthTemplate
+                      templateName={templateName}
+                      setTemplateName={setTemplateName}
+                      language={language}
+                      setLanguage={setlanguage}
+                    />
+                    
+                )}
                   
-                  {/* preview */}
-                  {step ===2 ? (
-                    <div className="bg-gray-50 p-6 border-l">
-                    <h3 className="text-lg font-semibold mb-4">Preview</h3>
-                    <div className="bg-[#E5DDD5] p-4 rounded-lg h-[calc(100vh-12rem)] overflow-y-auto">
-                      <div className="max-w-sm mx-auto">
-                          <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-                              {headerType !== 'none' && headerContent && (
-                                  <div className="font-medium mb-2">
-                                    {headerType === 'text' && getFormatedText(headerContent, 'header')}
-                                    {headerType === 'image' && previewFile && (
-                                      <img src={previewFile} alt="Preview" className="w-full rounded" />
-                                    )}
-                                    {headerType === 'video' && previewFile && (
-                                      <video src={previewFile} controls className="w-full rounded" />
-                                    )}
-                                    {headerType === 'document' && (
-                                      <div className="flex items-center">
-                                        <Upload className="w-5 h-5 mr-2" />
-                                        <span>{headerContent}</span>
-                                      </div>
-                                    )}
-                                    {headerType === 'location' && (
-                                      <div className="flex items-center">
-                                        <MapPin className="w-5 h-5 mr-2" />
-                                        <span>Location</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                            <div className="mb-2">
-                                  {getFormatedText(messageBody, 'body') || 'Message body will appear here'}
-                            </div>
-
-                            {footer && (
-                                <div className="mt-2 pt-2 border-t text-sm text-gray-500">
-                                  {footer}
-                                </div>
-                            )}
-
-                            {button.length > 0 && (
-                              <div className="mt-2 pt-2 border-t space-y-2">
-                                {button.map((buttons) => (
-                                  <button
-                                    key={buttons.id}
-                                    className="w-full p-2 text-center bg-gray-50 text-blue-500 rounded"
-                                  >
-                                    {buttons.text}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
+           
+                {step === 2 && templateType === "pre-approved_utility" && stepButton === "editor4" &&(
+                  <div>
+                    <Input
+                    placeholder="Search templates..."
+                    value={searchTemplate}
+                    onChange={(e) => setSearchTemplate(e.target.value)}
+                    className="flex-1"
+                  />
+                    {filteredTemplates.map((template)=>(
+                      <Card
+                      key={template.id}
+                      className="p-3 mb-3 cursor-pointer hover:bg-gray-50">
+                        <div className="flex items-center justify-between">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="font-medium truncate max-w-[150px] block">
+                              {template.name.length > 15
+                                ? `${template.name.slice(0, 15)}...`
+                                : template.name}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>{template.name}</TooltipContent>
+                        </Tooltip>
+                        <div className="flex gap-2">
+                          <Badge variant="secondary">{template.category}</Badge>
+                          <Badge
+                            variant={
+                              template.status === 'APPROVED'
+                                ? 'success'
+                                : template.status === 'REJECTED'
+                                ? 'REJECTED'
+                                : 'destructive'
+                            }
+                          >
+                            {template.status}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                    </div>
-                  ) : (
-                    <div className="bg-gray-50 p-6 border-l">
-                      <h3 className="text-lg font-semibold mb-4">Preview</h3>
-                      <div className="bg-[#E5DDD5] p-4 rounded-lg  overflow-y-auto">
-                        <div className="max-w-sm mx-auto">
-                          <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-                            {/* Message Body */}
-                            <div className="mb-2 text-gray-800">
-                              Message body will appear here
-                            </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
 
-                            {/* Footer */}
-                            <div className="mt-2 pt-2 border-t text-sm text-gray-500">
-                              Sample footer content here
-                            </div>
+                {step === 2 && templateType === "pre-approved_auth" && stepButton === "editor5" &&(
+                  <div>
+                    <h1>Approve auth</h1>
+                  </div>
+                )}
 
-                            {/* Buttons */}
-                            <div className="mt-2 pt-2 border-t space-y-2">
-                              <button
-                                className="w-full p-2 text-center bg-gray-50 text-blue-500 rounded"
-                              >
-                                Button 1
-                              </button>
-                              <button
-                                className="w-full p-2 text-center bg-gray-50 text-blue-500 rounded"
-                              >
-                                Button 2
-                              </button>
-                            </div>
-                          </div>
+                {/* Action button */}
+                <div className="flex justify-end gap-4 mt-8">
+                  <button
+                    onClick={handleback}
+                    className="px-4 py-2 border rounded-md hover:bg-gray-50"
+                  >
+                    {step === 1 ? "Go Back" : "Previous"}
+                  </button>
+                  <button
+                    onClick={step === 1 ? handleNext : exportData}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                    value={stepButton}
+                    onChange={(e) =>
+                      setStepButton((e.target as HTMLButtonElement).value)
+                    }
+                  >
+                    {step === 1 ? "Next" : "Export Template"}
+                  </button>
+                </div>
+              </div>
+
+              {/* {(templateType==='custom' && stepButton === 'next') &&(
+                (<TemplateEditor
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  templateName={templateName}
+                  setTemplateName={setTemplateName}
+                  language={language}
+                  setLanguage={setlanguage}
+                  variables={variables}
+                  setVariables={setVariables}
+                  showVariableModal={showVariableModal}
+                  setShowVariableModal={setShowVariableModal}
+                  messageBody={messageBody}
+                  setMessageBody={setMessageBody}
+                  header={header}
+                  setHeader={setHeader}
+                  footer={footer}
+                  setFooter={setFooter}
+                  button={button}
+                  showButtonModal={showButtonModal}
+                  setShowButtonModal={setShowButtonModal}
+                  newButton={newButton}
+                  headerType={headerType}
+                  setHeaderType={(type: string) =>
+                    setHeaderType(
+                      type as
+                        | "none"
+                        | "text"
+                        | "image"
+                        | "video"
+                        | "document"
+                        | "location"
+                    )
+                  }
+                  headerContent={headerContent}
+                  setHeaderContent={setHeaderContent}
+                  previewFile={previewFile}
+                  setPreviewFile={setPreviewFile}
+                  handleFileUpload={handleFileUpload}
+                  insertVariable={insertVariable}
+                  removeVariable={removeVariable}
+                  removeButton={removeButton}
+                  languages={languages}
+                  headerVariables={headerVariables}
+                  onAddVariable={(variable: Variable) => {
+                    setNewVariable(variable);
+                    setShowVariableModal(true);
+                  }}
+                  newVariable={newVariable}
+                  setNewVariable={setNewVariable}
+                  bodyVariables={bodyVariables}
+                />)
+              )} */}
+
+              {/* preview */}
+              {step ===2 && templateType==='one-time_passcode' && stepButton ==='editor5' && (   
+                  <AuthPreview
+                    addSecurityRecommendation={addSecurityRecommendation}
+                    addExpirationTime={addExpirationTime}
+                    validityPeriod={validityPeriod}
+                    codeDeliveryMethod={codeDeliveryMethod}
+                    autofillText={autofillText}
+                    copyCodeText={copyCodeText}
+                  />
+              )}
+              {step === 2 ? (
+                <TemplatePreview
+                  headerType={headerType}
+                  headerContent={headerContent}
+                  previewFile={previewFile}
+                  messageBody={messageBody}
+                  footer={footer}
+                  button={button}
+                  getFormatedText={getFormatedText}
+                  templateType={templateType}
+                />
+              ) : step === 1 && activeTab === "marketing" ? (
+                <div className="bg-gray-50 p-6 border-l">
+                  <h3 className="text-lg font-semibold mb-4">Preview</h3>
+                  <div className="bg-[#E5DDD5] p-4 rounded-lg  overflow-y-auto">
+                    <div className="max-w-sm mx-auto">
+                      <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+                        {/* Message Body */}
+                        <div className="mb-2 text-gray-800">
+                          Message body will appear here
+                        </div>
+
+                        {/* Footer */}
+                        <div className="mt-2 pt-2 border-t text-sm text-gray-500">
+                          Sample footer content here
+                        </div>
+
+                        {/* Buttons */}
+                        <div className="mt-2 pt-2 border-t space-y-2">
+                          <button className="w-full p-2 text-center bg-gray-50 text-blue-500 rounded">
+                            Button 1
+                          </button>
+                          <button className="w-full p-2 text-center bg-gray-50 text-blue-500 rounded">
+                            Button 2
+                          </button>
                         </div>
                       </div>
                     </div>
-                  )}  
-              </div>
-            </div>
-          </div>
-        )}
+                  </div>
+                </div>
+              ) : step === 1 && activeTab === "utility" ? (
+                <div className="bg-gray-50 p-6 border-l">
+                  <h3 className="text-lg font-semibold mb-4">Preview</h3>
+                  <div className="bg-[#E5DDD5] p-4 rounded-lg  overflow-y-auto">
+                    <div className="max-w-sm mx-auto">
+                      <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+                        {/* Message Body */}
+                        <div className="mb-2 text-gray-800">
+                          Finalize account set-up
+                        </div>
 
-        {/* Variable Modal */}
-        {showVariableModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">
-              Add {newVariable.section === 'header' ? 'Header' : 'Body'} Variable
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Variable Name
-                </label>
-                <input
-                  type="text"
-                  value={newVariable.name}
-                  onChange={(e) => setNewVariable({ ...newVariable, name: e.target.value })}
-                  placeholder="Enter variable name"
-                  className="w-full p-2 border rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Variable Type
-                </label>
-                <select
-                  value={newVariable.type}
-                  onChange={(e) => setNewVariable({ ...newVariable, type: e.target.value as Variable['type'] })}
-                  className="w-full p-2 border rounded-md"
-                >
-                  <option value="text">Text</option>
-                  <option value="number">Number</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Example Value
-                </label>
-                <input
-                  type="text"
-                  value={newVariable.example}
-                  onChange={(e) => setNewVariable({ ...newVariable, example: e.target.value })}
-                  placeholder="Enter example value"
-                  className="w-full p-2 border rounded-md"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-4 mt-6">
-              <button
-                onClick={() => setShowVariableModal(false)}
-                className="px-4 py-2 border rounded-md hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={addVariable}
-                disabled={!newVariable.name || !newVariable.example}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300"
-              >
-                Add Variable
-              </button>
+                        {/* Footer */}
+                        <div className="mt-2 pt-2 border-t text-sm text-gray-500">
+                          Hi John, Your new account has been created
+                          successfully. Please verify your email address to
+                          complete your profile.
+                        </div>
+
+                        {/* Buttons */}
+                        <div className="mt-2 pt-2 border-t space-y-2">
+                          <button className="flex items-center justify-center w-full p-2 text-center bg-gray-50 text-blue-500 rounded">
+                            <Link2 />
+                            Verify
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : activeTab ==='Authentication' && (
+                <div className="bg-gray-50 p-6 border-l">
+                  <h3 className="text-lg font-semibold mb-4">Preview</h3>
+                  <div className="bg-[#E5DDD5] p-4 rounded-lg  overflow-y-auto">
+                    <div className="max-w-sm mx-auto">
+                      <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+                        {/* Message Body */}
+                        <div className="mb-2 text-gray-800">
+                          Here is One-Time PassCode 225566
+                        </div>
+
+                        {/* Footer */}
+                        <div className="mt-2 pt-2 border-t text-sm text-gray-500">
+                          Please use OTP it will be valid for next 2 minutes
+                        </div>
+
+                        {/* Buttons */}
+                        <div className="mt-2 pt-2 border-t space-y-2">
+                          <button className="flex items-center justify-center w-full p-2 text-center bg-gray-50 text-blue-500 rounded">
+                            <Copy />
+                            Copy
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
-        )}
+      )}
 
-        {/* Button Modal */}
-        {showButtonModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-semibold mb-4">Add Button</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Button Type
-                  </label>
-                  <select
-                    value={newButton.type}
-                    onChange={(e) => setNewButton({ ...newButton, type: e.target.value as Button['type'] })}
-                    className="w-full p-2 border rounded-md"
-                  >
-                    <option value="reply">Quick Reply</option>
-                    <option value="url">URL</option>
-                    <option value="phone">Phone Number</option>
-                    <option value="copy">Copy Text</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Button Text
-                  </label>
-                  <input
-                    type="text"
-                    value={newButton.text}
-                    onChange={(e) => setNewButton({ ...newButton, text: e.target.value })}
-                    placeholder="Enter button text"
-                    className="w-full p-2 border rounded-md"
-                    maxLength={20}
-                  />
-                </div>
-                {(newButton.type === 'url' || newButton.type === 'phone' || newButton.type === 'copy') && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {newButton.type === 'url' ? 'URL' : newButton.type === 'phone' ? 'Phone Number' : 'Text to Copy'}
-                    </label>
-                    <input
-                      type={newButton.type === 'phone' ? 'tel' : 'text'}
-                      value={newButton.value || ''}
-                      onChange={(e) => setNewButton({ ...newButton, value: e.target.value })}
-                      placeholder={
-                        newButton.type === 'url'
-                          ? 'https://example.com'
-                          : newButton.type === 'phone'
-                          ? '+1234567890'
-                          : 'Text to copy'
-                      }
-                      className="w-full p-2 border rounded-md"
-                    />
-                  </div>
-                )}
-              </div>
-              <div className="flex justify-end gap-4 mt-6">
-                <button
-                  onClick={() => setShowButtonModal(false)}
-                  className="px-4 py-2 border rounded-md hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={addButton}
-                  disabled={!newButton.text}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300"
-                >
-                  Add Button
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
+      {/* Variable Modal */}
+      {showVariableModal && (
+       
+        <VariableModal
+          newVariable={newVariable}
+          setNewVariable={setNewVariable}
+          setShowVariableModal={setShowVariableModal}
+          addVariable={addVariable}
+        />
+      )}
 
-  export default TemplateBuilders;
+      {/* Button Modal */}
+      {showButtonModal && (
+       
+        <ButtonModal
+          newButton={newButton}
+          setNewButton={setNewButton}
+          setShowButtonModal={setShowButtonModal}
+          addButton={addButton}
+        />
+      )}
+    </div>
+  );
+};
+
+export default TemplateBuilders;
+
+
