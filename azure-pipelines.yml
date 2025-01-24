@@ -1,21 +1,27 @@
-# Node.js
-# Build a general Node.js project with npm.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
-
 trigger:
-- main
+  branches:
+    include:
+      - main  # Trigger on changes to the main branch in Azure DevOps
 
 pool:
   vmImage: ubuntu-latest
 
+variables:
+  - group: github-secrets  # Reference the variable group containing GITHUB_PAT
+
 steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '20.x'
-  displayName: 'Install Node.js'
+- checkout: self  # Check out the Azure DevOps repository
 
 - script: |
-    npm install
-    npm run build
-  displayName: 'npm install and build'
+    # Configure Git with the GitHub PAT
+    git config --global user.email "egeniestore@gmail.com"
+    git config --global user.name "Azure Pipeline"
+
+    # Add GitHub as a remote
+    git remote add github https://$(GITHUB_PAT)@github.com/egenie4u/heidelAIWebsite.git
+
+    # Push changes to GitHub
+    git push github HEAD:main --force --no-verify
+
+    echo "Azure DevOps changes have been pushed to GitHub"
+  displayName: 'Push changes to GitHub'
