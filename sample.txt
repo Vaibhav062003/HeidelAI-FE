@@ -3,4 +3,4 @@ new commit
 new commit
 new commit
 
-vipul
+Rounak : yeah ive added env variables in vercel
