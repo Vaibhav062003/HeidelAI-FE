@@ -84,7 +84,13 @@ const ChatView = ({
     // Fetch conversation details
     const fetchConversation = async () => {
       try {
-        const response = await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}`);
+        const response = await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}`, {
+          method: "GET",
+          credentials: "include",  // Allows cookies/auth headers if needed
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
         const data = await response.json();
         setConversation(data);
         console.log("conversation data", data);
@@ -95,7 +101,13 @@ const ChatView = ({
 
     const fetchMessages = async () => {
       try {
-        const response = await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/messages`);
+        const response = await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/messages`, {
+          method: "GET",
+          credentials: "include",  // Allows cookies/auth headers if needed
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
         const data = await response.json();
         setMessages(data);
       } catch (error) {
