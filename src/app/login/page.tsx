@@ -1,134 +1,109 @@
 "use client";
-import React from "react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { auth, provider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from '@/components/firebase';
-import { Toaster, toast } from 'sonner'
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 
-import {
-  IconBrandGoogle,
-} from "@tabler/icons-react";
+const supabaseUrl = "https://ffibjxjbjsekelomsyqh.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaWJqeGpianNla2Vsb21zeXFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc5ODI1MzEsImV4cCI6MjA1MzU1ODUzMX0.A1ctcA2SoSzedOq-c0bGuEVSK4IPB2uVjuPQp1ifThk";
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-export default function LoginPage() {
+const AuthForm: React.FC<{ isSignUp: boolean; toggleForm: () => void }> = ({ isSignUp, toggleForm }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const router = useRouter();
 
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const router = useRouter();
-
-    // Handle Google login
-    const handleGoogleLogin = async () => {
-        try {
-        await signInWithPopup(auth, provider);
-        toast.success('Login successful');
-        router.push('/dashboard'); // Redirect to dashboard
-        } catch (error) {
-        toast.error('An error occurred during login');
-        console.error('Error during Google sign-in:', error);
+  const handleAuth = async () => {
+    try {
+      if (isSignUp) {
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) {
+          setMessage(error.message);
+        } else if (data.user) {
+          setMessage("Sign-up successful! Please check your email to confirm your account.");
         }
-    };
-
-    // Handle email/password login
-    const handleEmailLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-        await signInWithEmailAndPassword(auth, email, password);
-        toast.success('Login successful');
-        router.push('/dashboard'); // Redirect to dashboard
-        } catch (error) {
-        toast.error('Invalid email or password');
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          setMessage(error.message);
+        } else {
+          router.push("/dashboard");
         }
-    };
+      }
+    } catch (error) {
+      setMessage("An unexpected error occurred. Please try again.");
+    }
+  };
 
-    // Handle registration
-    //   const handleRegister = async () => {
-    //     try {
-    //       await createUserWithEmailAndPassword(auth, email, password);
-    //       alert('Registration successful! Please log in.');
-    //     } catch (error) {
-    //       console.error('Error during registration:', error);
-    //     }
-    //   };
-
-
- 
-  
   return (
-    <section className="h-[100vh] px-6 flex items-center justify-center">
-    <Toaster position="top-center" richColors  />
-
-    <div className="max-w-md w-full mx-auto rounded-none md:rounded-2xl p-4 md:p-8 shadow-input bg-black">
-      <h2 className="font-semibold pb-6 text-xl text-center text-neutral-200">
-        Sign in to your account
-      </h2>
-      <p className=" text-sm max-w-sm mt-2 text-neutral-300">
-        
-      </p>
-
-      <form className="my-8" onSubmit={handleEmailLogin}>
-        
-        <LabelInputContainer className=" mb-4">
-          <Label htmlFor="email">Email Address</Label>
-          <Input value={email} onChange={(e) => {setEmail(e.target.value)}} className="border border-white/[0.1] rounded-[0.5rem] h-[45px] bg-zinc-800 placeholder:text-zinc-400 text-white" placeholder="projectmayhem@fc.com"  type="email" />
-        </LabelInputContainer>
-        <LabelInputContainer className="mb-4">
-          <Label htmlFor="password">Password</Label>
-          <Input  value={password} onChange={(e) => {setPassword(e.target.value)}} className="border border-white/[0.2] rounded-[0.5rem] h-[45px] bg-zinc-800 placeholder:text-zinc-400 text-white" placeholder="••••••••" type="password" />
-        </LabelInputContainer>
-        
-
-        <button
-          className="bg-gradient-to-br relative group/btn rounded-[0.5rem] from-zinc-900 to-zinc-900  block bg-zinc-800 w-full text-white  h-10 font-medium  shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
-          type="submit"
-        >
-          Log in  &rarr;
-          <BottomGradient />
-        </button>
-        </form>
-
-        <div className="bg-gradient-to-r from-transparent via-neutral-700 to-transparent my-8 h-[1px] w-full" />
-
-        <div className="flex flex-col space-y-4">
-          
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white">
+      <div className="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-lg">
+        <div className="flex justify-center mb-4">
           <button
-            className=" relative group/btn flex space-x-2 items-center justify-start px-4 w-full text-black rounded-[0.5rem] h-10 font-medium shadow-input bg-zinc-900 dark:shadow-[0px_0px_1px_1px_var(--neutral-800)]"
-            onClick={handleGoogleLogin}
+            onClick={() => {
+              toggleForm();
+              setMessage("");
+            }}
+            className={`px-6 py-2 mx-2 text-lg font-medium rounded-lg transition-all ${
+              !isSignUp
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-700 text-gray-300"
+            }`}
           >
-            <IconBrandGoogle className="h-4 w-4 text-neutral-300" />
-            <span className="text-neutral-300 text-sm">
-              Google
-            </span>
-            <BottomGradient />
+            Sign In
           </button>
-          
+          <button
+            onClick={() => {
+              toggleForm();
+              setMessage("");
+            }}
+            className={`px-6 py-2 mx-2 text-lg font-medium rounded-lg transition-all ${
+              isSignUp
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-700 text-gray-300"
+            }`}
+          >
+            Sign Up
+          </button>
         </div>
+        <h2 className="text-3xl font-semibold mb-6 text-center">
+          {isSignUp ? "Create an Account" : "Welcome Back"}
+        </h2>
+        <input
+          type="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full p-3 mb-4 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <input
+          type="password"
+          placeholder="Enter your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full p-3 mb-6 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          onClick={handleAuth}
+          className="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded text-lg font-medium"
+        >
+          {isSignUp ? "Sign Up" : "Sign In"}
+        </button>
+        <p className="mt-4 text-center text-sm text-gray-400">{message}</p>
+      </div>
     </div>
-    </section>
-  );
-}
-
-const BottomGradient = () => {
-  return (
-    <>
-      <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
-      <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
-    </>
   );
 };
 
-const LabelInputContainer = ({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) => {
+const AuthPage: React.FC = () => {
+  const [isSignUp, setIsSignUp] = useState(false);
+
   return (
-    <div className={cn("flex flex-col space-y-2 w-full", className)}>
-      {children}
+    <div>
+      <AuthForm isSignUp={isSignUp} toggleForm={() => setIsSignUp(!isSignUp)} />
     </div>
   );
 };
+
+export default AuthPage;
