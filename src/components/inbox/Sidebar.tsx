@@ -94,8 +94,9 @@ const Sidebar = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null); 
-  const [showModal, setShowModal] = useState(false); 
+  const [showOptions, setShowOptions] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState("");
 
   // Filter templates based on the search input
   const filteredTemplates = templates.filter((template) =>
@@ -151,6 +152,11 @@ const Sidebar = ({
     setSelectedProduct(product); 
   };
 
+  const handleOptionSelect = (platform) => {
+    setSelectedPlatform(platform);
+    setShowForm(true);
+    setShowOptions(false);
+  };
 
   return (
     <TooltipProvider>
@@ -243,19 +249,56 @@ const Sidebar = ({
             className="p-2 bg-gradient-to-b from-white via-gray-100 to-white rounded-md shadow-sm"
           >
             <div className="mb-1 flex gap-2">
+              {/* Main Add Button */}
               <button
-                className="bg-blue-500 text-white w-12 h-9 rounded-full flex items-center justify-center shadow-md hover:bg-blue-600 transition-all self-start"
-                onClick={toggleForm}
+                className="bg-blue-500 text-white w-12 h-9 rounded-full flex items-center justify-center shadow-md hover:bg-blue-600 transition-all relative z-10"
+                onClick={() => setShowOptions(!showOptions)}
                 aria-label="Add Product"
               >
                 <span className="text-2xl font-bold">+</span>
               </button>
 
-              {/* Conditionally render the AddProduct form */}
+              {/* Dropdown Menu - Now properly layered */}
+              {showOptions && (
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowOptions(false)}
+                >
+                  <div className="absolute right-36 top-14 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-xl border border-gray-200 dark:border-gray-700 transform translate-x-[-70px]">
+                    <div className="py-1">
+                      <button
+                        onClick={() => handleOptionSelect("pinecone")}
+                        className="block w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 text-left transition-colors"
+                      >
+                        Add to Pinecone
+                      </button>
+                      <button
+                        onClick={() => handleOptionSelect("shopify")}
+                        className="block w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 text-left transition-colors"
+                      >
+                        Add to Shopify
+                      </button>
+                      <button
+                        onClick={() => handleOptionSelect("other")}
+                        className="block w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 text-left transition-colors"
+                      >
+                        Other
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Product Form */}
               {showForm && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                  <AddProduct closeForm={() => setShowForm(false)} />{" "}
-                  {/* Pass closeForm */}
+                  <AddProduct
+                    closeForm={() => {
+                      setShowForm(false);
+                      setSelectedPlatform("");
+                    }}
+                    platform={selectedPlatform}
+                  />
                 </div>
               )}
 
