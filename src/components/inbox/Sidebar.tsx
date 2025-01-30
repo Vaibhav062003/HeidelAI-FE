@@ -5,7 +5,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import AddProduct from "@/components/inbox/AddProduct";
-import ProductList from "@/components/inbox/PreviewProduct";
+import ProductList from "@/components/inbox/ProductList";
+import ProductPreview from "./PreviewProduct";
 import {
   Select,
   SelectTrigger,
@@ -92,8 +93,8 @@ const Sidebar = ({
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState(null); // New state for selected product
-  const [showModal, setShowModal] = useState(false); // State to control modal visibility
+  const [selectedProduct, setSelectedProduct] = useState(null); 
+  const [showModal, setShowModal] = useState(false); 
   const [showForm, setShowForm] = useState(false);
 
   // Filter templates based on the search input
@@ -146,11 +147,10 @@ const Sidebar = ({
     setFilteredProducts(filtered);
   }, [searchProduct, selectedCategory, products]);
 
-  // // Handle opening modal with selected product
-  // const handleOpenModal = (product: any) => {
-  //   setSelectedProduct(product);
-  //   setShowModal(true);
-  // };
+  const handleProductSelect = (product) => {
+    setSelectedProduct(product); 
+  };
+
 
   return (
     <TooltipProvider>
@@ -240,7 +240,7 @@ const Sidebar = ({
 
           <TabsContent
             value="products"
-            className="p-2 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 rounded-md shadow-sm"
+            className="p-2 bg-gradient-to-b from-white via-gray-100 to-white rounded-md shadow-sm"
           >
             <div className="mb-1 flex gap-2">
               <button
@@ -263,16 +263,16 @@ const Sidebar = ({
                 placeholder="Search products..."
                 value={searchProduct}
                 onChange={(e) => setSearchProduct(e.target.value)}
-                className="w-full bg-gray-800 text-white border border-gray-700 rounded-md px-2 py-1 focus:ring-1 focus:ring-blue-400 text-xs"
+                className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-2 py-1 focus:ring-1 focus:ring-blue-400 text-xs"
               />
               <Select
                 value={selectedCategory}
                 onValueChange={setSelectedCategory}
               >
-                <SelectTrigger className="w-[120px] bg-gray-800 text-white border border-gray-700 p-1 rounded-md text-xs">
+                <SelectTrigger className="w-[120px] bg-white text-gray-900 border border-gray-300 p-1 rounded-md text-xs">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border border-gray-300">
                   <SelectItem value="All">All</SelectItem>
                   <SelectItem value="electronics">Electronics</SelectItem>
                   <SelectItem value="jewelery">Jewelry</SelectItem>
@@ -284,39 +284,39 @@ const Sidebar = ({
               </Select>
             </div>
 
-            <ScrollArea className="h-[450px] bg-gradient-to-r from-gray-900 to-gray-800 rounded-md p-2 overflow-auto shadow-md">
+            <ScrollArea className="h-[450px] bg-gradient-to-r from-white to-gray-100 rounded-md p-2 overflow-auto shadow-md">
               <div className="grid grid-cols-1 gap-2">
                 {loading && (
-                  <p className="text-center text-xs font-medium text-white">
+                  <p className="text-center text-xs font-medium text-gray-700">
                     Loading products...
                   </p>
                 )}
                 {error && (
-                  <p className="text-center text-red-400 font-medium text-xs">
+                  <p className="text-center text-red-500 font-medium text-xs">
                     {error}
                   </p>
                 )}
                 {!loading && !error && filteredProducts.length === 0 && (
-                  <p className="text-center text-xs font-medium text-white">
+                  <p className="text-center text-xs font-medium text-gray-700">
                     No products found.
                   </p>
                 )}
                 {filteredProducts.map((product: any) => (
                   <Card
                     key={product.id}
-                    className="p-1 bg-gray-800 shadow-sm rounded-md hover:shadow-md transform hover:scale-105 transition-all duration-200 cursor-pointer"
+                    className="p-1 bg-white shadow-sm rounded-md hover:shadow-md transform hover:scale-105 transition-all duration-200 cursor-pointer"
                   >
-                    <div className="flex items-center bg-gradient-to-t from-gray-900 via-gray-900 to-gray-700 p-1 rounded-md">
+                    <div className="flex items-center bg-gradient-to-t from-white via-gray-100 to-gray-200 p-1 rounded-md">
                       <img
                         src={product.metadata.images}
                         alt={product.metadata.name}
                         className="w-16 h-16 object-cover rounded-md mr-8 transition-all duration-200 hover:scale-110"
                       />
                       <div className="flex flex-col justify-center">
-                        <h3 className="font-medium text-xs text-white">
+                        <h3 className="font-medium text-xs text-gray-900">
                           {product.metadata.name}
                         </h3>
-                        <p className="text-xs text-gray-200">
+                        <p className="text-xs text-gray-600">
                           ₹{product.metadata.price}
                         </p>
                         <div className="flex gap-6 mt-3">
@@ -325,28 +325,17 @@ const Sidebar = ({
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => {
-                                  setSelectedProduct(product); // Set the selected product before opening the modal
-                                  setShowModal(true); // Show the modal when clicked
-                                }}
+                                onClick={() => handleProductSelect(product)} // Call handleProductSelect
                                 className="hover:bg-blue-500 text-blue-500 px-2 py-0.5 text-xs"
                               >
                                 <ExternalLink className="h-3 w-3 mr-2" />
                                 View
                               </Button>
-
                             </TooltipTrigger>
                             <TooltipContent>
                               View product details
                             </TooltipContent>
                           </Tooltip>
-
-                          {/* {showModal && selectedProduct && (
-                                <ProductList
-                                  product={selectedProduct}
-                                  onClose={() => setShowModal(false)} // Close the modal
-                                />
-                              )}   */}
 
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -404,6 +393,12 @@ const Sidebar = ({
             </div>
           </TabsContent>
         </Tabs>
+        {selectedProduct && (
+          <ProductPreview
+            product={selectedProduct}
+            onClose={() => setSelectedProduct(null)}
+          />
+        )}
       </Card>
     </TooltipProvider>
   );
