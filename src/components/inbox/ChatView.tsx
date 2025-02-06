@@ -150,23 +150,23 @@ const ChatView = ({
           </div>
 
           <div className="flex items-center gap-3">
-            <Tooltip>
+            {/* <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Phone className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Start voice call</TooltipContent>
-            </Tooltip>
+            </Tooltip> */}
 
-            <Tooltip>
+            {/* <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Video className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Start video call</TooltipContent>
-            </Tooltip>
+            </Tooltip> */}
 
             <Tooltip>
               <TooltipTrigger asChild>

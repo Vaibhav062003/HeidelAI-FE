@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import AddProduct from "@/components/inbox/AddProduct";
 import ProductList from "@/components/inbox/ProductList";
 import ProductPreview from "./PreviewProduct";
+import { X } from "lucide-react";
 import {
   Select,
   SelectTrigger,
@@ -93,10 +94,12 @@ const Sidebar = ({
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState(null); 
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [showOptions, setShowOptions] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
 
   // Filter templates based on the search input
   const filteredTemplates = templates.filter((template) =>
@@ -104,27 +107,26 @@ const Sidebar = ({
   );
 
   // Fetch products from API
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch("/Dataset.json");
-        if (!response.ok) { 
-          throw new Error("Failed to fetch products");
-        }
-        const data = await response.json();
-        setProducts(data);
-        setFilteredProducts(data);
-      } catch (err: any) {
-        setError(err.message || "Something went wrong");
-      } finally {
-        setLoading(false);
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/Dataset.json");
+      if (!response.ok) {
+        throw new Error("Failed to fetch products");
       }
-    };
-   
+      const data = await response.json();
+      setProducts(data);
+      setFilteredProducts(data);
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
   }, []);
-
 
   // const handleAddProduct = () => {
   //   fetchProducts(); // Re-fetch products after adding a new one
@@ -136,8 +138,10 @@ const Sidebar = ({
   useEffect(() => {
     const filtered = products.filter((products) => {
       const matchesSearch =
-      products.metadata.name &&
-      products.metadata.name.toLowerCase().includes(searchProduct.toLowerCase());
+        products.metadata.name &&
+        products.metadata.name
+          .toLowerCase()
+          .includes(searchProduct.toLowerCase());
 
       // Apply category filter
       const matchesCategory =
@@ -149,7 +153,7 @@ const Sidebar = ({
   }, [searchProduct, selectedCategory, products]);
 
   const handleProductSelect = (product) => {
-    setSelectedProduct(product); 
+    setSelectedProduct(product);
   };
 
   const handleOptionSelect = (platform) => {
@@ -160,28 +164,69 @@ const Sidebar = ({
 
   return (
     <TooltipProvider>
-      <Card className="h-[550px] w-[360px] bg-white border-l">
+      {/* Toggle Button */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="fixed right-4 top-4 p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors z-50 shadow-sm"
+      >
+        {isSidebarOpen ? (
+          <X className="h-5 w-5" />
+        ) : (
+          <span className="text-xl">☰</span>
+        )}
+      </button>
+
+      {/* Collapsible Sidebar Card */}
+      <Card
+        className={`fixed right-0 top-0 h-[725px] w-[380px] bg-white border-l transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "translate-x-full"
+        } shadow-xl z-40`}
+      >
         <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="summary">
-              <FileText className="h-4 w-4 mr-2" />
+          <TabsList className="grid grid-rows-2 grid-cols-3 gap-2 px-4 bg-gray-50 rounded-lg border p-1.5 h-[88px]">
+            {/* TabsTriggers without close functionality */}
+            <TabsTrigger
+              value="summary"
+              className="row-start-1 col-span-1 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-100 gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <FileText className="h-4 w-4" />
               Summary
             </TabsTrigger>
-            <TabsTrigger value="templates">
-              <FileText className="h-4 w-4 mr-2" />
+            
+            <TabsTrigger
+              value="templates"
+              className="row-start-1 col-span-1 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-100 gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <FileText className="h-4 w-4" />
               Templates
             </TabsTrigger>
-            <TabsTrigger value="products">
-              <Package className="h-4 w-4 mr-2" />
+            
+            <TabsTrigger
+              value="products"
+              className="row-start-1 col-span-1 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-100 gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <Package className="h-4 w-4" />
               Products
             </TabsTrigger>
-            <TabsTrigger value="analytics">
-              <BarChart3 className="h-4 w-4 mr-2" />
+
+            <TabsTrigger
+              value="analytics"
+              className="row-start-2 col-span-1 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-100 gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <BarChart3 className="h-4 w-4" />
               Analytics
+            </TabsTrigger>
+            
+            <TabsTrigger
+              value="collaboration"
+              className="row-start-2 col-span-1 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-100 gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <Users className="h-4 w-4" />
+              Team
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="summary" className="p-4 h-full">
+          <TabsContent value="summary" className="p-12 h-full">
             <ConversationSummary />
           </TabsContent>
 

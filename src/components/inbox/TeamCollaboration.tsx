@@ -85,7 +85,7 @@ const TeamCollaboration = () => {
 
   return (
     <TooltipProvider>
-      <Card className="p-4 bg-white">
+      <Card className="p-5 bg-white">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-blue-500" />
@@ -94,7 +94,7 @@ const TeamCollaboration = () => {
           <Badge variant="secondary">{teamMembers?.length || 0} Members</Badge>
         </div>
 
-        <ScrollArea className="h-[300px]">
+        <ScrollArea className="h-[200px]">
           <div className="space-y-4">
             {Array.isArray(teamMembers) && teamMembers.length > 0 ? (
               teamMembers.map((member) => (
