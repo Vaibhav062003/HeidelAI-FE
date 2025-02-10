@@ -25,7 +25,7 @@ export const ContactListHeader = ({
 
   return (
     <div className="border-b p-4 flex items-center justify-between">
-      <h1 className="text-xl font-semibold">Customer Management</h1>
+      <h1 className="text-xl font-semibold">Contacts</h1>
       <div className="flex gap-4 items-center">
         <input
           type="text"

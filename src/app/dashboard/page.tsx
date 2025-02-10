@@ -29,7 +29,6 @@ import {
   // Users,
 } from "lucide-react";
 
-
 export default function DashboardPage() {
   const router = useRouter();
   const [activeView, setActiveView] = useState<
@@ -43,11 +42,11 @@ export default function DashboardPage() {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (!user) {
-        router.push('/login')
+        router.push("/login");
       }
-    })
-    return () => unsubscribe()
-  }, [router])
+    });
+    return () => unsubscribe();
+  }, [router]);
 
   const handleConversationSelect = (id: string) => {
     setSelectedConversationId(id);
@@ -62,7 +61,7 @@ export default function DashboardPage() {
         <Tabs
           value={activeView}
           onValueChange={(value) => setActiveView(value as typeof activeView)}
-          className="flex-1 flex"
+          className="flex-1 flex overflow-hidden"
         >
           {/* Left Sidebar */}
           <div className="w-16 hover:w-48 transition-all duration-300 ease-in-out fixed left-0 h-full z-20">
@@ -125,7 +124,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Main Content Area */}
-          <div className="flex-1 flex flex-col ml-16">
+          <div className="flex-1 flex flex-col ml-16 overflow-hidden">
             <TabsContent value="inbox" className="m-0 flex-1 overflow-hidden">
               <div className="flex h-full bg-white">
                 {/* Left Sidebar with Tabs */}
@@ -193,7 +192,10 @@ export default function DashboardPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="Contacts" className="m-0 flex-1 p-6 overflow-auto">
+            <TabsContent
+              value="Contacts"
+              className="m-0 flex-1 h-full overflow-hidden"
+            >
               <ContactsDashboard />
             </TabsContent>
 
