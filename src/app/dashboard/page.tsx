@@ -30,6 +30,7 @@ import {
   // Wand2,
   // Users,
 } from "lucide-react";
+import { EmojiProvider } from '@/components/EmojiProvider';
 
 
 
@@ -64,6 +65,7 @@ export default function DashboardPage(){
 
   return (
     <>
+    <EmojiProvider>
     <div className="bg-black text-white h-screen flex justify-center items-center text-center font-semibold px-4 md:flex lg:hidden">Dashboard is currently supported only on desktop screens.</div>
     <div className="hidden lg:flex min-h-screen bg-gray-100  flex-col">
 
@@ -152,6 +154,7 @@ export default function DashboardPage(){
 
 <StatusBar />
 </div>
+</EmojiProvider>
     </>
   );
 };

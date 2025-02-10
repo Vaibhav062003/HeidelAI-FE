@@ -14,7 +14,15 @@ interface ConversationListProps {
   onConversationSelect?: (id: string) => void;
 }
 
-
+const ConversationItemSkeleton = () => (
+  <div className="flex items-center gap-3 p-3 animate-pulse">
+    <div className="w-12 h-12 rounded-full bg-gray-200" />
+    <div className="flex-1 space-y-2">
+      <div className="h-4 bg-gray-200 rounded w-3/4" />
+      <div className="h-3 bg-gray-200 rounded w-1/2" />
+    </div>
+  </div>
+);
 
 const ConversationList = ({
   selectedConversationId,
@@ -42,7 +50,12 @@ const ConversationList = ({
           Filter
         </button>
       </div>
-    <div className="p-4 text-neutral-700">Loading conversations...</div>
+      {/* Loading Skeletons */}
+      <div className="flex-1 overflow-auto">
+          {[...Array(8)].map((_, i) => (
+            <ConversationItemSkeleton key={i} />
+          ))}
+        </div>
     </div>
     );
   }
@@ -113,12 +126,13 @@ const ConversationList = ({
       </ScrollArea> */}
       <div className="flex-1 overflow-y-auto">
           {conversations.map((conversation: Conversation) => (
+            
         <ConversationPreview
           key={conversation.id}
           id={conversation.id}
           channelType={conversation.platform as "telegram" | "whatsapp" | "instagram" | "web"}
           customerName={conversation.customer_name}
-          lastMessage={conversation.last_message}
+          lastMessage={formatLastMessage(conversation.last_message)}
           timestamp={conversation.timestamp}
           unreadCount={conversation.unread_count}
           avatarUrl={conversation.avatar_url}
@@ -133,6 +147,10 @@ const ConversationList = ({
       </div>
     </div>
   );
+};
+
+const formatLastMessage = (message: string) => {
+  return message.includes("know_more_request_from_sender") ? "Know more." : message;
 };
 
 export default ConversationList;

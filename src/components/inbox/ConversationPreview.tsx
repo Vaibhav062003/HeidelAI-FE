@@ -71,23 +71,23 @@ const ConversationPreview = ({
           </div>
           <p className="text-sm text-gray-600 truncate">{lastMessage}</p>
           <div className="flex items-center gap-2 mt-2">
-            {channelType === "whatsapp" && (
-              <Badge variant="outline" className="bg-green-50">
-                WhatsApp
+            {priority && priority === "low" && (
+              <Badge variant="outline" className="bg-green-400">
+                Low
               </Badge>
             )}
-            {channelType === "telegram" && (
-              <Badge variant="outline" className="bg-blue-50">
-                Telegram
+            {priority && priority === "medium" && (
+              <Badge variant="outline" className="bg-orange-400">
+                Medium
               </Badge>
             )}
-            {channelType === "instagram" && (
-              <Badge variant="outline" className="bg-purple-50">
-                Instagram
+            {priority && priority === "high" && (
+              <Badge variant="outline" className="bg-red-400">
+                High
               </Badge>
             )}
             {unreadCount > 0 && (
-              <Badge variant="destructive">{unreadCount}</Badge>
+              <Badge className="rounded-full" variant="destructive">{unreadCount}</Badge>
             )}
           </div>
         </div>

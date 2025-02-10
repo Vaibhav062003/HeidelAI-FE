@@ -15,7 +15,7 @@ export default function DashboardLayout({
       </head>
       <body>
         <div className="min-h-screen bg-gray-100">
-          <Toaster position="top-center" richColors />
+          <Toaster position="top-right" richColors />
           {children}
         </div>
       </body>

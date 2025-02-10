@@ -4,6 +4,11 @@ import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
+import dotenv from 'dotenv';
+dotenv.config();
+
+
+
 export const metadata: Metadata = {
   title: 'AI Startup',
   description: 'AI Startup Landing Page',

@@ -4,11 +4,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from 'date-fns';
+import { toast } from 'sonner';
 import { toZonedTime } from 'date-fns-tz';
 import { Conversation } from '../types/conversation';
+import { ShoppingCart, MapPin, Upload, FileText, FileImage, FileVideo, Music, File, Loader2, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
+import dynamic from 'next/dynamic';
+
+const Picker = dynamic(
+  () => {
+    return import('emoji-picker-react');
+  },
+  { ssr: false }
+);
+
 import {
   Tooltip,
   TooltipContent,
@@ -36,6 +50,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import ReminderDialog from "./ReminderDialog";
 
+import '../../app/dashboard/dashboard.css';
+import Image from "next/image";
+import { IconShoppingCartFilled } from "@tabler/icons-react";
+import { Progress } from "@radix-ui/react-progress";
+
+interface ProductData {
+  id: number;
+  image_link: string;
+  name: string;
+  on_sale: string;
+  permalink: string;
+  price: number;
+  regular_price: string;
+}
+
 interface Message {
   id: string;
   content: string;
@@ -44,31 +73,410 @@ interface Message {
   sender_id: string;
   conversation_id: string;
   status?: "sent" | "delivered" | "read";
-  type?: "text" | "image" | "file" | "voice";
+  type?: "text" | "image" | "file" | "voice" | "video";
+  product_data?: ProductData[];
   fileUrl?: string;
+  fileName?: string;
+  fileType?: string;
 }
 
 interface ChatViewProps {
   selectedConversationId?: string;
 }
 
+interface CartProductData {
+  name: string;
+  price: string;
+  sale_price: string;
+  image_url: string;
+  link: string;
+}
+
+interface CartItem {
+  product_data: CartProductData;  
+  quantity: number;
+  item_price: number;
+  currency: string;
+}
+
+interface AddressDetails {
+  country: string;
+  city: string;
+  address: string;
+  full_name: string;
+  flow_token: string;
+  state: string;
+  email: string;
+  pin_code: string;
+}
+
+interface OrderItem {
+  product_retailer_id: string;
+  quantity: number;
+  item_price: number;
+  currency: string;
+}
+
+interface AddressData {
+  sender_id: string;
+  order_details: OrderItem[];
+  address: AddressDetails;
+}
+
+
+// Skeletons
+
+const MessageSkeleton = () => (
+  <div className="flex flex-col gap-4 animate-pulse">
+    {/* Left side message */}
+    <div className="flex items-start gap-2 max-w-[50%]">
+      <div className="w-8 h-8 bg-gray-200 rounded-full" />
+      <div className="flex flex-col gap-2">
+        <div className="h-4 w-24 bg-gray-200 rounded-full" />
+        <div className="h-10 w-48 bg-gray-200 rounded-lg" />
+      </div>
+    </div>
+    
+    {/* Right side message */}
+    <div className="flex items-start gap-2 max-w-[50%] self-end">
+      <div className="flex flex-col gap-2">
+        <div className="h-4 w-24 bg-gray-200 rounded-full self-end" />
+        <div className="h-10 w-56 bg-gray-200 rounded-lg" />
+      </div>
+    </div>
+  </div>
+);
+
+const LoadingState = () => (
+  <Card className="h-full flex flex-col bg-white max-h-[94vh]">
+    {/* Header skeleton */}
+    <div className="p-4 border-b flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+        <div className="space-y-2">
+          <div className="h-4 w-32 bg-gray-200 rounded-full animate-pulse" />
+          <div className="h-3 w-24 bg-gray-200 rounded-full animate-pulse" />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+      </div>
+    </div>
+
+    {/* Messages area */}
+    <ScrollArea className="flex-1 h-full p-4">
+      <div className="space-y-6">
+        {[1,2,3,4].map(i => (
+          <MessageSkeleton key={i} />
+        ))}
+      </div>
+    </ScrollArea>
+
+    {/* Input area skeleton */}
+    <div className="p-4 border-t">
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
+        <div className="flex-1 h-10 bg-gray-200 rounded-lg animate-pulse" />
+        <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
+      </div>
+    </div>
+  </Card>
+);
+
+const parseProductData = (productDataString: string): ProductData[] => {
+  try {
+    return JSON.parse(productDataString);
+  } catch (error) {
+    console.error('Error parsing product data:', error);
+    return [];
+  }
+};
+
+
+
+const CartMessage = ({ items }: { items: CartItem[] }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const total = items.reduce((sum, item) => sum + (item.item_price * item.quantity), 0);
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+
+  return (
+    <>
+      <div className="flex flex-col w-fit mb-4 bg-gray-50 rounded-lg p-4 border">
+        <div className="flex items-center gap-4">
+          <img 
+            src={items[0].product_data.image_url}
+            alt={items[0].product_data.name}
+            className="w-24 h-24  rounded"
+          />
+          <div className="flex flex-col space-y-2">
+          <div className="relative flex space-x-2">
+            <ShoppingCart className="h-6 w-6 text-blue-600" />
+            <div className="font-medium ">{totalQuantity} items</div>
+          </div>
+          <div className="text-sm">₹{total.toLocaleString('en-IN')} (estimated total)</div>
+          </div>
+        </div>
+        <Button 
+          variant="outline" 
+          className="mt-3"
+          onClick={() => setIsModalOpen(true)}
+        >
+          View Cart ({totalQuantity} items)
+        </Button>
+        
+      </div>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Cart Details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 max-h-[60vh] overflow-auto p-4">
+            {items.map((item, idx) => (
+              <div key={idx} className="flex gap-4 border-b pb-4">
+                <img 
+                  src={item.product_data.image_url}
+                  alt={item.product_data.name}
+                  className="w-24 h-24  rounded"
+                />
+                <div className="flex-1">
+                  <h4 className="font-medium line-clamp-2">{item.product_data.name}</h4>
+                  <div className="flex items-center justify-between mt-2">
+                    <span>Quantity: {item.quantity}</span>
+                    <div className="text-right">
+                      <div className="font-medium">₹{(item.item_price * item.quantity).toLocaleString('en-IN')}</div>
+                      <div className="text-sm text-gray-500">
+                        {item.quantity} × ₹{item.item_price.toLocaleString('en-IN')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div className="flex justify-between pt-4 text-lg font-medium">
+              <span>Total ({totalQuantity} items)</span>
+              <span className="font-bold">₹{total.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+const AddressMessage = ({ data }: { data: AddressData }) => {
+  return (
+    <div className="flex flex-col w-fit mb-4 bg-gray-50 rounded-lg p-4 border max-w-md hover:shadow-md transition-shadow">
+      <div className="flex items-center gap-3 mb-3">
+        <MapPin className="h-5 w-5 text-blue-600" />
+        <div className="font-medium">Delivery Address</div>
+      </div>
+      
+      <div className="space-y-3 text-sm">
+        <div className="flex flex-col">
+          <span className="font-medium">{data.address.full_name}</span>
+          <span className="text-gray-600">{data.address.email}</span>
+          <span className="text-gray-600">+{data.sender_id}</span>
+        </div>
+
+        <div className="flex flex-col">
+          <span>{data.address.address}</span>
+          <span>{data.address.city}, {data.address.state}</span>
+          <span>{data.address.pin_code}</span>
+          <span>{data.address.country.replace('0_', '')}</span>
+        </div>
+
+        <div className="pt-3 border-t">
+          <div className="text-xs text-gray-500 mb-1">Order Summary</div>
+          {data.order_details.map((item, idx) => (
+            <div key={idx} className="flex justify-between">
+              <span>{item.quantity} items</span>
+              <span className="font-medium">
+                {item.currency} {item.item_price.toLocaleString('en-IN')}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const FilePreview = ({ 
+  file, 
+  progress, 
+  onCancel 
+}: { 
+  file: File;
+  progress: number;
+  onCancel: () => void;
+}) => {
+  const isVideo = file.type.startsWith('video/');
+  const previewUrl = URL.createObjectURL(file);
+
+  return (
+    <div className="relative">
+      <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100">
+        {isVideo ? (
+          <video
+            src={previewUrl}
+            className="w-full h-full object-cover"
+            controls={false}
+          />
+        ) : (
+          <img
+            src={previewUrl}
+            alt="Preview"
+            className="w-full h-full object-cover"
+          />
+        )}
+        
+        {/* Progress overlay */}
+        {/* <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center">
+          <div className="w-3/4">
+            <div className="text-white text-sm mb-2 text-center">
+              {progress < 100 ? 'Uploading...' : 'Processing...'}
+              {progress < 100 && ` ${Math.round(progress)}%`}
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        </div> */}
+
+        {/* Cancel button */}
+        <button
+          onClick={onCancel}
+          className="absolute top-2 right-2 p-1 rounded-full bg-black/50 hover:bg-black/75 transition-colors"
+        >
+          <X className="h-4 w-4 text-white" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+
 const ChatView = ({
   selectedConversationId,
 }: ChatViewProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
-  const [checked, setChecked] = useState(false)
+  const [isAIEnabled, setIsAIEnabled] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const lastMessageRef = useRef<HTMLDivElement>(null);
+  const [message, setMessage] = useState("");
+  const [isFileModalOpen, setIsFileModalOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const inputFileRef = useRef<HTMLInputElement>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isSending, setIsSending] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
 
 
   const handleMicClick = () => {
     setIsRecording(!isRecording);
   };
 
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const lastMessageRef = useRef<HTMLDivElement>(null);
+  const handleFileUpload = async (file: File | null, recipient: string) => {
+    if (!file) return;
+    
+    setUploading(true);
+    setUploadProgress(0);
+    const formData = new FormData();
+    formData.append('file', file);
+  
+    try {
+      const response = await fetch(`https://egenie-whatsapp.koyeb.app/media/${recipient}/upload`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+      const data = await response.json();
+      
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        content: data.fileUrl,
+        type: file.type.startsWith('image/') ? 'image' : 'video',
+        role: 'agent',
+        conversation_id: selectedConversationId,
+        timestamp: new Date().toISOString(),
+        sender_id: 'agent',
+        fileUrl: data.fileUrl,
+        fileName: file.name,
+        fileType: file.type
+      }]);
+    } catch (error) {
+      toast.error('Failed to upload file');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+      setSelectedFile(null);
+      setIsFileModalOpen(false);
+    }
+  };
+  
+  
+
+  const sendMessage = async () => {
+    if (!message.trim() || !selectedConversationId || isSending) return;
+
+    const platform = selectedConversationId.split('_')[0]; 
+    const sender_id = selectedConversationId.split('_')[1]; 
+
+    setIsSending(true);
+    try {
+      const response = await fetch('https://egenie-whatsapp.koyeb.app/conversations/send_message', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          conversation_id: selectedConversationId,
+          content: message,
+          type: 'text',
+          sender_id: sender_id,
+          platform: platform,
+        }),
+      });
+  
+      if (!response.ok) throw new Error('Failed to send message');
+  
+      const data = await response.json();
+      
+      // // Add message to local state
+      // setMessages(prev => [...prev, {
+      //   id: data.id,
+      //   content: message,
+      //   type: 'text',
+      //   role: 'agent',
+      //   conversation_id: selectedConversationId,
+      //   timestamp: new Date().toISOString(),
+      //   sender_id: 'agent',
+      //   status: 'sent'
+      // }]);
+  
+      // Clear input
+      setMessage('');
+    } catch (error) {
+      toast.error('Failed to send message');
+    } finally {
+      setIsSending(false);
+    }
+  };
+  
+
 
   useEffect(() => {
     // Scroll to the bottom when new messages are added
@@ -77,13 +485,56 @@ const ChatView = ({
     }
   }, [messages]);
 
+  const toggleAI = async () => {
+    if (!selectedConversationId || isToggling) return;
+    
+    setIsToggling(true);
+    try {
+      const response = await fetch(`/api/conversations/${selectedConversationId}/toggle-ai`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ enabled: !isAIEnabled }),
+      });
+  
+      if (!response.ok) throw new Error('Failed to toggle AI');
+      
+      setIsAIEnabled(!isAIEnabled);
+      toast.success(`AI ${!isAIEnabled ? 'enabled' : 'disabled'} for this conversation`);
+    } catch (error) {
+      toast.error('Failed to toggle AI status');
+      console.error(error);
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
 
   useEffect(() => {
     if (!selectedConversationId) return;
 
+    
+
+    const setUnreadCount = async () => {
+      try {
+        await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/read`, {
+          method: "GET",
+          credentials: "include",  // Allows cookies/auth headers if needed
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      } catch (error) {
+        console.error("Error setting unread count:", error);
+      }
+    }
+
+    
     // Fetch conversation details
     const fetchConversation = async () => {
       try {
+        setLoading(true);
         const response = await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}`, {
           method: "GET",
           credentials: "include",  // Allows cookies/auth headers if needed
@@ -97,10 +548,35 @@ const ChatView = ({
       } catch (error) {
         console.error("Error fetching conversation:", error);
       }
+      finally {
+        setLoading(false);
+      }
     };
+    
+    const fetchAIStatus = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/ai`, {
+          method: "GET",
+          credentials: "include",  // Allows cookies/auth headers if needed
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await response.json();
+        setIsAIEnabled(data);
+        console.log("AI data", data);
+      } catch (error) {
+        console.error("Error fetching AI status:", error);
+      }
+      finally {
+        setLoading(false);
+      }
+    }
 
     const fetchMessages = async () => {
       try {
+        setLoading(true);
         const response = await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/messages`, {
           method: "GET",
           credentials: "include",  // Allows cookies/auth headers if needed
@@ -110,6 +586,7 @@ const ChatView = ({
         });
         const data = await response.json();
         setMessages(data);
+        console.log("messages data", data);
       } catch (error) {
         console.error('Error fetching messages:', error);
       } finally {
@@ -127,13 +604,15 @@ const ChatView = ({
     };
 
     fetchConversation();
+    setUnreadCount();
+    fetchAIStatus();
     fetchMessages();
 
     return () => ws.close();
   }, [selectedConversationId]);
 
   // Decide on avatar source
-  let avatarSource = "/default-avatar.png";
+  let avatarSource = "";
   if (conversation?.platform === "whatsapp") {
     avatarSource = "/features/whatsapp.png";
   } else if (conversation?.platform === "telegram") {
@@ -142,13 +621,53 @@ const ChatView = ({
     avatarSource = "/features/instagram.png";
   }
 
+  if (loading) {
+    return <LoadingState />;
+  }
+
   return (
+    <>
+    <style>
+        {`
+          
+          .product-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+          }
+          .product-scroll::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+          }
+          .product-scroll::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+          }
+          .custom-scroll::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+          }
+          .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+          }
+        `}
+      </style>
     <TooltipProvider>
+      {!selectedConversationId ? (
+        <Card className="h-full flex flex-col bg-white max-h-[94vh] items-center justify-center">
+          <div className="text-center text-gray-500">
+            <h3 className="text-3xl font-bold text-black mb-2">Welcome to your dashboard!</h3>
+            <p>Select a conversation from the list to continue</p>
+          </div>
+        </Card>
+      ) : (
       <Card className="h-full flex flex-col bg-white max-h-[94vh]">
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <img src={avatarSource} alt="Platform avatar" />
+              <img src={avatarSource} alt="Platform avatar"  />
             </Avatar>
             <div>
               <h3 className="font-medium">{conversation?.customer_name}</h3>
@@ -162,7 +681,7 @@ const ChatView = ({
           </div>
 
           <div className="flex items-center gap-3">
-            <Tooltip>
+            {/* <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Phone className="h-5 w-5" />
@@ -178,7 +697,7 @@ const ChatView = ({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Start video call</TooltipContent>
-            </Tooltip>
+            </Tooltip> */}
 
             <Tooltip>
               <TooltipTrigger asChild>
@@ -195,7 +714,11 @@ const ChatView = ({
 
             <div className="flex items-center gap-2">
               <span className="AI text-xs">AI</span>
-              <Switch checked={false} />
+              <Switch 
+                checked={isAIEnabled}
+                onCheckedChange={toggleAI}
+                disabled={isToggling}
+              />
             </div>
 
             <DropdownMenu>
@@ -214,51 +737,348 @@ const ChatView = ({
           </div>
         </div>
 
-        <ScrollArea ref={scrollAreaRef} className="flex-1 h-full p-4">
-      <div className="space-y-4">
-        {messages.map((message, index) => (
-          <div
-            key={message.id}
-            className={`flex ${
-              message.role === "customer" ? "justify-start" : "justify-end"
-            }`}
-          >
-            <div
-              className={`max-w-[70%] rounded-lg p-3 ${
-                message.role === "customer"
-                  ? "bg-gray-100 text-black"
-                  : "bg-blue-500 text-white"
-              }`}
-            >
-              {message.type === "image" && message.fileUrl && (
-                <img
-                  src={message.fileUrl}
-                  alt="Shared image"
-                  className="rounded-lg mb-2"
+        {  /* Modal for attaching files */}
+        <Dialog open={isFileModalOpen} onOpenChange={setIsFileModalOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Upload Media</DialogTitle>
+              <DialogDescription>
+                Upload an image or video file
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4">
+              {!selectedFile ? (
+                <div
+                  className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer"
+                  onClick={() => inputFileRef.current?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files[0];
+                    if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+                      setSelectedFile(file);
+                    }
+                  }}
+                >
+                  <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-500">
+                    Drop your media here or click to browse
+                  </p>
+                </div>
+              ) : (
+                <FilePreview 
+                  file={selectedFile}
+                  progress={uploadProgress}
+                  onCancel={() => {
+                    setSelectedFile(null);
+                    setUploadProgress(0);
+                  }}
                 />
               )}
-              {message.type === "voice" && message.fileUrl && (
-                <audio controls src={message.fileUrl} className="w-full" />
-              )}
-              {(message.type === "text" || !message.type) && (
-                <p>{message.content}</p>
-              )}
-              <div className="flex items-center gap-2 mt-1">
-                <span
-                  className={`text-xs ${
-                    message.role === "customer" ? "text-gray-500" : "text-blue-100"
-                  }`}
-                >
-                  {formatMessageTime(message.timestamp)}
-                </span>
-              </div>
+              
+              <input
+                type="file"
+                ref={inputFileRef}
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+                    setSelectedFile(file);
+                  }
+                }}
+                accept="image/*,video/*"
+              />
             </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsFileModalOpen(false)}
+                disabled={uploading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                disabled={!selectedFile || uploading}
+                onClick={() => handleFileUpload(selectedFile, selectedConversationId)}
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Sending...
+                  </>
+                ) : (
+                  'Send'
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <ScrollArea ref={scrollAreaRef} className="flex-1 h-full p-4">
+          <div className="space-y-4">
+            {messages.map((message, index) => {
+            const productInfo = message.content ? extractProductInfo(message.content) : null;
+            const botProductInfo = message.content ? extractBotProductInfo(message.content) : null;
+            const addressData = message.content ? extractAddressData(message.content) : null;
+
+            console.log("productInfo", productInfo);
+            // console.log("botProductInfo", botProductInfo);
+            
+            return (
+              <div key={message.id}>
+                {productInfo && message.role === "customer" && (
+                  <div className="flex flex-col w-fit mb-4">
+                    {productInfo.map((product: any, idx: number) => (
+                      <a 
+                        key={idx}
+                        href={product.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center space-x-4 p-3 rounded-lg border hover:shadow-md transition-shadow"
+                      >
+                        <img 
+                          src={product.image_url} 
+                          alt={product.name}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <h3 className="text-sm font-medium line-clamp-2">{product.name}</h3>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="text-black font-semibold">{product.sale_price}</span>
+                            {(!product.sale_price) && (
+                              <><span className="text-black font-semibold">{product.price}</span>  <br/>  <br/> </>
+                            )}
+                            {(product.sale_price) && (
+                            <span className="text-gray-500 line-through text-sm">{product.price}</span>
+                            )}
+                          </div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                  
+                )}
+
+                 
+                
+              
+              <div
+                className={`flex ${
+                  message.role === "customer" ? "justify-start" : "justify-end pr-10"
+                }`}
+              >
+                
+                <div
+                  className={`max-w-[41%] flex flex-col items-end sticky right-0 `}
+                >
+                  
+                  {/* {botProductInfo && message.role === "ai" && (
+                    <div className="flex flex-col max-w-[40%] overflow-hidden justify-end mb-4">
+                        {botProductInfo.map((product: any, idx: number) => (
+                          <a 
+                            key={idx}
+                            href={product.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex flex-col items-center space-x-4 p-3 rounded-lg border hover:shadow-md transition-shadow bg-blue-50"
+                          >
+                            <img 
+                              src={product.image_url} 
+                              alt={product.name}
+                              className="w-full overflow-hidden object-cover rounded"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-sm font-medium line-clamp-2">{product.name}</h3>
+                              <div className="flex items-center space-x-2 mt-1">
+                                <span className="text-black font-semibold">{product.sale_price}</span>
+                                <span className="text-gray-500 line-through text-sm">{product.price}</span>
+                              </div>
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                  )} */}
+                  {botProductInfo && message.role === "ai" && (
+                    <img className="w-80 rounded-lg border mb-2" src={botProductInfo[0].image_url}/>
+                  )}
+
+
+
+                  
+
+                  <div className={` rounded-lg p-3 w-fit  ${
+                    message.role === "customer"
+                      ? "bg-gray-100 text-black"
+                      : "bg-blue-500 text-white"
+                  }
+                  ${
+                    extractCartData(message.content) && message.role === "customer" || addressData && message.role === "customer" || message.fileUrl
+                      ? "bg-transparent"
+                      : ""
+                  }`}>
+                     {message.content && extractCartData(message.content) && message.role === "customer" && (
+                    <>
+                      <CartMessage items={extractCartData(message.content)} />
+                      
+                  </>
+                    )}
+
+                {addressData && message.role === "customer" && (
+                        <AddressMessage data={addressData} />
+                      )}
+                  {/* Render message content */}
+                  {message.type === "image" && message.fileUrl && (
+                    <img
+                      src={message.fileUrl}
+                      alt="Shared image"
+                      className="rounded-lg mb-2 border shadow-sm"
+                    />
+                  )}
+                  {message.type === "video" && message.fileUrl && (
+                    
+                    <video
+                      src={message.fileUrl}
+                      className="rounded-lg mb-2 border shadow-sm "
+                      controls
+                    />
+                  
+                  )}
+                  {message.type === "voice" && message.fileUrl && (
+                    <audio controls src={message.fileUrl} className="w-full" />
+                  )}
+
+                  
+
+                  
+                  {(message.type === "text" || !message.type) && !productInfo  && !botProductInfo && !extractCartData(message.content) && !checkAIMessage(message) && !addressData &&(
+                    <p>{message.content}</p>
+                  )}
+                  {(message.type === "text" || !message.type) && message.role === "ai" && checkAIMessage(message) && (
+                    <p>{checkAIMessage(message)}</p>
+                  )}
+                  {(message.type === "text" || !message.type) && productInfo && message.role === "customer" && (
+                    <p>Know more.</p>
+                  )}
+                  {(message.type === "text" || !message.type) && botProductInfo && message.role === "ai" && (
+                    <>
+                    <p className="w-fit">
+                    <b>
+                      {botProductInfo[0].name.slice(0, 40)}
+                      {botProductInfo[0].name.length > 40 && (
+                        <>
+                          <br/>
+                          {botProductInfo[0].name.slice(40)}
+                        </>
+                      )}
+                    </b><br/>  <br/> 
+                    <span className="text-white font-semibold">{botProductInfo[0].sale_price}</span>
+                    {(!botProductInfo[0].sale_price) && (
+                      <><span className="text-white font-semibold">{botProductInfo[0].price}</span>  <br/>  <br/> </>
+                    )}
+                    {(botProductInfo[0].sale_price) && (
+                      <><span className="text-gray-200 line-through text-sm ml-2">{botProductInfo[0].price}</span> <br/>  <br/> </>
+                    )} 
+                     🎉<b>Key Highlights:</b> <br/>  
+                    - EMI Available! ✅ <br/> 
+                    - Get GST invoice and save up to 28% on <br/> business purchases <br/> 
+                    - Free Shipping all over India 🚚<br/> <br />
+                    
+                    <span className="text-gray-200 text-sm"> <i>To contact us, simply type Live Agent </i></span>
+                     </p>
+                  </>
+                  )}
+
+                  {/* Render timestamp */}
+                  <div className="flex w-fit items-center gap-2 mt-1">
+                    <span
+                      className={`text-xs ${
+                        message.role === "customer" ? "text-gray-500" : "text-blue-100"
+                      }
+                      ${
+                        message.fileUrl ?  "!text-gray-800" : ""
+                      }`}
+                    >
+                      {formatMessageTime(message.timestamp)}
+                    </span>
+                  </div>
+                  </div>
+                  {/* Render product data below the message */}
+                  {message.product_data && (
+                    <div className=" w-full bg-white mt-4">
+                    <div className="relative overflow-x-auto"
+                      // style={{
+                      //   scrollbarWidth: 'thin',
+                      //   scrollbarColor: 'grey transparent',
+
+                      //   '&::-webkit-scrollbar': {
+                      //     width: '6px',
+                      //     height: '6px'
+                      //   },
+                      //   '&::-webkit-scrollbar-thumb': {
+                      //     backgroundColor: 'grey',
+                      //     borderRadius: '20px'
+                      //   },
+                      //   '&::-webkit-scrollbar-track': {
+                      //     background: 'transparent'
+                      //   }
+                      // }}>
+                      >
+                        <div className="flex gap-4 snap-x snap-mandatory product-scroll overflow-x-auto py-4 px-2">
+                          {message.product_data.map((product) => (
+                            <a
+                              href={product.permalink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              key={product.id}
+                              className="snap-start flex-none w-[280px] border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+                            >
+                              <div className="relative">
+                                <img
+                                  src={product.image_link}
+                                  alt={product.name}
+                                  className="w-full h-48 object-cover"
+                                />
+                                {product.on_sale === "True" && (
+                                  <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+                                    Sale
+                                  </span>
+                                )}
+                              </div>
+                              <div className="p-4">
+                                <h3 className="font-medium text-black text-sm line-clamp-2 mb-2">
+                                  {product.name}
+                                </h3>
+                                <div className="flex items-baseline gap-2">
+                                  <span className="text-lg text-black font-bold">
+                                    ₹{product.price.toLocaleString('en-IN')}
+                                  </span>
+                                  {product.on_sale === "True" && (
+                                    <span className="text-sm text-gray-500 line-through">
+                                      ₹{parseInt(product.regular_price).toLocaleString('en-IN')}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              </div>
+             );
+            })}
+
+            {/* Empty div for scrolling */}
           </div>
-        ))}
-        {/* Empty div for scrolling */}
-        <div ref={lastMessageRef} />
-      </div>
-    </ScrollArea>
+            <div ref={lastMessageRef} />
+        </ScrollArea>
 
         <div className="p-4 border-t">
           <div className="flex gap-2 mb-4 overflow-x-auto">
@@ -275,20 +1095,68 @@ const ChatView = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Smile className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Add emoji</TooltipContent>
-            </Tooltip>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Smile className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+  className="w-80 p-0" 
+  side="top" 
+  align="start"
+>
+  <div className="emoji-picker-container">
+    <style jsx global>{`
+      .EmojiPickerReact {
+        --epr-hover-bg-color: #f3f4f6;
+        --epr-focus-bg-color: #e5e7eb;
+        --epr-highlight-color: #2563eb;
+        --epr-search-border-color: #e5e7eb;
+        --epr-category-label-bg-color: #ffffff;
+      }
+
+      .EmojiPickerReact .epr-scroll-wrapper::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .EmojiPickerReact .epr-scroll-wrapper::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+      }
+
+      .EmojiPickerReact .epr-scroll-wrapper::-webkit-scrollbar-thumb {
+        background: #2563eb;
+        border-radius: 4px;
+      }
+
+      .EmojiPickerReact .epr-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+        background: #1d4ed8;
+      }
+    `}</style>
+    <Picker
+      onEmojiClick={(emojiData) => {
+        setMessage((prev) => prev + emojiData.emoji);
+      }}
+      width="100%"
+      height={400}
+      previewConfig={{ showPreview: false }}
+      searchPlaceholder="Search emoji..."
+      lazyLoadEmojis={true}
+    />
+  </div>
+</PopoverContent>
+          </Popover>
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Paperclip className="h-4 w-4" />
-                </Button>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => setIsFileModalOpen(true)}
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
               </TooltipTrigger>
               <TooltipContent>Attach file</TooltipContent>
             </Tooltip>
@@ -311,13 +1179,32 @@ const ChatView = ({
               </TooltipContent>
             </Tooltip>
 
-            <Input placeholder="Type your message..." className="flex-1" />
+            <Input
+               value={message}
+               onChange={(e) => setMessage(e.target.value)}
+               placeholder="Type a message..."
+               className=" flex-1"
+               onKeyPress={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+            />
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon">
+              <Button 
+                size="icon" 
+                onClick={sendMessage}
+                disabled={isSending || !message.trim()}
+              >
+                {isSending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
                   <Send className="h-4 w-4" />
-                </Button>
+                )}
+              </Button>
               </TooltipTrigger>
               <TooltipContent>Send message</TooltipContent>
             </Tooltip>
@@ -333,7 +1220,9 @@ const ChatView = ({
           }}
         />
       </Card>
+      )}
     </TooltipProvider>
+    </>
   );
 };
 
@@ -353,4 +1242,176 @@ const formatMessageTime = (timestamp: string): string => {
   }
 };
 
+const checkAIMessage = (message: Message) => {
+  if (message.content.includes("Thanks for sending your us cart!") && message.role === "ai") {
+    return (
+      <>
+      <b>Complete your order</b> <br /> <br /> 
+      Thanks for sending your us cart! 📦🤩 <br /><br /> 
+      Before we can proceed, we just need a few more details about <br /> <b>your address</b> so we know exactly where to deliver your order. <br /><br /> 
+      Let&apos;s get this sorted and your items will be on their way!🚀
+      </>
+    )
+  }
+  if (message.content.includes(" I'm *Talkative*, an AI-powered agent for eGenie Stores. I'm here to help you find the perfect tech products for your needs.") && message.role === "ai") {
+    return (
+      <>
+      <img src="https://egeniestores.com/wp-content/uploads/egenie.jpeg" className="rounded-sm mb-2 w-80 " />
+      Hi👋 I&apos;m <b>Talkative</b>, an AI-powered agent for <br /> eGenie Stores. I&apos;m here to help you find the <br /> perfect tech products for your needs.  <br /> <br />  
+      <b>✅Whether you&apos;re looking for:</b> <br/> 
+      - A new phone <br />
+      - A powerful gaming laptop <br />
+      - A custom-built PC  <br /><br /> 
+      I can help you find the best options for your <br /> budget and preferences.🎉 <br /> <br />
+      Feel free to ask me any questions you may <br /> have about our <b>services</b> or <b>policies</b> , and I&apos;ll <br /> be happy to assist!📕  
+      </>
+    )
+  }
+  if (message.content.includes("Complete your payment and confirm your order with us.") && message.role === "ai") {
+    return (
+      <div className="flex flex-col">
+      <b>Complete your order</b> <br /> 
+      You are one step away! 😎 <br /><br /> 
+      Complete your payment and confirm your <br />order with us.📦 <br /><br /> 
+      To contact us regarding any queries<br /> please reply with  <b>Live Agent</b> 
+      {/* <Button 
+          variant="outline" 
+          className="mt-3 bg-white text-black"
+          
+        >
+         Payment Button
+        </Button> */}
+        </div>
+    )
+  }
+  return null;
+}
+
+const extractProductInfo = (content: string) => {
+  try {
+    const match = content.match(/know_more_request_from_sender=(\[.*?\])/);
+    if (match) {
+      const jsonStr = match[1]
+        .replace(/'/g, '"') // Convert single quotes to double quotes
+        .replace(/"name":\s*"([^"]*?)"/g, (match, nameValue) => {
+          const fixedName = nameValue.replace(/(?<!\\)"/g, '\\"'); // Escape only unescaped double quotes inside the name
+          return `"name": "${fixedName}"`;
+        });
+
+      return JSON.parse(jsonStr);
+    }
+    return null;
+  } catch (error) {
+    console.error('Error parsing product info:', error);
+    return null;
+  }
+};
+
+const extractBotProductInfo = (content: string) => {
+  try {
+    const match = content.match(/know_more_details_from_bot=(\[.*?\])/);
+    if (match) {
+      const jsonStr = match[1].replace(/'/g, '"');
+      return JSON.parse(jsonStr);
+    }
+    return null;
+  } catch (error) {
+    console.error('Error parsing product info:', error);
+    return null;
+  }
+};
+
+const extractCartData = (content: string) => {
+  try {
+    const match = content.match(/cart_data_from_sender=(\[.+?\])/);
+    if (!match) return null;
+
+    const cartItems: CartItem[] = JSON.parse(match[1]);
+    return cartItems;
+  } catch (error) {
+    console.error('Error parsing cart data:', error);
+    return null;
+  }
+};
+
+const extractAddressData = (content: string): AddressData | null => {
+  try {
+    const match = content.match(/address_data_from_sender\s*=\s*({.+})/);
+    if (!match) return null;
+    
+    const jsonStr = match[1].replace(/'/g, '"');
+    return JSON.parse(jsonStr);
+  } catch (error) {
+    console.error('Error parsing address data:', error);
+    return null;
+  }
+};
+
+const formatPrice = (price: string) => {
+  return price.replace(/\\u20b9/g, '₹').replace(/\u20b9/g, '₹');
+};
+
+export const FileMessage = ({ fileUrl, fileName, fileType }: { 
+  fileUrl: string;
+  fileName: string;
+  fileType?: string;
+}) => {
+  const getFileIcon = () => {
+    if (fileType?.startsWith('image/')) return <FileImage className="h-5 w-5 text-blue-500" />;
+    if (fileType?.startsWith('video/')) return <FileVideo className="h-5 w-5 text-purple-500" />;
+    if (fileType?.startsWith('audio/')) return <Music className="h-5 w-5 text-green-500" />;
+    if (fileType === 'application/pdf') return <FileText className="h-5 w-5 text-red-500" />;
+    return <File className="h-5 w-5 text-gray-500" />;
+  };
+
+  const isImage = fileType?.startsWith('image/');
+  const isPDF = fileType === 'application/pdf';
+  
+  if (isImage) {
+    return <img src={fileUrl} alt={fileName} className="max-w-sm rounded-lg" />;
+  }
+
+  if (isPDF) {
+    return (
+      <div className="flex flex-col gap-2">
+        <a 
+          href={fileUrl} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 p-3 rounded-lg border hover:bg-gray-50"
+        >
+          {getFileIcon()}
+          <div className="flex flex-col">
+            <span className="text-sm text-blue-600">{fileName}</span>
+            <span className="text-xs text-gray-500">PDF Document</span>
+          </div>
+        </a>
+        <iframe 
+          src={`${fileUrl}#view=FitH`} 
+          className="w-full h-[400px] rounded-lg border"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <a 
+      href={fileUrl} 
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="flex items-center gap-2 p-3 rounded-lg border hover:bg-gray-50"
+    >
+      {getFileIcon()}
+      <div className="flex flex-col">
+        <span className="text-sm text-blue-600">{fileName}</span>
+        <span className="text-xs text-gray-500">
+          {fileType?.split('/')[1].toUpperCase() || 'Document'}
+        </span>
+      </div>
+    </a>
+  );
+};
+
 export default ChatView;
+
+

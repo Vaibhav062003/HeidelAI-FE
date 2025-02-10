@@ -1,3 +1,7 @@
 {
-    "search.useIgnoreFiles": false
+    "search.useIgnoreFiles": false,
+    "workbench.colorCustomizations": {
+        "titleBar.activeBackground": "#248658",
+        "titleBar.inactiveBackground": "#248658"
+    }
 }
