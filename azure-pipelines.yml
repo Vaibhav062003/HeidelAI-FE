@@ -8,85 +8,55 @@ pool:
 
 variables:
   - group: github-secrets
-  GIT_REDACT_URLS: false
-  GIT_HTTP_USER_AGENT: "Azure-DevOps-Sync/1.0"
 
 steps:
 - checkout: self
   persistCredentials: true
-  clean: false
-  fetchDepth: 0  # Critical: Get full repository history
+  clean: false        # Preserve git history references
+  fetchDepth: 0       # Fetch full history to avoid shallow clone issues
 
 - script: |
-    set -exo pipefail
+    set -ex  # Enable verbose output and exit on error
 
-    # Configure Git environment
+    # Configure Git identity
     git config --global user.email "egeniestore@gmail.com"
-    git config --global user.name "Azure DevOps Syncer"
-    git config --global http.version HTTP/1.1
-    git config --global http.postBuffer 524288000
-    git config --global pack.windowMemory 512m
+    git config --global user.name "Azure DevOps CI/CD"
 
-    # Add GitHub remote with authentication
+    # Add GitHub remote using token
     git remote add github https://oauth2:$(GITHUB_PAT)@github.com/egenie4u/heidelAIWebsite.git
 
-    # Verify repository integrity
-    echo "=== Repository Integrity Check ==="
-    git fsck --full --strict
+    # Verify remote configuration
+    echo "=== Remote Configuration ==="
+    git remote -v
 
-    # Synchronize branches
-    echo "=== Synchronization Process ==="
-    retry_count=0
-    max_retries=3
-    
-    while [ $retry_count -lt $max_retries ]; do
-        git fetch --all --prune --tags
-        LOCAL_COMMIT=$(git rev-parse HEAD)
-        REMOTE_COMMIT=$(git ls-remote github main | awk '{print $1}')
+    # (Optional) In case the checkout was shallow, force an unshallow fetch.
+    echo "=== Ensuring Full Repository History ==="
+    git fetch --unshallow || echo "Repository already complete"
+
+    # Update all references
+    echo "=== Fetching Latest References ==="
+    git fetch --all --prune
+
+    # Compare local and remote commits
+    echo "=== Commit Diff Analysis ==="
+    LOCAL_COMMIT=$(git rev-parse HEAD)
+    REMOTE_COMMIT=$(git ls-remote github main | awk '{print $1}')
+
+    if [ "$LOCAL_COMMIT" != "$REMOTE_COMMIT" ]; then
+        echo "Detected divergence: Local(${LOCAL_COMMIT:0:7}) vs Remote(${REMOTE_COMMIT:0:7})"
         
-        echo "Local Commit: ${LOCAL_COMMIT:0:7}"
-        echo "Remote Commit: ${REMOTE_COMMIT:0:7}"
+        # Push changes using --no-thin to send full pack objects along with force-with-lease and tag following
+        echo "=== Pushing Changes ==="
+        git push --no-thin github HEAD:main --force-with-lease --follow-tags
         
-        if [ "$LOCAL_COMMIT" != "$REMOTE_COMMIT" ]; then
-            echo "Attempt $((retry_count+1)) of $max_retries: Pushing changes..."
-            git push github HEAD:main \
-                --force-with-lease \
-                --no-thin \
-                --progress \
-                --atomic \
-                2>&1 | tee push.log
-        
-            if grep -q "error: " push.log; then
-                ((retry_count++))
-                echo "Push failed, retrying in 15 seconds..."
-                sleep 15
-            else
-                echo "Push successful!"
-                break
-            fi
-        else
-            echo "Repositories already synchronized"
-            exit 0
-        fi
-    done
-    
-    if [ $retry_count -eq $max_retries ]; then
-        echo "##vso[task.logissue type=error]Failed after $max_retries attempts"
-        exit 1
+        echo "=== Push Verification ==="
+        git ls-remote github main
+    else
+        echo "No divergence detected - repositories are in sync"
     fi
 
-    # Final verification
-    echo "=== Post-Push Verification ==="
-    git ls-remote --heads github
-    git diff --exit-code HEAD github/main
-  displayName: 'GitHub Repository Sync'
+    # Cleanup credentials
+    git remote remove github
+  displayName: 'GitHub Sync'
   env:
-    GIT_TRACE: 1
-    GIT_CURL_VERBOSE: 1
-    GIT_TRACE_PACKET: 1
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: 'push.log'
-    ArtifactName: 'GitLogs'
-  condition: always()
+    GIT_REDACT_URLS: false
