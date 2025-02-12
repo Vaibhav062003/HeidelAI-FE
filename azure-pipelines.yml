@@ -1,27 +1,50 @@
 trigger:
   branches:
     include:
-      - main  # Trigger on changes to the main branch in Azure DevOps
+      - main
 
 pool:
   vmImage: ubuntu-latest
 
 variables:
-  - group: github-secrets  # Reference the variable group containing GITHUB_PAT
+  - group: github-secrets
 
 steps:
-- checkout: self  # Check out the Azure DevOps repository
+- checkout: self
+  persistCredentials: true  # Required for Git operations later
 
 - script: |
-    # Configure Git with the GitHub PAT
-    git config --global user.email "egeniestore@gmail.com"
-    git config --global user.name "Azure Pipeline"
-
-    # Add GitHub as a remote
-    git remote add github https://$(GITHUB_PAT)@github.com/egenie4u/heidelAIWebsite.git
-
-    # Push changes to GitHub
-    git push github HEAD:main --force --no-verify
-
-    echo "Azure DevOps changes have been pushed to GitHub"
-  displayName: 'Push changes to GitHub'
+    set -e  # Exit immediately on error
+    
+    # Configure Git identity
+    git config --global user.email "azure-pipelines@no-reply.com"
+    git config --global user.name "Azure DevOps CI/CD"
+    
+    # Security: Add GitHub to safe directories
+    git config --global --add safe.directory $(Build.SourcesDirectory)
+    
+    # Configure GitHub remote using modern authentication
+    git remote add github https://oauth2:$(GITHUB_PAT)@github.com/egenie4u/heidelAIWebsite.git
+    
+    # Verify remote configuration
+    echo "Configured remotes:"
+    git remote -v
+    
+    # Force fetch to ensure updated references
+    git fetch --all
+    
+    # Push changes only if differences exist
+    if [ -n "$(git status --porcelain)" ]; then
+        echo "Detected changes, pushing to GitHub..."
+        git push github HEAD:main --follow-tags
+        echo "Push completed successfully"
+    else
+        echo "No changes to push"
+    fi
+    
+    # Final verification
+    echo "Last 3 commits in GitHub remote:"
+    git ls-remote github main | head -3
+  displayName: 'Sync with GitHub'
+  env:
+    GIT_REDACT_URLS: false  # Disable URL redacting for debugging
