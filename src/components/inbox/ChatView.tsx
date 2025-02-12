@@ -10,7 +10,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
-import { toZonedTime } from 'date-fns-tz';
+// import { toZonedTime } from 'date-fns-tz';
 import { Conversation } from '../types/conversation';
 import { ShoppingCart, MapPin, Upload, FileText, FileImage, FileVideo, Music, File, Loader2, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
@@ -32,12 +32,12 @@ import {
 import {
   Send,
   Paperclip,
-  Globe,
-  Bot,
+  // Globe,
+  // Bot,
   MoreVertical,
-  Phone,
-  Video,
-  UserPlus,
+  // Phone,
+  // Video,
+  // UserPlus,
   Smile,
   Mic,
   Clock,
@@ -51,9 +51,9 @@ import {
 import ReminderDialog from "./ReminderDialog";
 
 import '../../app/dashboard/dashboard.css';
-import Image from "next/image";
-import { IconShoppingCartFilled } from "@tabler/icons-react";
-import { Progress } from "@radix-ui/react-progress";
+// import Image from "next/image";
+// import { IconShoppingCartFilled } from "@tabler/icons-react";
+// import { Progress } from "@radix-ui/react-progress";
 
 interface ProductData {
   id: number;
@@ -63,6 +63,14 @@ interface ProductData {
   permalink: string;
   price: number;
   regular_price: string;
+}
+
+interface ProductInfo {
+  name: string;
+  price: string;
+  link: string;
+  image_url: string;
+  sale_price?: string;
 }
 
 interface Message {
@@ -185,14 +193,14 @@ const LoadingState = () => (
   </Card>
 );
 
-const parseProductData = (productDataString: string): ProductData[] => {
-  try {
-    return JSON.parse(productDataString);
-  } catch (error) {
-    console.error('Error parsing product data:', error);
-    return [];
-  }
-};
+// const parseProductData = (productDataString: string): ProductData[] => {
+//   try {
+//     return JSON.parse(productDataString);
+//   } catch (error) {
+//     console.error('Error parsing product data:', error);
+//     return [];
+//   }
+// };
 
 
 
@@ -306,7 +314,7 @@ const AddressMessage = ({ data }: { data: AddressData }) => {
 
 const FilePreview = ({ 
   file, 
-  progress, 
+  // progress, 
   onCancel 
 }: { 
   file: File;
@@ -409,7 +417,7 @@ const ChatView = ({
         content: data.fileUrl,
         type: file.type.startsWith('image/') ? 'image' : 'video',
         role: 'agent',
-        conversation_id: selectedConversationId,
+        conversation_id: selectedConversationId ?? '', // Ensure it's always a string
         timestamp: new Date().toISOString(),
         sender_id: 'agent',
         fileUrl: data.fileUrl,
@@ -418,6 +426,7 @@ const ChatView = ({
       }]);
     } catch (error) {
       toast.error('Failed to upload file');
+      console.log('file upload error:', error);
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -832,7 +841,7 @@ const ChatView = ({
               <div key={message.id}>
                 {productInfo && message.role === "customer" && (
                   <div className="flex flex-col w-fit mb-4">
-                    {productInfo.map((product: any, idx: number) => (
+                    {productInfo.map((product: ProductInfo, idx: number) => (
                       <a 
                         key={idx}
                         href={product.link}
@@ -922,7 +931,7 @@ const ChatView = ({
                   }`}>
                      {message.content && extractCartData(message.content) && message.role === "customer" && (
                     <>
-                      <CartMessage items={extractCartData(message.content)} />
+                      <CartMessage items={extractCartData(message.content) ?? []} />
                       
                   </>
                     )}
