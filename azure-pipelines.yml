@@ -11,40 +11,47 @@ variables:
 
 steps:
 - checkout: self
-  persistCredentials: true  # Required for Git operations later
+  persistCredentials: true
+  clean: false  # Preserve git history references
 
 - script: |
-    set -e  # Exit immediately on error
+    set -ex  # Enable verbose output and exit on error
     
     # Configure Git identity
-    git config --global user.email "azure-pipelines@no-reply.com"
+    git config --global user.email "egeniestore@gmail.com"
     git config --global user.name "Azure DevOps CI/CD"
     
-    # Security: Add GitHub to safe directories
-    git config --global --add safe.directory $(Build.SourcesDirectory)
-    
-    # Configure GitHub remote using modern authentication
+    # Add GitHub remote using token
     git remote add github https://oauth2:$(GITHUB_PAT)@github.com/egenie4u/heidelAIWebsite.git
     
     # Verify remote configuration
-    echo "Configured remotes:"
+    echo "=== Remote Configuration ==="
     git remote -v
     
-    # Force fetch to ensure updated references
-    git fetch --all
+    # Update all references
+    echo "=== Fetching Latest ==="
+    git fetch --all --prune
     
-    # Push changes only if differences exist
-    if [ -n "$(git status --porcelain)" ]; then
-        echo "Detected changes, pushing to GitHub..."
-        git push github HEAD:main --follow-tags
-        echo "Push completed successfully"
+    # Compare local and remote commits
+    echo "=== Commit Diff Analysis ==="
+    LOCAL_COMMIT=$(git rev-parse HEAD)
+    REMOTE_COMMIT=$(git ls-remote github main | awk '{print $1}')
+    
+    if [ "$LOCAL_COMMIT" != "$REMOTE_COMMIT" ]; then
+        echo "Detected divergence: Local(${LOCAL_COMMIT:0:7}) vs Remote(${REMOTE_COMMIT:0:7})"
+        
+        # Push with lease for safety
+        echo "=== Pushing Changes ==="
+        git push github HEAD:main --force-with-lease --follow-tags
+        
+        echo "=== Push Verification ==="
+        git ls-remote github main
     else
-        echo "No changes to push"
+        echo "No divergence detected - repositories are in sync"
     fi
     
-    # Final verification
-    echo "Last 3 commits in GitHub remote:"
-    git ls-remote github main | head -3
-  displayName: 'Sync with GitHub'
+    # Cleanup credentials
+    git remote remove github
+  displayName: 'GitHub Sync'
   env:
-    GIT_REDACT_URLS: false  # Disable URL redacting for debugging
+    GIT_REDACT_URLS: false
