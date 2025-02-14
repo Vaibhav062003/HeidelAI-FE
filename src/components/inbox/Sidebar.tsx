@@ -29,6 +29,8 @@ import TemplateBuilder from "./TemplateBuilder";
 import ConversationSummary from "./ConversationSummary";
 
 interface SidebarProps {
+  selectedConversationId?: string;
+  onConversationSelect?: (id: string) => void;
   templates?: Array<{ id: string; title: string; category: string }>;
   products?: Array<{
     id: string;
@@ -45,6 +47,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({
+  selectedConversationId,
   templates = [
     { id: "1", title: "Order Status Update", category: "Support" },
     { id: "2", title: "Product Information", category: "Sales" },
@@ -86,7 +89,7 @@ const Sidebar = ({
 
   return (
     <TooltipProvider>
-      <Card className="h-[550px] w-[360px] bg-white border-l">
+      <Card className="h-full p-2 bg-white border-l">
         <Tabs defaultValue="summary" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="summary">
@@ -107,9 +110,9 @@ const Sidebar = ({
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="summary" className="p-4 h-full">
+          <TabsContent value="summary" className=" h-full">
           <div className="h-full">
-            <ConversationSummary />
+            <ConversationSummary selectedConversationId={selectedConversationId}/>
           </div>
           </TabsContent>
 

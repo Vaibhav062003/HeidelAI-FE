@@ -37,7 +37,6 @@ const ConversationPreview = ({
   isAiEnabled = true,
   assignedAgentId
 }: ConversationPreviewProps) => {
-  console.log("ConversationPreview", customerName);
   return (
     <Card
       className={`p-4 cursor-pointer transition-colors ${
@@ -72,17 +71,17 @@ const ConversationPreview = ({
           <p className="text-sm text-gray-600 truncate">{lastMessage}</p>
           <div className="flex items-center gap-2 mt-2">
             {priority && priority === "low" && (
-              <Badge variant="outline" className="bg-green-400">
+              <Badge variant="outline" className="bg-green-100 text-green-600">
                 Low
               </Badge>
             )}
             {priority && priority === "medium" && (
-              <Badge variant="outline" className="bg-orange-400">
+              <Badge variant="outline" className="bg-yellow-100 text-yellow-600">
                 Medium
               </Badge>
             )}
             {priority && priority === "high" && (
-              <Badge variant="outline" className="bg-red-400">
+              <Badge variant="outline" className="bg-red-100 text-red-600">
                 High
               </Badge>
             )}

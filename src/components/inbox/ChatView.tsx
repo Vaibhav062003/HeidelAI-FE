@@ -370,6 +370,48 @@ const FilePreview = ({
 };
 
 
+// const MessageTimer = ({ lastMessageTime }: { lastMessageTime: string }) => {
+//   const [timeLeft, setTimeLeft] = useState<string>('');
+//   const [isExpired, setIsExpired] = useState(false);
+
+//   useEffect(() => {
+//     const calculateTimeLeft = () => {
+//       const messageTime = new Date(lastMessageTime);
+//       const deadline = new Date(messageTime.getTime() + 24 * 60 * 60 * 1000);
+//       const now = new Date();
+//       const difference = deadline.getTime() - now.getTime();
+
+//       if (difference <= 0) {
+//         setIsExpired(true);
+//         setTimeLeft('Window expired');
+//         return;
+//       }
+
+//       const hours = Math.floor(difference / (1000 * 60 * 60));
+//       const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+
+//       setTimeLeft(`${hours}h ${minutes}m remaining`);
+//       setIsExpired(false);
+//     };
+
+//     calculateTimeLeft();
+//     const timer = setInterval(calculateTimeLeft, 60000); // Update every minute
+
+//     return () => clearInterval(timer);
+//   }, [lastMessageTime]);
+
+//   return (
+//     <div className={cn(
+//       "text-xs text-center mb-2",
+//       isExpired ? "text-red-500" : "text-gray-500",
+//       timeLeft.includes('1h') ? "text-amber-500" : ""
+//     )}>
+//       {timeLeft}
+//     </div>
+//   );
+// };
+
+
 const ChatView = ({
   selectedConversationId,
 }: ChatViewProps) => {
@@ -412,18 +454,18 @@ const ChatView = ({
       });
       const data = await response.json();
       
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        content: data.fileUrl,
-        type: file.type.startsWith('image/') ? 'image' : 'video',
-        role: 'agent',
-        conversation_id: selectedConversationId ?? '', // Ensure it's always a string
-        timestamp: new Date().toISOString(),
-        sender_id: 'agent',
-        fileUrl: data.fileUrl,
-        fileName: file.name,
-        fileType: file.type
-      }]);
+      // setMessages(prev => [...prev, {
+      //   id: Date.now().toString(),
+      //   content: data.fileUrl,
+      //   type: file.type.startsWith('image/') ? 'image' : 'video',
+      //   role: 'agent',
+      //   conversation_id: selectedConversationId ?? '', // Ensure it's always a string
+      //   timestamp: new Date().toISOString(),
+      //   sender_id: 'agent',
+      //   fileUrl: data.fileUrl,
+      //   fileName: file.name,
+      //   fileType: file.type
+      // }]);
     } catch (error) {
       toast.error('Failed to upload file');
       console.log('file upload error:', error);
@@ -499,7 +541,7 @@ const ChatView = ({
     
     setIsToggling(true);
     try {
-      const response = await fetch(`/api/conversations/${selectedConversationId}/toggle-ai`, {
+      const response = await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/toggle_ai`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -512,8 +554,8 @@ const ChatView = ({
       setIsAIEnabled(!isAIEnabled);
       toast.success(`AI ${!isAIEnabled ? 'enabled' : 'disabled'} for this conversation`);
     } catch (error) {
+      console.error('Failed to toggle AI status',error);
       toast.error('Failed to toggle AI status');
-      console.error(error);
     } finally {
       setIsToggling(false);
     }
@@ -582,6 +624,7 @@ const ChatView = ({
         setLoading(false);
       }
     }
+    
 
     const fetchMessages = async () => {
       try {
@@ -634,6 +677,14 @@ const ChatView = ({
     return <LoadingState />;
   }
 
+  const lastCustomerMessage = messages
+    .filter(m => m.role === 'customer')
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+
+  const isWindowExpired = lastCustomerMessage 
+    ? (new Date().getTime() - new Date(lastCustomerMessage.timestamp).getTime()) > (24 * 60 * 60 * 1000)
+    : true;
+
   return (
     <>
     <style>
@@ -665,7 +716,7 @@ const ChatView = ({
       </style>
     <TooltipProvider>
       {!selectedConversationId ? (
-        <Card className="h-full flex flex-col bg-white max-h-[94vh] items-center justify-center">
+        <Card className="h-full flex flex-col bg-white  items-center justify-center">
           <div className="text-center text-gray-500">
             <h3 className="text-3xl font-bold text-black mb-2">Welcome to your dashboard!</h3>
             <p>Select a conversation from the list to continue</p>
@@ -679,13 +730,13 @@ const ChatView = ({
               <img src={avatarSource} alt="Platform avatar"  />
             </Avatar>
             <div>
-              <h3 className="font-medium">{conversation?.customer_name}</h3>
-              <div className="flex items-center gap-2">
+              <h3 className="font-semibold">{conversation?.customer_name}</h3>
+              {/* <div className="flex items-center gap-2">
                 <Badge variant="secondary" className="text-xs">
                   Active
                 </Badge>
                 <span className="text-xs text-gray-500">Last seen 2m ago</span>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -834,7 +885,7 @@ const ChatView = ({
             const botProductInfo = message.content ? extractBotProductInfo(message.content) : null;
             const addressData = message.content ? extractAddressData(message.content) : null;
 
-            console.log("productInfo", productInfo);
+            // console.log("productInfo", productInfo);
             // console.log("botProductInfo", botProductInfo);
             
             return (

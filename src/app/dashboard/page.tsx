@@ -46,7 +46,7 @@ import { EmojiProvider } from '@/components/EmojiProvider';
 export default function DashboardPage(){
     const router = useRouter()
     const [activeView, setActiveView] = useState<"inbox" | "analytics" | "billing" | "settings">("inbox")
-    const [showTeamPanel, setShowTeamPanel] = useState(true)
+    const [showTeamPanel, setShowTeamPanel] = useState(false)
     const [selectedConversationId, setSelectedConversationId] = useState<string>("");
     const [isAIEnabled, setIsAIEnabled] = useState(false);
   
@@ -96,36 +96,37 @@ export default function DashboardPage(){
   </div>
 
   <TabsContent value="inbox" className="flex-1 flex overflow-hidden m-0">
-    <ResizablePanelGroup direction="horizontal">
-      <ResizablePanel defaultSize={20} minSize={15}>
-        <ConversationList
+  <TabsContent value="inbox" className="flex-1 flex overflow-hidden m-0">
+  <div className="flex w-full">
+    {/* Conversation List - Fixed width */}
+    <div className="w-[320px] min-w-[280px] border-r border-gray-200">
+      <ConversationList
+        selectedConversationId={selectedConversationId}
+        onConversationSelect={setSelectedConversationId}
+      />
+    </div>
+
+    {/* Chat View - Flexible width */}
+    <div className="flex-1 flex flex-col h-full min-w-[400px]">
+      <ChatView selectedConversationId={selectedConversationId} />
+    </div>
+
+    {/* Right Sidebar - Fixed width */}
+    <div className="w-[360px] min-w-[280px] border-l border-gray-200">
+      {selectedConversationId && (
+        <Sidebar 
           selectedConversationId={selectedConversationId}
-          onConversationSelect={setSelectedConversationId}
+          onConversationSelect={setSelectedConversationId} 
         />
-      </ResizablePanel>
-
-      <ResizableHandle />
-
-      <ResizablePanel defaultSize={50} minSize={30}>
-        <div className="flex-1 flex flex-col h-full">
-          <ChatView selectedConversationId={selectedConversationId}  />
-          
+      )}
+      {showTeamPanel && (
+        <div className="mt-4">
+          <TeamCollaboration />
         </div>
-      </ResizablePanel>
-
-      <ResizableHandle />
-
-      <ResizablePanel defaultSize={30} minSize={20}>
-        <div className="h-full flex flex-col">
-          <Sidebar />
-          {showTeamPanel && (
-            <div className="mt-4">
-              <TeamCollaboration />
-            </div>
-          )}
-        </div>
-      </ResizablePanel>
-    </ResizablePanelGroup>
+      )}
+    </div>
+  </div>
+</TabsContent>
   </TabsContent>
 
   <TabsContent value="analytics" className="m-0 flex-1 p-6 overflow-auto">
@@ -152,7 +153,7 @@ export default function DashboardPage(){
   </TabsContent>
 </Tabs>
 
-<StatusBar />
+{/* <StatusBar /> */}
 </div>
 </EmojiProvider>
     </>
