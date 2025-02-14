@@ -1,27 +1,62 @@
 trigger:
   branches:
     include:
-      - main  # Trigger on changes to the main branch in Azure DevOps
+      - main
 
 pool:
   vmImage: ubuntu-latest
 
 variables:
-  - group: github-secrets  # Reference the variable group containing GITHUB_PAT
+  - group: github-secrets
 
 steps:
-- checkout: self  # Check out the Azure DevOps repository
+- checkout: self
+  persistCredentials: true
+  clean: false        # Preserve git history references
+  fetchDepth: 0       # Fetch full history to avoid shallow clone issues
 
 - script: |
-    # Configure Git with the GitHub PAT
+    set -ex  # Enable verbose output and exit on error
+
+    # Configure Git identity
     git config --global user.email "egeniestore@gmail.com"
-    git config --global user.name "Azure Pipeline"
+    git config --global user.name "Azure DevOps CI/CD"
 
-    # Add GitHub as a remote
-    git remote add github https://$(GITHUB_PAT)@github.com/egenie4u/heidelAIWebsite.git
+    # Add GitHub remote using token
+    git remote add github https://oauth2:$(GITHUB_PAT)@github.com/egenie4u/heidelAIWebsite.git
 
-    # Push changes to GitHub
-    git push github HEAD:main --force --no-verify
+    # Verify remote configuration
+    echo "=== Remote Configuration ==="
+    git remote -v
 
-    echo "Azure DevOps changes have been pushed to GitHub"
-  displayName: 'Push changes to GitHub'
+    # (Optional) In case the checkout was shallow, force an unshallow fetch.
+    echo "=== Ensuring Full Repository History ==="
+    git fetch --unshallow || echo "Repository already complete"
+
+    # Update all references
+    echo "=== Fetching Latest References ==="
+    git fetch --all --prune
+
+    # Compare local and remote commits
+    echo "=== Commit Diff Analysis ==="
+    LOCAL_COMMIT=$(git rev-parse HEAD)
+    REMOTE_COMMIT=$(git ls-remote github main | awk '{print $1}')
+
+    if [ "$LOCAL_COMMIT" != "$REMOTE_COMMIT" ]; then
+        echo "Detected divergence: Local(${LOCAL_COMMIT:0:7}) vs Remote(${REMOTE_COMMIT:0:7})"
+        
+        # Push changes using --no-thin to send full pack objects along with force-with-lease and tag following
+        echo "=== Pushing Changes ==="
+        git push --no-thin github HEAD:main --force-with-lease --follow-tags
+        
+        echo "=== Push Verification ==="
+        git ls-remote github main
+    else
+        echo "No divergence detected - repositories are in sync"
+    fi
+
+    # Cleanup credentials
+    git remote remove github
+  displayName: 'GitHub Sync'
+  env:
+    GIT_REDACT_URLS: false
