@@ -1,9 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import AddProduct from "@/components/inbox/AddProduct";
+import ProductList from "@/components/inbox/ProductList";
+import ProductPreview from "./PreviewProduct";
+import { X } from "lucide-react";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -28,6 +39,22 @@ import {
 import TemplateBuilder from "./TemplateBuilder";
 import ConversationSummary from "./ConversationSummary";
 
+interface Metadata {
+  category: string;
+  description: string;
+  images: string;
+  name: string;
+  on_sale: string; // Use boolean if the data contains `true/false` instead of `"True"/"False"`
+  permalink: string;
+  price: number;
+  product_id: number;
+  purchasable: string; // Use boolean if the data contains `true/false`
+  regular_price: string; // Use `number` if parsed as numeric values
+  sale_price: string; // Use `number` if parsed as numeric values
+  slug: string;
+  stock_quantity: number;
+}
+
 interface SidebarProps {
   selectedConversationId?: string;
   onConversationSelect?: (id: string) => void;
@@ -38,6 +65,9 @@ interface SidebarProps {
     price: string;
     image: string;
     url?: string;
+    title: string;
+    category: string;
+    metadata?: Metadata; // Adding the Metadata interface here
   }>;
   analytics?: {
     responseTime: string;
@@ -53,22 +83,6 @@ const Sidebar = ({
     { id: "2", title: "Product Information", category: "Sales" },
     { id: "3", title: "Welcome Message", category: "Greeting" },
   ],
-  products = [
-    {
-      id: "1",
-      name: "Premium Package",
-      price: "$99.99",
-      image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
-      url: "https://example.com/products/premium-package",
-    },
-    {
-      id: "2",
-      name: "Basic Bundle",
-      price: "$49.99",
-      image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
-      url: "https://example.com/products/basic-bundle",
-    },
-  ],
   analytics = {
     responseTime: "2m 30s",
     resolutionRate: "94%",
@@ -76,37 +90,125 @@ const Sidebar = ({
   },
 }: SidebarProps) => {
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
-  const [searchProduct, setSearchProduct] = useState("");
   const [searchTemplate, setSearchTemplate] = useState("");
+  const [searchProduct, setSearchProduct] = useState("");
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showOptions, setShowOptions] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchProduct.toLowerCase()),
-  );
 
+  // Filter templates based on the search input
   const filteredTemplates = templates.filter((template) =>
-    template.title.toLowerCase().includes(searchTemplate.toLowerCase()),
+    template.title.toLowerCase().includes(searchTemplate.toLowerCase())
   );
+
+  // Fetch products from API
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/Dataset.json");
+      if (!response.ok) {
+        throw new Error("Failed to fetch products");
+      }
+      const data = await response.json();
+      setProducts(data);
+      setFilteredProducts(data);
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  // const handleAddProduct = () => {
+  //   fetchProducts(); // Re-fetch products after adding a new one
+  // };
+
+  const toggleForm = () => setShowForm((prev) => !prev);
+
+  // Filter products based on search term and category
+  useEffect(() => {
+    const filtered = products.filter((products) => {
+      const matchesSearch =
+        products.metadata.name &&
+        products.metadata.name
+          .toLowerCase()
+          .includes(searchProduct.toLowerCase());
+
+      // Apply category filter
+      const matchesCategory =
+        selectedCategory === "All" || products.category === selectedCategory;
+
+      return matchesSearch && matchesCategory;
+    });
+    setFilteredProducts(filtered);
+  }, [searchProduct, selectedCategory, products]);
+
+  const handleProductSelect = (product) => {
+    setSelectedProduct(product);
+  };
+
+  const handleOptionSelect = (platform) => {
+    setSelectedPlatform(platform);
+    setShowForm(true);
+    setShowOptions(false);
+  };
 
   return (
     <TooltipProvider>
       <Card className="h-full p-2 bg-white border-l">
         <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="summary">
-              <FileText className="h-4 w-4 mr-2" />
+          <TabsList className="grid grid-rows-2 grid-cols-3 gap-2 px-4 bg-gray-50 rounded-lg border p-1.5 h-[88px]">
+            {/* TabsTriggers without close functionality */}
+            <TabsTrigger
+              value="summary"
+              className="row-start-1 col-span-1 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-100 gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <FileText className="h-4 w-4" />
               Summary
             </TabsTrigger>
-            <TabsTrigger value="templates">
-              <FileText className="h-4 w-4 mr-2" />
+            
+            <TabsTrigger
+              value="templates"
+              className="row-start-1 col-span-1 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-100 gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <FileText className="h-4 w-4" />
               Templates
             </TabsTrigger>
-            <TabsTrigger value="products">
-              <Package className="h-4 w-4 mr-2" />
+            
+            <TabsTrigger
+              value="products"
+              className="row-start-1 col-span-1 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-100 gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <Package className="h-4 w-4" />
               Products
             </TabsTrigger>
-            <TabsTrigger value="analytics">
-              <BarChart3 className="h-4 w-4 mr-2" />
+
+            <TabsTrigger
+              value="analytics"
+              className="row-start-2 col-span-1 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-100 gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <BarChart3 className="h-4 w-4" />
               Analytics
+            </TabsTrigger>
+            
+            <TabsTrigger
+              value="collaboration"
+              className="row-start-2 col-span-1 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-100 gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <Users className="h-4 w-4" />
+              Team
             </TabsTrigger>
           </TabsList>
 
@@ -175,61 +277,165 @@ const Sidebar = ({
             )}
           </TabsContent>
 
-          <TabsContent value="products" className="p-4">
-            <div className="mb-4">
+          <TabsContent
+            value="products"
+            className="p-2 bg-gradient-to-b from-white via-gray-100 to-white rounded-md shadow-sm"
+          >
+            <div className="mb-1 flex gap-2">
+              {/* Main Add Button */}
+              <button
+                className="bg-blue-500 text-white w-12 h-9 rounded-full flex items-center justify-center shadow-md hover:bg-blue-600 transition-all relative z-10"
+                onClick={() => setShowOptions(!showOptions)}
+                aria-label="Add Product"
+              >
+                <span className="text-2xl font-bold">+</span>
+              </button>
+
+              {/* Dropdown Menu - Now properly layered */}
+              {showOptions && (
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowOptions(false)}
+                >
+                  <div className="absolute right-36 top-14 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-xl border border-gray-200 dark:border-gray-700 transform translate-x-[-70px]">
+                    <div className="py-1">
+                      <button
+                        onClick={() => handleOptionSelect("pinecone")}
+                        className="block w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 text-left transition-colors"
+                      >
+                        Add to Pinecone
+                      </button>
+                      <button
+                        onClick={() => handleOptionSelect("shopify")}
+                        className="block w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 text-left transition-colors"
+                      >
+                        Add to Shopify
+                      </button>
+                      <button
+                        onClick={() => handleOptionSelect("other")}
+                        className="block w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 text-left transition-colors"
+                      >
+                        Other
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Product Form */}
+              {showForm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <AddProduct
+                    closeForm={() => {
+                      setShowForm(false);
+                      setSelectedPlatform("");
+                    }}
+                    platform={selectedPlatform}
+                  />
+                </div>
+              )}
+
               <Input
                 placeholder="Search products..."
                 value={searchProduct}
                 onChange={(e) => setSearchProduct(e.target.value)}
-                className="w-full"
+                className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-2 py-1 focus:ring-1 focus:ring-blue-400 text-xs"
               />
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
+                <SelectTrigger className="w-[120px] bg-white text-gray-900 border border-gray-300 p-1 rounded-md text-xs">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-300">
+                  <SelectItem value="All">All</SelectItem>
+                  <SelectItem value="electronics">Electronics</SelectItem>
+                  <SelectItem value="jewelery">Jewelry</SelectItem>
+                  <SelectItem value="men's clothing">Men's Clothing</SelectItem>
+                  <SelectItem value="women's clothing">
+                    Women's Clothing
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <ScrollArea className="h-[700px]">
-              {filteredProducts.map((product) => (
-                <Card key={product.id} className="p-3 mb-3">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-medium">{product.name}</h3>
-                      <p className="text-sm text-gray-500">{product.price}</p>
-                      <div className="flex gap-2 mt-2">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => window.open(product.url, "_blank")}
-                            >
-                              <ExternalLink className="h-4 w-4 mr-2" /> View
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Open product page</TooltipContent>
-                        </Tooltip>
 
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                const productLink = `Check out ${product.name}: ${product.url}`;
-                                console.log("Share product:", productLink);
-                              }}
-                            >
-                              <Send className="h-4 w-4 mr-2" /> Share
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Share in chat</TooltipContent>
-                        </Tooltip>
+            <ScrollArea className="h-[450px] bg-gradient-to-r from-white to-gray-100 rounded-md p-2 overflow-auto shadow-md">
+              <div className="grid grid-cols-1 gap-2">
+                {loading && (
+                  <p className="text-center text-xs font-medium text-gray-700">
+                    Loading products...
+                  </p>
+                )}
+                {error && (
+                  <p className="text-center text-red-500 font-medium text-xs">
+                    {error}
+                  </p>
+                )}
+                {!loading && !error && filteredProducts.length === 0 && (
+                  <p className="text-center text-xs font-medium text-gray-700">
+                    No products found.
+                  </p>
+                )}
+                {filteredProducts.map((product: any) => (
+                  <Card
+                    key={product.id}
+                    className="p-1 bg-white shadow-sm rounded-md hover:shadow-md transform hover:scale-105 transition-all duration-200 cursor-pointer"
+                  >
+                    <div className="flex items-center bg-gradient-to-t from-white via-gray-100 to-gray-200 p-1 rounded-md">
+                      <img
+                        src={product.metadata.images}
+                        alt={product.metadata.name}
+                        className="w-16 h-16 object-cover rounded-md mr-8 transition-all duration-200 hover:scale-110"
+                      />
+                      <div className="flex flex-col justify-center">
+                        <h3 className="font-medium text-xs text-gray-900">
+                          {product.metadata.name}
+                        </h3>
+                        <p className="text-xs text-gray-600">
+                          ₹{product.metadata.price}
+                        </p>
+                        <div className="flex gap-6 mt-3">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleProductSelect(product)} // Call handleProductSelect
+                                className="hover:bg-blue-500 text-blue-500 px-2 py-0.5 text-xs"
+                              >
+                                <ExternalLink className="h-3 w-3 mr-2" />
+                                View
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              View product details
+                            </TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const productLink = `Check out ${product.metadata.name}: ${product.metadata.permalink}`;
+                                  console.log("Share product:", productLink);
+                                }}
+                                className="hover:bg-blue-500 text-blue-500 px-2 py-0.5 text-xs"
+                              >
+                                <Send className="h-3 w-3 mr-2" />
+                                Share
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Share in chat</TooltipContent>
+                          </Tooltip>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                ))}
+              </div>
             </ScrollArea>
           </TabsContent>
 
@@ -263,6 +469,12 @@ const Sidebar = ({
             </div>
           </TabsContent>
         </Tabs>
+        {selectedProduct && (
+          <ProductPreview
+            product={selectedProduct}
+            onClose={() => setSelectedProduct(null)}
+          />
+        )}
       </Card>
     </TooltipProvider>
   );

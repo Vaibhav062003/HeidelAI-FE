@@ -748,9 +748,9 @@ const ChatView = ({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Start voice call</TooltipContent>
-            </Tooltip>
+            </Tooltip> */}
 
-            <Tooltip>
+            {/* <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Video className="h-5 w-5" />
