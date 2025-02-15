@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,12 +6,19 @@ import { Search, Filter } from "lucide-react";
 import ConversationPreview from "./ConversationPreview";
 import { useConversations } from '../hooks/useConversations';
 import { Conversation } from '@/components/types/conversation';
-
-
+import { FilterMenu, FilterOptions } from './FilterMenu';
 
 interface ConversationListProps {
   selectedConversationId?: string;
   onConversationSelect?: (id: string) => void;
+}
+
+type TabValue = 'all' | 'live_agent' | 'AI';
+
+interface SearchResult {
+  conversation: Conversation;
+  matchedOn: 'name' | 'message';
+  matchedText?: string;
 }
 
 const ConversationItemSkeleton = () => (
@@ -24,11 +31,78 @@ const ConversationItemSkeleton = () => (
   </div>
 );
 
+const EmptyState = ({ message }: { message: string }) => (
+  <div className="flex flex-col items-center justify-center h-full p-4 text-center text-gray-500">
+    <p className="text-sm">{message}</p>
+  </div>
+);
+
 const ConversationList = ({
   selectedConversationId,
   onConversationSelect
 }: ConversationListProps) => {
   const { conversations, loading, error } = useConversations();
+  const [activeTab, setActiveTab] = useState<TabValue>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState<FilterOptions>({
+    platform: [],
+    priority: [],
+    sentiment: [],
+    unreadOnly: false,
+    hasQuery: false,
+  });
+
+
+  const searchResults: SearchResult[] = conversations
+    .filter(conversation => {
+      // Apply filters
+      if (filters.platform.length && !filters.platform.includes(conversation.platform)) {
+        return false;
+      }
+      if (filters.priority.length && !filters.priority.includes(conversation.priority)) {
+        return false;
+      }
+      if (filters.sentiment.length && !filters.sentiment.includes(conversation.sentiment)) {
+        return false;
+      }
+      if (filters.unreadOnly && conversation.unread_count === 0) {
+        return false;
+      }
+      if (filters.hasQuery && !conversation.query) {
+        return false;
+      }
+
+      // Apply search
+      const nameMatch = conversation.customer_name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const messageMatch = conversation.last_message
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+
+      return nameMatch || messageMatch;
+    })
+  .map(conversation => {
+    const isNameMatch = conversation.customer_name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+    return {
+      conversation,
+      matchedOn: isNameMatch ? 'name' as const : 'message' as const,
+      matchedText: searchQuery ? conversation.last_message : undefined
+    };
+  })
+    .filter(result => {
+      switch (activeTab) {
+        case 'AI':
+          return result.conversation.is_ai_enabled;
+        case 'live_agent':
+          return !result.conversation.is_ai_enabled;
+        default:
+          return true;
+      }
+    });
 
   if (loading) {
     return (
@@ -45,10 +119,12 @@ const ConversationList = ({
             <TabsTrigger value="AI">AI</TabsTrigger>
           </TabsList>
         </Tabs>
-        <button className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
-          <Filter className="h-4 w-4" />
-          Filter
-        </button>
+        <div className="mt-4">
+            <FilterMenu 
+              filters={filters}
+              onFilterChange={setFilters}
+            />
+        </div>
       </div>
       {/* Loading Skeletons */}
       <div className="flex-1 custom-scrollb px-1 overflow-auto">
@@ -75,10 +151,12 @@ const ConversationList = ({
             <TabsTrigger value="AI">AI</TabsTrigger>
           </TabsList>
         </Tabs>
-        <button className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
-          <Filter className="h-4 w-4" />
-          Filter
-        </button>
+        <div className="mt-4">
+            <FilterMenu 
+              filters={filters}
+              onFilterChange={setFilters}
+            />
+          </div>
       </div>
     <div className="p-4 text-neutral-700">Error loading conversations: {error.message}</div>
     </div>
@@ -116,24 +194,32 @@ const ConversationList = ({
         }
       `}
     </ style >
-    <div className="w-80 h-[94vh] py-4  bg-white border-r border-gray-200 flex flex-col">
-      <div className="p-4 border-b border-gray-200">
-        <div className="relative">
+    
+    <div className="w-80 h-[94vh] bg-white border-r border-gray-200 flex flex-col">
+        <div className="p-4 border-b border-gray-200">
+          <div className="relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-          <Input placeholder="Search conversations" className="pl-9 pr-4" />
+            <Input 
+              placeholder="Search conversations" 
+              className="pl-9 pr-4"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabValue)} className="mt-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="live_agent">Live Agent</TabsTrigger>
+              <TabsTrigger value="AI">AI</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <div className="mt-4">
+            <FilterMenu 
+              filters={filters}
+              onFilterChange={setFilters}
+            />
+          </div>
         </div>
-        <Tabs defaultValue="all" className="mt-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="live_agent">Live Agent</TabsTrigger>
-            <TabsTrigger value="AI">AI</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        <button className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
-          <Filter className="h-4 w-4" />
-          Filter
-        </button>
-      </div>
 
       {/* <ScrollArea className="flex-1">
         <div className="p-2 w-80  space-y-2">
@@ -154,27 +240,45 @@ const ConversationList = ({
           ))}
         </div>
       </ScrollArea> */}
-      <div className="flex-1 custom-scrollb px-1 overflow-y-scroll">
-          {conversations.map((conversation: Conversation) => (
-            
-        <ConversationPreview
-          key={conversation.id}
-          id={conversation.id}
-          channelType={conversation.platform as "telegram" | "whatsapp" | "instagram" | "web"}
-          customerName={conversation.customer_name}
-          lastMessage={formatLastMessage(conversation.last_message)}
-          timestamp={conversation.timestamp}
-          unreadCount={conversation.unread_count}
-          avatarUrl={conversation.avatar_url}
-          isAiEnabled={conversation.is_ai_enabled}
-          assignedAgentId={conversation.assigned_agent_id}
-          isSelected={selectedConversationId === conversation.id}
-          onClick={() => onConversationSelect?.(conversation.id)}
-          priority="medium" // Default values for existing props
-          sentiment="neutral" // Default values for existing props
+        <div className="flex-1 custom-scrollb px-1 overflow-y-scroll">
+      {searchResults.length === 0 ? (
+        <EmptyState 
+          message={
+            activeTab === 'live_agent' 
+              ? "No conversations have Live Agent enabled" 
+              : activeTab === 'AI' 
+                ? "No conversations have AI enabled"
+                : "No conversations found"
+          } 
         />
-      ))}
-      </div>
+      ) : (
+        searchResults
+          .sort((a, b) => 
+            new Date(b.conversation.timestamp).getTime() - 
+            new Date(a.conversation.timestamp).getTime()
+          )
+          .map(({ conversation, matchedOn, matchedText }) => (
+            <div key={conversation.id} className="flex flex-col">
+              <ConversationPreview
+                id={conversation.id}
+                channelType={conversation.platform as "telegram" | "whatsapp" | "instagram" | "web"}
+                customerName={conversation.customer_name}
+                lastMessage={formatLastMessage(conversation.last_message)}
+                timestamp={conversation.timestamp}
+                unreadCount={conversation.unread_count}
+                avatarUrl={conversation.avatar_url}
+                isAiEnabled={conversation.is_ai_enabled}
+                assignedAgentId={conversation.assigned_agent_id}
+                isSelected={selectedConversationId === conversation.id}
+                onClick={() => onConversationSelect?.(conversation.id)}
+                priority={conversation.priority}
+                sentiment={conversation.sentiment}
+              />
+              
+            </div>
+          ))
+      )}
+    </div>
     </div>
     </>
   );

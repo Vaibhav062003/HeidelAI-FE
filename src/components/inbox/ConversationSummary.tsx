@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Brain, Tag, AlertTriangle, Clock, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { Skeleton } from "@/components/ui/skeleton";
+import Image from "next/image";
 
 const WS_URL = 'wss://egenie-whatsapp.koyeb.app/cs';
 
@@ -28,8 +29,8 @@ const LoadingState = () => (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-purple-500" />
-          <h3 className="font-medium">Conversation Summary</h3>
+          <Image height={30} width={30} src='/icons/summary_icon.png' alt="summary_icon"/>
+          <h3 className="font-bold">Conversation Summary</h3>
           </div>
           <Skeleton className="h-6 w-20" />
         </div>
@@ -40,7 +41,7 @@ const LoadingState = () => (
         </div>
 
         <div>
-        <h4 className="text-sm font-medium mb-2">Summary Points</h4>
+        <h4 className="text-base font-medium mb-2">Summary Points</h4>
           <div className="space-y-2">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-2">
@@ -52,7 +53,7 @@ const LoadingState = () => (
         </div>
 
         <div>
-        <h4 className="text-sm font-medium mb-2">AI suggestions</h4>
+        <h4 className="text-base font-medium mb-2">AI suggestions</h4>
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex items-center gap-2">
@@ -223,7 +224,7 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Brain className="h-5 w-5 text-purple-500" />
+          <Image height={30} width={30} src='/icons/summary_icon.png' alt="summary_icon"/>
             <h3 className="font-semibold">Conversation Summary</h3>
           </div>
           <Badge

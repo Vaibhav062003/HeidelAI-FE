@@ -9,4 +9,7 @@ export interface Conversation {
   avatar_url: string;
   is_ai_enabled: boolean;
   assigned_agent_id: string | null;
+  priority: "low" | "medium" | "high";
+  sentiment: "positive" | "neutral" | "negative";
+  query?: string;
 }

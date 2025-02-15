@@ -60,11 +60,11 @@ const ConversationPreview = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-black truncate">{customerName}</span>
-              {isAiEnabled ? (
+              {/* {isAiEnabled ? (
                 <Bot className="h-4 w-4 text-blue-500" />
               ) : assignedAgentId ? (
                 <User2 className="h-4 w-4 text-green-500" />
-              ) : null}
+              ) : null} */}
             </div>
             <span className="text-sm text-gray-500">{getRelativeTime(timestamp)}</span>
           </div>
