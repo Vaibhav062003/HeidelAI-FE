@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { AuthPreview } from "./AuthPreview";
-// import { AuthPreview } from "./AuthPreview";
+
 
 interface AppSetup {
   packageName: string;
@@ -12,6 +11,25 @@ interface AuthTemplateProps {
   setTemplateName: (name: string) => void;
   language: string;
   setLanguage: (language: string) => void;
+  languages: string[];
+  codeDeliveryMethod: string;
+  setCodeDeliveryMethod: React.Dispatch<React.SetStateAction<"zero_tap" | "one_tap" | "copy_code">>
+  addSecurityRecommendation: boolean;
+  addExpirationTime: boolean;
+  setAddExpirationTime: (value: boolean) => void;
+  validityPeriod: string;
+  autofillText: string;
+  setAutofillText: (text: string) => void;
+  setAddSecurityRecommendation: (value: boolean) => void;
+  setValidityPeriod: (period: string) => void;
+  copyCodeText: string;
+  setCopyCodeText: (text: string) => void;
+  apps: AppSetup[];
+  setApps: React.Dispatch<React.SetStateAction<AppSetup[]>>;
+  customValidityPeriod: boolean;
+  setCustomValidityPeriod: (value: boolean) => void;
+  validityPeriods: string[];
+
 }
 
 export const AuthTemplate: React.FC<AuthTemplateProps> = ({
@@ -19,39 +37,30 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
   setTemplateName,
   language,
   setLanguage,
+  languages,
+  codeDeliveryMethod,
+  setCodeDeliveryMethod,
+  addSecurityRecommendation,
+  setAddSecurityRecommendation,
+  addExpirationTime,
+  setAddExpirationTime,
+  validityPeriod,
+  autofillText,
+  setAutofillText,
+  setValidityPeriod,
+  copyCodeText,
+  setCopyCodeText,
+  apps,
+  setApps,
+  customValidityPeriod,
+  setCustomValidityPeriod,
+  validityPeriods,
 }) => {
   // State for code delivery method
-  const [codeDeliveryMethod, setCodeDeliveryMethod] = useState<
-    "zero-tap" | "one-tap" | "copy"
-  >("zero-tap");
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  // State for app setup
-  const [apps, setApps] = useState<AppSetup[]>([
-    { packageName: "", signatureHash: "" },
-  ]);
 
-  // State for content settings
-  const [addSecurityRecommendation, setAddSecurityRecommendation] =
-    useState(true);
-  const [addExpirationTime, setAddExpirationTime] = useState(false);
-  const [customValidityPeriod, setCustomValidityPeriod] = useState(false);
-  const [validityPeriod, setValidityPeriod] = useState("10 minutes");
 
-  // State for button text
-  const [autofillText, setAutofillText] = useState("Autofill");
-  const [copyCodeText, setCopyCodeText] = useState("Copy code");
-
-  const validityPeriods = [
-    "10 minutes",
-    "30 minutes",
-    "1 hour",
-    "2 hours",
-    "3 hours",
-    "4 hours",
-    "5 hours",
-    "6 hours",
-  ];
 
   const addApp = () => {
     if (apps.length < 5) {
@@ -66,8 +75,43 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
   };
  
   return (
-    <>
-    <div className="">
+    <div className="grid ">
+
+<div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Template name
+          </label>
+          <input
+            type="text"
+            value={templateName}
+            onChange={(e) => setTemplateName(e.target.value)}
+            placeholder="Enter a template name"
+            className="w-full p-2 border rounded-md"
+            maxLength={512}
+          />
+          <div className="text-xs text-gray-500 mt-1">
+            {templateName.length} / 512
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Language
+          </label>
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="w-full p-2 border rounded-md"
+          >
+            {languages.map((lang) => (
+              <option key={lang} value={lang}>
+                {lang}
+              </option>
+            ))}
+          </select>
+        </div>
+        </div>
+    <div className="inline-block">
       <div>
         {/* Code Delivery Setup */}
         <div className="mb-6">
@@ -80,8 +124,8 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
             <label className="flex items-start gap-3">
               <input
                 type="radio"
-                checked={codeDeliveryMethod === "zero-tap"}
-                onChange={() => setCodeDeliveryMethod("zero-tap")}
+                checked={codeDeliveryMethod === "zero_tap"}
+                onChange={() => setCodeDeliveryMethod("zero_tap")}
                 className="mt-1"
               />
               <div>
@@ -112,8 +156,8 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
             <label className="flex items-start gap-3">
               <input
                 type="radio"
-                checked={codeDeliveryMethod === "one-tap"}
-                onChange={() => setCodeDeliveryMethod("one-tap")}
+                checked={codeDeliveryMethod === "one_tap"}
+                onChange={() => setCodeDeliveryMethod("one_tap")}
                 className="mt-1"
               />
               <div>
@@ -127,8 +171,8 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
             <label className="flex items-start gap-3">
               <input
                 type="radio"
-                checked={codeDeliveryMethod === "copy"}
-                onChange={() => setCodeDeliveryMethod("copy")}
+                checked={codeDeliveryMethod === "copy_code"}
+                onChange={() => setCodeDeliveryMethod("copy_code")}
                 className="mt-1"
               />
               <div>
@@ -310,20 +354,16 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
         </div>
       </div>
     </div>
+    {/* <AuthPreview
+      addSecurityRecommendation={addSecurityRecommendation}
+      addExpirationTime={addExpirationTime}
+      validityPeriod={validityPeriod || '5 minutes'}
+      codeDeliveryMethod={codeDeliveryMethod}
+      autofillText={autofillText}
+      copyCodeText={copyCodeText}
+    /> */}
+</div>
 
-    <div>
-    <div>
-        <AuthPreview
-          addSecurityRecommendation={addSecurityRecommendation}
-          addExpirationTime={addExpirationTime}
-          validityPeriod={validityPeriod}
-          codeDeliveryMethod={codeDeliveryMethod}
-          autofillText={autofillText}
-          copyCodeText={copyCodeText}
-        />
-      </div>
-    </div>
-    </>
   );
 };
 

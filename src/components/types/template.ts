@@ -1,15 +1,15 @@
 export interface WhatsAppTemplate {
   id?: string; 
+  type: string;
   name: string;
   status: 'APPROVED' | 'PENDING' | 'REJECTED';
   category: 'MARKETING' | 'UTILITY' | 'AUTHENTICATION';
-  type:string;
   language: string;
   header?: {
     type: 'none' | 'text' | 'media';
     content?: string;
   };
-  template?: 'custom' | 'catalog' | 'one-time_Passcode' | 'pre-approved_utility' | 'pre-approved_auth';
+  template?: 'custom' | 'catalog' | 'one-time_Passcode';
   body: string;
   footer?: string;
   button?: {
@@ -25,4 +25,15 @@ export interface WhatsAppTemplate {
     example: string;
     section: 'body'
   }[];
+  components?: WhatsAppTemplateComponent[];
 }
+
+
+
+export interface WhatsAppTemplateComponent {
+  type?: 'body' | 'footer' | 'button';
+  text?: string;
+    example?: {
+      body_text?: string[];
+    };
+  }

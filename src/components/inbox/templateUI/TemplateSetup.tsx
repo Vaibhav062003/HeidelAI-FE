@@ -17,9 +17,6 @@ export const TemplateSetup: React.FC<TemplateSetupProps> = ({
   setActiveTab,
   templateType,
   setTemplateType,
-  newVariable,
-  setNewVariable,
-  bodyVariables
 }) => {
   return (
     <>
@@ -81,7 +78,7 @@ export const TemplateSetup: React.FC<TemplateSetupProps> = ({
               Send messages about an existing order or account.
             </p>
           </div>
-          <div
+          {/* <div
             className={`p-4 rounded-lg border ${
               templateType === 'pre-approved_utility' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
             }`}
@@ -97,7 +94,7 @@ export const TemplateSetup: React.FC<TemplateSetupProps> = ({
             <p className="text-gray-600 ml-6">
               Save time by using pre-approved templates from our Template Library.
             </p>
-          </div>         
+          </div>          */}
         </div>
       ) : activeTab === 'Authentication' ? (
         <div className="space-y-4">
@@ -117,7 +114,7 @@ export const TemplateSetup: React.FC<TemplateSetupProps> = ({
               Send messages about an existing order or account.
             </p>
           </div>
-          <div
+          {/* <div
             className={`p-4 rounded-lg border ${
               templateType === 'pre-approved_auth' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
             }`}
@@ -132,7 +129,7 @@ export const TemplateSetup: React.FC<TemplateSetupProps> = ({
             <p className="text-gray-600 ml-6">
               Save time by using pre-approved templates from our Template Library.
             </p>
-          </div>         
+          </div>          */}
         </div>
       ) : (
         <div className="space-y-4">
@@ -162,7 +159,7 @@ export const TemplateSetup: React.FC<TemplateSetupProps> = ({
               <div className={`w-4 h-4 rounded-full border ${
                 templateType === 'catalog' ? 'border-4 border-blue-500' : 'border-gray-300'
               }`}></div>
-              <h3 className="font-semibold">catalog</h3>
+              <h3 className="font-semibold">Catalog</h3>
             </div>
             <p className="text-gray-600 ml-6">
               Send messages about your entire catalog or just a few of its products.

@@ -1,28 +1,23 @@
-import React, { useState } from "react";
-import { Plus, Trash2, Info, Upload, MapPin, Smile } from "lucide-react";
+import React, { useRef, useState } from "react";
+import {
+  Plus,
+  Trash2,
+  Info,
+  Upload,
+  MapPin,
+  Smile,
+  Code,
+  Strikethrough,
+  Italic,
+  Bold,
+} from "lucide-react";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
+import { AppSetup, Button, Variable } from "@/components/types/template_types";
 
-type Variable = {
-  id: string;
-  name: string;
-  type: "text" | "number" | "date" | "currency" | "datetime";
-  example: string;
-  section: "header" | "body";
-};
+import ImageUploadHandler from "./ImageUploadHandler";
+import { insertFormatting } from "./textFormatting";
 
-type Button = {
-  id: string;
-  type: "reply" | "url" | "phone" | "copy";
-  text: string;
-  value?: string;
-};
-
-interface AppSetup {
-  packageName: string;
-  signatureHash: string;
-  templateType: string;
-}
 
 interface TemplateEditorProps {
   templateName: string;
@@ -95,8 +90,12 @@ interface TemplateEditorProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   templateType: string;
-}
+  isChecked: boolean;
+  setIsChecked: (checked: boolean) => void;
+  selectedTime: string;
+  setSelectedTime: (time: string) => void;
 
+}
 const headerTypes = [
   { value: "text", label: "Text" },
   { value: "image", label: "Image" },
@@ -138,24 +137,19 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   activeTab,
   setActiveTab,
   templateType,
+  isChecked,
+  setIsChecked,
+  selectedTime,
+  setSelectedTime,
+
 }) => {
-  const [isChecked, setIsChecked] = useState(false);
-  const [selectedTime, setSelectedTime] = useState("");
-  const [codeDeliveryMethod, setCodeDeliveryMethod] = useState<
-    "zero-tap" | "one-tap" | "copy"
-  >("zero-tap");
-  const [termsAccepted, setTermsAccepted] = useState(false);
+
+  
   const [apps, setApps] = useState<AppSetup[]>([
-    { packageName: "", signatureHash: "", templateType: "" },
+    { packageName: "", signatureHash: "" },
   ]);
-  const [addSecurityRecommendation, setAddSecurityRecommendation] =
-    useState(true);
-  const [addExpirationTime, setAddExpirationTime] = useState(false);
-  const [customValidityPeriod, setCustomValidityPeriod] = useState(false);
-  const [validityPeriod, setValidityPeriod] = useState("10 minutes");
-  const [autofillText, setAutofillText] = useState("Autofill");
-  const [copyCodeText, setCopyCodeText] = useState("Copy code");
   const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
+  const [text, setText] = useState("");
 
   const handleEmojiSelect = (emoji: any) => {
     // Append selected emoji to message body
@@ -174,12 +168,14 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     "6 hours",
   ];
 
+  const handleFileUploads = (url: string) => {
+    setPreviewFile(url);
+    setHeaderContent(url);
+  };
+
   const addApp = () => {
     if (apps.length < 5) {
-      setApps([
-        ...apps,
-        { packageName: "", signatureHash: "", templateType: "" },
-      ]);
+      setApps([...apps, { packageName: "", signatureHash: "" }]);
     }
   };
 
@@ -189,54 +185,116 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     setApps(newApps);
   };
 
+  interface Selection {
+    baseNode: Node | null;
+    baseOffset: number;
+    extentNode: Node | null;
+    extentOffset: number;
+  }
+  // textFormatting.ts
+  const FORMAT_MARKERS = {
+    bold: { start: "**", end: "**" },
+    italic: { start: "_", end: "_" },
+    strikethrough: { start: "~~", end: "~~" },
+    monospace: { start: "`", end: "`" },
+  } as const;
+
+  // const insertFormatting = (
+  //   format: keyof typeof FORMAT_MARKERS,
+  //   messageBody: string,
+  //   setMessageBody: (value: string) => void
+  // ) => {
+  //   const textarea = document.querySelector("textarea");
+  //   if (!textarea) return;
+
+  //   const start = textarea.selectionStart;
+  //   const end = textarea.selectionEnd;
+
+  //   // If there's no text selected, preserve cursor position
+  //   if (start === end) {
+  //     const marker = FORMAT_MARKERS[format];
+  //     const newText =
+  //       messageBody.slice(0, start) +
+  //       marker.start +
+  //       marker.end +
+  //       messageBody.slice(end);
+
+  //     setMessageBody(newText);
+
+  //     // Set cursor position between markers
+  //     setTimeout(() => {
+  //       textarea.selectionStart = start + marker.start.length;
+  //       textarea.selectionEnd = start + marker.start.length;
+  //       textarea.focus();
+  //     }, 0);
+  //     return;
+  //   }
+
+  //   const selectedText = messageBody.substring(start, end);
+  //   const marker = FORMAT_MARKERS[format];
+
+  //   // Check if selection already has this formatting
+  //   const hasFormatting =
+  //     selectedText.startsWith(marker.start) &&
+  //     selectedText.endsWith(marker.end);
+
+  //   let newText;
+  //   if (hasFormatting) {
+  //     // Remove formatting
+  //     newText =
+  //       messageBody.slice(0, start) +
+  //       selectedText.slice(marker.start.length, -marker.end.length) +
+  //       messageBody.slice(end);
+  //   } else {
+  //     // Add formatting
+  //     newText =
+  //       messageBody.slice(0, start) +
+  //       marker.start +
+  //       selectedText +
+  //       marker.end +
+  //       messageBody.slice(end);
+  //   }
+
+  //   setMessageBody(newText);
+
+  //   // Preserve selection
+  //   setTimeout(() => {
+  //     const newSelectionStart = start;
+  //     const newSelectionEnd = hasFormatting
+  //       ? end - (marker.start.length + marker.end.length)
+  //       : end + (marker.start.length + marker.end.length);
+
+  //     textarea.selectionStart = newSelectionStart;
+  //     textarea.selectionEnd = newSelectionEnd;
+  //     textarea.focus();
+  //   }, 0);
+  // };
+
+  // // Convert Markdown to HTML for preview
+  // const getFormattedText = (
+  //   text: string,
+  //   type: "header" | "body"
+  // ): React.ReactNode => {
+  //   // Replace newlines with <br /> first
+  //   let formattedText = text.replace(/\n/g, "<br />");
+
+  //   // Convert Markdown to HTML
+  //   formattedText = formattedText
+  //     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // Bold
+  //     .replace(/_(.*?)_/g, "<em>$1</em>") // Italic
+  //     .replace(/~~(.*?)~~/g, "<del>$1</del>") // Strikethrough
+  //     .replace(/`(.*?)`/g, "<code>$1</code>"); // Monospace
+
+  //   // Handle variables if present
+  //   formattedText = formattedText.replace(
+  //     /{{(\w+)}}/g,
+  //     '<span class="text-blue-500">{{$1}}</span>'
+  //   );
+
+  //   return formattedText;
+  // };
+
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-
-  const applyFormatting = (format: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-
-    // No text selected
-    if (start === end) {
-      return; // Optionally handle this case
-    }
-
-    // Get selected text
-    const selectedText = messageBody.substring(start, end);
-    let formattedText = "";
-
-    // Apply formatting based on type
-    switch (format) {
-      case "bold":
-        formattedText = `*${selectedText}*`; // Markdown style for bold
-        break;
-      case "italic":
-        formattedText = `_${selectedText}_`; // Markdown style for italic
-        break;
-      case "strikethrough":
-        formattedText = `~${selectedText}~`; // Markdown style for strikethrough
-        break;
-      default:
-        return; // Invalid format type
-    }
-
-    // Update message body
-    const newMessageBody =
-      messageBody.substring(0, start) +
-      formattedText +
-      messageBody.substring(end);
-
-    setMessageBody(newMessageBody);
-
-    // Set cursor position
-    setTimeout(() => {
-      textarea.focus(); // Ensure the textarea is focused
-      textarea.selectionStart = start;
-      textarea.selectionEnd = start + formattedText.length;
-    }, 0);
-  };
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
@@ -362,25 +420,17 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 {(headerType === "image" ||
                   headerType === "video" ||
                   headerType === "document") && (
-                  <div className="border-2 border-dashed rounded-lg p-4 text-center">
-                    <input
-                      type="file"
-                      accept={
-                        headerType === "image"
-                          ? "image/*"
-                          : headerType === "video"
-                          ? "video/*"
-                          : "*"
-                      }
-                      onChange={handleFileUpload}
-                      className="hidden"
-                      id="file-upload"
-                    />
-                    <label htmlFor="file-upload" className="cursor-pointer">
-                      <Upload className="mx-auto w-8 h-8 mb-2" />
-                      <p>Click to upload {headerType}</p>
-                    </label>
-                  </div>
+                  <ImageUploadHandler
+                    onUploadComplete={handleFileUploads}
+                    accept={
+                      headerType === "image"
+                        ? "image/*"
+                        : headerType === "video"
+                        ? "video/*"
+                        : "*"
+                    }
+                    className="w-full"
+                  />
                 )}
 
                 {headerType === "location" && (
@@ -456,10 +506,13 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                   ref={textareaRef}
                   value={messageBody}
                   onChange={(e) => setMessageBody(e.target.value)}
+                  onInput={(e) => setText(e.currentTarget.textContent || "")}
                   placeholder="Enter your message"
                   className="w-full p-2 border rounded-md h-32 bg-white"
                   maxLength={1024}
                 />
+
+               
                 <div className="absolute bottom-2 right-2 flex items-center gap-2">
                   {/* Emoji Picker Toggle */}
                   <div className="relative">
@@ -477,33 +530,45 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                     )}
                   </div>
 
-                  {/* Formatting Buttons */}
                   <button
-                    className="p-1 text-gray-500 hover:text-gray-700"
-                    onClick={() => applyFormatting("bold")}
-                    aria-label="Bold"
+                    onClick={() =>
+                      insertFormatting("bold", messageBody, setMessageBody)
+                    }
+                    className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                    title="Bold"
                   >
-                    <span className="font-bold">B</span>
+                    <Bold size={16} />
                   </button>
                   <button
-                    className="p-1 text-gray-500 hover:text-gray-700"
-                    onClick={() => applyFormatting("italic")}
-                    aria-label="Italic"
+                    onClick={() =>
+                      insertFormatting("italic", messageBody, setMessageBody)
+                    }
+                    className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                    title="Italic"
                   >
-                    <span className="italic">I</span>
+                    <Italic size={16} />
                   </button>
                   <button
-                    className="p-1 text-gray-500 hover:text-gray-700"
-                    onClick={() => applyFormatting("strikethrough")}
-                    aria-label="Strikethrough"
+                    onClick={() =>
+                      insertFormatting(
+                        "strikethrough",
+                        messageBody,
+                        setMessageBody
+                      )
+                    }
+                    className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                    title="Strikethrough"
                   >
-                    <span className="line-through">S</span>
+                    <Strikethrough size={16} />
                   </button>
                   <button
-                    className="p-1 text-gray-500 hover:text-gray-700"
-                    aria-label="Insert code"
+                    onClick={() =>
+                      insertFormatting("monospace", messageBody, setMessageBody)
+                    }
+                    className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                    title="Monospace"
                   >
-                    <code>&lt;/&gt;</code>
+                    <Code size={16} />
                   </button>
                 </div>
               </div>

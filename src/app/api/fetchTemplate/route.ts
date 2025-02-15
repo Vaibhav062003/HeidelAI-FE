@@ -19,7 +19,6 @@ export async function GET() {
 
     const data: any = await response.json(); 
    
-
     const templates: WhatsAppTemplate[] = data.data || [];
 
     return NextResponse.json(templates, {

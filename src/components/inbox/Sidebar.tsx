@@ -28,7 +28,8 @@ import {
 import ConversationSummary from "./ConversationSummary";
 import { WhatsAppTemplate } from "../types/template";
 import TemplateBuilders from "./TemplateBuilders";
-import TemplateBuilder from "./TemplateBuilder";
+import TemplatePre from "./TemplatePre";
+
 
 
 interface SidebarProps {
@@ -81,6 +82,7 @@ const Sidebar = ({
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
 
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchProduct.toLowerCase()),
@@ -123,8 +125,19 @@ const Sidebar = ({
     template.name.toLowerCase().includes(searchTemplate.toLowerCase()) && template.status === 'APPROVED' //added condition
 );
 
+  
   return (
+
+      
     <TooltipProvider>
+      {selectedTemplate && (
+        <TemplatePre
+        template={selectedTemplate}
+        isOpen={!!selectedTemplate}
+        onClose={() => setSelectedTemplate(null)}
+      />
+      )}
+     
       <Card className="h-[550px] w-[430px] bg-white border-l">
         <Tabs defaultValue="summary" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
@@ -170,6 +183,8 @@ const Sidebar = ({
                 setIsOpen={setShowTemplateBuilder}
                 templates={templates}
                 setTemplates={setTemplates}
+                searchTemplate={searchTemplate}
+                setSearchTemplate={setSearchTemplate}
                 />
               </div>
             ) : (
@@ -205,7 +220,8 @@ const Sidebar = ({
                     </div>
                     ):(
                       filteredTemplates.map((template) => (
-                        <Card
+                        <Card 
+                        onClick={() => setSelectedTemplate(template)}
                         key={template.id}
                         className="p-3 mb-3 cursor-pointer hover:bg-gray-50">
                           <div className="flex items-center justify-between">

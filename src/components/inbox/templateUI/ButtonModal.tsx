@@ -1,4 +1,4 @@
-import { Button } from '@/components/types/button';
+import { Button } from '@/components/types/template_types';
 import React from 'react';
 
 

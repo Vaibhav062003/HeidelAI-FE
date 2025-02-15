@@ -1,12 +1,7 @@
+import { Variable } from '@/components/types/template_types';
 import React from 'react';
 
-type Variable = {
-  id: string;
-  name: string;
-  type: 'text' | 'number' | 'date' | 'currency' | 'datetime';
-  example: string;
-  section: 'header' | 'body';
-};
+
 
 type VariableModalProps = {
   newVariable: Variable;

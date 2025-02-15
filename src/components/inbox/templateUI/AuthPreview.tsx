@@ -1,12 +1,27 @@
 import React from 'react';
 
+interface AppSetup {
+  packageName: string;
+  signatureHash: string;
+}
+
 interface AuthPreviewProps {
   addSecurityRecommendation: boolean;
   addExpirationTime: boolean;
   validityPeriod: string;
-  codeDeliveryMethod: "zero-tap" | "one-tap" | "copy";
   autofillText: string;
+  codeDeliveryMethod: string;
+  setCodeDeliveryMethod: React.Dispatch<React.SetStateAction<"zero_tap" | "one_tap" | "copy_code">>
   copyCodeText: string;
+  setCopyCodeText : (text: string) => void;
+  apps: AppSetup[];
+  setApps: React.Dispatch<React.SetStateAction<AppSetup[]>>;
+  customValidityPeriod: boolean;
+  setCustomValidityPeriod: (value: boolean) => void;
+  validityPeriods: string[];
+  setAddSecurityRecommendation: (value: boolean) => void;
+  setAddExpirationTime: (value: boolean) => void;
+  setValidityPeriod: (period: string) => void;
 }
 
 export const AuthPreview: React.FC<AuthPreviewProps> = ({
@@ -17,12 +32,13 @@ export const AuthPreview: React.FC<AuthPreviewProps> = ({
   autofillText,
   copyCodeText,
 }) => {
-  const code = "{{1}}"; // Placeholder for the verification code
+  const code = '{{1}}';
   const currentTime = new Date().toLocaleTimeString([], { 
     hour: '2-digit', 
     minute: '2-digit',
     hour12: true 
   });
+  
 
   return (
     <div className="bg-gray-50 p-6 border-l">
@@ -32,7 +48,7 @@ export const AuthPreview: React.FC<AuthPreviewProps> = ({
           <div className="bg-white rounded-lg shadow-sm">
             <div className="p-3">
               <p className="text-gray-800 mb-2">
-                {code} is your verification code. For your security, do not share this code.
+                {code} is verification code. For your security, do not share this code.
               </p>
               {addSecurityRecommendation && (
                 <p className="text-gray-600 text-sm mb-2">
@@ -48,14 +64,14 @@ export const AuthPreview: React.FC<AuthPreviewProps> = ({
                 {currentTime}
               </div>
             </div>
-            {codeDeliveryMethod !== "zero-tap" && (
+            {codeDeliveryMethod !== "zero_tap" && (
               <div className="border-t">
-                {codeDeliveryMethod === "one-tap" && (
+                {codeDeliveryMethod === "one_tap" && (
                   <button className="w-full p-3 text-center text-blue-500 hover:bg-gray-50 transition-colors">
                     {autofillText}
                   </button>
                 )}
-                {codeDeliveryMethod === "copy" && (
+                {codeDeliveryMethod === "copy_code" && (
                   <button className="w-full p-3 text-center text-blue-500 hover:bg-gray-50 transition-colors">
                     {copyCodeText}
                   </button>
