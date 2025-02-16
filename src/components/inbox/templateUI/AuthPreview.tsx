@@ -44,7 +44,8 @@ export const AuthPreview: React.FC<AuthPreviewProps> = ({
     <div className="bg-gray-50 p-6 border-l">
       <div className="bg-[#E5DDD5] p-4 rounded-lg h-[calc(100vh-12rem)] overflow-y-auto">
         <div className="max-w-sm mx-auto">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">Template Preview</h3>
+        
+          
           <div className="bg-white rounded-lg shadow-sm">
             <div className="p-3">
               <p className="text-gray-800 mb-2">

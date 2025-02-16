@@ -7,7 +7,7 @@ import { TemplatePreview } from "./templateUI/TemplatePreview";
 import { VariableModal } from "./templateUI/Variablemodal";
 import { ButtonModal } from "./templateUI/ButtonModal";
 import { AppSetup, Button, Variable } from "../types/template_types";
-import Catlog from "./templateUI/Catlog";
+import Catlog from "./templateUI/CatlogTemplate";
 import AuthTemplate from "./templateUI/AuthTemplate";
 
 
@@ -61,6 +61,7 @@ const [step, setStep] = useState(1);
   const [validityPeriod, setValidityPeriod] = useState("10 minutes");
   const [autofillText, setAutofillText] = useState("Autofill");
   const [copyCodeText, setCopyCodeText] = useState("Copy code");
+  const [templateTypeSelected, setTemplateTypeSelected] = useState(false);
   const [stepButton, setStepButton] = useState<any>(null);
   const [bodyContent,setBodyContent] = useState<string | null>(null);
   const [isChecked, setIsChecked] = useState(false);
@@ -104,24 +105,78 @@ const [step, setStep] = useState(1);
     setButton(button.filter((button) => button.id !== id));
   };
 
-  const handleback = () => {
-    step === 2 ? setStep(1) : setIsOpen(false), setStep(1);
+  const resetForm = () => {
+    setStep(1);
+    setActiveTab("marketing");
+    setTemplateType("custom");
+    setTemplateName("");
+    setlanguage("English");
+    setVariables([]);
+    setShowVariableModal(false);
+    setMessageBody("");
+    setHeader("");
+    setNewVariable({
+      id: "",
+      name: "",
+      type: "text",
+      example: "",
+      section: "body",
+    });
+    setFooter("");
+    setButton([]);
+    setShowButtonModal(false);
+    setNewButton({
+      id: "",
+      type: "reply",
+      text: "",
+      content: "",
+      value: "",
+    });
+    setHeaderType("text");
+    setHeaderContent(null);
+    setPreviewFile(null);
+    setCodeDeliveryMethod("zero_tap");
+    setTermsAccepted(false);
+    setApps([{ packageName: "", signatureHash: "" }]);
+    setAddSecurityRecommendation(true);
+    setAddExpirationTime(false);
+    setCustomValidityPeriod(false);
+    setValidityPeriod("10 minutes");
+    setAutofillText("Autofill");
+    setCopyCodeText("Copy code");
+    setTemplateTypeSelected(false);
+    setStepButton(null);
+    setBodyContent(null);
+    setIsChecked(false);
+    setSelectedTime("");
   };
 
-  const handleNext = () => {
-    if (step === 1) {
-      if (templateType === "custom") {
-        setStepButton("next");
-        setStep(2);
-      } else if (templateType === "catalog") {
-        setStepButton("editor2");
-        setStep(2);
-      } else if (templateType === 'one-time_Passcode') {
-        setStepButton("editor3");
-        setStep(2);
-      }
+  const handleBack = () => {
+    if (step === 2) {
+      setStep(1);
+    } else {
+      setIsOpen(false);
+      setStep(1);
     }
+    resetForm(); // Reset form when going back
   };
+  
+
+const handleNext = () => {
+  // Proceed based on the selected template type
+  if (step === 1) {
+    if (templateType === "custom") {
+      setStepButton("next");
+      setStep(2);
+    } else if (templateType === "catalog") {
+      setStepButton("editor2");
+      setStep(2);
+    } else if (templateType === "one-time_Passcode") {
+      setStepButton("editor3");
+      setStep(2);
+    }
+  }
+};
 
  
 
@@ -675,13 +730,13 @@ const exportData = async () => {
     <div className="relative">
       {isOpen && (
         <div className=" fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
-          <div className="bg-white rounded-lg w-full max-w-6xl h-[80vh] overflow-y-auto">
+          <div className="bg-white rounded-lg w-full max-w-4xl h-[80vh] overflow-y-auto">
             {/* header */}
             <div className="border-b p-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span className="font-semibold">Set up a template</span>
+                  <span className=" font-semibold">Set up a template</span>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
@@ -690,8 +745,8 @@ const exportData = async () => {
                   <X size={20} />
                 </button>
               </div>
-              <div className="flex gap-4">
-                <div className="flex items-center gap-2">
+              <div className="text-sm flex gap-4">
+                <div className=" flex items-center gap-2">
                   <div
                     className={`w-6 h-6 rounded-full flex items-center justify-center
                       ${step === 1 ? "bg-blue-500 text-white" : "bg-gray-200"}`}
@@ -723,7 +778,7 @@ const exportData = async () => {
             </div>
 
             {/* content */}
-            <div className="grid grid-cols-2 gap-4 p-4">
+            <div className="text-sm grid grid-cols-2 gap-4 p-4">
               <div className="p-6">
                 {
                   step === 1 ? (
@@ -824,7 +879,7 @@ const exportData = async () => {
 
                 {step === 2 && templateType === "one-time_Passcode" && stepButton === "editor3" && (
                    
-                    <div className="inline-block">
+                    <div >
                        <AuthTemplate
                       templateName={templateName}
                       setTemplateName={setTemplateName}
@@ -853,9 +908,9 @@ const exportData = async () => {
                 )}
 
                  {/* Action button */}
-              <div className="flex justify-end gap-4 mt-8">
+              <div className="text-sm flex justify-end gap-4 mt-8">
                     <button
-                      onClick={handleback}
+                      onClick={handleBack}
                       className="px-4 py-2 border rounded-md hover:bg-gray-50"
                     >
                       {step === 1 ? "Go Back" : "Previous"}
@@ -867,6 +922,7 @@ const exportData = async () => {
                       onChange={(e) =>
                         setStepButton((e.target as HTMLButtonElement).value)
                       }
+                  
                     >
                       {step === 1 ? "Next" : "Export Template"}
                     </button>

@@ -296,7 +296,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   return (
-    <div className="space-y-6">
+    <div className="text-sm space-y-6">
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -337,7 +337,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           {/* Header Section with Variables */}
           <div className="border p-4 rounded-lg bg-gray-50">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Header (Optional)</h3>
+              <h3 className="text-md font-semibold">Header (Optional)</h3>
               <button
                 onClick={() => {
                   setNewVariable({ ...newVariable, section: "header" });
@@ -448,7 +448,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
           <div className="border p-4 rounded-lg bg-gray-50">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Message Body Section</h3>
+              <h3 className="text-sm font-semibold">Message Body Section</h3>
               <button
                 onClick={() => {
                   setNewVariable({ ...newVariable, section: "body" });

@@ -29,11 +29,13 @@ export interface WhatsAppTemplate {
 }
 
 
-
 export interface WhatsAppTemplateComponent {
-  type?: 'body' | 'footer' | 'button';
+  type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS' | 'MEDIA' | 'LOCATION';
   text?: string;
-    example?: {
-      body_text?: string[];
-    };
-  }
+  buttons?: { text: string }[];
+  example?: {
+    header_text?: string[];
+    body_text?: string[];
+    footer_text?: string[];
+  };
+}

@@ -24,8 +24,8 @@ const CatalogPreview: React.FC<CatalogTemplatePreviewProps> = ({
 
   return (
     <div className="bg-[#EFE7DE] p-6 rounded-lg h-full min-h-[600px] relative shadow-lg">
-      <div className="bg-white text-center py-3 rounded-t-lg absolute top-0 left-0 right-0 border-b">
-        <h3 className="text-base font-medium text-gray-800">Template Preview</h3>
+      <div className="bg-white  py-3 rounded-t-lg absolute top-0 left-0 right-0 border-b">
+        <h3 className="text-lg font-semibold text-gray-800">Preview</h3>
       </div>
       
       <div className="mt-14 space-y-4">

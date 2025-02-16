@@ -132,7 +132,7 @@ export const Catalog: React.FC<CatalogProps> = ({
         {/* Catalog Format Section */}
         <div className="bg-gray-600">
           <div className="bg-white p-1 rounded-lg shadow-sm">
-            <h2 className="text-lg font-medium text-gray-900 mb-3">
+            <h2 className="text-md font-semibold  text-gray-900 mb-3">
               Catalog format
             </h2>
             <p className="text-sm text-gray-600 mb-4">
@@ -188,7 +188,7 @@ export const Catalog: React.FC<CatalogProps> = ({
 
         {/* Catalog Setup Section */}
         <div className="bg-white p-1 rounded-lg shadow-sm">
-          <h2 className="text-lg font-medium text-gray-900 mb-3">
+          <h2 className="text-md font-semibold text-gray-900 mb-3">
             Catalog setup
           </h2>
           <p className="text-sm text-gray-600 mb-4">
@@ -252,9 +252,9 @@ export const Catalog: React.FC<CatalogProps> = ({
           )}
         </div>
 
-        <div className="border p-4 rounded-lg bg-gray-50 ">
+        <div className="border  p-2 rounded-lg bg-gray-50 ">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Message Body Section</h3>
+            <h3 className="text-sm font-semibold">Message Body Section</h3>
             <button
               onClick={() => {
                 setNewVariable({ ...newVariable, section: "body" });
@@ -383,7 +383,7 @@ export const Catalog: React.FC<CatalogProps> = ({
       </div>
 
       {/* Footer Section */}
-      <div className="border p-4 rounded-lg bg-gray-50">
+      <div className="border p-2 rounded-lg bg-gray-50">
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Footer (Optional)
         </label>
@@ -398,8 +398,8 @@ export const Catalog: React.FC<CatalogProps> = ({
       </div>
 
       {/* Button Section */}
-      <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h2 className="text-lg font-medium text-gray-900 mb-3">Button</h2>
+      <div className="bg-white  rounded-lg shadow-sm">
+        <h2 className="text-md font-semibold text-gray-900 mb-3">Button</h2>
 
         <div className="bg-gray-50 p-4 rounded-md flex items-start space-x-3 mb-4">
           <LightbulbIcon

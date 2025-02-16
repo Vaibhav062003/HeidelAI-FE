@@ -20,7 +20,7 @@ export const TemplateSetup: React.FC<TemplateSetupProps> = ({
 }) => {
   return (
     <>
-      <h2 className="text-xl font-semibold mb-4">Set up your template</h2>
+      <h2 className="text-md font-semibold mb-4">Set up your template</h2>
       <p className="text-gray-600 mb-6">
         Choose the category that best describes your message template. Then,
         choose the type of message you want to send.
@@ -29,7 +29,7 @@ export const TemplateSetup: React.FC<TemplateSetupProps> = ({
       {/* Template Type Tabs */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <button
-          className={`flex items-center justify-center gap-2 p-4 rounded-lg border ${
+          className={`flex items-center justify-center gap-2  rounded-lg border ${
             activeTab === "marketing" ? "border-blue-500" : "border-gray-200"
           }`}
           onClick={() => setActiveTab("marketing")}

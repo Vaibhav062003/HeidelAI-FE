@@ -28,7 +28,8 @@ import {
 import ConversationSummary from "./ConversationSummary";
 import { WhatsAppTemplate } from "../types/template";
 import TemplateBuilders from "./TemplateBuilders";
-import TemplatePre from "./TemplatePre";
+import { WhatsAppTemplateDialog } from "./WhatsAppTemplateDialog";
+
 
 
 
@@ -131,10 +132,15 @@ const Sidebar = ({
       
     <TooltipProvider>
       {selectedTemplate && (
-        <TemplatePre
+        <WhatsAppTemplateDialog
         template={selectedTemplate}
         isOpen={!!selectedTemplate}
         onClose={() => setSelectedTemplate(null)}
+        onSend={() => {
+          // Handle send logic
+          console.log("Sending template:", selectedTemplate);
+          setSelectedTemplate(null);
+    }}
       />
       )}
      
@@ -229,7 +235,7 @@ const Sidebar = ({
                             <TooltipTrigger asChild>
                               <span className="font-medium truncate max-w-[150px] block">
                                 {template.name.length > 15
-                                  ? `${template.name.slice(0, 15)}...`
+                                  ? `${template.name.slice(0, 15)}`
                                   : template.name}
                               </span>
                             </TooltipTrigger>
