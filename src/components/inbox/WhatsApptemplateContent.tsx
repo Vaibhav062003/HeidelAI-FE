@@ -145,7 +145,7 @@ export const WhatsAppTemplateContent = ({
 
   return (
     <div className="max-w-md mx-auto">
-    <ScrollArea className="h-[400px] rounded-lg">
+    <ScrollArea className="h-[350px] rounded-lg">
     <div className="max-w-xl mx-autbg-[#E5DDD5] rounded-lg p-6">
       <div className="bg-[#E5DDD5] p-4 rounded-lg overflow-y-auto">
       <div className="max-w-sm mx-auto">
