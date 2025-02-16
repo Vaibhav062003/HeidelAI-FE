@@ -16,7 +16,8 @@ import BillingPlans from "@/components/inbox/BillingPlans";
 import TeamCollaboration from "@/components/inbox/TeamCollaboration";
 import AutomationRules from "@/components/inbox/AutomationRules";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import ContactsDashboard from "@/components/Contacts/ContactsDashboard";
+import ContactsDashboard from "@/components/contacts/ContactsDashboard";
+import SettingsSidebar from "@/components/setting_tab/SettingsSidebar";
 import {
   MessageSquare,
   BarChart2,
@@ -38,6 +39,7 @@ export default function DashboardPage() {
   const [selectedConversationId, setSelectedConversationId] =
     useState<string>("");
   const [isAIEnabled, setIsAIEnabled] = useState(false);
+  const [showContact, setShowContact] = useState(false);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -71,31 +73,31 @@ export default function DashboardPage() {
                 className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
               >
                 <MessageSquare className="h-5 w-5" />
-                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   Inbox
-                  <div className="absolute right-full top-1/2 w-2 h-2 -mt-1 -mr-1 bg-gray-800 rotate-45" />
+                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
               </TabsTrigger>
 
-              <TabsTrigger
+              {/* <TabsTrigger
                 value="analytics"
                 className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
               >
                 <BarChart2 className="h-5 w-5" />
-                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   Analytics
-                  <div className="absolute right-full top-1/2 w-2 h-2 -mt-1 -mr-1 bg-gray-800 rotate-45" />
+                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
-              </TabsTrigger>
+              </TabsTrigger> */}
 
               <TabsTrigger
                 value="Contacts"
                 className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
               >
                 <ContactRoundIcon className="h-5 w-5" />
-                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   Contacts
-                  <div className="absolute right-full top-1/2 w-2 h-2 -mt-1 -mr-1 bg-gray-800 rotate-45" />
+                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
               </TabsTrigger>
 
@@ -104,9 +106,9 @@ export default function DashboardPage() {
                 className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
               >
                 <CreditCard className="h-5 w-5" />
-                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   Billing
-                  <div className="absolute right-full top-1/2 w-2 h-2 -mt-1 -mr-1 bg-gray-800 rotate-45" />
+                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
               </TabsTrigger>
 
@@ -115,12 +117,12 @@ export default function DashboardPage() {
                 className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
               >
                 <Settings className="h-5 w-5" />
-                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   Settings
-                  <div className="absolute right-full top-1/2 w-2 h-2 -mt-1 -mr-1 bg-gray-800 rotate-45" />
+                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
               </TabsTrigger>
-            </TabsList>
+            </TabsList>{" "}
           </div>
 
           {/* Main Content Area */}
@@ -199,12 +201,12 @@ export default function DashboardPage() {
               <ContactsDashboard />
             </TabsContent>
 
-            <TabsContent
+            {/* <TabsContent
               value="analytics"
               className="m-0 flex-1 p-6 overflow-auto"
             >
               <AnalyticsDashboard />
-            </TabsContent>
+            </TabsContent> */}
 
             <TabsContent
               value="billing"
@@ -217,7 +219,7 @@ export default function DashboardPage() {
               value="settings"
               className="m-0 flex-1 p-6 overflow-auto"
             >
-              {/* <SettingsPanel /> */}
+              <SettingsSidebar />
             </TabsContent>
 
             <StatusBar />

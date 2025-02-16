@@ -32,14 +32,16 @@ export default function LoginPage() {
           setIsSignUp(false); // Switch back to login after successful signup
         }
       } else {
-        // Login logic
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { user, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
           toast.error('Invalid email or password');
         } else {
-          toast.success('Login successful');
+          // console.log("user_detail",user);
+          const { data: { user } } = await supabase.auth.getUser()
+          console.log("user data",user);
           router.push('/dashboard'); // Redirect to dashboard
         }
+        
       }
     } catch (error) {
       toast.error('An unexpected error occurred');
