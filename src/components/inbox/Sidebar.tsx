@@ -167,48 +167,24 @@ const Sidebar = ({
 
   return (
     <TooltipProvider>
-      <Card className="h-full p-2 bg-white border-l">
+      <Card className="h-full max-h-screen p-2 bg-white border-l">
         <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="grid grid-rows-2 grid-cols-3 gap-2 px-4 bg-gray-50 rounded-lg border p-1.5 h-[88px]">
-            {/* TabsTriggers without close functionality */}
-            <TabsTrigger
-              value="summary"
-              className="row-start-1 col-span-1 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-100 gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
-            >
-              <FileText className="h-4 w-4" />
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="summary">
+              <FileText className="h-4 w-4 mr-2" />
               Summary
             </TabsTrigger>
-            
-            <TabsTrigger
-              value="templates"
-              className="row-start-1 col-span-1 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-100 gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
-            >
-              <FileText className="h-4 w-4" />
+            <TabsTrigger value="templates">
+              <FileText className="h-4 w-4 mr-2" />
               Templates
             </TabsTrigger>
-            
-            <TabsTrigger
-              value="products"
-              className="row-start-1 col-span-1 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-100 gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
-            >
-              <Package className="h-4 w-4" />
+            <TabsTrigger value="products">
+              <Package className="h-4 w-4 mr-2" />
               Products
             </TabsTrigger>
-
-            <TabsTrigger
-              value="analytics"
-              className="row-start-2 col-span-1 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-100 gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
-            >
-              <BarChart3 className="h-4 w-4" />
+            <TabsTrigger value="analytics">
+              <BarChart3 className="h-4 w-4 mr-2" />
               Analytics
-            </TabsTrigger>
-            
-            <TabsTrigger
-              value="collaboration"
-              className="row-start-2 col-span-1 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-100 gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
-            >
-              <Users className="h-4 w-4" />
-              Team
             </TabsTrigger>
           </TabsList>
 
@@ -469,12 +445,6 @@ const Sidebar = ({
             </div>
           </TabsContent>
         </Tabs>
-        {selectedProduct && (
-          <ProductPreview
-            product={selectedProduct}
-            onClose={() => setSelectedProduct(null)}
-          />
-        )}
       </Card>
     </TooltipProvider>
   );

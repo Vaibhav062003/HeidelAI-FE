@@ -220,7 +220,7 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
   if (!conversation) return null;
 
   return (
-    <Card className="p-4 bg-white">
+    <Card className="p-4 bg-white h-full">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

@@ -39,7 +39,7 @@ const ConversationPreview = ({
 }: ConversationPreviewProps) => {
   return (
     <Card
-      className={`p-4 cursor-pointer transition-colors ${
+      className={`p-4 w-full rounded-none cursor-pointer transition-colors ${
         isSelected ? "bg-gray-100" : "hover:bg-gray-50"
       }`}
       onClick={onClick}

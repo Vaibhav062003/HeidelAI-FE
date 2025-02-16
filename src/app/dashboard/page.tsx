@@ -134,71 +134,38 @@ export default function DashboardPage(){
 
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col ml-16 overflow-hidden">
-            <TabsContent value="inbox" className="m-0 flex-1 overflow-hidden">
-              <div className="flex h-full bg-white">
-                {/* Left Sidebar with Tabs */}
-                <div className="w-80 border-r flex flex-col">
-                  <div className="p-4 border-b">
-                    <Tabs defaultValue="conversations" className="space-y-4">
-                      <TabsList className="grid grid-cols-3 w-full">
-                        <TabsTrigger value="conversations">Chats</TabsTrigger>
-                        <TabsTrigger value="unattended">Unattended</TabsTrigger>
-                        <TabsTrigger value="mentions">Mentions</TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                  </div>
-
-                  {/* Tab Contents */}
-                  <div className="flex-1 overflow-y-auto">
-                    <TabsContent
-                      value="conversations"
-                      className="m-0 p-2 h-full"
-                    >
-                      <ConversationList
-                        selectedConversationId={selectedConversationId}
-                        onConversationSelect={setSelectedConversationId}
-                      />
-                    </TabsContent>
-
-                    {/* <TabsContent value="unattended" className="m-0 p-2 h-full">
-            <UnattendedList
-              onConversationSelect={setSelectedConversationId}
-            />
-          </TabsContent>
-          
-          <TabsContent value="mentions" className="m-0 p-2 h-full">
-            <MentionsList
-              onConversationSelect={setSelectedConversationId}
-            />
-          </TabsContent> */}
-                  </div>
-                </div>
-
-                {/* Chat View */}
-                <div className="flex-1 flex flex-col border-r">
-                  {selectedConversationId ? (
-                    <>
-                      <div className="p-4 border-b flex items-center justify-between"></div>
-                      <ChatView
-                        selectedConversationId={selectedConversationId}
-                        className="flex-1 overflow-y-auto bg-gray-50"
-                      />
-                    </>
-                  ) : (
-                    <div className="flex-1 flex items-center justify-center bg-gray-50">
-                      <p className="text-gray-500 text-lg">
-                        Uh oh! Looks like there are no messages from customers
-                        in your inbox.
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right Sidebar */}
-                <div className="w-96 bg-white flex flex-col">
-                  <Sidebar />
-                </div>
+          <TabsContent value="inbox" className="flex-1 flex overflow-hidden h-full m-0">
+            <TabsContent value="inbox" className="flex-1 flex overflow-hidden h-full m-0">
+            <div className="flex w-full">
+              {/* Conversation List - Fixed width */}
+              <div className="w-[320px] min-w-[280px] border-r border-gray-200">
+                <ConversationList
+                  selectedConversationId={selectedConversationId}
+                  onConversationSelect={setSelectedConversationId}
+                />
               </div>
+
+              {/* Chat View - Flexible width */}
+              <div className="flex-1 flex flex-col h-full min-w-[400px]">
+                <ChatView selectedConversationId={selectedConversationId} />
+              </div>
+
+              {/* Right Sidebar - Fixed width */}
+              <div className="w-[360px] min-w-[280px] border-l border-gray-200">
+                {selectedConversationId && (
+                  <Sidebar 
+                    selectedConversationId={selectedConversationId}
+                    onConversationSelect={setSelectedConversationId} 
+                  />
+                )}
+                {showTeamPanel && (
+                  <div className="mt-4">
+                    <TeamCollaboration />
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
             </TabsContent>
 
             <TabsContent
@@ -229,7 +196,7 @@ export default function DashboardPage(){
               {/* <SettingsPanel /> */}
             </TabsContent>
 
-            <StatusBar />
+            {/* <StatusBar /> */}
           </div>
         </Tabs>
       </div>

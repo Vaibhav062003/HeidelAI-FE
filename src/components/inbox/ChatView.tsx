@@ -723,7 +723,7 @@ const ChatView = ({
           </div>
         </Card>
       ) : (
-      <Card className="h-full flex flex-col bg-white max-h-[94vh]">
+      <Card className="h-full flex flex-col bg-white max-h-screen">
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
