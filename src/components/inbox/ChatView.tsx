@@ -9,12 +9,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from 'date-fns';
-import { toast } from 'sonner';
+import { toast, Toaster } from 'sonner';
 // import { toZonedTime } from 'date-fns-tz';
 import { Conversation } from '../types/conversation';
 import { ShoppingCart, MapPin, Upload, FileText, FileImage, FileVideo, Music, File, Loader2, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
 import dynamic from 'next/dynamic';
+import { useReminders } from '../hooks/useReminders';
+
 
 const Picker = dynamic(
   () => {
@@ -431,6 +433,8 @@ const ChatView = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isSending, setIsSending] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { reminders = [] } = useReminders(selectedConversationId);
+
 
 
 
@@ -687,6 +691,7 @@ const ChatView = ({
 
   return (
     <>
+    <Toaster position="top-right"/>
     <style>
         {`
           
@@ -759,17 +764,32 @@ const ChatView = ({
               <TooltipContent>Start video call</TooltipContent>
             </Tooltip> */}
 
-            <Tooltip>
+<Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowReminder(true)}
-                >
-                  <Clock className="h-5 w-5" />
-                </Button>
+                <div className="relative">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowReminder(true)}
+                  >
+                    <Clock className="h-5 w-5" />
+                    {reminders.length > 0 && (
+                      <Badge 
+                        variant="secondary" 
+                        className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                      >
+                        {reminders.length}
+                      </Badge>
+                    )}
+                  </Button>
+                </div>
               </TooltipTrigger>
-              <TooltipContent>Set reminder</TooltipContent>
+              <TooltipContent>
+                {reminders.length > 0 
+                  ? `${reminders.length} reminder${reminders.length > 1 ? 's' : ''} set`
+                  : 'Set reminder'
+                }
+              </TooltipContent>
             </Tooltip>
 
             <div className="flex items-center gap-2">
@@ -1277,7 +1297,9 @@ const ChatView = ({
           onSave={(reminder) => {
             console.log("Reminder saved:", reminder);
             setShowReminder(false);
+            
           }}
+          conversationId={selectedConversationId}
         />
       </Card>
       )}

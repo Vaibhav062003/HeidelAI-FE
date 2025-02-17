@@ -5,7 +5,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import AddProduct from "@/components/inbox/AddProduct";
-import ProductList from "@/components/inbox/ProductList";
 import ProductPreview from "./PreviewProduct";
 import ProductsTab from "./Product";
 import { X } from "lucide-react";
@@ -66,16 +65,8 @@ interface SidebarProps {
   selectedConversationId?: string;
   onConversationSelect?: (id: string) => void;
   templates?: Array<{ id: string; title: string; category: string }>;
-  products?: Array<{
-    id: string;
-    name: string;
-    price: string;
-    image: string;
-    url?: string;
-    title: string;
-    category: string;
-    metadata?: Metadata; // Adding the Metadata interface here
-  }>;
+  products?: Array<Product>; // Update this line to use the main Product interface
+
   analytics?: {
     responseTime: string;
     resolutionRate: string;
@@ -329,8 +320,8 @@ const Sidebar = ({
             )}
           </TabsContent>
 
-          <TabsContent value="products">
-            <ProductsTab onProductSelect={setSelectedProduct} />
+          <TabsContent className="h-full" value="products">
+            <ProductsTab onProductSelect={(product: Product) => setSelectedProduct(product)} />
           </TabsContent>
 
           <TabsContent value="analytics" className="p-4">

@@ -11,24 +11,29 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+interface Metadata {
+  category: string;
+  description: string;
+  images: string;
+  name: string;
+  on_sale: string; // Use boolean if the data contains `true/false` instead of `"True"/"False"`
+  permalink: string;
+  price: number;
+  product_id: number;
+  purchasable: string; // Use boolean if the data contains `true/false`
+  regular_price: string; // Use `number` if parsed as numeric values
+  sale_price: string; // Use `number` if parsed as numeric values
+  slug: string;
+  stock_quantity: number;
+}
+
 interface Product {
   id: string;
   category: string;
-  metadata: {
-    images: string;
-    name: string;
-    price: string;
-    permalink: string;
-    // price: number;
-    product_id: number;
-    purchasable: string; // Use boolean if the data contains `true/false`
-    regular_price: string; // Use `number` if parsed as numeric values
-    sale_price: string; // Use `number` if parsed as numeric values
-    slug: string;
-    stock_quantity: number;
-  };
+  metadata: Metadata;
 }
 
+type MetadataValue = string | number | boolean;
 
 interface ProductPreviewProps {
   product: Product;
@@ -54,7 +59,7 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
       icon: <Tag className="h-5 w-5" />,
       fields: [
         { key: "regular_price", label: "Regular Price" },
-        { key: "sale_price", label: "Sale Price", condition: product.on_sale },
+        { key: "sale_price", label: "Sale Price", condition: product.metadata.on_sale },
         { key: "price", label: "Current Price" },
       ],
     },
@@ -68,10 +73,10 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
     },
   ];
 
-  const formatValue = (key: string, value: any) => {
-    if (key === "purchasable") return value ? "In Stock" : "Out of Stock";
+  const formatValue = (key: string, value: MetadataValue): string => {
+    if (key === "purchasable") return String(value) === "true" ? "In Stock" : "Out of Stock";
     if (key.includes("price")) return `₹${value}`;
-    return value || "N/A";
+    return value?.toString() || "N/A";
   };
 
   return (

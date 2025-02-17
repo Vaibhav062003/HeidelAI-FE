@@ -16,7 +16,7 @@ import BillingPlans from "@/components/inbox/BillingPlans";
 import TeamCollaboration from "@/components/inbox/TeamCollaboration";
 import AutomationRules from "@/components/inbox/AutomationRules";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import ContactsDashboard from "@/components/contacts/ContactsDashboard";
+import ContactsDashboard from "@/components/Contacts/ContactsDashboard";
 import SettingsSidebar from "@/components/setting_tab/SettingsSidebar";
 import {
   MessageSquare,
@@ -175,7 +175,7 @@ export default function DashboardPage() {
 
             <TabsContent
               value="Contacts"
-              className="m-0 flex-1 h-full overflow-hidden"
+              className="m-0 flex-1 fixed top-0  w-[96vw] h-full overflow-hidden"
             >
               <ContactsDashboard />
             </TabsContent>
@@ -189,14 +189,14 @@ export default function DashboardPage() {
 
             <TabsContent
               value="billing"
-              className="m-0 flex-1 p-6 overflow-auto"
+              className="m-0 fixed top-0 w-[96vw] flex-1 p-6 overflow-auto"
             >
               <BillingPlans />
             </TabsContent>
 
             <TabsContent
               value="settings"
-              className="m-0 flex-1 p-6 overflow-auto"
+              className="m-0 fixed top-0 w-[96vw] flex-1 p-6 overflow-auto"
             >
               <SettingsSidebar />
             </TabsContent>

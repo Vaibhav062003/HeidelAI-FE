@@ -18,23 +18,28 @@ import {
 } from "@/components/ui/tooltip";
 import { ExternalLink, Send, Plus, Search, Eye, Share2 } from "lucide-react";
 
+interface Metadata {
+  category: string;
+  description: string;
+  images: string;
+  name: string;
+  on_sale: string; // Use boolean if the data contains `true/false` instead of `"True"/"False"`
+  permalink: string;
+  price: number;
+  product_id: number;
+  purchasable: string; // Use boolean if the data contains `true/false`
+  regular_price: string; // Use `number` if parsed as numeric values
+  sale_price: string; // Use `number` if parsed as numeric values
+  slug: string;
+  stock_quantity: number;
+}
+
 interface Product {
   id: string;
   category: string;
-  metadata: {
-    images: string;
-    name: string;
-    price: string;
-    permalink: string;
-    // price: number;
-    product_id: number;
-    purchasable: string; // Use boolean if the data contains `true/false`
-    regular_price: string; // Use `number` if parsed as numeric values
-    sale_price: string; // Use `number` if parsed as numeric values
-    slug: string;
-    stock_quantity: number;
-  };
+  metadata: Metadata;
 }
+
 
 interface ProductsTabProps {
   onProductSelect: (product: Product) => void;
@@ -60,8 +65,8 @@ const ProductsTab = ({ onProductSelect }: ProductsTabProps) => {
       const data = await response.json();
       setProducts(data);
       setFilteredProducts(data);
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -105,7 +110,7 @@ const ProductsTab = ({ onProductSelect }: ProductsTabProps) => {
   }, []);
 
   return (
-    <div className="p-3 bg-white rounded-lg border border-gray-100 shadow-sm">
+    <div className="p-3 mb-2 bg-white rounded-lg border border-gray-100 shadow-sm">
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <div className="flex-1 relative">
           <Input
@@ -164,7 +169,7 @@ const ProductsTab = ({ onProductSelect }: ProductsTabProps) => {
         </div>
       </div>
 
-      <ScrollArea className="h-[500px] pr-2">
+      <ScrollArea className="h-screen pr-2">
         <div className="space-y-2">
           {filteredProducts.map((product) => (
             <div
