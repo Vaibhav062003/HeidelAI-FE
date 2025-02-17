@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // whatsapp-template-content.tsx
 import React, { useState, useRef, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
