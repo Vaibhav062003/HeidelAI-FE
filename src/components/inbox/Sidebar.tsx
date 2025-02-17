@@ -1,29 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ScrollArea} from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip";
+import Image from 'next/image';
 import {
   FileText,
   Package,
   BarChart3,
-  Search,
   Plus,
   TrendingUp,
   Clock,
   Users,
-  MessageSquare,
   Send,
   ExternalLink,
-  Link,
 } from "lucide-react";
 import ConversationSummary from "./ConversationSummary";
 import { WhatsAppTemplate } from "../types/template";
@@ -261,10 +259,12 @@ const Sidebar = ({
               {filteredProducts.map((product) => (
                 <Card key={product.id} className="p-3 mb-3">
                   <div className="flex items-center gap-3">
-                    <img
+                    <Image
                       src={product.image}
                       alt={product.name}
-                      className="w-16 h-16 object-cover rounded"
+                      width={64}
+                      height={64}
+                      className="object-cover rounded"
                     />
                     <div className="flex-1">
                       <h3 className="font-medium">{product.name}</h3>

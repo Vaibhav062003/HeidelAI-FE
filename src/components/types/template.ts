@@ -1,3 +1,4 @@
+//template.ts
 export interface WhatsAppTemplate {
   id?: string; 
   type: string;

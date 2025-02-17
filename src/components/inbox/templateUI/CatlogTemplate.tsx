@@ -10,7 +10,6 @@ import {
   Italic,
   Bold,
   X,
-  Search,
 } from "lucide-react";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
@@ -23,6 +22,7 @@ type Variable = {
   type: "text" | "number" | "date" | "currency" | "datetime";
   example: string;
   section: "header" | "body";
+  value:string;
 };
 
 type Button = {
@@ -82,7 +82,7 @@ export const Catalog: React.FC<CatalogProps> = ({
   const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const [showCatalog, setShowCatalog] = useState(false);
 
-  const handleEmojiSelect = (emoji: any) => {
+  const handleEmojiSelect = (emoji: { native: string }) => {
     // Append selected emoji to message body
     setMessageBody(messageBody + emoji.native);
     setEmojiPickerVisible(false); // Optionally hide picker after selection

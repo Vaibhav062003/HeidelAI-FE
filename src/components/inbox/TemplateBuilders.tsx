@@ -1,4 +1,4 @@
-import { Component, Copy, Link, Link2, X } from "lucide-react";
+import {  Copy,  Link2, X } from "lucide-react";
 import { WhatsAppTemplate } from "../types/template";
 import { useEffect, useState } from "react";
 import { TemplateSetup } from "./templateUI/TemplateSetup";
@@ -9,6 +9,8 @@ import { ButtonModal } from "./templateUI/ButtonModal";
 import { AppSetup, Button, Variable } from "../types/template_types";
 import Catlog from "./templateUI/CatlogTemplate";
 import AuthTemplate from "./templateUI/AuthTemplate";
+
+// Remove this duplicate import since Variable is already imported above
 
 
 type TemplateBuildersProps ={
@@ -22,7 +24,7 @@ type TemplateBuildersProps ={
 
 // Helper function to format template name
 
-const TemplateBuilders = ({ isOpen, setIsOpen, templates, setTemplates,searchTemplate,setSearchTemplate }: TemplateBuildersProps) => {
+const TemplateBuilders = ({ isOpen, setIsOpen,  setTemplates }: TemplateBuildersProps) => {
 const [step, setStep] = useState(1);
   const [activeTab, setActiveTab] = useState("marketing");
   const [templateType, setTemplateType] = useState("custom");
@@ -38,6 +40,7 @@ const [step, setStep] = useState(1);
     type: "text",
     example: "",
     section: "body",
+    value: "",
   });
   const [footer, setFooter] = useState("");
   const [button, setButton] = useState<Button[]>([]);
@@ -62,7 +65,7 @@ const [step, setStep] = useState(1);
   const [autofillText, setAutofillText] = useState("Autofill");
   const [copyCodeText, setCopyCodeText] = useState("Copy code");
   const [templateTypeSelected, setTemplateTypeSelected] = useState(false);
-  const [stepButton, setStepButton] = useState<any>(null);
+  const [stepButton, setStepButton] = useState<string | null>(null);
   const [bodyContent,setBodyContent] = useState<string | null>(null);
   const [isChecked, setIsChecked] = useState(false);
   const [selectedTime, setSelectedTime] = useState("");
@@ -75,15 +78,6 @@ const [step, setStep] = useState(1);
     "5 hours",
     "6 hours",];
   
-
-  const headerTypes = [
-    { value: "none", label: "None" },
-    { value: "text", label: "Text" },
-    { value: "image", label: "Image" },
-    { value: "video", label: "Video" },
-    { value: "document", label: "Document" },
-    { value: "location", label: "Location" },
-  ];
 
   const removeVariable = (id: string) => {
     setVariables(variables.filter((variable) => variable.id !== id));
@@ -121,6 +115,7 @@ const [step, setStep] = useState(1);
       type: "text",
       example: "",
       section: "body",
+      value: "",
     });
     setFooter("");
     setButton([]);
@@ -244,6 +239,7 @@ const handleNext = () => {
         type: "text",
         example: "",
         section: "body",
+        value: "",
       });
     }
   };
@@ -281,7 +277,7 @@ const handleNext = () => {
         }
       };
       loadTemplates();
-    }, []);
+    }, [setTemplates]);
 
 
 
@@ -521,15 +517,15 @@ const handleNext = () => {
 //   console.log(JSON.stringify(data, null, 2));
 // };
 
-const sendPostRequest = async (data:any) => {
+const sendPostRequest = async (data: Record<string, unknown>) => {
   const url = "https://egenie-whatsapp.koyeb.app/api/create_whatsapp_template"; // Replace with your actual URL
   try {
     const response = await fetch(url, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json", // Replace with your actual token
+        "Content-Type": "application/json", // Ensure the content type is set to JSON
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(data), // Convert the data object to a JSON string
     });
 
     if (!response.ok) {
@@ -537,12 +533,13 @@ const sendPostRequest = async (data:any) => {
       throw new Error(`HTTP error! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
     }
 
-    console.log("POST request successful:");
+    const result = await response.json();
+    console.log("POST request successful:", result); // Log the successful response
   } catch (error) {
     if (error instanceof Error) {
-      console.error("Error during POST request:", error.message);
+      console.error("Error during POST request:", error.message); // Log the error message
     } else {
-      console.error("Error during POST request:", error);
+      console.error("Error during POST request:", error); // Log any other errors
     }
   }
 };
@@ -709,6 +706,7 @@ const exportData = async () => {
       }
       
     }
+    console.log(payload)
     await sendPostRequest(payload);
   } catch (error) {
     if (error instanceof Error) {
@@ -915,7 +913,7 @@ const exportData = async () => {
                     <button
                       onClick={step === 1 ? handleNext : exportData }
                       className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                      value={stepButton}
+                      value={stepButton || ""}
                       onChange={(e) =>
                         setStepButton((e.target as HTMLButtonElement).value)
                       }

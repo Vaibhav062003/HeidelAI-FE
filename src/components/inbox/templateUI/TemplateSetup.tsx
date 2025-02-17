@@ -1,15 +1,24 @@
 import React from "react";
 import { MessageSquare, Wrench, ShieldCheck } from "lucide-react";
-import { TemplateEditor } from "./TemplateEditor";
+
+type Variable = {
+  id: string;
+  name: string;
+  type: "text" | "number" | "date" | "currency" | "datetime";
+  example: string;
+  section: "header" | "body";
+  value:string;
+};
+
 
 type TemplateSetupProps = {
   activeTab: string;
-  setActiveTab: (tab: string) => void;
+  setActiveTab: React.Dispatch<React.SetStateAction<string>>;
   templateType: string;
-  setTemplateType: (type: string) => void;
-  newVariable: any;
-  setNewVariable: (variable: any) => void;
-  bodyVariables: any;
+  setTemplateType: React.Dispatch<React.SetStateAction<string>>;
+  newVariable: Variable;
+  setNewVariable: React.Dispatch<React.SetStateAction<Variable>>;
+  bodyVariables: Variable[];
 };
 
 export const TemplateSetup: React.FC<TemplateSetupProps> = ({
