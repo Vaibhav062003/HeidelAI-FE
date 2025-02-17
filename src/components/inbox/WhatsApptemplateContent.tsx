@@ -58,14 +58,6 @@ export const WhatsAppTemplateContent = ({
   const getFormatedText = (text: string, type: string) => {
     let formattedText = text;
   
-    // Replace variables with their example values
-    variables
-      .filter((v) => v.section === type)
-      .forEach((variable) => {
-        const regex = new RegExp(`{{${variable.name}}}`, "g");
-        formattedText = formattedText.replace(regex, variable.example);
-      });
-  
     // Handle formatting (bold, italic, strikethrough, monospace)
     formattedText = formattedText
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold
@@ -73,15 +65,7 @@ export const WhatsAppTemplateContent = ({
     .replace(/~~(.*?)~~/g, '<del>$1</del>')           // Strikethrough
     .replace(/`(.*?)`/g, '<code>$1</code>');   // Monospace
   
-    // Ensure all remaining placeholders are replaced (including numeric ones)
-    formattedText = formattedText.replace(
-      /{{(\d+)}}/g, // Match numeric placeholders like {{1}}, {{2}}, etc.
-      (_, number) => {
-        const variable = variables.find((v) => v.name === number && v.section === type);
-        return variable ? variable.example : `{{${number}}}`; // Fallback if no match
-      }
-    );
-  
+
     return formattedText;
   };
 

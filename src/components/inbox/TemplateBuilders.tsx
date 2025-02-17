@@ -537,8 +537,7 @@ const sendPostRequest = async (data:any) => {
       throw new Error(`HTTP error! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
     }
 
-    const result = await response.json();
-    console.log("POST request successful:", result);
+    console.log("POST request successful:");
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error during POST request:", error.message);
@@ -646,7 +645,7 @@ const exportData = async () => {
             }),
             ...(["image", "video", "document"].includes(headerType) && {
               example: {
-                header_url: [headerContent], // Use the uploaded media handle here
+                header_handle: [headerContent], // Use the uploaded media handle here
               },
             }),
           },
@@ -710,8 +709,6 @@ const exportData = async () => {
       }
       
     }
-  
-    console.log("Sending payload:", JSON.stringify(payload, null, 2));
     await sendPostRequest(payload);
   } catch (error) {
     if (error instanceof Error) {
