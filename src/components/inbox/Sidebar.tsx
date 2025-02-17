@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import AddProduct from "@/components/inbox/AddProduct";
@@ -36,24 +36,13 @@ import {
   ExternalLink,
   Link,
 } from "lucide-react";
-import TemplateBuilder from "./TemplateBuilder";
 import ConversationSummary from "./ConversationSummary";
+import { WhatsAppTemplate } from "../types/template";
+import TemplateBuilders from "./TemplateBuilders";
+import { WhatsAppTemplateDialog } from "./WhatsAppTemplateDialog";
 
-interface Metadata {
-  category: string;
-  description: string;
-  images: string;
-  name: string;
-  on_sale: string; // Use boolean if the data contains `true/false` instead of `"True"/"False"`
-  permalink: string;
-  price: number;
-  product_id: number;
-  purchasable: string; // Use boolean if the data contains `true/false`
-  regular_price: string; // Use `number` if parsed as numeric values
-  sale_price: string; // Use `number` if parsed as numeric values
-  slug: string;
-  stock_quantity: number;
-}
+
+
 
 interface SidebarProps {
   selectedConversationId?: string;
@@ -77,12 +66,12 @@ interface SidebarProps {
 }
 
 const Sidebar = ({
-  selectedConversationId,
-  templates = [
-    { id: "1", title: "Order Status Update", category: "Support" },
-    { id: "2", title: "Product Information", category: "Sales" },
-    { id: "3", title: "Welcome Message", category: "Greeting" },
-  ],
+  // templates = [
+  //   { id: "1", title: "Order Status Update", category: "Support" },
+  //   { id: "2", title: "Product Information", category: "Sales" },
+  //   { id: "3", title: "Welcome Message", category: "Greeting" },
+  // ],
+
   analytics = {
     responseTime: "2m 30s",
     resolutionRate: "94%",
@@ -165,9 +154,71 @@ const Sidebar = ({
     setShowOptions(false);
   };
 
+  const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
+
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchProduct.toLowerCase()),
+  );
+
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        setLoading(true);
+  
+        const response = await fetch('/api/fetchTemplate');
+        console.log("Response:", response);
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+  
+        const result = await response.json();
+        
+        if (result && result.data){
+          setTemplates(result.data);
+        }else {
+          console.error("Invalid response format:", result);
+          setError("Invalid response format from server");
+        }
+        
+      } catch (err) {
+        console.error("Error in fetch:", err);
+        setError(err instanceof Error ? err.message : "Fetch error");
+      } finally {
+        setLoading(false);
+      
+      }
+    };
+    loadTemplates();
+  }, []);
+
+  const filteredTemplates = (templates || []).filter((template) =>
+    template.name.toLowerCase().includes(searchTemplate.toLowerCase()) && template.status === 'APPROVED' //added condition
+);
+
+  
   return (
+
+      
     <TooltipProvider>
-      <Card className="h-full max-h-screen p-2 bg-white border-l">
+      {selectedTemplate && (
+        <WhatsAppTemplateDialog
+        template={selectedTemplate}
+        isOpen={!!selectedTemplate}
+        onClose={() => setSelectedTemplate(null)}
+        onSend={() => {
+          // Handle send logic
+          console.log("Sending template:", selectedTemplate);
+          setSelectedTemplate(null);
+    }}
+      />
+      )}
+     
+      <Card className="h-[550px] w-[430px] bg-white border-l">
         <Tabs defaultValue="summary" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="summary">
@@ -196,7 +247,7 @@ const Sidebar = ({
 
           <TabsContent value="templates" className="p-4">
             {showTemplateBuilder ? (
-              <div className="space-y-4">
+              <div className=" space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-medium">Create Template</h3>
                   <Button
@@ -207,11 +258,13 @@ const Sidebar = ({
                     Back
                   </Button>
                 </div>
-                <TemplateBuilder
-                  onSave={(template) => {
-                    console.log("Template saved:", template);
-                    setShowTemplateBuilder(false);
-                  }}
+                <TemplateBuilders 
+                isOpen={showTemplateBuilder} 
+                setIsOpen={setShowTemplateBuilder}
+                templates={templates}
+                setTemplates={setTemplates}
+                searchTemplate={searchTemplate}
+                setSearchTemplate={setSearchTemplate}
                 />
               </div>
             ) : (
@@ -236,18 +289,34 @@ const Sidebar = ({
                     <TooltipContent>Create new template</TooltipContent>
                   </Tooltip>
                 </div>
-                <ScrollArea className="h-[700px]">
-                  {filteredTemplates.map((template) => (
-                    <Card
-                      key={template.id}
-                      className="p-3 mb-3 cursor-pointer hover:bg-gray-50"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{template.title}</span>
-                        <Badge variant="secondary">{template.category}</Badge>
+                <ScrollArea className="h-[400px]">
+                    {loading ?(
+                      <div className="flex items-center justify-center h-20">
+                        <p>Loading templates...</p>
                       </div>
-                    </Card>
-                  ))}
+                    ): error ?(
+                      <div className="flex items-center justify-center h-20 text-red-500">
+                      {error}
+                    </div>
+                    ):(
+                      filteredTemplates.map((template) => (
+                        <Card 
+                        onClick={() => setSelectedTemplate(template)}
+                        key={template.id}
+                        className="p-3 mb-3 cursor-pointer hover:bg-gray-50">
+                          <div className="flex items-center justify-between">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="font-semibold max-w-[150px] block">
+                                  {template.name}
+                              </span>
+                            </TooltipTrigger>
+                            {/* <TooltipContent>{template.name}</TooltipContent> */}
+                          </Tooltip>
+                        </div>
+                        </Card>
+                      )
+                    ))}
                 </ScrollArea>
               </>
             )}
