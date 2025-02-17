@@ -5,6 +5,29 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+interface Contact {
+  id?: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  city?: string;
+  country?: string;
+  bio?: string;
+  company?: string;
+  tags: string[];
+  platform?: string;
+  user_name?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface ContactFormModalProps {
+  contact?: Partial<Contact>;
+  onClose: () => void;
+  onSave: (contact: Partial<Contact>) => void;
+}
+
 export const ContactForm = ({
   contact,
   onClose,
@@ -19,13 +42,12 @@ export const ContactForm = ({
     country: "",
     bio: "",
     company: "",
-    tags: [], // Default value
     platform: "",
     ...contact,
     tags: Array.isArray(contact?.tags) ? contact.tags : [], // Type guard
   });
 
-  const [tagsList, setTagsList] = useState<Tag[]>([]);
+  const [tagsList, setTagsList] = useState<string[]>([]);
   const [loadingTags, setLoadingTags] = useState(true);
   const [isTagsOpen, setIsTagsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -40,9 +62,10 @@ export const ContactForm = ({
 
       if (!error && data) {
         setTagsList(
-          data.map((tag) => tag.name).filter((name): name is string => !!name)
+          data.map((tag: { name: string }) => tag.name).filter((name): name is string => !!name)
         );
       }
+      setLoadingTags(false);
     };
     fetchTags();
   }, []);
@@ -50,50 +73,41 @@ export const ContactForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-// Phone number validation
-if (formData.phone) {
-  console.log("Starting phone validation for:", formData.phone);
+    // Phone number validation
+    if (formData.phone) {
+      console.log("Starting phone validation for:", formData.phone);
 
-  // Check phone number length
-  if (formData.phone.length !== 10) {
-    alert("Phone number must be exactly 10 digits");
-    return;
-  }
+      // Check phone number length
+      if (formData.phone.length !== 10) {
+        alert("Phone number must be exactly 10 digits");
+        return;
+      }
 
-  // Simplified query to check for duplicate phone numbers
-  const { data: existingContacts, error: phoneCheckError } = await supabase
-    .from("contacts")
-    .select("id, phone")
-    .eq("phone", formData.phone);
+      // Simplified query to check for duplicate phone numbers
+      const { data: existingContacts, error: phoneCheckError } = await supabase
+        .from("contacts")
+        .select("id, phone")
+        .eq("phone", formData.phone);
 
-  // Log the full response
-  console.log("Full query response:", {
-    data: existingContacts,
-    error: phoneCheckError,
-    query: {
-      phone: formData.phone,
-      currentId: contact?.id
+      if (phoneCheckError) {
+        console.error("Phone check error details:", phoneCheckError);
+        alert("Error checking phone number uniqueness");
+        return;
+      }
+
+      // Check if phone exists in another contact
+      if (existingContacts && existingContacts.length > 0) {
+        const isDuplicate = existingContacts.some(
+          (existingContact) => existingContact.id !== contact?.id
+        );
+
+        if (isDuplicate) {
+          alert(`Phone number ${formData.phone} is already in use`);
+          return;
+        }
+      }
     }
-  });
 
-  if (phoneCheckError) {
-    console.error("Phone check error details:", phoneCheckError);
-    alert("Error checking phone number uniqueness");
-    return;
-  }
-
-  // Check if phone exists in another contact
-  if (existingContacts && existingContacts.length > 0) {
-    const isDuplicate = existingContacts.some(
-      (existingContact) => existingContact.id !== contact?.id
-    );
-
-    if (isDuplicate) {
-      alert(`Phone number ${formData.phone} is already in use`);
-      return;
-    }
-  }
-}    
     // required fields
     if (!formData.firstName || !formData.lastName || !formData.email) {
       alert("First Name, Last Name, and Email are required fields");
@@ -107,7 +121,7 @@ if (formData.phone) {
       .in("name", formData.tags || []);
 
     const invalidTags = (formData.tags || []).filter(
-      (t) => !existingTags?.some((et) => et.name === t)
+      (t) => !existingTags?.some((et: { name: string }) => et.name === t)
     );
 
     if (invalidTags.length > 0) {
@@ -121,20 +135,22 @@ if (formData.phone) {
         updated_at: new Date().toISOString(),
       };
 
-      // Save/Update contact
-      let { error } = contact?.id
-        ? await supabase
-            .from("contacts")
-            .update(contactData)
-            .eq("id", contact.id)
-        : await supabase.from("contacts").insert([
-            {
-              ...contactData,
-              created_at: new Date().toISOString(),
-            },
-          ]);
+      let response;
+      if (contact?.id) {
+        response = await supabase
+          .from("contacts")
+          .update(contactData)
+          .eq("id", contact.id);
+      } else {
+        response = await supabase.from("contacts").insert([
+          {
+            ...contactData,
+            created_at: new Date().toISOString(),
+          },
+        ]);
+      }
 
-      if (error) throw error;
+      if (response.error) throw response.error;
 
       // Now handle broadcast tables
       if (contactData.platform === "Whatsapp" && contactData.phone) {
@@ -171,7 +187,7 @@ if (formData.phone) {
       }
 
       onSave(contactData);
-    } catch (error) {
+    } catch (error: any) {
       alert(`Error saving contact: ${error.message}`);
     }
   };
@@ -208,7 +224,6 @@ if (formData.phone) {
   ];
 
   const platforms = ["Whatsapp", "Instagram"];
-
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 p-6">
       {/* First Name */}

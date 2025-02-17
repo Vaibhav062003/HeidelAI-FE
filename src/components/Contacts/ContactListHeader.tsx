@@ -1,6 +1,7 @@
 import { MoreVertical, Plus, Upload } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { MessageComposer } from "./Message";
+
 interface ContactListHeaderProps {
   searchValue: string;
   onSearch: (value: string) => void;

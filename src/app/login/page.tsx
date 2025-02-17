@@ -32,7 +32,7 @@ export default function LoginPage() {
           setIsSignUp(false); // Switch back to login after successful signup
         }
       } else {
-        const { user, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
           toast.error('Invalid email or password');
         } else {
