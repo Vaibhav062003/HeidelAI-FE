@@ -28,7 +28,8 @@ import dayjs from "dayjs";
 import { Dayjs } from 'dayjs';
 import { StaticDateTimePicker } from '@mui/x-date-pickers/StaticDateTimePicker';
 import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
-import { useToast } from "@/components/ui/use-toast"; 
+import { toast } from "sonner";
+// import { useToast } from "@/components/ui/use-toast"; 
 
 
 // ... other imports
@@ -53,7 +54,6 @@ export default function ReminderDialog({
   onSave, 
   conversationId 
 }: ReminderDialogProps) {
-  const { toast } = useToast();
   const [selectedDateTime, setSelectedDateTime] = useState<Dayjs | null>(dayjs());
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
@@ -82,8 +82,7 @@ export default function ReminderDialog({
         throw new Error('Failed to set reminder');
       }
 
-      toast({
-        title: "Reminder set successfully",
+      toast.success("Reminder set successfully", {
         description: `Reminder set for ${selectedDateTime.format('MMM D, YYYY h:mm A')}`,
       });
 
@@ -101,10 +100,8 @@ export default function ReminderDialog({
       onOpenChange(false);
 
     } catch (error) {
-      toast({
-        title: "Failed to set reminder",
+      toast.error("Failed to set reminder", {
         description: "Please try again later",
-        variant: "destructive",
       });
       console.log('Error setting reminder:', error);
     } finally {

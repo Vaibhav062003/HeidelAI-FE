@@ -106,7 +106,37 @@ const ConversationList = ({
 
   if (loading) {
     return (
-      <div className="w-80 h-full bg-white border-r border-gray-200 flex flex-col">
+      <>
+      <style>
+      {`
+
+
+
+        .custom-scrollb::-webkit-scrollbar {
+          width: 4px;
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+
+        .custom-scrollb:hover::-webkit-scrollbar {
+          opacity: 1;
+        }
+
+        .custom-scrollb::-webkit-scrollbar-thumb {
+          background-color: #efefef;
+          border-radius: 20px;
+        }
+
+        .custom-scrollb::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .custom-scrollb:not(:hover)::-webkit-scrollbar-thumb {
+          opacity: 0;
+        }
+      `}
+    </ style >
+      <div className="w-80 max-h-screen bg-white border-r border-gray-200 flex flex-col">
       <div className="p-4 border-b border-gray-200">
         <div className="relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -127,12 +157,13 @@ const ConversationList = ({
         </div>
       </div>
       {/* Loading Skeletons */}
-      <div className="flex-1 custom-scrollb px-1 overflow-auto">
+      <div className="flex-1 custom-scrollb px-1 overflow-y-scroll">
           {[...Array(12)].map((_, i) => (
             <ConversationItemSkeleton key={i} />
           ))}
         </div>
     </div>
+    </>
     );
   }
 
