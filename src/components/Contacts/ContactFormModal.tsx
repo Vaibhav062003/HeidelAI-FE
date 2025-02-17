@@ -1,9 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, PostgrestError } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+type SupabaseError = PostgrestError;
 
 interface Contact {
   id?: number;
@@ -187,8 +193,14 @@ export const ContactForm = ({
       }
 
       onSave(contactData);
-    } catch (error: any) {
-      alert(`Error saving contact: ${error.message}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(`Error saving contact: ${error.message}`);
+      } else if (typeof error === 'object' && error !== null && 'message' in error) {
+        alert(`Error saving contact: ${(error as SupabaseError).message}`);
+      } else {
+        alert('An unknown error occurred while saving the contact');
+      }
     }
   };
 

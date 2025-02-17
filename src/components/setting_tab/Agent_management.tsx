@@ -20,15 +20,31 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+
+
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
 );
 
+interface Agent {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  created_at?: string;
+}
+
+
+
 export const AgentsSettings = () => {
-  const [agents, setAgents] = useState([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Omit<Agent, 'created_at'>>({
     id: '',
     name: '',
     email: '',
@@ -47,11 +63,11 @@ export const AgentsSettings = () => {
         .from('agent_management')
         .select('*')
         .order('created_at', { ascending: false });
-
+  
       if (error) throw error;
-      setAgents(data);
+      setAgents(data as Agent[]);
     } catch (error) {
-      console.error('Error fetching agents:', error.message);
+      console.error('Error fetching agents:', error instanceof Error ? error.message : 'Unknown error');
     }
   };
 
@@ -94,7 +110,7 @@ export const AgentsSettings = () => {
       setIsOpen(false);
       setFormData({ id: '', name: '', email: '', role: '' });
     } catch (error) {
-      console.error('Error saving agent:', error.message);
+      console.error('Error saving agent:',error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
@@ -116,7 +132,7 @@ export const AgentsSettings = () => {
       setIsOpen(false);
       setFormData({ id: '', name: '', email: '', role: '' });
     } catch (error) {
-      console.error('Error deleting agent:', error.message);
+      console.error('Error deleting agent:', error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setDeleting(false);
     }
@@ -136,7 +152,7 @@ export const AgentsSettings = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {agents.map((agent) => (
+            {agents.map((agent: Agent) => (
               <TableRow key={agent.id}>
                 <TableCell>{agent.name}</TableCell>
                 <TableCell>{agent.email}</TableCell>

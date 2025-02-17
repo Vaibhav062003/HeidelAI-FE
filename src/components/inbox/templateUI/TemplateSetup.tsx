@@ -2,15 +2,32 @@ import React from "react";
 import { MessageSquare, Wrench, ShieldCheck } from "lucide-react";
 import { TemplateEditor } from "./TemplateEditor";
 
-type TemplateSetupProps = {
+interface Variable {
+  id: string;
+  name: string;
+  type: string;
+  example?: string;
+  section: string;
+}
+
+interface BodyVariable {
+  id: string;
+  name: string;
+  value: string;  // Required in BodyVariable
+}
+
+// Update the TemplateSetupProps type
+interface TemplateSetupProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   templateType: string;
   setTemplateType: (type: string) => void;
-  newVariable: any;
-  setNewVariable: (variable: any) => void;
-  bodyVariables: any;
-};
+  newVariable: Variable;
+  setNewVariable: React.Dispatch<React.SetStateAction<Variable>>;  // Updated type
+  bodyVariables: BodyVariable[];
+}
+
+
 
 export const TemplateSetup: React.FC<TemplateSetupProps> = ({
   activeTab,

@@ -14,8 +14,12 @@ interface CannedResponsesProps {
   onClose: () => void;
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const CannedResponses: React.FC<CannedResponsesProps> =  ({ onInsertResponse, onClose }: CannedResponsesProps) => {
@@ -129,7 +133,7 @@ const CannedResponses: React.FC<CannedResponsesProps> =  ({ onInsertResponse, on
 
         <p className="text-gray-600 mb-6 text-sm">
           Canned Responses are pre-written reply templates that help you quickly respond to conversations.
-          Use the '/' character followed by the shortcode to insert a response.
+          Use the &apos;/&apos; character followed by the shortcode to insert a response.
         </p>
 
         {responses.length === 0 ? (

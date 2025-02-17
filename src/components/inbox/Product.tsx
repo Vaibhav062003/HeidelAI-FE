@@ -45,6 +45,9 @@ interface ProductsTabProps {
   onProductSelect: (product: Product) => void;
 }
 
+type PlatformType = "pinecone" | "shopify" | "other" | undefined;
+
+
 const ProductsTab = ({ onProductSelect }: ProductsTabProps) => {
   const [searchProduct, setSearchProduct] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
@@ -54,7 +57,7 @@ const ProductsTab = ({ onProductSelect }: ProductsTabProps) => {
   const [error, setError] = useState("");
   const [showOptions, setShowOptions] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState("");
+  const [selectedPlatform, setSelectedPlatform] = useState<PlatformType>(undefined);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const fetchProducts = async () => {
@@ -88,7 +91,7 @@ const ProductsTab = ({ onProductSelect }: ProductsTabProps) => {
     setFilteredProducts(filtered);
   }, [searchProduct, selectedCategory, products]);
 
-  const handleOptionSelect = (platform: string) => {
+  const handleOptionSelect = (platform: PlatformType) => {
     setSelectedPlatform(platform);
     setShowForm(true);
     setShowOptions(false);
@@ -142,24 +145,24 @@ const ProductsTab = ({ onProductSelect }: ProductsTabProps) => {
                 <button
                   onClick={() => handleOptionSelect("pinecone")}
                   className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white 
-                         border border-transparent hover:border-gray-300 
-                         hover:bg-gray-50 text-left transition-all"
+                            border border-transparent hover:border-gray-300 
+                            hover:bg-gray-50 text-left transition-all"
                 >
                   Add to Pinecone
                 </button>
                 <button
                   onClick={() => handleOptionSelect("shopify")}
                   className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white 
-                         border border-transparent hover:border-gray-300 
-                         hover:bg-gray-50 text-left transition-all"
+                            border border-transparent hover:border-gray-300 
+                            hover:bg-gray-50 text-left transition-all"
                 >
                   Add to Shopify
                 </button>
                 <button
-                  onClick={() => handleOptionSelect("Wordpress")}
+                  onClick={() => handleOptionSelect("other")}
                   className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white 
-                         border border-transparent hover:border-gray-300 
-                         hover:bg-gray-50 text-left transition-all"
+                            border border-transparent hover:border-gray-300 
+                            hover:bg-gray-50 text-left transition-all"
                 >
                   Add to Wordpress
                 </button>
@@ -261,13 +264,13 @@ const ProductsTab = ({ onProductSelect }: ProductsTabProps) => {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
           onClick={() => {
             setShowForm(false);
-            setSelectedPlatform("");
+            setSelectedPlatform(undefined);
           }}
         >
           <AddProduct
             closeForm={() => {
               setShowForm(false);
-              setSelectedPlatform("");
+              setSelectedPlatform(undefined);
             }}
             platform={selectedPlatform}
           />

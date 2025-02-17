@@ -33,6 +33,15 @@ type Button = {
   value: string;
 };
 
+interface EmojiData {
+  id: string;
+  name: string;
+  native: string;
+  unified: string;
+  keywords: string[];
+  shortcodes: string;
+}
+
 interface CatalogProps {
   templateName: string;
   setTemplateName: (name: string) => void;
@@ -82,7 +91,7 @@ export const Catalog: React.FC<CatalogProps> = ({
   const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const [showCatalog, setShowCatalog] = useState(false);
 
-  const handleEmojiSelect = (emoji: any) => {
+  const handleEmojiSelect = (emoji: EmojiData) => {
     // Append selected emoji to message body
     setMessageBody(messageBody + emoji.native);
     setEmojiPickerVisible(false); // Optionally hide picker after selection

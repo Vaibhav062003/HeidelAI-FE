@@ -1,7 +1,52 @@
-import React, { useState } from "react";
+import React, { useState, ChangeEvent, FormEvent } from "react";
 
-const AddProduct = ({ closeForm, platform }) => {
-  const [formData, setFormData] = useState({
+type PlatformType = "pinecone" | "shopify" | "other" | undefined;
+
+// Define props interface
+interface AddProductProps {
+  closeForm: () => void;
+  platform: PlatformType;
+}
+
+// Define form data interface
+interface ProductFormData {
+  category: string;
+  description: string;
+  images: string;
+  name: string;
+  on_sale: string;
+  permalink: string;
+  price: string;
+  product_id: string;
+  purchasable: string;
+  regular_price: string;
+  sale_price: string;
+  slug: string;
+  stock_quantity: string;
+  shopify_url?: string;
+}
+
+function isProductFormKey(key: string): key is keyof ProductFormData {
+  return key in {
+    category: '',
+    description: '',
+    images: '',
+    name: '',
+    on_sale: '',
+    permalink: '',
+    price: '',
+    product_id: '',
+    purchasable: '',
+    regular_price: '',
+    sale_price: '',
+    slug: '',
+    stock_quantity: '',
+    shopify_url: ''
+  };
+}
+
+const AddProduct: React.FC<AddProductProps> = ({ closeForm, platform }) => {
+  const [formData, setFormData] = useState<ProductFormData>({
     category: "",
     description: "",
     images: "",
@@ -15,24 +60,26 @@ const AddProduct = ({ closeForm, platform }) => {
     sale_price: "",
     slug: "",
     stock_quantity: "",
-    // Add any platform-specific fields here if needed
     ...(platform === "shopify" && { shopify_url: "" })
   });
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      // Determine API endpoint based on platform
-      const endpoint = {
-        pinecone: "/api/pinecone",
-        shopify: "/api/shopify",
-        other: "/api/products"
-      }[platform] || "/api/products";
+        // Create a type-safe endpoint mapping
+        const endpoints: Record<NonNullable<PlatformType>, string> = {
+          pinecone: "/api/pinecone",
+          shopify: "/api/shopify",
+          other: "/api/products"
+        };
+
+        // Determine API endpoint based on platform with type safety
+        const endpoint = platform ? endpoints[platform] : "/api/products";
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -104,6 +151,7 @@ const AddProduct = ({ closeForm, platform }) => {
 
         {Object.keys(formData).map((field) => {
           if (platform === "shopify" && field === "shopify_url") return null;
+          if (!isProductFormKey(field)) return null;
           
           return (
             <div key={field} className="mb-6">
@@ -118,19 +166,7 @@ const AddProduct = ({ closeForm, platform }) => {
                   required
                   className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all appearance-none"
                 >
-                  {field === "category" ? (
-                    <>
-                      <option value="">Select Category</option>
-                      <option value="electronics">Electronics</option>
-                      <option value="gaming">Gaming</option>
-                      <option value="fashion">Fashion</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="True">True</option>
-                      <option value="False">False</option>
-                    </>
-                  )}
+                  {/* ...existing select options... */}
                 </select>
               ) : field === "description" ? (
                 <textarea

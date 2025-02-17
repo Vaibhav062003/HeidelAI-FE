@@ -18,6 +18,15 @@ import { AppSetup, Button, Variable } from "@/components/types/template_types";
 import ImageUploadHandler from "./ImageUploadHandler";
 import { insertFormatting } from "./textFormatting";
 
+interface EmojiData {
+  id: string;
+  name: string;
+  native: string;
+  unified: string;
+  keywords: string[];
+  shortcodes: string;
+}
+
 
 interface TemplateEditorProps {
   templateName: string;
@@ -151,7 +160,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const [text, setText] = useState("");
 
-  const handleEmojiSelect = (emoji: any) => {
+  const handleEmojiSelect = (emoji: EmojiData) => {
     // Append selected emoji to message body
     setMessageBody(messageBody + emoji.native);
     setEmojiPickerVisible(false); // Optionally hide picker after selection
@@ -668,7 +677,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 Set custom validity period for your message
               </h4>
               <p className="text-sm text-gray-600">
-                If you don't set a custom validity period, the standard 10
+                If you don&apos;t set a custom validity period, the standard 10
                 minutes WhatsApp message validity period will be applied.
               </p>
             </div>
@@ -715,7 +724,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           <p className="text-sm text-gray-600">
             To help us review your message template, please add an example of
             each variable to your body text. Do not use real customer
-            information. Meta's hosted cloud API reviews template and variable
+            information. Meta&apos;s hosted cloud API reviews template and variable
             parameters to protect the security and integrity of our services.
           </p>
         </div>
