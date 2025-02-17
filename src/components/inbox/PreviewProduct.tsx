@@ -12,21 +12,29 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 interface Product {
-  name: string;
-  on_sale: boolean;
-  price: string;
-  product_id: string;
-  purchasable: boolean;
-  regular_price: string;
-  sale_price: string;
-  stock_quantity: string;
-  metadata: Record<string, any>;
+  id: string;
+  category: string;
+  metadata: {
+    images: string;
+    name: string;
+    price: string;
+    permalink: string;
+    // price: number;
+    product_id: number;
+    purchasable: string; // Use boolean if the data contains `true/false`
+    regular_price: string; // Use `number` if parsed as numeric values
+    sale_price: string; // Use `number` if parsed as numeric values
+    slug: string;
+    stock_quantity: number;
+  };
 }
+
 
 interface ProductPreviewProps {
   product: Product;
   onClose: () => void;
 }
+
 
 const ProductPreview: React.FC<ProductPreviewProps> = ({
   product,
@@ -99,72 +107,96 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
           </button>
         </div>
 
-        {/* Details Grid */}
+         {/* Main Content */}
         <div className="grid grid-cols-2 gap-6 mb-6">
-          {/* Pricing Section */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Pricing</h3>
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* Product Image */}
+            <div className="border rounded-lg overflow-hidden">
+              <img
+                src={product.metadata.images}
+                alt={product.metadata.name}
+                className="w-full h-48 object-contain bg-gray-50"
+              />
+            </div>
+
+            {/* Product Identifiers */}
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Current Price:</span>
-                <span className="font-medium text-lg text-gray-900">
-                  ₹{product.metadata.price}
-                </span>
+              <h3 className="text-sm font-medium text-gray-700">Identifiers</h3>
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">SKU:</span>
+                  <span className="font-medium text-gray-900">
+                    {product.metadata.product_id}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Slug:</span>
+                  <span className="font-medium text-gray-900 text-xs">
+                    {product.metadata.slug}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Permalink:</span>
+                  <a
+                    href={product.metadata.permalink}
+                    target="_blank"
+                    rel="noopener"
+                    className="text-blue-600 hover:underline text-xs"
+                  >
+                    View Link
+                  </a>
+                </div>
               </div>
-              {product.on_sale && (
-                <>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-600">Regular Price:</span>
-                    <span className="text-gray-400 line-through">
-                      ₹{product.metadata.regular_price}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-600">Sale Price:</span>
-                    <span className="font-medium text-green-600">
-                      ₹{product.metadata.sale_price}
-                    </span>
-                  </div>
-                </>
-              )}
             </div>
           </div>
 
-          {/* Inventory Section */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Inventory</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Stock Quantity:</span>
-                <span className="font-medium text-gray-900">
-                  {product.metadata.stock_quantity}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Availability:</span>
-                <Badge variant={product.purchasable ? "default" : "destructive"}>
-                  {product.purchasable ? "In Stock" : "Out of Stock"}
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </div>
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Pricing Section - Keep existing */}
 
-        {/* Additional Details */}
-        <div className="mb-6">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Product Details</h3>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">SKU:</span>
-              <span className="font-medium text-gray-900">
-                {product.metadata.sku || "N/A"}
-              </span>
+            {/* Inventory & Availability */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-gray-700">Stock Details</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Stock Quantity:</span>
+                  <span className="font-medium text-gray-900">
+                    {product.metadata.stock_quantity}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Purchasable:</span>
+                  <Badge variant={product.metadata.purchasable === 'true' ? "default" : "destructive"}>
+                    {product.metadata.purchasable === 'true' ? "Available" : "Available"}
+                  </Badge>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Category:</span>
-              <span className="font-medium text-gray-900">
-                {product.category}
-              </span>
+
+            {/* Price Details */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-gray-700">Price Breakdown</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Regular Price:</span>
+                  <span className="font-medium text-gray-900">
+                    ₹{product.metadata.regular_price}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Sale Price:</span>
+                  <span className="font-medium text-gray-900">
+                    ₹{product.metadata.sale_price}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Current Price:</span>
+                  <span className="font-medium text-gray-900">
+                    ₹{product.metadata.price}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -179,7 +211,7 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
               <span className="font-medium">Share in Chat</span>
             </button>
             
-            {product.metadata.url && (
+            {/* {product.metadata.url && (
               <a
                 href={product.metadata.url}
                 target="_blank"
@@ -188,7 +220,7 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
               >
                 View full product page ↗
               </a>
-            )}
+            )} */}
           </div>
         </div>
       </div>
