@@ -233,28 +233,12 @@ const Sidebar = ({
                           <div className="flex items-center justify-between">
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className="font-medium truncate max-w-[150px] block">
-                                {template.name.length > 15
-                                  ? `${template.name.slice(0, 15)}`
-                                  : template.name}
+                              <span className="font-semibold max-w-[150px] block">
+                                  {template.name}
                               </span>
                             </TooltipTrigger>
-                            <TooltipContent>{template.name}</TooltipContent>
+                            {/* <TooltipContent>{template.name}</TooltipContent> */}
                           </Tooltip>
-                          <div className="flex gap-2">
-                            <Badge variant="secondary">{template.category}</Badge>
-                            <Badge
-                              variant={
-                                template.status === 'APPROVED'
-                                  ? 'success'
-                                  : template.status === 'REJECTED'
-                                  ? 'REJECTED'
-                                  : 'destructive'
-                              }
-                            >
-                              {template.status}
-                            </Badge>
-                          </div>
                         </div>
                         </Card>
                       )

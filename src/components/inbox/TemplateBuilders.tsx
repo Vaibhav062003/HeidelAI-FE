@@ -641,14 +641,14 @@ const exportData = async () => {
             ...(headerType === "text" && {
               text: header,
               example: {
-                header_text: variables
-                  .filter((v) => v.section === "header")
-                  .map((variable) => variable.example),
+                header_text: headerVariables.map((variable) => variable.example),
               },
             }),
-            ...(headerType === "image" && { image: { link: headerContent } }),
-            ...(headerType === "video" && { video: { link: headerContent } }),
-            ...(headerType === "document" && { document: { link: headerContent } }),
+            ...(["image", "video", "document"].includes(headerType) && {
+              example: {
+                header_url: [headerContent], // Use the uploaded media handle here
+              },
+            }),
           },
           {
             type: "BODY",
