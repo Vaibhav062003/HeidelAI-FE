@@ -20,6 +20,7 @@ export const ContactForm = ({
     bio: "",
     company: "",
     tags: [], // Default value
+    platform: "",
     ...contact,
     tags: Array.isArray(contact?.tags) ? contact.tags : [], // Type guard
   });
@@ -48,8 +49,69 @@ export const ContactForm = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+// Phone number validation
+if (formData.phone) {
+  console.log("Starting phone validation for:", formData.phone);
+
+  // Check phone number length
+  if (formData.phone.length !== 10) {
+    alert("Phone number must be exactly 10 digits");
+    return;
+  }
+
+  // Simplified query to check for duplicate phone numbers
+  const { data: existingContacts, error: phoneCheckError } = await supabase
+    .from("contacts")
+    .select("id, phone")
+    .eq("phone", formData.phone);
+
+  // Log the full response
+  console.log("Full query response:", {
+    data: existingContacts,
+    error: phoneCheckError,
+    query: {
+      phone: formData.phone,
+      currentId: contact?.id
+    }
+  });
+
+  if (phoneCheckError) {
+    console.error("Phone check error details:", phoneCheckError);
+    alert("Error checking phone number uniqueness");
+    return;
+  }
+
+  // Check if phone exists in another contact
+  if (existingContacts && existingContacts.length > 0) {
+    const isDuplicate = existingContacts.some(
+      (existingContact) => existingContact.id !== contact?.id
+    );
+
+    if (isDuplicate) {
+      alert(`Phone number ${formData.phone} is already in use`);
+      return;
+    }
+  }
+}    
+    // required fields
     if (!formData.firstName || !formData.lastName || !formData.email) {
       alert("First Name, Last Name, and Email are required fields");
+      return;
+    }
+
+    // Validate tags exist in tags table first
+    const { data: existingTags } = await supabase
+      .from("tags")
+      .select("name")
+      .in("name", formData.tags || []);
+
+    const invalidTags = (formData.tags || []).filter(
+      (t) => !existingTags?.some((et) => et.name === t)
+    );
+
+    if (invalidTags.length > 0) {
+      alert(`Invalid tags: ${invalidTags.join(", ")}`);
       return;
     }
 
@@ -59,6 +121,7 @@ export const ContactForm = ({
         updated_at: new Date().toISOString(),
       };
 
+      // Save/Update contact
       let { error } = contact?.id
         ? await supabase
             .from("contacts")
@@ -73,23 +136,43 @@ export const ContactForm = ({
 
       if (error) throw error;
 
+      // Now handle broadcast tables
+      if (contactData.platform === "Whatsapp" && contactData.phone) {
+        // Save to WhatsApp broadcast table
+        for (const tag of contactData.tags || []) {
+          const { error: whatsappError } = await supabase
+            .from("broadcast_whatsapp")
+            .insert([
+              {
+                tag_name: tag,
+                phone: contactData.phone,
+              },
+            ]);
+
+          if (whatsappError) throw whatsappError;
+        }
+      } else if (
+        contactData.platform === "Instagram" &&
+        contactData.user_name
+      ) {
+        // Save to Instagram broadcast table
+        for (const tag of contactData.tags || []) {
+          const { error: instagramError } = await supabase
+            .from("broadcast_instagram")
+            .insert([
+              {
+                user_name: contactData.user_name,
+                tag_name: tag,
+              },
+            ]);
+
+          if (instagramError) throw instagramError;
+        }
+      }
+
       onSave(contactData);
     } catch (error) {
       alert(`Error saving contact: ${error.message}`);
-    }
-    // Validate tags exist in tags table
-    const { data: existingTags } = await supabase
-      .from("tags")
-      .select("name")
-      .in("name", formData.tags || []);
-
-    const invalidTags = (formData.tags || []).filter(
-      (t) => !existingTags?.some((et) => et.name === t)
-    );
-
-    if (invalidTags.length > 0) {
-      alert(`Invalid tags: ${invalidTags.join(", ")}`);
-      return;
     }
   };
 
@@ -123,6 +206,8 @@ export const ContactForm = ({
     "Canada",
     "Australia",
   ];
+
+  const platforms = ["Whatsapp", "Instagram"];
 
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 p-6">
@@ -171,7 +256,14 @@ export const ContactForm = ({
           type="tel"
           className="w-full px-3 py-2 border rounded-lg"
           value={formData.phone || ""}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          onChange={(e) => {
+            // Allow only numbers
+            const value = e.target.value.replace(/\D/g, "");
+            setFormData({ ...formData, phone: value });
+          }}
+          maxLength={10}
+          pattern="\d{10}"
+          title="Please enter exactly 10 digits"
         />
       </div>
 
@@ -202,6 +294,38 @@ export const ContactForm = ({
             </option>
           ))}
         </select>
+      </div>
+
+      {/* Platform */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Platform</label>
+        <select
+          className="w-full px-3 py-2 border rounded-lg"
+          value={formData.platform || ""}
+          onChange={(e) =>
+            setFormData({ ...formData, platform: e.target.value })
+          }
+        >
+          <option value="">Select Platform</option>
+          {platforms.map((platform) => (
+            <option key={platform} value={platform}>
+              {platform}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Instagram ID */}
+      <div className={formData.platform === "Instagram" ? "block" : "hidden"}>
+        <label className="block text-sm font-medium mb-1">Instagram ID *</label>
+        <input
+          required={formData.platform === "Instagram"}
+          className="w-full px-3 py-2 border rounded-lg"
+          value={formData.user_name || ""}
+          onChange={(e) =>
+            setFormData({ ...formData, user_name: e.target.value })
+          }
+        />
       </div>
 
       {/* Bio */}

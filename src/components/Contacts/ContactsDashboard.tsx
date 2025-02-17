@@ -31,6 +31,8 @@ const ContactsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [isImporting, setIsImporting] = useState(false);
   const [importingCount, setImportingCount] = useState(0);
+  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+
 
   // const [channels, setChannels] = useState<BroadcastChannel[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -173,7 +175,7 @@ const ContactsDashboard = () => {
       console.error('Error fetching tags:', error);
       setError('Failed to load tags');
     } else {
-      setTags(data || []);
+      setTags(data);
     }
   };
 
@@ -233,7 +235,7 @@ const ContactsDashboard = () => {
       })
       .eq("id", id)
       .select();
-
+        
     if (error) {
       console.error("Error updating tag:", error);
       setError("Failed to update tag");
@@ -271,6 +273,9 @@ const ContactsDashboard = () => {
         onSelectChannel={(channelId) => {
           /* your select logic */
         }}
+        onTagModalOpen={() => setIsTagModalOpen(true)}
+        onTagModalClose={() => setIsTagModalOpen(false)}
+
         selectedChannel={null}
         error={error}
       />
