@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import AgentsSettings from './Agent_management';
 import TeamsConfiguration from './Team_configuration';
-import CannedResponses from './CannedResponsesContext';
+import CannedResponses from './CannedResponses';
 import { Construction } from 'lucide-react';
 import { 
   Select, 

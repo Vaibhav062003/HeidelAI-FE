@@ -167,7 +167,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Chat View */}
+                {/* Chat View
                 <div className="flex-1 flex flex-col border-r">
                   {selectedConversationId ? (
                     <>
@@ -185,7 +185,7 @@ export default function DashboardPage() {
                       </p>
                     </div>
                   )}
-                </div>
+                </div> */}
 
                 {/* Right Sidebar */}
                 <div className="w-96 bg-white flex flex-col">

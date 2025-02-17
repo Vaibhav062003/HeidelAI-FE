@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import CannedResponses from './CannedResponsesContext';
+import CannedResponses from './CannedResponses';
 
 const SettingsSections = [
   { 
