@@ -71,6 +71,10 @@ const AddProduct = ({ closeForm, platform }) => {
   };
 
   return (
+    <div 
+      className="bg-white p-6 rounded-lg w-full max-w-md"
+      onClick={(e) => e.stopPropagation()} // Add this line
+    > 
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50 backdrop-blur-sm">
       <form
         className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-gray-100 transition-all transform"
@@ -174,6 +178,8 @@ const AddProduct = ({ closeForm, platform }) => {
         </div>
       </form>
     </div>
+    </div>
+
   );
 };
 

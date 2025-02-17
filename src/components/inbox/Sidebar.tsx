@@ -5,6 +5,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import AddProduct from "@/components/inbox/AddProduct";
+import ProductList from "@/components/inbox/ProductList";
+import ProductPreview from "./PreviewProduct";
+import ProductsTab from "./Product";
+import { X } from "lucide-react";
 import {
   Select,
   SelectTrigger,
@@ -325,166 +329,8 @@ const Sidebar = ({
             )}
           </TabsContent>
 
-          <TabsContent
-            value="products"
-            className="p-2 bg-gradient-to-b from-white via-gray-100 to-white rounded-md shadow-sm"
-          >
-            <div className="mb-1 flex gap-2">
-              {/* Main Add Button */}
-              <button
-                className="bg-blue-500 text-white w-12 h-9 rounded-full flex items-center justify-center shadow-md hover:bg-blue-600 transition-all relative z-10"
-                onClick={() => setShowOptions(!showOptions)}
-                aria-label="Add Product"
-              >
-                <span className="text-2xl font-bold">+</span>
-              </button>
-
-              {/* Dropdown Menu - Now properly layered */}
-              {showOptions && (
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setShowOptions(false)}
-                >
-                  <div className="absolute right-36 top-14 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-xl border border-gray-200 dark:border-gray-700 transform translate-x-[-70px]">
-                    <div className="py-1">
-                      <button
-                        onClick={() => handleOptionSelect("pinecone")}
-                        className="block w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 text-left transition-colors"
-                      >
-                        Add to Pinecone
-                      </button>
-                      <button
-                        onClick={() => handleOptionSelect("shopify")}
-                        className="block w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 text-left transition-colors"
-                      >
-                        Add to Shopify
-                      </button>
-                      <button
-                        onClick={() => handleOptionSelect("other")}
-                        className="block w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 text-left transition-colors"
-                      >
-                        Other
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Product Form */}
-              {showForm && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                  <AddProduct
-                    closeForm={() => {
-                      setShowForm(false);
-                      setSelectedPlatform("");
-                    }}
-                    platform={selectedPlatform}
-                  />
-                </div>
-              )}
-
-              <Input
-                placeholder="Search products..."
-                value={searchProduct}
-                onChange={(e) => setSearchProduct(e.target.value)}
-                className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-2 py-1 focus:ring-1 focus:ring-blue-400 text-xs"
-              />
-              <Select
-                value={selectedCategory}
-                onValueChange={setSelectedCategory}
-              >
-                <SelectTrigger className="w-[120px] bg-white text-gray-900 border border-gray-300 p-1 rounded-md text-xs">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-300">
-                  <SelectItem value="All">All</SelectItem>
-                  <SelectItem value="electronics">Electronics</SelectItem>
-                  <SelectItem value="jewelery">Jewelry</SelectItem>
-                  <SelectItem value="men's clothing">Men&apos;s Clothing</SelectItem>
-                  <SelectItem value="women's clothing">
-                    Women&apos;s Clothing
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <ScrollArea className="h-[450px] bg-gradient-to-r from-white to-gray-100 rounded-md p-2 overflow-auto shadow-md">
-              <div className="grid grid-cols-1 gap-2">
-                {loading && (
-                  <p className="text-center text-xs font-medium text-gray-700">
-                    Loading products...
-                  </p>
-                )}
-                {error && (
-                  <p className="text-center text-red-500 font-medium text-xs">
-                    {error}
-                  </p>
-                )}
-                {!loading && !error && filteredProducts.length === 0 && (
-                  <p className="text-center text-xs font-medium text-gray-700">
-                    No products found.
-                  </p>
-                )}
-                {filteredProducts.map((product: Product) => (
-                  <Card
-                    key={product.id}
-                    className="p-1 bg-white shadow-sm rounded-md hover:shadow-md transform hover:scale-105 transition-all duration-200 cursor-pointer"
-                  >
-                    <div className="flex items-center bg-gradient-to-t from-white via-gray-100 to-gray-200 p-1 rounded-md">
-                      <img
-                        src={product.metadata.images}
-                        alt={product.metadata.name}
-                        className="w-16 h-16 object-cover rounded-md mr-8 transition-all duration-200 hover:scale-110"
-                      />
-                      <div className="flex flex-col justify-center">
-                        <h3 className="font-medium text-xs text-gray-900">
-                          {product.metadata.name}
-                        </h3>
-                        <p className="text-xs text-gray-600">
-                          ₹{product.metadata.price}
-                        </p>
-                        <div className="flex gap-6 mt-3">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleProductSelect(product)} // Call handleProductSelect
-                                className="hover:bg-blue-500 text-blue-500 px-2 py-0.5 text-xs"
-                              >
-                                <ExternalLink className="h-3 w-3 mr-2" />
-                                View
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              View product details
-                            </TooltipContent>
-                          </Tooltip>
-
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  const productLink = `Check out ${product.metadata.name}: ${product.metadata.permalink}`;
-                                  console.log("Share product:", productLink);
-                                }}
-                                className="hover:bg-blue-500 text-blue-500 px-2 py-0.5 text-xs"
-                              >
-                                <Send className="h-3 w-3 mr-2" />
-                                Share
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Share in chat</TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </ScrollArea>
+          <TabsContent value="products">
+            <ProductsTab onProductSelect={setSelectedProduct} />
           </TabsContent>
 
           <TabsContent value="analytics" className="p-4">
@@ -516,7 +362,13 @@ const Sidebar = ({
               </Card>
             </div>
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        {selectedProduct && (
+          <ProductPreview
+            product={selectedProduct}
+            onClose={() => setSelectedProduct(null)}
+          />
+        )}
       </Card>
     </TooltipProvider>
   );

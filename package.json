@@ -43,6 +43,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
     "cobe": "^0.6.3",
+    "country-flag-icons": "^1.5.16",
     "date-fns-tz": "^3.2.0",
     "dotenv": "^16.4.7",
     "embla-carousel-react": "^8.5.1",
