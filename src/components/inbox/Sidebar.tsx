@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import AddProduct from "@/components/inbox/AddProduct";
-import ProductList from "@/components/inbox/ProductList";
-import ProductPreview from "./PreviewProduct";
-import { X } from "lucide-react";
 import {
   Select,
   SelectTrigger,
@@ -15,7 +12,6 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
@@ -26,23 +22,41 @@ import {
   FileText,
   Package,
   BarChart3,
-  Search,
   Plus,
   TrendingUp,
   Clock,
   Users,
-  MessageSquare,
   Send,
   ExternalLink,
-  Link,
 } from "lucide-react";
 import ConversationSummary from "./ConversationSummary";
 import { WhatsAppTemplate } from "../types/template";
 import TemplateBuilders from "./TemplateBuilders";
 import { WhatsAppTemplateDialog } from "./WhatsAppTemplateDialog";
 
+interface Metadata {
+  category: string;
+  description: string;
+  images: string;
+  name: string;
+  on_sale: string; // Use boolean if the data contains `true/false` instead of `"True"/"False"`
+  permalink: string;
+  price: number;
+  product_id: number;
+  purchasable: string; // Use boolean if the data contains `true/false`
+  regular_price: string; // Use `number` if parsed as numeric values
+  sale_price: string; // Use `number` if parsed as numeric values
+  slug: string;
+  stock_quantity: number;
+}
 
+interface Product {
+  id: string;
+  category: string;
+  metadata: Metadata;
+}
 
+type PlatformType = "pinecone" | "shopify" | "other";
 
 interface SidebarProps {
   selectedConversationId?: string;
@@ -71,7 +85,7 @@ const Sidebar = ({
   //   { id: "2", title: "Product Information", category: "Sales" },
   //   { id: "3", title: "Welcome Message", category: "Greeting" },
   // ],
-
+  selectedConversationId,
   analytics = {
     responseTime: "2m 30s",
     resolutionRate: "94%",
@@ -81,22 +95,17 @@ const Sidebar = ({
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
   const [searchTemplate, setSearchTemplate] = useState("");
   const [searchProduct, setSearchProduct] = useState("");
-  const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showOptions, setShowOptions] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState("");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<PlatformType | "">("");
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-
-  // Filter templates based on the search input
-  const filteredTemplates = templates.filter((template) =>
-    template.title.toLowerCase().includes(searchTemplate.toLowerCase())
-  );
 
   // Fetch products from API
   const fetchProducts = async () => {
@@ -109,8 +118,8 @@ const Sidebar = ({
       const data = await response.json();
       setProducts(data);
       setFilteredProducts(data);
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -128,40 +137,34 @@ const Sidebar = ({
 
   // Filter products based on search term and category
   useEffect(() => {
-    const filtered = products.filter((products) => {
+    const filtered = products.filter((product: Product) => {
       const matchesSearch =
-        products.metadata.name &&
-        products.metadata.name
+        product.metadata.name &&
+        product.metadata.name
           .toLowerCase()
           .includes(searchProduct.toLowerCase());
-
+  
       // Apply category filter
       const matchesCategory =
-        selectedCategory === "All" || products.category === selectedCategory;
-
+        selectedCategory === "All" || product.category === selectedCategory;
+  
       return matchesSearch && matchesCategory;
     });
     setFilteredProducts(filtered);
   }, [searchProduct, selectedCategory, products]);
 
-  const handleProductSelect = (product) => {
+  const handleProductSelect = (product: Product) => {
     setSelectedProduct(product);
   };
 
-  const handleOptionSelect = (platform) => {
+  const handleOptionSelect = (platform: PlatformType) => {
     setSelectedPlatform(platform);
     setShowForm(true);
     setShowOptions(false);
   };
 
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
-
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchProduct.toLowerCase()),
-  );
 
   useEffect(() => {
     const loadTemplates = async () => {
@@ -218,7 +221,7 @@ const Sidebar = ({
       />
       )}
      
-      <Card className="h-[550px] w-[430px] bg-white border-l">
+     <Card className="h-full max-h-screen p-2 bg-white border-l">
         <Tabs defaultValue="summary" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="summary">
@@ -245,7 +248,7 @@ const Sidebar = ({
           </div>
           </TabsContent>
 
-          <TabsContent value="templates" className="p-4">
+          <TabsContent value="templates" className="p-4 h-full">
             {showTemplateBuilder ? (
               <div className=" space-y-4">
                 <div className="flex items-center justify-between">
@@ -289,7 +292,7 @@ const Sidebar = ({
                     <TooltipContent>Create new template</TooltipContent>
                   </Tooltip>
                 </div>
-                <ScrollArea className="h-[400px]">
+                <ScrollArea className="h-screen">
                     {loading ?(
                       <div className="flex items-center justify-center h-20">
                         <p>Loading templates...</p>
@@ -397,9 +400,9 @@ const Sidebar = ({
                   <SelectItem value="All">All</SelectItem>
                   <SelectItem value="electronics">Electronics</SelectItem>
                   <SelectItem value="jewelery">Jewelry</SelectItem>
-                  <SelectItem value="men's clothing">Men's Clothing</SelectItem>
+                  <SelectItem value="men's clothing">Men&apos;s Clothing</SelectItem>
                   <SelectItem value="women's clothing">
-                    Women's Clothing
+                    Women&apos;s Clothing
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -422,7 +425,7 @@ const Sidebar = ({
                     No products found.
                   </p>
                 )}
-                {filteredProducts.map((product: any) => (
+                {filteredProducts.map((product: Product) => (
                   <Card
                     key={product.id}
                     className="p-1 bg-white shadow-sm rounded-md hover:shadow-md transform hover:scale-105 transition-all duration-200 cursor-pointer"
