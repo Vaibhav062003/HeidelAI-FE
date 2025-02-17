@@ -1,8 +1,8 @@
-import { ArrowUpFromLine, Copy, MapPin, Upload } from "lucide-react";
+import { FileText, MapPin } from "lucide-react";
+import Image from "next/image";
 import React, { useState } from "react";
 import CatalogPreview from "./CatlogPreview";
 import { AuthPreview } from "./AuthPreview";
-
 
 interface Button {
   id: string;
@@ -27,11 +27,12 @@ interface TemplatePreviewProps {
   language: string;
   setLanguage: React.Dispatch<React.SetStateAction<string>>;
   languages: string[];
-  
 
   setTemplateName?: React.Dispatch<React.SetStateAction<string>>;
   codeDeliveryMethod: string;
-  setCodeDeliveryMethod: React.Dispatch<React.SetStateAction<"zero_tap" | "one_tap" | "copy_code">>
+  setCodeDeliveryMethod: React.Dispatch<
+    React.SetStateAction<"zero_tap" | "one_tap" | "copy_code">
+  >;
   addSecurityRecommendation: boolean;
   addExpirationTime: boolean;
   setAddExpirationTime: (value: boolean) => void;
@@ -67,7 +68,7 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
   setAddExpirationTime,
   validityPeriod,
   autofillText,
-  setAutofillText,
+
   setValidityPeriod,
   copyCodeText,
   setCopyCodeText,
@@ -76,41 +77,10 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
   customValidityPeriod,
   setCustomValidityPeriod,
   validityPeriods,
-
-
 }) => {
-  const [catalogFormat, setCatalogFormat] = useState<"catalog" | "multi-product">("catalog");
- 
-  const currentTime = new Date().toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: 'numeric',
-    hour12: true
-  });
-    const [termsAccepted, setTermsAccepted] = useState(false);
-  
-    // State for app setup
-   
-  const addApp = () => {
-    if (apps.length < 5) {
-      setApps([...apps, { packageName: "", signatureHash: "" }]);
-    }
-  };
-
-  const updateApp = (index: number, field: keyof AppSetup, value: string) => {
-    const newApps = [...apps];
-    newApps[index] = { ...newApps[index], [field]: value };
-    setApps(newApps);
-  };
-
-
-  // const formatMessageBody = (text: string) => {
-  //   return text
-  //   .replace(/\*(.*?)\*/g, "**$1**") // Bold
-  //     .replace(/_(.*?)_/g, '<em>$1</em>') // Italic
-  //     .replace(/~(.*?)~/g, '<del>$1</del>') // Strikethrough
-  //     .replace(/```(.*?)```/g, '<code>$1</code>'); // Monospace
-  // };
-
+  const [catalogFormat, setCatalogFormat] = useState<
+    "catalog" | "multi-product"
+  >("catalog");
 
   if (templateType === "catalog") {
     return (
@@ -124,29 +94,29 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
     );
   }
 
-// In TemplatePreview.tsx
-if (templateType === 'one-time_Passcode') {
-  return (
-    <AuthPreview
-      addSecurityRecommendation={addSecurityRecommendation}
-      setAddSecurityRecommendation={setAddSecurityRecommendation}
-      addExpirationTime={addExpirationTime}
-      setAddExpirationTime={setAddExpirationTime}
-      validityPeriod={validityPeriod}
-      autofillText={autofillText}
-      setValidityPeriod={setValidityPeriod}
-      codeDeliveryMethod={codeDeliveryMethod}
-      setCodeDeliveryMethod={setCodeDeliveryMethod}
-      copyCodeText={copyCodeText}
-      setCopyCodeText={setCopyCodeText}
-      apps={apps}
-      setApps={setApps}
-      customValidityPeriod={customValidityPeriod}
-      setCustomValidityPeriod={setCustomValidityPeriod}
-      validityPeriods={validityPeriods}
-    />
-  );
-}
+  // In TemplatePreview.tsx
+  if (templateType === "one-time_Passcode") {
+    return (
+      <AuthPreview
+        addSecurityRecommendation={addSecurityRecommendation}
+        setAddSecurityRecommendation={setAddSecurityRecommendation}
+        addExpirationTime={addExpirationTime}
+        setAddExpirationTime={setAddExpirationTime}
+        validityPeriod={validityPeriod}
+        autofillText={autofillText}
+        setValidityPeriod={setValidityPeriod}
+        codeDeliveryMethod={codeDeliveryMethod}
+        setCodeDeliveryMethod={setCodeDeliveryMethod}
+        copyCodeText={copyCodeText}
+        setCopyCodeText={setCopyCodeText}
+        apps={apps}
+        setApps={setApps}
+        customValidityPeriod={customValidityPeriod}
+        setCustomValidityPeriod={setCustomValidityPeriod}
+        validityPeriods={validityPeriods}
+      />
+    );
+  }
 
   if (templateType !== "custom") {
     return null;
@@ -160,15 +130,23 @@ if (templateType === 'one-time_Passcode') {
           <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
             {headerType !== "none" && headerContent && (
               <div className="font-medium mb-2">
-                {headerType === "text" &&
-                  <strong> {getFormatedText(headerContent || "", "header")}</strong>}
+                {headerType === "text" && (
+                  <strong>
+                    {" "}
+                    {getFormatedText(headerContent || "", "header")}
+                  </strong>
+                )}
                 {headerType === "image" && previewFile && (
-                  <img
+                  <Image
                     src={previewFile}
                     alt="Preview"
+                    layout="responsive"
+                    width={700}
+                    height={475}
                     className="w-full rounded"
                   />
                 )}
+
                 {headerType === "video" && previewFile && (
                   <video
                     src={previewFile}
@@ -176,10 +154,29 @@ if (templateType === 'one-time_Passcode') {
                     className="w-full rounded"
                   />
                 )}
-                {headerType === "document" && (
-                  <div className="flex items-center">
-                    <Upload className="w-5 h-5 mr-2" />
-                    <span>{headerContent}</span>
+                {headerType === "document" && previewFile && (
+                  <div className="bg-zinc-800 rounded-lg p-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <FileText className="w-8 h-8 text-red-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-medium truncate">
+                          {decodeURIComponent(
+                            previewFile
+                              .split("/")
+                              .pop()
+                              ?.replace(/\.[^/.]+$/, "") || "Document"
+                          )}
+                        </p>
+                        <p className="text-zinc-400 text-xs mt-0.5">
+                          68 KB, Microsoft Edge PDF Document
+                        </p>
+                      </div>
+                    </div>
+                    <button className="w-full mt-4 py-2 text-center text-white bg-zinc-700 hover:bg-zinc-600 rounded-md transition-colors">
+                      Download
+                    </button>
                   </div>
                 )}
                 {headerType === "location" && (
@@ -193,7 +190,7 @@ if (templateType === 'one-time_Passcode') {
             <div
               className="mb-2"
               dangerouslySetInnerHTML={{
-                __html: getFormatedText(messageBody, "body") as string
+                __html: getFormatedText(messageBody, "body") as string,
               }}
             />
 
@@ -201,13 +198,8 @@ if (templateType === 'one-time_Passcode') {
         {getFormatedText(messageBody, 'body') || 'Message body will appear here'}
       </div> */}
 
-
-
-
             {footer && (
-              <div className="mt-2 pt-2 text-sm text-gray-500">
-                {footer}
-              </div>
+              <div className="mt-2 pt-2 text-sm text-gray-500">{footer}</div>
             )}
 
             {button.length > 0 && (

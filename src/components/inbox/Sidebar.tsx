@@ -21,6 +21,7 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip";
+import Image from 'next/image';
 import {
   FileText,
   Package,

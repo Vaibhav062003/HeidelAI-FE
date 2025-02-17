@@ -53,7 +53,7 @@ export const WhatsAppTemplateContent = ({
   onTemplateChange,
 }: WhatsAppTemplateContentProps) => {
   const [editableTemplate, setEditableTemplate] = useState(template);
-  const [variables, setVariables] = useState<Variable[]>([]);
+ 
 
   const getFormatedText = (text: string, type: string) => {
     let formattedText = text;
@@ -84,7 +84,7 @@ export const WhatsAppTemplateContent = ({
       const btnIndex = Number(field.split("-")[1]);
       updatedComponents[componentIndex].buttons = updatedComponents[
         componentIndex
-      ].buttons.map((btn: any, index: number) =>
+      ].buttons.map((btn: { text: string }, index: number) =>
         index === btnIndex ? { ...btn, text: value } : btn
       );
     }
@@ -93,12 +93,12 @@ export const WhatsAppTemplateContent = ({
     onTemplateChange?.(newTemplate);
   };
 
-  const renderBody = (component: any, index: number) => {
+  const renderBody = (component: { type: string; text?: string; example?: { body_text?: string[] }; }, index: number) => {
     if (component.type !== "BODY") return null;
 
     let text = component.text || "";
     if (component.example?.body_text?.[0]) {
-      component.example.body_text[0].forEach((value: string, idx: number) => {
+      component.example.body_text[0].split(' ').forEach((value: string, idx: number) => {
         text = text.replace(`{{${idx + 1}}}`, value);
       });
     }
@@ -122,7 +122,7 @@ export const WhatsAppTemplateContent = ({
     );
   };
 
-  const renderFooter = (component: any, index: number) => {
+  const renderFooter = (component: { type: string; text?: string }, index: number) => {
     if (component.type !== "FOOTER") return null;
 
     return (
@@ -144,12 +144,12 @@ export const WhatsAppTemplateContent = ({
     );
   };
 
-  const renderButtons = (component: any, index: number) => {
+  const renderButtons = (component: { type: string; buttons: { text: string }[] }, index: number) => {
     if (component.type !== "BUTTONS") return null;
 
     return (
       <div className="space-y-2">
-        {component.buttons.map((button: any, btnIndex: number) => (
+        {component.buttons.map((button: { text: string }, btnIndex: number) => (
           <button
             key={btnIndex}
             className="w-full p-3 text-center bg-gray-50 text-blue-500 rounded-md hover:bg-gray-100 transition-colors text-sm font-medium"
@@ -181,7 +181,7 @@ export const WhatsAppTemplateContent = ({
               <div key={index}>
                 {renderBody(component, index)}
                 {renderFooter(component, index)}
-                {renderButtons(component, index)}
+                {component.buttons ? renderButtons({ ...component, buttons: component.buttons || [] }, index) : null}
               </div>
             ))}
           </div>

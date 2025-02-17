@@ -13,6 +13,7 @@ export type Variable ={
   type: "text" | "number" | "date" | "currency" | "datetime";
   example: string;
   section: "header" | "body";
+  value: string;
 }
 
 export type Header ={
@@ -29,7 +30,7 @@ export type Component = {
   type: Body | Footer | Button;
   format?: string;
   text?: string;
-  example?: Record<string, any>;
+  example?: Record<string, unknown>;
   buttons?: { type: string; text: string }[];
 }
 

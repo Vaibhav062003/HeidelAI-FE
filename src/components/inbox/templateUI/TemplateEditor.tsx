@@ -1,9 +1,8 @@
-import React, { useRef, useState } from "react";
+import React, {  useState } from "react";
 import {
   Plus,
   Trash2,
   Info,
-  Upload,
   MapPin,
   Smile,
   Code,
@@ -13,7 +12,7 @@ import {
 } from "lucide-react";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import { AppSetup, Button, Variable } from "@/components/types/template_types";
+import { Button, Variable } from "@/components/types/template_types";
 
 import ImageUploadHandler from "./ImageUploadHandler";
 import { insertFormatting } from "./textFormatting";
@@ -135,17 +134,16 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   headerContent,
   setHeaderContent,
   setPreviewFile,
-  handleFileUpload,
+  
   insertVariable,
   removeVariable,
   removeButton,
   languages,
   headerVariables,
   bodyVariables,
-  onAddVariable,
+
   activeTab,
-  setActiveTab,
-  templateType,
+
   isChecked,
   setIsChecked,
   selectedTime,
@@ -154,59 +152,25 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 }) => {
 
   
-  const [apps, setApps] = useState<AppSetup[]>([
-    { packageName: "", signatureHash: "" },
-  ]);
+
   const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const [text, setText] = useState("");
 
-  const handleEmojiSelect = (emoji: EmojiData) => {
+  const handleEmojiSelect = (emoji: { native: string }) => {
     // Append selected emoji to message body
     setMessageBody(messageBody + emoji.native);
     setEmojiPickerVisible(false); // Optionally hide picker after selection
   };
 
-  const validityPeriods = [
-    "10 minutes",
-    "30 minutes",
-    "1 hour",
-    "2 hours",
-    "3 hours",
-    "4 hours",
-    "5 hours",
-    "6 hours",
-  ];
+
 
   const handleFileUploads = (url: string) => {
     setPreviewFile(url);
     setHeaderContent(url);
   };
 
-  const addApp = () => {
-    if (apps.length < 5) {
-      setApps([...apps, { packageName: "", signatureHash: "" }]);
-    }
-  };
 
-  const updateApp = (index: number, field: keyof AppSetup, value: string) => {
-    const newApps = [...apps];
-    newApps[index] = { ...newApps[index], [field]: value };
-    setApps(newApps);
-  };
 
-  interface Selection {
-    baseNode: Node | null;
-    baseOffset: number;
-    extentNode: Node | null;
-    extentOffset: number;
-  }
-  // textFormatting.ts
-  const FORMAT_MARKERS = {
-    bold: { start: "**", end: "**" },
-    italic: { start: "_", end: "_" },
-    strikethrough: { start: "~~", end: "~~" },
-    monospace: { start: "`", end: "`" },
-  } as const;
 
   // const insertFormatting = (
   //   format: keyof typeof FORMAT_MARKERS,
