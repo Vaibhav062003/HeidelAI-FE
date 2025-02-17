@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 interface Product {
   id: string;
   category: string;
+  on_sales: number;
   metadata: {
     images: string;
     name: string;
@@ -54,7 +55,7 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
       icon: <Tag className="h-5 w-5" />,
       fields: [
         { key: "regular_price", label: "Regular Price" },
-        { key: "sale_price", label: "Sale Price", condition: product.on_sale },
+        { key: "sale_price", label: "Sale Price", condition: product.on_sales },
         { key: "price", label: "Current Price" },
       ],
     },

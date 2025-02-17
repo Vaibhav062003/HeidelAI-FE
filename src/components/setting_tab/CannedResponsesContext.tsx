@@ -11,14 +11,14 @@ interface CannedResponse {
 
 interface CannedResponsesProps {
   onInsertResponse: (message: string) => void;
+  onClose: () => void;
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-const CannedResponses: React.FC<CannedResponsesProps> = ({ onInsertResponse }) => {
+const CannedResponses: React.FC<CannedResponsesProps> =  ({ onInsertResponse, onClose }: CannedResponsesProps) => {
   const [responses, setResponses] = useState<CannedResponse[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newShortcode, setNewShortcode] = useState('');
