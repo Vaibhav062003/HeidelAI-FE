@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
+ // Adjust the import path accordingly
 import { WhatsAppTemplate } from "../types/template";
 import { ScrollArea } from "../ui/scroll-area";
+import { Variable } from "../types/template_types";
 
 interface WhatsAppTemplateContentProps {
   template: WhatsAppTemplate;
@@ -9,7 +11,12 @@ interface WhatsAppTemplateContentProps {
   onTemplateChange?: (template: WhatsAppTemplate) => void;
 }
 
-const AutoResizeTextArea = ({ value, onChange, placeholder, className }: {
+const AutoResizeTextArea = ({
+  value,
+  onChange,
+  placeholder,
+  className,
+}: {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   placeholder?: string;
@@ -19,7 +26,7 @@ const AutoResizeTextArea = ({ value, onChange, placeholder, className }: {
 
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [value]);
@@ -31,10 +38,10 @@ const AutoResizeTextArea = ({ value, onChange, placeholder, className }: {
       onChange={onChange}
       placeholder={placeholder}
       className={`${className} min-h-[24px]`}
-      style={{ 
-        resize: 'none',
-        overflowY: 'hidden',
-        wordWrap: 'break-word'
+      style={{
+        resize: "none",
+        overflowY: "hidden",
+        wordWrap: "break-word",
       }}
     />
   );
@@ -46,6 +53,37 @@ export const WhatsAppTemplateContent = ({
   onTemplateChange,
 }: WhatsAppTemplateContentProps) => {
   const [editableTemplate, setEditableTemplate] = useState(template);
+  const [variables, setVariables] = useState<Variable[]>([]);
+
+  const getFormatedText = (text: string, type: string) => {
+    let formattedText = text;
+  
+    // Replace variables with their example values
+    variables
+      .filter((v) => v.section === type)
+      .forEach((variable) => {
+        const regex = new RegExp(`{{${variable.name}}}`, "g");
+        formattedText = formattedText.replace(regex, variable.example);
+      });
+  
+    // Handle formatting (bold, italic, strikethrough, monospace)
+    formattedText = formattedText
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold
+    .replace(/_(.*?)_/g, '<em>$1</em>')               // Italic
+    .replace(/~~(.*?)~~/g, '<del>$1</del>')           // Strikethrough
+    .replace(/`(.*?)`/g, '<code>$1</code>');   // Monospace
+  
+    // Ensure all remaining placeholders are replaced (including numeric ones)
+    formattedText = formattedText.replace(
+      /{{(\d+)}}/g, // Match numeric placeholders like {{1}}, {{2}}, etc.
+      (_, number) => {
+        const variable = variables.find((v) => v.name === number && v.section === type);
+        return variable ? variable.example : `{{${number}}}`; // Fallback if no match
+      }
+    );
+  
+    return formattedText;
+  };
 
   const handleTextChange = (
     componentIndex: number,
@@ -56,13 +94,14 @@ export const WhatsAppTemplateContent = ({
     if (field === "text") {
       updatedComponents[componentIndex].text = value;
     } else if (
-      field === "buttons" &&
+      field.startsWith("buttons-") &&
       Array.isArray(updatedComponents[componentIndex].buttons)
     ) {
+      const btnIndex = Number(field.split("-")[1]);
       updatedComponents[componentIndex].buttons = updatedComponents[
         componentIndex
-      ].buttons.map((btn: any, btnIndex: number) =>
-        btnIndex === Number(field.split("-")[1]) ? { ...btn, text: value } : btn
+      ].buttons.map((btn: any, index: number) =>
+        index === btnIndex ? { ...btn, text: value } : btn
       );
     }
     const newTemplate = { ...editableTemplate, components: updatedComponents };
@@ -90,7 +129,10 @@ export const WhatsAppTemplateContent = ({
             placeholder="Message body will appear here"
           />
         ) : (
-          <p className="whitespace-pre-wrap text-base leading-normal">{text}</p>
+          <div
+            dangerouslySetInnerHTML={{ __html: getFormatedText(text, "BODY") }}
+            className="whitespace-pre-wrap text-base leading-normal"
+          />
         )}
       </div>
     );
@@ -109,7 +151,10 @@ export const WhatsAppTemplateContent = ({
             placeholder="Footer text here"
           />
         ) : (
-          <p className="whitespace-pre-wrap text-sm leading-normal">{component.text}</p>
+          <div
+            dangerouslySetInnerHTML={{ __html: component.text || "" }}
+            className="whitespace-pre-wrap text-sm leading-normal"
+          />
         )}
       </div>
     );
@@ -135,7 +180,7 @@ export const WhatsAppTemplateContent = ({
                 placeholder={`Button ${btnIndex + 1}`}
               />
             ) : (
-              <span>{button.text}</span>
+              <span dangerouslySetInnerHTML={{ __html: button.text || "" }} />
             )}
           </button>
         ))}
@@ -145,24 +190,19 @@ export const WhatsAppTemplateContent = ({
 
   return (
     <div className="max-w-md mx-auto">
-    <ScrollArea className="h-[350px] rounded-lg">
-    <div className="max-w-xl mx-autbg-[#E5DDD5] rounded-lg p-6">
-      <div className="bg-[#E5DDD5] p-4 rounded-lg overflow-y-auto">
-      <div className="max-w-sm mx-auto">
-        <div className="bg-white rounded-lg shadow-sm p-4">
-          {editableTemplate.components?.map((component, index) => (
-            <div key={index}>
-              {renderBody(component, index)}
-              {renderFooter(component, index)}
-              {renderButtons(component, index)}
-            </div>
-          ))}
+      <ScrollArea className="h-[350px] rounded-lg">
+        <div className="bg-[#E5DDD5] rounded-lg p-6">
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            {editableTemplate.components?.map((component, index) => (
+              <div key={index}>
+                {renderBody(component, index)}
+                {renderFooter(component, index)}
+                {renderButtons(component, index)}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-    </div>
-    </div>
-    </ScrollArea>
+      </ScrollArea>
     </div>
   );
 };
-
