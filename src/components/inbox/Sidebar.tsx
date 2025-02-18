@@ -1,10 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import AddProduct from "@/components/inbox/AddProduct";
+import ProductPreview from "./PreviewProduct";
+import ProductsTab from "./Product";
+import { X } from "lucide-react";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import {
   Tooltip,
   TooltipContent,
@@ -15,30 +25,48 @@ import {
   FileText,
   Package,
   BarChart3,
-  Search,
   Plus,
   TrendingUp,
   Clock,
   Users,
-  MessageSquare,
   Send,
   ExternalLink,
-  Link,
 } from "lucide-react";
-import TemplateBuilder from "./TemplateBuilder";
 import ConversationSummary from "./ConversationSummary";
+import { WhatsAppTemplate } from "../types/template";
+import TemplateBuilders from "./TemplateBuilders";
+import { WhatsAppTemplateDialog } from "./WhatsAppTemplateDialog";
+
+interface Metadata {
+  category: string;
+  description: string;
+  images: string;
+  name: string;
+  on_sale: string; // Use boolean if the data contains `true/false` instead of `"True"/"False"`
+  permalink: string;
+  price: number;
+  product_id: number;
+  purchasable: string; // Use boolean if the data contains `true/false`
+  regular_price: string; // Use `number` if parsed as numeric values
+  sale_price: string; // Use `number` if parsed as numeric values
+  slug: string;
+  stock_quantity: number;
+}
+
+interface Product {
+  id: string;
+  category: string;
+  metadata: Metadata;
+}
+
+type PlatformType = "pinecone" | "shopify" | "other";
 
 interface SidebarProps {
   selectedConversationId?: string;
   onConversationSelect?: (id: string) => void;
   templates?: Array<{ id: string; title: string; category: string }>;
-  products?: Array<{
-    id: string;
-    name: string;
-    price: string;
-    image: string;
-    url?: string;
-  }>;
+  products?: Array<Product>; // Update this line to use the main Product interface
+
   analytics?: {
     responseTime: string;
     resolutionRate: string;
@@ -47,28 +75,12 @@ interface SidebarProps {
 }
 
 const Sidebar = ({
+  // templates = [
+  //   { id: "1", title: "Order Status Update", category: "Support" },
+  //   { id: "2", title: "Product Information", category: "Sales" },
+  //   { id: "3", title: "Welcome Message", category: "Greeting" },
+  // ],
   selectedConversationId,
-  templates = [
-    { id: "1", title: "Order Status Update", category: "Support" },
-    { id: "2", title: "Product Information", category: "Sales" },
-    { id: "3", title: "Welcome Message", category: "Greeting" },
-  ],
-  products = [
-    {
-      id: "1",
-      name: "Premium Package",
-      price: "$99.99",
-      image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
-      url: "https://example.com/products/premium-package",
-    },
-    {
-      id: "2",
-      name: "Basic Bundle",
-      price: "$49.99",
-      image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
-      url: "https://example.com/products/basic-bundle",
-    },
-  ],
   analytics = {
     responseTime: "2m 30s",
     resolutionRate: "94%",
@@ -76,20 +88,135 @@ const Sidebar = ({
   },
 }: SidebarProps) => {
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
-  const [searchProduct, setSearchProduct] = useState("");
   const [searchTemplate, setSearchTemplate] = useState("");
+  const [searchProduct, setSearchProduct] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showOptions, setShowOptions] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<PlatformType | "">("");
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchProduct.toLowerCase()),
-  );
 
-  const filteredTemplates = templates.filter((template) =>
-    template.title.toLowerCase().includes(searchTemplate.toLowerCase()),
-  );
+  // Fetch products from API
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/Dataset.json");
+      if (!response.ok) {
+        throw new Error("Failed to fetch products");
+      }
+      const data = await response.json();
+      setProducts(data);
+      setFilteredProducts(data);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  // const handleAddProduct = () => {
+  //   fetchProducts(); // Re-fetch products after adding a new one
+  // };
+
+  const toggleForm = () => setShowForm((prev) => !prev);
+
+  // Filter products based on search term and category
+  useEffect(() => {
+    const filtered = products.filter((product: Product) => {
+      const matchesSearch =
+        product.metadata.name &&
+        product.metadata.name
+          .toLowerCase()
+          .includes(searchProduct.toLowerCase());
+  
+      // Apply category filter
+      const matchesCategory =
+        selectedCategory === "All" || product.category === selectedCategory;
+  
+      return matchesSearch && matchesCategory;
+    });
+    setFilteredProducts(filtered);
+  }, [searchProduct, selectedCategory, products]);
+
+  const handleProductSelect = (product: Product) => {
+    setSelectedProduct(product);
+  };
+
+  const handleOptionSelect = (platform: PlatformType) => {
+    setSelectedPlatform(platform);
+    setShowForm(true);
+    setShowOptions(false);
+  };
+
+  const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
+
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        setLoading(true);
+  
+        const response = await fetch('/api/fetchTemplate');
+        console.log("Response:", response);
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+  
+        const result = await response.json();
+        
+        if (result && result.data){
+          setTemplates(result.data);
+        }else {
+          console.error("Invalid response format:", result);
+          setError("Invalid response format from server");
+        }
+        
+      } catch (err) {
+        console.error("Error in fetch:", err);
+        setError(err instanceof Error ? err.message : "Fetch error");
+      } finally {
+        setLoading(false);
+      
+      }
+    };
+    loadTemplates();
+  }, []);
+
+  const filteredTemplates = (templates || []).filter((template) =>
+    template.name.toLowerCase().includes(searchTemplate.toLowerCase()) && template.status === 'APPROVED' //added condition
+);
+
+  
   return (
+
+      
     <TooltipProvider>
-      <Card className="h-full p-2 bg-white border-l">
+      {selectedTemplate && (
+        <WhatsAppTemplateDialog
+        template={selectedTemplate}
+        isOpen={!!selectedTemplate}
+        onClose={() => setSelectedTemplate(null)}
+        onSend={() => {
+          // Handle send logic
+          console.log("Sending template:", selectedTemplate);
+          setSelectedTemplate(null);
+    }}
+      />
+      )}
+     
+     <Card className="h-full max-h-screen p-2 bg-white border-l">
         <Tabs defaultValue="summary" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="summary">
@@ -116,9 +243,9 @@ const Sidebar = ({
           </div>
           </TabsContent>
 
-          <TabsContent value="templates" className="p-4">
+          <TabsContent value="templates" className="p-4 h-full">
             {showTemplateBuilder ? (
-              <div className="space-y-4">
+              <div className=" space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-medium">Create Template</h3>
                   <Button
@@ -129,11 +256,13 @@ const Sidebar = ({
                     Back
                   </Button>
                 </div>
-                <TemplateBuilder
-                  onSave={(template) => {
-                    console.log("Template saved:", template);
-                    setShowTemplateBuilder(false);
-                  }}
+                <TemplateBuilders 
+                isOpen={showTemplateBuilder} 
+                setIsOpen={setShowTemplateBuilder}
+                templates={templates}
+                setTemplates={setTemplates}
+                searchTemplate={searchTemplate}
+                setSearchTemplate={setSearchTemplate}
                 />
               </div>
             ) : (
@@ -158,79 +287,41 @@ const Sidebar = ({
                     <TooltipContent>Create new template</TooltipContent>
                   </Tooltip>
                 </div>
-                <ScrollArea className="h-[700px]">
-                  {filteredTemplates.map((template) => (
-                    <Card
-                      key={template.id}
-                      className="p-3 mb-3 cursor-pointer hover:bg-gray-50"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{template.title}</span>
-                        <Badge variant="secondary">{template.category}</Badge>
+                <ScrollArea className="h-screen">
+                    {loading ?(
+                      <div className="flex items-center justify-center h-20">
+                        <p>Loading templates...</p>
                       </div>
-                    </Card>
-                  ))}
+                    ): error ?(
+                      <div className="flex items-center justify-center h-20 text-red-500">
+                      {error}
+                    </div>
+                    ):(
+                      filteredTemplates.map((template) => (
+                        <Card 
+                        onClick={() => setSelectedTemplate(template)}
+                        key={template.id}
+                        className="p-3 mb-3 cursor-pointer hover:bg-gray-50">
+                          <div className="flex items-center justify-between">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="font-semibold max-w-[150px] block">
+                                  {template.name}
+                              </span>
+                            </TooltipTrigger>
+                            {/* <TooltipContent>{template.name}</TooltipContent> */}
+                          </Tooltip>
+                        </div>
+                        </Card>
+                      )
+                    ))}
                 </ScrollArea>
               </>
             )}
           </TabsContent>
 
-          <TabsContent value="products" className="p-4">
-            <div className="mb-4">
-              <Input
-                placeholder="Search products..."
-                value={searchProduct}
-                onChange={(e) => setSearchProduct(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <ScrollArea className="h-[700px]">
-              {filteredProducts.map((product) => (
-                <Card key={product.id} className="p-3 mb-3">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-medium">{product.name}</h3>
-                      <p className="text-sm text-gray-500">{product.price}</p>
-                      <div className="flex gap-2 mt-2">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => window.open(product.url, "_blank")}
-                            >
-                              <ExternalLink className="h-4 w-4 mr-2" /> View
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Open product page</TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                const productLink = `Check out ${product.name}: ${product.url}`;
-                                console.log("Share product:", productLink);
-                              }}
-                            >
-                              <Send className="h-4 w-4 mr-2" /> Share
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Share in chat</TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </ScrollArea>
+          <TabsContent className="h-full" value="products">
+            <ProductsTab onProductSelect={(product: Product) => setSelectedProduct(product)} />
           </TabsContent>
 
           <TabsContent value="analytics" className="p-4">
@@ -262,7 +353,13 @@ const Sidebar = ({
               </Card>
             </div>
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        {selectedProduct && (
+          <ProductPreview
+            product={selectedProduct}
+            onClose={() => setSelectedProduct(null)}
+          />
+        )}
       </Card>
     </TooltipProvider>
   );

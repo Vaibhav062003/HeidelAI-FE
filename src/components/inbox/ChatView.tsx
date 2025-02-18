@@ -9,12 +9,17 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from 'date-fns';
-import { toast } from 'sonner';
+import { toast, Toaster } from 'sonner';
 // import { toZonedTime } from 'date-fns-tz';
 import { Conversation } from '../types/conversation';
 import { ShoppingCart, MapPin, Upload, FileText, FileImage, FileVideo, Music, File, Loader2, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
 import dynamic from 'next/dynamic';
+import { useReminders } from '../hooks/useReminders';
+
+import { Plus } from "lucide-react";
+
+
 
 const Picker = dynamic(
   () => {
@@ -63,6 +68,14 @@ interface ProductData {
   permalink: string;
   price: number;
   regular_price: string;
+}
+
+interface Reminder {
+  id: string;
+  title: string;
+  notes?: string;
+  dateTime: string;
+  conversationId: string;
 }
 
 interface ProductInfo {
@@ -156,7 +169,7 @@ const MessageSkeleton = () => (
 );
 
 const LoadingState = () => (
-  <Card className="h-full flex flex-col bg-white max-h-[94vh]">
+  <Card className="h-screen flex flex-col bg-white ">
     {/* Header skeleton */}
     <div className="p-4 border-b flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -202,7 +215,81 @@ const LoadingState = () => (
 //   }
 // };
 
-
+const RemindersPopover = ({ 
+  reminders, 
+  onCreateReminder, 
+  onDeleteReminder 
+}: { 
+  reminders: Reminder[];
+  onCreateReminder: () => void;
+  onDeleteReminder: (id: string) => void;
+}) => {
+  return (
+    <PopoverContent className="w-80" align="end">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="font-medium">Reminders</h4>
+          {reminders.length > 0 && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onCreateReminder}
+              className="h-8 px-2 text-blue-600 hover:text-blue-700"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Create Reminder
+            </Button>
+          )}
+        </div>
+        <div className="space-y-2">
+          {reminders.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="text-sm text-gray-500 mb-4">No reminders set</div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={onCreateReminder}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add your first reminder
+              </Button>
+            </div>
+          ) : (
+            reminders.map((reminder) => (
+              console.log("reminder", reminder),
+              <div
+                key={reminder.id}
+                className="flex items-start justify-between p-2 rounded-lg border bg-white group"
+              >
+                <div>
+                  <p className="font-medium text-sm">{reminder.title}</p>
+                  {reminder.notes && (
+                    <p className="text-xs text-gray-500">{reminder.notes}</p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                  {format(
+          // Add IST offset (UTC+5:30)
+          new Date(new Date(reminder.dateTime).getTime() + (5.5 * 60 * 60 * 1000)),
+          "MMM d, yyyy 'at' h:mm a"
+        )}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => onDeleteReminder(reminder.id)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </PopoverContent>
+  );
+};
 
 const CartMessage = ({ items }: { items: CartItem[] }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -431,6 +518,8 @@ const ChatView = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isSending, setIsSending] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { reminders = [], refetchReminders } = useReminders(selectedConversationId);
+
 
 
 
@@ -687,6 +776,7 @@ const ChatView = ({
 
   return (
     <>
+    <Toaster richColors position="top-right"/>
     <style>
         {`
           
@@ -723,7 +813,7 @@ const ChatView = ({
           </div>
         </Card>
       ) : (
-      <Card className="h-full flex flex-col bg-white max-h-[94vh]">
+      <Card className="h-full flex flex-col bg-white max-h-screen">
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
@@ -748,9 +838,9 @@ const ChatView = ({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Start voice call</TooltipContent>
-            </Tooltip>
+            </Tooltip> */}
 
-            <Tooltip>
+            {/* <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Video className="h-5 w-5" />
@@ -761,15 +851,58 @@ const ChatView = ({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowReminder(true)}
-                >
-                  <Clock className="h-5 w-5" />
-                </Button>
+                <div className="relative">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="relative mr-2"
+                      >
+                        <Clock className="h-5 w-5" />
+                        {reminders.length > 0 && (
+                          <Badge 
+                            variant="secondary" 
+                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                          >
+                            {reminders.length}
+                          </Badge>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <RemindersPopover 
+                      reminders={reminders} 
+                      onCreateReminder={() => setShowReminder(true)}
+                      onDeleteReminder={async (id) => {
+                        try {
+                          const response = await fetch(`https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders/${id}`, {
+                            method: 'DELETE',
+                            credentials: 'include'
+                          });
+                          
+                          if (!response.ok) {
+                            throw new Error('Failed to delete reminder');
+                          }
+                          
+                          toast.success('Reminder deleted successfully');
+                          // Refresh reminders after deletion
+                          refetchReminders();
+                        } catch (error) {
+                          toast.error('Failed to delete reminder');
+                          console.error('Error deleting reminder:', error);
+                        }
+                      }}
+                    />
+                  </Popover>
+                  
+                </div>
               </TooltipTrigger>
-              <TooltipContent>Set reminder</TooltipContent>
+              <TooltipContent>
+                {reminders.length > 0 
+                  ? `${reminders.length} reminder${reminders.length > 1 ? 's' : ''} set`
+                  : 'Set reminder'
+                }
+              </TooltipContent>
             </Tooltip>
 
             <div className="flex items-center gap-2">
@@ -1274,10 +1407,13 @@ const ChatView = ({
         <ReminderDialog
           open={showReminder}
           onOpenChange={setShowReminder}
-          onSave={(reminder) => {
+          onSave={async (reminder) => {
             console.log("Reminder saved:", reminder);
             setShowReminder(false);
+            // Refresh reminders after creating new one
+            refetchReminders();
           }}
+          conversationId={selectedConversationId}
         />
       </Card>
       )}
