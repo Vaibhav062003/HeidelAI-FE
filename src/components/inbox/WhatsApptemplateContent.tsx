@@ -1,9 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Badge } from "@/components/ui/badge"; // Adjust the import path accordingly
 import { WhatsAppTemplate } from "../types/template";
 import { ScrollArea } from "../ui/scroll-area";
-import { Variable } from "../types/template_types";
-import Image from "next/image";
+
 import { FileText, MapPin } from "lucide-react";
 
 interface WhatsAppTemplateContentProps {
@@ -119,7 +117,7 @@ export const WhatsAppTemplateContent = ({
         );
   
         return (
-          <div className="bg-zinc-800 rounded-lg p-3 w-[300px] mb-4">
+          <div className="bg-gray-500 rounded-lg p-3 w-[300px] mb-4">
             <div className="flex items-start space-x-2">
               <div className="flex-shrink-0">
                 <FileText className="w-4 h-4 text-red-500" />
@@ -136,22 +134,22 @@ export const WhatsAppTemplateContent = ({
             </button>
           </div>
         );
-      }
+      } 
+    }
 
-      else if (component.format === "LOCATION") {
-        return (
-          <div className="bg-zinc-800 rounded-lg p-3 w-[300px] mb-4">
-            <div className="flex items-start space-x-2">
-              <div className="flex-shrink-0">
-                <MapPin className="w-4 h-4 text-red-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-white text-xs font-medium">Current Location</p>
-              </div>
+    if (component.format === "LOCATION") {
+      return (
+        <div className="bg-gray-400 rounded-lg p-3 w-[300px] mb-4">
+          <div className="flex items-start space-x-2">
+            <div className="flex-shrink-0">
+              <MapPin className="w-4 h-4 text-red-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-xs font-medium">Current Location</p>
             </div>
           </div>
-        );
-      }
+        </div>
+      );
     }
 
     // Render text if no media is present
