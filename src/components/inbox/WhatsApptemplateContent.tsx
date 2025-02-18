@@ -160,6 +160,12 @@ export const WhatsAppTemplateContent = ({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white text-xs font-medium">Current Location</p>
+              <textarea
+                value={text}
+                onChange={(e) => handleTextChange(index, "text", e.target.value)}
+                className="w-full bg-transparent outline-none border-none p-0 text-white text-xs leading-normal resize-none"
+                placeholder="Location text here"
+              />
             </div>
           </div>
         </div>
