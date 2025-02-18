@@ -14,8 +14,8 @@ import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import { Button, Variable } from "@/components/types/template_types";
 
-import ImageUploadHandler from "./ImageUploadHandler";
 import { insertFormatting } from "./textFormatting";
+import FileUploadHandler from './FileUploadHandler';
 
 
 interface TemplateEditorProps {
@@ -155,9 +155,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
 
 
-  const handleFileUploads = (url: string) => {
-    setPreviewFile(url);
-    setHeaderContent(url);
+  const handleFileUploadComplete = ( fileHandle: string) => {
+
+    // Set the file_handle as the header content
+    setHeaderContent(fileHandle);
+    console.log('File Handle:', fileHandle);
   };
 
 
@@ -384,8 +386,9 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 {(headerType === "image" ||
                   headerType === "video" ||
                   headerType === "document") && (
-                  <ImageUploadHandler
-                    onUploadComplete={handleFileUploads}
+                  <FileUploadHandler
+                    setPreviewFile={setPreviewFile}
+                    onUploadComplete={handleFileUploadComplete}
                     accept={
                       headerType === "image"
                         ? "image/*"

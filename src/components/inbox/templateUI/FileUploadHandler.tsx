@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AWS from 'aws-sdk';
 import { Upload, Loader2 } from 'lucide-react';
 
+
 // Configure AWS SDK for Supabase S3-compatible storage
 AWS.config.update({
   accessKeyId: "ae71b2dfaa0c52ee96397e53906aa99e",
@@ -15,10 +16,11 @@ const s3 = new AWS.S3({
 });
 
 interface FileUploadProps {
-  onUploadComplete: (url: string) => void;
+  onUploadComplete: (fileHandle: string) => void;
   className?: string;
   accept?: string; // MIME types for allowed files
   maxFileSize?: number; // in bytes
+  setPreviewFile: (url: string) => void;
 }
 
 const FileUploadHandler: React.FC<FileUploadProps> = ({
@@ -26,6 +28,7 @@ const FileUploadHandler: React.FC<FileUploadProps> = ({
   className = '',
   accept = 'image/*, application/pdf, video/*', // Default: Images, PDFs, Videos
   maxFileSize = 5 * 1024 * 1024, // Default: 50MB
+  setPreviewFile
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,10 +58,28 @@ const FileUploadHandler: React.FC<FileUploadProps> = ({
         ACL: "public-read",
         ContentType: file.type,
       };
+
+
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const apiResponse =await fetch ('https://egenie-whatsapp.koyeb.app/api/file/upload',{
+        method:'POST',
+        body:formData
+      })
+
+      if (!apiResponse.ok) {
+        throw new Error('Failed to process file with API.');
+      }
+
+      const apiData = await apiResponse.json();
+      const fileHandle = apiData.file_handle;
+
       const uploadResult = await s3.upload(params).promise();
       const publicUrl = convertToPublicUrl(uploadResult.Location);
 
-      onUploadComplete(publicUrl);
+      setPreviewFile(publicUrl);
+      onUploadComplete(fileHandle);
     } catch (err) {
       console.error("Upload error:", err);
       setError(err instanceof Error ? err.message : "Failed to upload file");

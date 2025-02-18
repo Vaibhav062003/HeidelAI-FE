@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Badge } from "@/components/ui/badge";
- // Adjust the import path accordingly
+import { Badge } from "@/components/ui/badge"; // Adjust the import path accordingly
 import { WhatsAppTemplate } from "../types/template";
 import { ScrollArea } from "../ui/scroll-area";
 import { Variable } from "../types/template_types";
+import Image from "next/image";
+import { FileText, MapPin } from "lucide-react";
 
 interface WhatsAppTemplateContentProps {
   template: WhatsAppTemplate;
@@ -23,14 +24,12 @@ const AutoResizeTextArea = ({
   className?: string;
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [value]);
-
   return (
     <textarea
       ref={textareaRef}
@@ -53,18 +52,16 @@ export const WhatsAppTemplateContent = ({
   onTemplateChange,
 }: WhatsAppTemplateContentProps) => {
   const [editableTemplate, setEditableTemplate] = useState(template);
- 
 
-  const getFormatedText = (text: string, type: string) => {
+  const getFormattedText = (text: string, type: string) => {
     let formattedText = text;
-  
+
     // Handle formatting (bold, italic, strikethrough, monospace)
     formattedText = formattedText
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold
-    .replace(/_(.*?)_/g, '<em>$1</em>')               // Italic
-    .replace(/~~(.*?)~~/g, '<del>$1</del>')           // Strikethrough
-    .replace(/`(.*?)`/g, '<code>$1</code>');   // Monospace
-  
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+      .replace(/_(.*?)_/g, '<em>$1</em>') // Italic
+      .replace(/~~(.*?)~~/g, '<del>$1</del>') // Strikethrough
+      .replace(/`(.*?)`/g, '<code>$1</code>'); // Monospace
 
     return formattedText;
   };
@@ -84,7 +81,7 @@ export const WhatsAppTemplateContent = ({
       const btnIndex = Number(field.split("-")[1]);
       updatedComponents[componentIndex].buttons = updatedComponents[
         componentIndex
-      ].buttons.map((btn: { text: string }, index: number) =>
+      ].buttons.map((btn: { type: string; text: string; value?: string }, index: number) =>
         index === btnIndex ? { ...btn, text: value } : btn
       );
     }
@@ -93,16 +90,103 @@ export const WhatsAppTemplateContent = ({
     onTemplateChange?.(newTemplate);
   };
 
-  const renderBody = (component: { type: string; text?: string; example?: { body_text?: string[] }; }, index: number) => {
-    if (component.type !== "BODY") return null;
 
+  const renderHeader = (component: { type: string; format?: string; example?: { header_handle?: string[] }; text?: string }, index: number) => {
+    if (component.type !== "HEADER") return null;
+
+    // Render media if present
+    if (component.format && component.example?.header_handle?.[0]) {
+      const mediaUrl = component.example.header_handle[0];
+      if (component.format === "IMAGE") {
+        return (
+          <div className="mb-4">
+            <img src={mediaUrl} alt="Header Media" className="w-full h-auto rounded-lg" />
+          </div>
+        );
+      } else if (component.format === "VIDEO") {
+        return (
+          <div className="mb-4">
+            <video controls className="w-full h-auto rounded-lg">
+              <source src={mediaUrl} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        );
+      } else if (component.format === "DOCUMENT") {
+        // Extract file name from the URL
+        const fileName = decodeURIComponent(
+          mediaUrl.split("/").pop()?.replace(/\.[^/.]+$/, "") || "Document"
+        );
+  
+        return (
+          <div className="bg-zinc-800 rounded-lg p-3 w-[300px] mb-4">
+            <div className="flex items-start space-x-2">
+              <div className="flex-shrink-0">
+                <FileText className="w-4 h-4 text-red-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-xs font-medium truncate">{fileName}</p>
+                <p className="text-zinc-400 text-xs mt-0.5">Microsoft Edge PDF Document</p>
+              </div>
+            </div>
+            <button 
+              className="mt-2 w-full py-1.5 px-3 text-xs text-center text-white bg-zinc-700 hover:bg-zinc-600 rounded-md transition-colors"
+            >
+              Download
+            </button>
+          </div>
+        );
+      }
+
+      else if (component.format === "LOCATION") {
+        return (
+          <div className="bg-zinc-800 rounded-lg p-3 w-[300px] mb-4">
+            <div className="flex items-start space-x-2">
+              <div className="flex-shrink-0">
+                <MapPin className="w-4 h-4 text-red-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-xs font-medium">Current Location</p>
+              </div>
+            </div>
+          </div>
+        );
+      }
+    }
+
+    // Render text if no media is present
+    const text = component.text || "";
+    return (
+      <div className="mb-4 text-gray-800">
+        {editable ? (
+          <AutoResizeTextArea
+            value={text}
+            onChange={(e) => handleTextChange(index, "text", e.target.value)}
+            className="w-full bg-transparent outline-none border-none p-0 text-gray-800 placeholder:text-gray-500 text-base leading-normal"
+            placeholder="Header text here"
+          />
+        ) : (
+          <div
+            dangerouslySetInnerHTML={{ __html: getFormattedText(text, "HEADER") }}
+            className="whitespace-pre-wrap text-base leading-normal"
+          />
+        )}
+      </div>
+    );
+  };
+
+  const renderBody = (component: { type: string; text?: string; example?: { body_text?: string[] } }, index: number) => {
+    if (component.type !== "BODY") return null;
     let text = component.text || "";
-    if (component.example?.body_text?.[0]) {
-      component.example.body_text[0].split(' ').forEach((value: string, idx: number) => {
+    if (
+      component.example?.body_text &&
+      Array.isArray(component.example.body_text) &&
+      typeof component.example.body_text[0] === "string"
+    ) {
+      component.example.body_text[0].split('').forEach((value: string, idx: number) => {
         text = text.replace(`{{${idx + 1}}}`, value);
       });
     }
-
     return (
       <div className="mb-4 text-gray-800">
         {editable ? (
@@ -114,7 +198,7 @@ export const WhatsAppTemplateContent = ({
           />
         ) : (
           <div
-            dangerouslySetInnerHTML={{ __html: getFormatedText(text, "BODY") }}
+            dangerouslySetInnerHTML={{ __html: getFormattedText(text, "BODY") }}
             className="whitespace-pre-wrap text-base leading-normal"
           />
         )}
@@ -124,7 +208,6 @@ export const WhatsAppTemplateContent = ({
 
   const renderFooter = (component: { type: string; text?: string }, index: number) => {
     if (component.type !== "FOOTER") return null;
-
     return (
       <div className="mt-2 mb-4 text-sm text-gray-500">
         {editable ? (
@@ -144,12 +227,11 @@ export const WhatsAppTemplateContent = ({
     );
   };
 
-  const renderButtons = (component: { type: string; buttons: { text: string }[] }, index: number) => {
+  const renderButtons = (component: { type: string; buttons: { type: string; text: string }[] }, index: number) => {
     if (component.type !== "BUTTONS") return null;
-
     return (
       <div className="space-y-2">
-        {component.buttons.map((button: { text: string }, btnIndex: number) => (
+        {component.buttons.map((button, btnIndex) => (
           <button
             key={btnIndex}
             className="w-full p-3 text-center bg-gray-50 text-blue-500 rounded-md hover:bg-gray-100 transition-colors text-sm font-medium"
@@ -172,6 +254,7 @@ export const WhatsAppTemplateContent = ({
     );
   };
 
+
   return (
     <div className="max-w-md mx-auto">
       <ScrollArea className="h-[350px] rounded-lg">
@@ -179,6 +262,7 @@ export const WhatsAppTemplateContent = ({
           <div className="bg-white rounded-lg shadow-sm p-4">
             {editableTemplate.components?.map((component, index) => (
               <div key={index}>
+                {renderHeader(component, index)}
                 {renderBody(component, index)}
                 {renderFooter(component, index)}
                 {component.buttons ? renderButtons({ ...component, buttons: component.buttons || [] }, index) : null}
