@@ -89,9 +89,23 @@ export const WhatsAppTemplateContent = ({
   };
 
 
-  const renderHeader = (component: { type: string; format?: string; example?: { header_handle?: string[] }; text?: string }, index: number) => {
+  const renderHeader = (component: { type: string; format?: string; example?: { header_handle?: string[], header_text?: string[] }; text?: string }, index: number) => {
     if (component.type !== "HEADER") return null;
 
+    let text = component.text || "";
+    if (component.example?.header_text?.[0]) {
+      // Replace placeholders like {{1}}, {{2}}, etc.
+      component.example.header_text.forEach((value, idx) => {
+        text = text.replace(`{{${idx + 1}}}`, value);
+      });
+    }
+
+    // if (component.example?.body_text?.[0]) {
+    //   const bodyText = component.example.body_text[0];
+    //   for (let idx = 0; idx < bodyText.length; idx++) {
+    //     text = text.replace(`{{${idx + 1}}}`, bodyText[idx]);
+    //   }
+    // }
     // Render media if present
     if (component.format && component.example?.header_handle?.[0]) {
       const mediaUrl = component.example.header_handle[0];
@@ -152,8 +166,27 @@ export const WhatsAppTemplateContent = ({
       );
     }
 
+    if (component.format === "TEXT" || !component.format) {
+      return (
+        <div className="mb-4 text-gray-800">
+          {editable ? (
+            <AutoResizeTextArea
+              value={text}
+              onChange={(e) => handleTextChange(index, "text", e.target.value)}
+              className="w-full bg-transparent outline-none border-none p-0 text-gray-800 placeholder:text-gray-500 text-base leading-normal"
+              placeholder="Header text here"
+            />
+          ) : (
+            <div
+              dangerouslySetInnerHTML={{ __html: getFormattedText(text, "HEADER") }}
+              className="whitespace-pre-wrap text-base leading-normal"
+            />
+          )}
+        </div>
+      );
+    }
     // Render text if no media is present
-    const text = component.text || "";
+    
     return (
       <div className="mb-4 text-gray-800">
         {editable ? (
@@ -176,15 +209,15 @@ export const WhatsAppTemplateContent = ({
   const renderBody = (component: { type: string; text?: string; example?: { body_text?: string[] } }, index: number) => {
     if (component.type !== "BODY") return null;
     let text = component.text || "";
-    if (
-      component.example?.body_text &&
-      Array.isArray(component.example.body_text) &&
-      typeof component.example.body_text[0] === "string"
-    ) {
-      component.example.body_text[0].split('').forEach((value: string, idx: number) => {
-        text = text.replace(`{{${idx + 1}}}`, value);
-      });
+    
+    if (component.example?.body_text?.[0]) {
+      const bodyText = component.example.body_text[0];
+      for (let idx = 0; idx < bodyText.length; idx++) {
+        text = text.replace(`{{${idx + 1}}}`, bodyText[idx]);
+      }
     }
+
+
     return (
       <div className="mb-4 text-gray-800">
         {editable ? (

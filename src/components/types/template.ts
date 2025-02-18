@@ -39,7 +39,7 @@ export interface WhatsAppTemplate {
   components: WhatsAppTemplateComponent[];
 }
 export interface WhatsAppTemplateComponent {
-  type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS' | 'MEDIA' | 'LOCATION';
+  type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS' | 'MEDIA' | 'LOCATION' | 'TEXT';
   format?: string
   text?: string;
   buttons?: { type: string; text: string; value?: string }[];
