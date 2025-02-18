@@ -24,6 +24,11 @@ import {
 } from '@/components/ui/table';
 
 export default function DashboardPage() {
+  const handleInsertResponse = (message: string) => {
+    // Handle the canned response insertion
+    console.log('Inserting canned response:', message);
+    // Add your implementation here
+  };
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
@@ -31,7 +36,7 @@ export default function DashboardPage() {
       {/* Add component */}
       <AgentsSettings />
       <TeamsConfiguration />
-      <CannedResponses/>
+      <CannedResponses onInsertResponse={handleInsertResponse} />
       {/* You can add other dashboard components here */}
     </div>
   );

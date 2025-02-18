@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useRef, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
  // Adjust the import path accordingly

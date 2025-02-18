@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useRef, useState } from "react";
 import {
   Plus,
@@ -668,7 +669,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 Set custom validity period for your message
               </h4>
               <p className="text-sm text-gray-600">
-                If you don't set a custom validity period, the standard 10
+                If you don&apos;t set a custom validity period, the standard 10
                 minutes WhatsApp message validity period will be applied.
               </p>
             </div>
@@ -715,7 +716,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           <p className="text-sm text-gray-600">
             To help us review your message template, please add an example of
             each variable to your body text. Do not use real customer
-            information. Meta's hosted cloud API reviews template and variable
+            information. Meta&apos;s hosted cloud API reviews template and variable
             parameters to protect the security and integrity of our services.
           </p>
         </div>

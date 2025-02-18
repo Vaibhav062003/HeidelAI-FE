@@ -16,7 +16,7 @@ import BillingPlans from "@/components/inbox/BillingPlans";
 import TeamCollaboration from "@/components/inbox/TeamCollaboration";
 import AutomationRules from "@/components/inbox/AutomationRules";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import ContactsDashboard from "@/components/contacts/ContactsDashboard";
+import ContactsDashboard from "@/components/Contacts/ContactsDashboard";
 import SettingsSidebar from "@/components/setting_tab/SettingsSidebar";
 import {
   MessageSquare,

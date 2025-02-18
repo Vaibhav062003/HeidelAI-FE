@@ -1,3 +1,29 @@
+
+
+// Import createClient properly
+import { createClient } from "@supabase/supabase-js";
+import { useState, useCallback, useEffect } from "react";
+import Papa from "papaparse";
+import { ContactItem } from "../Contacts/ContactItem";  // Updated path
+import { ContactListHeader } from "../Contacts/ContactListHeader";
+import { PaginationFooter } from "../Contacts/PaginationFooter";
+import { ContactForm } from "../Contacts/ContactFormModal";
+import { Spinner } from "../Contacts/Spinner";
+import TagSidebar from "../Contacts/TagSidebar";
+import { Contact } from '../types/contacts';
+
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+interface MessageData {
+  tag?: string;
+  platform: "whatsapp" | "instagram";
+  template: string;
+}
+
 interface Tag {
   id: string;
   name: string;
@@ -5,33 +31,6 @@ interface Tag {
   created_at?: string;
 }
 
-interface Contact {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  country?: string;
-}
-
-// Import createClient properly
-import { createClient } from "@supabase/supabase-js";
-
-import { useState, useCallback, useEffect } from "react";
-import Papa from "papaparse";
-import { ContactItem } from "./ContactItem";
-import {ContactListHeader} from "./ContactListHeader";
-import { PaginationFooter } from "./PaginationFooter";
-import { ContactForm } from "./ContactFormModal";
-import { Spinner } from "./Spinner";
-import TagSidebar from "./TagSidebar";
-import { Contact } from "lucide-react";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 const ContactsDashboard = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -53,6 +52,11 @@ const ContactsDashboard = () => {
   useEffect(() => {
     fetchTags();
   }, []);
+
+  const handleMessageSend = (messageData: MessageData) => {
+    // Implement your message sending logic here
+    console.log('Sending message:', messageData);
+  };
 
   const fetchContacts = async () => {
     const { data, error } = await supabase.from("contacts").select("*");
@@ -278,12 +282,19 @@ const ContactsDashboard = () => {
       <div className="flex-1 flex flex-col h-screen max-h-screen">
         <div className="flex-none">
         <ContactListHeader
-        searchValue={searchQuery}
-        onSearch={setSearchQuery}
-        onAddContact={() => setSelectedContact({} as any)}
-        onImportCSV={handleFileUpload}
-        onMessageSend={onMessageSend}
-      />
+          searchValue={searchQuery}
+          onSearch={setSearchQuery}
+          onAddContact={() => setSelectedContact({
+            firstName: '',
+            lastName: '',
+            email: '',
+            phone: '',
+            company: '',
+            country: ''
+          } as Contact)}
+          onImportCSV={handleFileUpload}
+          onMessageSend={handleMessageSend}
+        />
         </div>
 
         <div className="flex-1 overflow-hidden p-4">

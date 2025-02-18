@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageSquare } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
-import { WhatsAppTemplateContent } from "./WhatsAppTemplateContent";
+import { WhatsAppTemplateContent } from "../Contacts/WhatsAppTemplateContent";
 import { WhatsAppTemplate } from "../types/template";
 import { ScrollArea } from "../ui/scroll-area";
 
@@ -11,12 +11,14 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+interface MessageData {
+  tag?: string;
+  platform: "whatsapp" | "instagram";
+  template: string;
+}
+
 interface MessageComposerProps {
-  onMessageSend: (data: {
-    tag?: string;
-    platform: "whatsapp" | "instagram";
-    template: string;
-  }) => void;
+  onMessageSend: (data: MessageData) => void;
 }
 
 export const MessageComposer = ({ onMessageSend }: MessageComposerProps) => {

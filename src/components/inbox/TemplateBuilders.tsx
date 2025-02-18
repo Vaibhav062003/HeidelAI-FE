@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, Copy, Link, Link2, X } from "lucide-react";
 import { WhatsAppTemplate } from "../types/template";
 import { useEffect, useState } from "react";

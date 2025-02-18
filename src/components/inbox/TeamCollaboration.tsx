@@ -13,7 +13,7 @@ import {
 import { Users, MessageSquare, HandIcon, Coffee, Clock } from "lucide-react";
 import { getFirestore, collection, getDocs, doc, setDoc, onSnapshot } from "firebase/firestore";
 import { app } from "@/components/firebase"; // Your Firebase configuration
-import { userId } from "@/app/login/page";
+// import { userId } from "@/app/login/page";
 
 interface TeamMember {
   id: string;

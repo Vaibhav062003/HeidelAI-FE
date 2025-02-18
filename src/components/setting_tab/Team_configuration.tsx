@@ -19,19 +19,37 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+interface Team {
+  id: string;
+  team_name: string;
+  members: number;
+  team_leader: string;
+  created_at?: string;
+}
+
+interface TeamFormData {
+  team_name: string;
+  members: number;
+  team_leader: string;
+}
 
 export const TeamsConfiguration = () => {
-  const [teams, setTeams] = useState([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [currentTeam, setCurrentTeam] = useState(null);
-  const [formData, setFormData] = useState({
+  const [currentTeam, setCurrentTeam] = useState<Team | null>(null);
+  const [formData, setFormData] = useState<TeamFormData>({
     team_name: '',
     members: 0,
     team_leader: ''
@@ -51,7 +69,7 @@ export const TeamsConfiguration = () => {
       if (error) throw error;
       setTeams(data);
     } catch (error) {
-      console.error('Error fetching teams:', error.message);
+      console.error('Error fetching teams:', error instanceof Error ? error.message : 'Unknown error');
     }
   };
 
@@ -63,7 +81,7 @@ export const TeamsConfiguration = () => {
         .insert([
           {
             team_name: formData.team_name,
-            members: parseInt(formData.members),
+            members: parseInt(formData.members.toString()),
             team_leader: formData.team_leader
           }
         ])
@@ -71,11 +89,11 @@ export const TeamsConfiguration = () => {
 
       if (error) throw error;
 
-      setTeams([...teams, data[0]]);
+      setTeams([...teams, data[0] as Team]);
       setIsCreateOpen(false);
       setFormData({ team_name: '', members: 0, team_leader: '' });
     } catch (error) {
-      console.error('Error creating team:', error.message);
+      console.error('Error creating team:', error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
@@ -88,22 +106,24 @@ export const TeamsConfiguration = () => {
         .from('teams')
         .update({
           team_name: formData.team_name,
-          members: parseInt(formData.members),
+          members: formData.members,  // No need to parse, it's already a number
           team_leader: formData.team_leader
         })
-        .eq('id', currentTeam.id)
+        .eq('id', currentTeam?.id)  // Add optional chaining
         .select();
-
+  
       if (error) throw error;
-
+  
+      // Type assertion for the response data
+      const updatedTeam = data[0] as Team;
       setTeams(teams.map(team => 
-        team.id === currentTeam.id ? data[0] : team
+        team.id === currentTeam?.id ? updatedTeam : team
       ));
       setIsEditOpen(false);
       setCurrentTeam(null);
       setFormData({ team_name: '', members: 0, team_leader: '' });
     } catch (error) {
-      console.error('Error updating team:', error.message);
+      console.error('Error updating team:', error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
@@ -126,13 +146,13 @@ export const TeamsConfiguration = () => {
       setCurrentTeam(null);
       setFormData({ team_name: '', members: 0, team_leader: '' });
     } catch (error) {
-      console.error('Error deleting team:', error.message);
+      console.error('Error deleting team:', error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setDeleting(false);
     }
   };
 
-  const handleManage = (team) => {
+  const handleManage = (team: Team) => {
     setCurrentTeam(team);
     setFormData({
       team_name: team.team_name,
@@ -199,7 +219,7 @@ export const TeamsConfiguration = () => {
                   type="number"
                   min="0"
                   value={formData.members}
-                  onChange={(e) => setFormData({ ...formData, members: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, members: parseInt(e.target.value) })}
                 />
               </div>
               <div>
@@ -249,7 +269,10 @@ export const TeamsConfiguration = () => {
                   type="number"
                   min="0"
                   value={formData.members}
-                  onChange={(e) => setFormData({ ...formData, members: e.target.value })}
+                  onChange={(e) => setFormData({ 
+                    ...formData, 
+                    members: parseInt(e.target.value) || 0 
+                  })}
                 />
               </div>
               <div>

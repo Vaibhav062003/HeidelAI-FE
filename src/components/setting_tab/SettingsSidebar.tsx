@@ -58,7 +58,10 @@ const SettingsSections = [
   { 
     icon: List, 
     name: 'Canned Responses', 
-    component: CannedResponses 
+    component: () => <CannedResponses onInsertResponse={(message: string) => {
+      // Handle the response insertion here
+      console.log('Inserting response:', message);
+    }} />
   },
   { 
     icon: Link, 

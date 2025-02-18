@@ -247,7 +247,7 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-4">Content</h3>
           <p className="text-sm text-gray-600 mb-4">
-            Content for authentication message templates can't be edited. You
+            Content for authentication message templates can&apos;t be edited. You
             can add additional content from the options below.
           </p>
 

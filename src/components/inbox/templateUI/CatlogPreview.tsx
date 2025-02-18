@@ -39,7 +39,7 @@ const CatalogPreview: React.FC<CatalogTemplatePreviewProps> = ({
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="font-medium text-[#00A884] text-[15px] leading-snug">
-                View {templateName || '[BIZ_NAME]'}'s Catalog on WhatsApp
+                View {templateName || '[BIZ_NAME]'}&apos;s Catalog on WhatsApp
               </h4>
               <p className="text-[13px] text-gray-600 mt-0.5">
                 Browse pictures and details of their offerings.

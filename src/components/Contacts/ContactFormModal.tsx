@@ -1,15 +1,42 @@
 import { useState, useEffect, useRef } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, PostgrestError } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export const ContactForm = ({
+interface Contact {
+  id?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  city?: string;
+  country?: string;
+  bio?: string;
+  company?: string;
+  tags?: string[];
+  platform?: string;
+  user_name?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface ContactFormModalProps {
+  contact?: Partial<Contact>;
+  onClose: () => void;
+  onSave: (contact: Partial<Contact>) => void;
+}
+
+interface Tag {
+  name: string;
+}
+
+export const ContactForm: React.FC<ContactFormModalProps> = ({
   contact,
   onClose,
   onSave,
-}: ContactFormModalProps) => {
+}) => {
   const [formData, setFormData] = useState<Partial<Contact>>({
     firstName: "",
     lastName: "",
@@ -19,10 +46,9 @@ export const ContactForm = ({
     country: "",
     bio: "",
     company: "",
-    tags: [], // Default value
     platform: "",
     ...contact,
-    tags: Array.isArray(contact?.tags) ? contact.tags : [], // Type guard
+    tags: Array.isArray(contact?.tags) ? contact.tags : [],
   });
 
   const [tagsList, setTagsList] = useState<Tag[]>([]);
@@ -37,19 +63,35 @@ export const ContactForm = ({
         .from("tags")
         .select("name")
         .order("name", { ascending: true });
-
+  
       if (!error && data) {
+        // Transform the data into Tag[] format
         setTagsList(
-          data.map((tag) => tag.name).filter((name): name is string => !!name)
+          data
+            .filter((tag): tag is { name: string } => !!tag.name)
+            .map((tag) => ({ name: tag.name }))
         );
       }
     };
     fetchTags();
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsTagsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
 // Phone number validation
 if (formData.phone) {
   console.log("Starting phone validation for:", formData.phone);
@@ -122,7 +164,7 @@ if (formData.phone) {
       };
 
       // Save/Update contact
-      let { error } = contact?.id
+      const { error } = contact?.id
         ? await supabase
             .from("contacts")
             .update(contactData)
@@ -172,23 +214,17 @@ if (formData.phone) {
 
       onSave(contactData);
     } catch (error) {
-      alert(`Error saving contact: ${error.message}`);
+      if (error instanceof Error || error instanceof PostgrestError) {
+        alert(`Error saving contact: ${error.message}`);
+      } else {
+        alert('An unexpected error occurred while saving the contact');
+      }
     }
-  };
+
+  }
 
   // dropdown tag list
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsTagsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+
 
   const toggleTag = (tagName: string) => {
     const currentTags = Array.isArray(formData.tags) ? formData.tags : [];
@@ -386,22 +422,22 @@ if (formData.phone) {
 
           {isTagsOpen && (
             <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
-              {tagsList.map((tagName) => (
+              {tagsList.map((tag) => (
                 <div
-                  key={tagName}
-                  onClick={() => toggleTag(tagName)}
+                  key={tag.name}
+                  onClick={() => toggleTag(tag.name)}
                   className={`px-3 py-2 cursor-pointer hover:bg-blue-50 flex items-center ${
-                    formData.tags?.includes(tagName) ? "bg-blue-50" : ""
+                    formData.tags?.includes(tag.name) ? "bg-blue-50" : ""
                   }`}
                 >
                   <span
                     className={`mr-2 ${
-                      formData.tags?.includes(tagName) ? "text-blue-600" : ""
+                      formData.tags?.includes(tag.name) ? "text-blue-600" : ""
                     }`}
                   >
-                    {formData.tags?.includes(tagName) ? "✓" : ""}
+                    {formData.tags?.includes(tag.name) ? "✓" : ""}
                   </span>
-                  {tagName}
+                  {tag.name}
                 </div>
               ))}
             </div>

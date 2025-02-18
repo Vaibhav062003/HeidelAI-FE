@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
 import getUnicodeFlagIcon from 'country-flag-icons/unicode'
+import { Contact } from '../types/contacts';
 
 // Country code mapping
 const countryToCodes: { [key: string]: string } = {
@@ -34,21 +35,11 @@ const countryPrefixes: { [key: string]: string } = {
   Canada: "+1"
 };
 
-interface Contact {
-  id: number;
-  firstName: string;
-  email: string;
-  company?: string;
-  phone?: string;
-  country?: string;
-  tags?: string[];
-  platform?: string;
-}
 
 interface ContactItemProps {
   contact: Contact;
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
+  onEdit: (id: string) => void;  // Changed from number to string
+  onDelete: (id: string) => void;  // Changed from number to string
 }
 
 const FlagImage = ({ country }: { country: string }) => {

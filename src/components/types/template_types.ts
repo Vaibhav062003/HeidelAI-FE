@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 //template_types.ts
 export type Button = {
   id: string;
