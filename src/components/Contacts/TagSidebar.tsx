@@ -14,8 +14,6 @@ interface TagSidebarProps {
   onCreateTag: (name: string, description: string) => void;
   onEditTag: (id: string, name: string, description: string) => void;
   onDeleteTag: (id: string) => void;
-  onSelectChannel: (channelId: string | null) => void;
-  selectedChannel: string | null;
   error?: string | null;
   onTagModalOpen?: () => void;
   onTagModalClose?: () => void;
@@ -26,8 +24,6 @@ const TagSidebar = ({
   onCreateTag,
   onEditTag,
   onDeleteTag,
-  onSelectChannel,
-  selectedChannel,
   error,
   onTagModalOpen,
   onTagModalClose,
@@ -151,13 +147,7 @@ const TagSidebar = ({
 
       <div className="space-y-2">
         {tags.map(tag => (
-          <Card
-            key={tag.id}
-            className={`hover:shadow-sm transition-all cursor-pointer ${
-              selectedChannel === tag.id ? "border-blue-600" : ""
-            }`}
-            onClick={() => onSelectChannel(tag.id)}
-          >
+          <Card key={tag.id} className="hover:shadow-sm transition-all">
             <CardContent className="p-3">
               <div className="flex justify-between items-start">
                 <div className="flex-1 min-w-0">

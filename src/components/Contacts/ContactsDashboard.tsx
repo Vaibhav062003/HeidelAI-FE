@@ -1,16 +1,9 @@
-import { useState, useCallback, useEffect } from "react";
-import Papa from "papaparse";
-import { createClient } from "@supabase/supabase-js";
-import { ContactItem } from "./ContactItem";
-import { ContactListHeader } from "./ContactListHeader";
-import { PaginationFooter } from "./PaginationFooter";
-import { ContactForm } from "./ContactFormModal";
-import { Spinner } from "./Spinner";
-import TagSidebar from "./TagSidebar";
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+interface Tag {
+  id: string;
+  name: string;
+  tag_description: string;
+  created_at?: string;
+}
 
 interface Contact {
   id: string;
@@ -22,6 +15,24 @@ interface Contact {
   country?: string;
 }
 
+// Import createClient properly
+import { createClient } from "@supabase/supabase-js";
+
+import { useState, useCallback, useEffect } from "react";
+import Papa from "papaparse";
+import { ContactItem } from "./ContactItem";
+import {ContactListHeader} from "./ContactListHeader";
+import { PaginationFooter } from "./PaginationFooter";
+import { ContactForm } from "./ContactFormModal";
+import { Spinner } from "./Spinner";
+import TagSidebar from "./TagSidebar";
+import { Contact } from "lucide-react";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 const ContactsDashboard = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,26 +43,23 @@ const ContactsDashboard = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [importingCount, setImportingCount] = useState(0);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
-
-
-  // const [channels, setChannels] = useState<BroadcastChannel[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const itemsPerPage = 10;
 
   useEffect(() => {
-    const fetchContacts = async () => {
-      const { data, error } = await supabase.from("contacts").select("*");
-      if (error) setError(error.message);
-      else setContacts(data || []);
-      setLoading(false);
-    };
     fetchContacts();
   }, []);
 
-  // Fetch initial tags
   useEffect(() => {
     fetchTags();
   }, []);
+
+  const fetchContacts = async () => {
+    const { data, error } = await supabase.from("contacts").select("*");
+    if (error) setError(error.message);
+    else setContacts(data || []);
+    setLoading(false);
+  };
 
   const handleFileUpload = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +70,7 @@ const ContactsDashboard = () => {
       setError(null);
       setImportingCount(0);
 
-      Papa.parse(file, {
+      Papa.parse<Record<string, string>>(file, {
         header: true,
         skipEmptyLines: true,
         complete: async (results) => {
@@ -74,7 +82,7 @@ const ContactsDashboard = () => {
             if (missingFields.length)
               throw new Error(`Missing columns: ${missingFields.join(", ")}`);
 
-            const contactsToImport = results.data.map((row: any, index) => {
+            const contactsToImport = results.data.map((row, index) => {
               const missing = requiredFields.filter(
                 (f) => !row[f]?.toString().trim()
               );
@@ -84,11 +92,11 @@ const ContactsDashboard = () => {
                 );
 
               return {
-                firstName: row.firstName.toString().trim(),
+                firstName: row.firstName?.toString().trim() || "",
                 lastName: row.lastName?.toString().trim() || "",
-                email: row.email.toString().trim(),
-                phone: (row.phone || "").toString().trim(),
-                company: (row.company || "").toString().trim(),
+                email: row.email?.toString().trim() || "",
+                phone: row.phone?.toString().trim() || "",
+                company: row.company?.toString().trim() || "",
               };
             });
 
@@ -99,7 +107,7 @@ const ContactsDashboard = () => {
               .select();
             if (error) throw error;
 
-            setContacts((prev) => [...prev, ...data]);
+            setContacts((prev) => [...prev, ...(data || [])]);
           } catch (err) {
             setError((err as Error).message);
           } finally {
@@ -115,21 +123,19 @@ const ContactsDashboard = () => {
   );
 
   const handleSaveContact = useCallback(
-    (contact: Partial<Contact>) => {
+    (newContact: Partial<Contact>) => {
       if (selectedContact?.id) {
-        // Update existing contact
         setContacts((prev) =>
           prev.map((c) =>
-            c.id === selectedContact.id ? { ...c, ...contact } : c
+            c.id === selectedContact.id ? { ...c, ...newContact } as Contact : c
           )
         );
       } else {
-        // Add new contact
-        const newContact = {
-          ...contact,
+        const contact = {
+          ...newContact,
           id: `manual-${Date.now()}`,
         } as Contact;
-        setContacts((prev) => [...prev, newContact]);
+        setContacts((prev) => [...prev, contact]);
       }
       setSelectedContact(null);
     },
@@ -137,7 +143,7 @@ const ContactsDashboard = () => {
   );
 
   const handleEdit = (contact: Contact) => {
-    setSelectedContact(contact); // Set selected contact to be edited
+    setSelectedContact(contact);
   };
 
   const handleDelete = async (contactId: string) => {
@@ -149,40 +155,27 @@ const ContactsDashboard = () => {
     if (error) {
       alert("Error deleting contact: " + error.message);
     } else {
-      setContacts(contacts.filter((contact) => contact.id !== contactId));
+      setContacts((prev) => prev.filter((contact) => contact.id !== contactId));
     }
   };
 
-  const filteredContacts = contacts.filter((contact) =>
-    `${contact.firstName} ${contact.lastName} ${contact.email}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
-  );
-
-  const paginatedContacts = filteredContacts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // fetch tags
   const fetchTags = async () => {
     const { data, error } = await supabase
       .from('tags')
-      .select('id, name, tag_description')
+      .select('id, name, tag_description, created_at')
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching tags:', error);
       setError('Failed to load tags');
     } else {
-      setTags(data);
+      setTags(data || []);
     }
   };
 
   const handleCreateTag = async (name: string, description: string) => {
     setError(null);
     
-    // Check for existing tag first
     const { data: existingTags } = await supabase
       .from('tags')
       .select('id')
@@ -196,7 +189,7 @@ const ContactsDashboard = () => {
     const { data, error: insertError } = await supabase
       .from('tags')
       .insert([{ 
-        name: name,
+        name, 
         tag_description: description 
       }])
       .select();
@@ -205,17 +198,14 @@ const ContactsDashboard = () => {
       console.error('Error creating tag:', insertError);
       setError('Failed to create tag');
     } else if (data) {
-      setTags(prev => [data[0], ...prev]); // Add new tag to top
+      setTags(prev => [data[0], ...prev]);
     }
   };
 
-  // tag edit and delete 
   const handleEditTag = async (id: string, newName: string, newDescription: string) => {
     setError(null);
-    // When editing a tag, clear the contact edit modal:
     setSelectedContact(null);
 
-    // Check for existing tags excluding the current one
     const { data: existingTags } = await supabase
       .from("tags")
       .select("id")
@@ -262,37 +252,40 @@ const ContactsDashboard = () => {
     }
   };
 
+  const filteredContacts = contacts.filter((contact) =>
+    `${contact.firstName} ${contact.lastName} ${contact.email}`
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
+  );
+
+  const paginatedContacts = filteredContacts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="h-screen w-full flex flex-row bg-background">
-      {/* Sidebar - fixed height */}
       <TagSidebar
         tags={tags}
         onCreateTag={handleCreateTag}
         onEditTag={handleEditTag}
         onDeleteTag={handleDeleteTag}
-        onSelectChannel={(channelId) => {
-          /* your select logic */
-        }}
         onTagModalOpen={() => setIsTagModalOpen(true)}
         onTagModalClose={() => setIsTagModalOpen(false)}
-
-        selectedChannel={null}
         error={error}
       />
 
-      {/* Main content area - fixed height with internal scrolling */}
       <div className="flex-1 flex flex-col h-screen max-h-screen">
-        {/* Header - fixed at top */}
         <div className="flex-none">
-          <ContactListHeader
-            searchValue={searchQuery}
-            onSearch={setSearchQuery}
-            onAddContact={() => setSelectedContact({} as Contact)}
-            onImportCSV={handleFileUpload}
-          />
+        <ContactListHeader
+        searchValue={searchQuery}
+        onSearch={setSearchQuery}
+        onAddContact={() => setSelectedContact({} as any)}
+        onImportCSV={handleFileUpload}
+        onMessageSend={onMessageSend}
+      />
         </div>
 
-        {/* Main content - scrollable */}
         <div className="flex-1 overflow-hidden p-4">
           {loading ? (
             <div className="h-full flex items-center justify-center">
@@ -304,19 +297,17 @@ const ContactsDashboard = () => {
             </div>
           ) : (
             <div className="h-full flex flex-col">
-              {/* Contact list - scrollable */}
               <div className="flex-1 overflow-y-auto bg-white rounded-lg shadow-sm border">
                 {paginatedContacts.map((contact) => (
                   <ContactItem
                     key={contact.id}
                     contact={contact}
-                    onEdit={() => setSelectedContact(contact)}
+                    onEdit={() => handleEdit(contact)}
                     onDelete={() => handleDelete(contact.id)}
                   />
                 ))}
               </div>
 
-              {/* Pagination - fixed at bottom */}
               {filteredContacts.length > itemsPerPage && (
                 <div className="flex-none pt-4">
                   <PaginationFooter
@@ -332,17 +323,13 @@ const ContactsDashboard = () => {
         </div>
       </div>
 
-      {/* Modals and notifications */}
       {selectedContact && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-xl">
             <ContactForm
               contact={selectedContact}
               onClose={() => setSelectedContact(null)}
-              onSave={(newContact) => {
-                handleSaveContact(newContact);
-                setSelectedContact(null);
-              }}
+              onSave={handleSaveContact}
             />
           </div>
         </div>
@@ -372,4 +359,5 @@ const ContactsDashboard = () => {
     </div>
   );
 };
+
 export default ContactsDashboard;
