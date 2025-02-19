@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, X, MessageSquare } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import React, { useState, useEffect } from "react";
+import { Plus, X, MessageSquare, Edit } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
 
 interface CannedResponse {
   id: string;
@@ -13,20 +13,21 @@ interface CannedResponsesProps {
   onInsertResponse: (message: string) => void;
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-const CannedResponses: React.FC<CannedResponsesProps> = ({ onInsertResponse }) => {
+const CannedResponses: React.FC<CannedResponsesProps> = ({
+  onInsertResponse,
+}) => {
   const [responses, setResponses] = useState<CannedResponse[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newShortcode, setNewShortcode] = useState('');
-  const [newMessage, setNewMessage] = useState('');
+  const [editingResponse, setEditingResponse] = useState<CannedResponse | null>(
+    null
+  );
+  const [newShortcode, setNewShortcode] = useState("");
+  const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,14 +39,14 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({ onInsertResponse }) =
   const fetchCannedResponses = async () => {
     try {
       const { data, error } = await supabase
-        .from('canned_responses')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("canned_responses")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       setResponses(data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -61,7 +62,7 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({ onInsertResponse }) =
       };
 
       const { data, error } = await supabase
-        .from('canned_responses')
+        .from("canned_responses")
         .insert([newResponse])
         .select()
         .single();
@@ -69,27 +70,66 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({ onInsertResponse }) =
       if (error) throw error;
 
       setResponses([data, ...responses]);
-      setNewShortcode('');
-      setNewMessage('');
-      setIsModalOpen(false);
+      resetForm();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add response');
+      setError(err instanceof Error ? err.message : "Failed to add response");
+    }
+  };
+
+  const handleUpdateResponse = async () => {
+    if (!editingResponse || !newShortcode || !newMessage) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("canned_responses")
+        .update({
+          shortcode: newShortcode,
+          message: newMessage,
+        })
+        .eq("id", editingResponse.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setResponses(responses.map((r) => (r.id === data.id ? data : r)));
+      resetForm();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to update response"
+      );
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('canned_responses')
+        .from("canned_responses")
         .delete()
-        .eq('id', id);
+        .eq("id", id);
 
       if (error) throw error;
 
-      setResponses(responses.filter(response => response.id !== id));
+      setResponses(responses.filter((response) => response.id !== id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete response');
+      setError(
+        err instanceof Error ? err.message : "Failed to delete response"
+      );
     }
+  };
+
+  const startEditing = (response: CannedResponse) => {
+    setEditingResponse(response);
+    setNewShortcode(response.shortcode);
+    setNewMessage(response.message);
+    setIsModalOpen(true);
+  };
+
+  const resetForm = () => {
+    setNewShortcode("");
+    setNewMessage("");
+    setEditingResponse(null);
+    setIsModalOpen(false);
   };
 
   if (isLoading) {
@@ -109,19 +149,24 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({ onInsertResponse }) =
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-sm">
+    <div className="w-half max-w-4xl mx-auto p-1 bg-white rounded-lg shadow-sm">
       <div className="bg-white p-6 rounded-lg border border-gray-200">
         {error && (
-          <div className="bg-red-100 text-red-700 p-4 rounded-md mb-4 border border-red-200">
+          <div className="bg-red-100 text-red-700 p-1 rounded-md mb-4 border border-red-200">
             {error}
-            <button onClick={() => setError(null)} className="float-right text-red-700">
+            <button
+              onClick={() => setError(null)}
+              className="float-right text-red-700"
+            >
               <X size={20} />
             </button>
           </div>
         )}
 
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Canned Responses</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Canned Responses
+          </h2>
           <button
             onClick={() => setIsModalOpen(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors"
@@ -132,8 +177,9 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({ onInsertResponse }) =
         </div>
 
         <p className="text-gray-600 mb-6 text-sm">
-          Canned Responses are pre-written reply templates that help you quickly respond to conversations.
-          Use the &apos;/&apos; character followed by the shortcode to insert a response.
+          Canned Responses are pre-written reply templates that help you quickly
+          respond to conversations. Use the '/' character followed by the
+          shortcode to insert a response.
         </p>
 
         {responses.length === 0 ? (
@@ -142,24 +188,40 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({ onInsertResponse }) =
             No canned responses found
           </div>
         ) : (
-          <div className="space-y-3">
-            {responses.map(response => (
-              <div
-                key={response.id}
-                className="group bg-white p-4 rounded-md border border-gray-200 hover:border-blue-200 transition-colors flex justify-between items-start shadow-sm"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm text-blue-600 font-mono mb-1">/{response.shortcode}</div>
-                  <div className="text-gray-900">{response.message}</div>
-                </div>
-                <button
-                  onClick={() => handleDelete(response.id)}
-                  className="text-gray-400 hover:text-red-600 transition-colors ml-4"
+          <div className="max-h-[600px] overflow-y-auto pr-2">
+            {" "}
+            {/* Added scroll container */}
+            <div className="space-y-3">
+              {responses.map((response) => (
+                <div
+                  key={response.id}
+                  className="group bg-white p-4 rounded-md border border-gray-200 hover:border-blue-200 transition-colors flex justify-between items-start shadow-sm"
                 >
-                  <X size={20} />
-                </button>
-              </div>
-            ))}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-blue-600 font-mono mb-1">
+                      /{response.shortcode}
+                    </div>
+                    <div className="text-gray-900">{response.message}</div>
+                  </div>
+                  <div className="flex items-center gap-2 ml-4">
+                    <button
+                      onClick={() => startEditing(response)}
+                      className="text-gray-400 hover:text-blue-600 transition-colors"
+                      title="Edit"
+                    >
+                      <Edit size={20} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(response.id)}
+                      className="text-gray-400 hover:text-red-600 transition-colors"
+                      title="Delete"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -167,9 +229,11 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({ onInsertResponse }) =
           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 backdrop-blur-sm">
             <div className="bg-white rounded-lg p-6 w-full max-w-lg border border-gray-200 shadow-xl">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">New Canned Response</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {editingResponse ? "Edit Response" : "New Canned Response"}
+                </h3>
                 <button
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={resetForm}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <X size={20} />
@@ -178,7 +242,9 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({ onInsertResponse }) =
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2 font-medium">Shortcode</label>
+                  <label className="block text-sm text-gray-700 mb-2 font-medium">
+                    Shortcode
+                  </label>
                   <input
                     type="text"
                     value={newShortcode}
@@ -189,7 +255,9 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({ onInsertResponse }) =
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2 font-medium">Message</label>
+                  <label className="block text-sm text-gray-700 mb-2 font-medium">
+                    Message
+                  </label>
                   <textarea
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
@@ -200,16 +268,18 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({ onInsertResponse }) =
 
                 <div className="flex justify-end gap-3 mt-6 border-t pt-4">
                   <button
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={resetForm}
                     className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
-                    onClick={handleAddResponse}
+                    onClick={
+                      editingResponse ? handleUpdateResponse : handleAddResponse
+                    }
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
                   >
-                    Save Response
+                    {editingResponse ? "Save Changes" : "Save Response"}
                   </button>
                 </div>
               </div>
