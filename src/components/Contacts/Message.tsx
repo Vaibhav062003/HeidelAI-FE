@@ -30,7 +30,8 @@ export const MessageComposer = ({ onMessageSend }: MessageComposerProps) => {
   >("whatsapp");
   const [templateSearch, setTemplateSearch] = useState("");
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<WhatsAppTemplate | null>(null);
   const [isTemplateDropdownOpen, setIsTemplateDropdownOpen] = useState(false);
   const [isFetchingTemplates, setIsFetchingTemplates] = useState(false);
   const templateDropdownRef = useRef<HTMLDivElement>(null);
@@ -268,8 +269,9 @@ export const MessageComposer = ({ onMessageSend }: MessageComposerProps) => {
               <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 h-[500px] overflow-hidden">
                 {selectedTemplate ? (
                   <ScrollArea className="h-full">
-                    <WhatsAppTemplateContent 
-                      template={selectedTemplate} 
+                    <WhatsAppTemplateContent
+                      key={selectedTemplate.id} // Add key to force re-render
+                      template={selectedTemplate}
                       editable={false}
                     />
                   </ScrollArea>
