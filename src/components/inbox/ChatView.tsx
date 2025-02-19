@@ -18,6 +18,12 @@ import dynamic from 'next/dynamic';
 import { useReminders } from '../hooks/useReminders';
 
 import { Plus } from "lucide-react";
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 
 
@@ -144,6 +150,12 @@ interface AddressData {
   address: AddressDetails;
 }
 
+interface CannedResponse {
+  id: string;
+  shortcode: string;
+  message: string;
+  created_at: string;
+}
 
 // Skeletons
 
@@ -519,9 +531,38 @@ const ChatView = ({
   const [isSending, setIsSending] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { reminders = [], refetchReminders } = useReminders(selectedConversationId);
+  const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
+  const [showCannedResponses, setShowCannedResponses] = useState(false);
+  const [filteredResponses, setFilteredResponses] = useState<CannedResponse[]>([]);
 
-
-
+    // Add this useEffect for loading canned responses
+    useEffect(() => {
+      const fetchCannedResponses = async () => {
+        const { data, error } = await supabase
+          .from('canned_responses')
+          .select('*');
+        
+        if (!error && data) {
+          setCannedResponses(data);
+        }
+      };
+      
+      fetchCannedResponses();
+    }, []);
+  
+    // Add this useEffect for handling canned response suggestions
+    useEffect(() => {
+      if (message.startsWith('/')) {
+        const query = message.substring(1).toLowerCase();
+        const filtered = cannedResponses.filter(response =>
+          response.shortcode.toLowerCase().includes(query)
+        );
+        setFilteredResponses(filtered);
+        setShowCannedResponses(true);
+      } else {
+        setShowCannedResponses(false);
+      }
+    }, [message, cannedResponses]);  
 
   const handleMicClick = () => {
     setIsRecording(!isRecording);
@@ -571,8 +612,20 @@ const ChatView = ({
   const sendMessage = async () => {
     if (!message.trim() || !selectedConversationId || isSending) return;
 
+    let contentToSend = message.trim();
     const platform = selectedConversationId.split('_')[0]; 
     const sender_id = selectedConversationId.split('_')[1]; 
+
+    // Check for canned response
+    if (contentToSend.startsWith('/')) {
+      const shortcode = contentToSend.slice(1).toLowerCase();
+      const cannedResponse = cannedResponses.find(
+        (cr) => cr.shortcode.toLowerCase() === shortcode
+      );
+      if (cannedResponse) {
+        contentToSend = cannedResponse.message;
+      }
+    }
 
     setIsSending(true);
     try {
@@ -584,30 +637,14 @@ const ChatView = ({
         },
         body: JSON.stringify({
           conversation_id: selectedConversationId,
-          content: message,
+          content: contentToSend,
           type: 'text',
           sender_id: sender_id,
           platform: platform,
         }),
       });
-  
+
       if (!response.ok) throw new Error('Failed to send message');
-  
-      const data = await response.json();
-      
-      // // Add message to local state
-      // setMessages(prev => [...prev, {
-      //   id: data.id,
-      //   content: message,
-      //   type: 'text',
-      //   role: 'agent',
-      //   conversation_id: selectedConversationId,
-      //   timestamp: new Date().toISOString(),
-      //   sender_id: 'agent',
-      //   status: 'sent'
-      // }]);
-  
-      // Clear input
       setMessage('');
     } catch (error) {
       toast.error('Failed to send message');
@@ -669,6 +706,7 @@ const ChatView = ({
         console.error("Error setting unread count:", error);
       }
     }
+    
 
     
     // Fetch conversation details
@@ -773,6 +811,7 @@ const ChatView = ({
   const isWindowExpired = lastCustomerMessage 
     ? (new Date().getTime() - new Date(lastCustomerMessage.timestamp).getTime()) > (24 * 60 * 60 * 1000)
     : true;
+    
 
   return (
     <>
@@ -1372,18 +1411,47 @@ const ChatView = ({
               </TooltipContent>
             </Tooltip>
 
+            <div className="flex-1 relative">
             <Input
-               value={message}
-               onChange={(e) => setMessage(e.target.value)}
-               placeholder="Type a message..."
-               className=" flex-1"
-               onKeyPress={(e) => {
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Type a message..."
+              className="w-full"
+              onKeyPress={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
                   sendMessage();
                 }
               }}
             />
+            
+            {showCannedResponses && (
+              <div className="absolute bottom-14 left-0 w-full bg-white border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+                {filteredResponses.map(response => (
+                  <div
+                    key={response.id}
+                    onClick={() => {
+                      setMessage(response.message);
+                      setShowCannedResponses(false);
+                    }}
+                    className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-blue-600 font-medium">/{response.shortcode}</span>
+                        <p className="text-gray-600 text-sm mt-1 line-clamp-1">
+                          {response.message}
+                        </p>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {format(parseISO(response.created_at), 'MMM d')}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
             <Tooltip>
               <TooltipTrigger asChild>
