@@ -1,313 +1,235 @@
-import React, { useState, useRef, useEffect } from "react";
+import React from "react";
 import { WhatsAppTemplate } from "../types/template";
 import { ScrollArea } from "../ui/scroll-area";
-
 import { FileText, MapPin } from "lucide-react";
 
 interface WhatsAppTemplateContentProps {
   template: WhatsAppTemplate;
-  editable?: boolean;
-  onTemplateChange?: (template: WhatsAppTemplate) => void;
 }
 
-const AutoResizeTextArea = ({
-  value,
-  onChange,
-  placeholder,
-  className,
-}: {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  placeholder?: string;
-  className?: string;
-}) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [value]);
-  return (
-    <textarea
-      ref={textareaRef}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className={`${className} min-h-[24px]`}
-      style={{
-        resize: "none",
-        overflowY: "hidden",
-        wordWrap: "break-word",
-      }}
-    />
-  );
-};
+export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps> = ({ template }) => {
 
-export const WhatsAppTemplateContent = ({
-  template,
-  editable = false,
-  onTemplateChange,
-}: WhatsAppTemplateContentProps) => {
-  const [editableTemplate, setEditableTemplate] = useState(template);
-
-  const getFormattedText = (text: string, type: string) => {
-    let formattedText = text;
-
-    // Handle formatting (bold, italic, strikethrough, monospace)
-    formattedText = formattedText
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
-      .replace(/_(.*?)_/g, '<em>$1</em>') // Italic
-      .replace(/~~(.*?)~~/g, '<del>$1</del>') // Strikethrough
-      .replace(/`(.*?)`/g, '<code>$1</code>'); // Monospace
-
-    return formattedText;
+  // Add this helper function at the top of your component
+  const calculateInputWidth = (text: string, fontSize: number = 14): number => {
+    const span = document.createElement("span");
+    span.style.visibility = "hidden";
+    span.style.position = "absolute";
+    span.style.fontSize = `${fontSize}px`;
+    span.style.fontFamily = "inherit";
+    span.innerText = text || "";
+    document.body.appendChild(span);
+    const width = span.offsetWidth;
+    document.body.removeChild(span);
+    return width + 25; // Add padding
   };
 
-  const handleTextChange = (
-    componentIndex: number,
-    field: string,
-    value: string
-  ) => {
-    const updatedComponents = [...(editableTemplate.components || [])];
-    if (field === "text") {
-      updatedComponents[componentIndex].text = value;
-    } else if (
-      field.startsWith("buttons-") &&
-      Array.isArray(updatedComponents[componentIndex].buttons)
-    ) {
-      const btnIndex = Number(field.split("-")[1]);
-      updatedComponents[componentIndex].buttons = updatedComponents[
-        componentIndex
-      ].buttons.map((btn: { type: string; text: string; value?: string }, index: number) =>
-        index === btnIndex ? { ...btn, text: value } : btn
-      );
-    }
-    const newTemplate = { ...editableTemplate, components: updatedComponents };
-    setEditableTemplate(newTemplate);
-    onTemplateChange?.(newTemplate);
+  const renderVariableText = (
+    text: string,
+    variables: string[] = [],
+    isHeader: boolean = false
+  ): React.ReactNode => {
+    const parts = text.split(/(\{\{\d+\}\})/g);
+
+    return parts.map((part, index) => {
+      const match = part.match(/\{\{(\d+)\}\}/);
+      if (match) {
+        const varIndex = parseInt(match[1], 10) - 1;
+        const exampleValue = variables[varIndex] || "";
+        return (
+          <input
+            key={index}
+            type="text"
+            defaultValue={exampleValue}
+            placeholder={exampleValue || "Enter value"}
+            className="inline-block px-1 mx-1 "
+            style={{
+              width: `${isHeader ? calculateInputWidth(exampleValue, 16) : calculateInputWidth(exampleValue)}px`,
+            }}
+          />
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
   };
 
 
-  const renderHeader = (component: { type: string; format?: string; example?: { header_handle?: string[], header_text?: string[] }; text?: string }, index: number) => {
+  // Helper function to replace placeholders with example value
+
+  // Render Header Component
+  const renderHeader = (component: { type: string; text?: string; format?: string; example?: { header_text?: string[], header_handle?: string[] } }) => {
     if (component.type !== "HEADER") return null;
 
-    let text = component.text || "";
-    if (component.example?.header_text?.[0]) {
-      // Replace placeholders like {{1}}, {{2}}, etc.
-      component.example.header_text.forEach((value, idx) => {
-        text = text.replace(`{{${idx + 1}}}`, value);
-      });
-    }
+    const text = component.text || "";
+    const exampleValues = component.example?.header_text;
 
-    // if (component.example?.body_text?.[0]) {
-    //   const bodyText = component.example.body_text[0];
-    //   for (let idx = 0; idx < bodyText.length; idx++) {
-    //     text = text.replace(`{{${idx + 1}}}`, bodyText[idx]);
-    //   }
-    // }
     // Render media if present
     if (component.format && component.example?.header_handle?.[0]) {
       const mediaUrl = component.example.header_handle[0];
-      if (component.format === "IMAGE") {
-        return (
-          <div className="mb-4">
-            <img src={mediaUrl} alt="Header Media" className="w-full h-auto rounded-lg" />
-          </div>
-        );
-      } else if (component.format === "VIDEO") {
-        return (
-          <div className="mb-4">
-            <video controls className="w-full h-auto rounded-lg">
-              <source src={mediaUrl} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          </div>
-        );
-      } else if (component.format === "DOCUMENT") {
-        // Extract file name from the URL
-        const fileName = decodeURIComponent(
-          mediaUrl.split("/").pop()?.replace(/\.[^/.]+$/, "") || "Document"
-        );
-  
-        return (
-          <div className="bg-gray-500 rounded-lg p-3 w-[300px] mb-4">
-            <div className="flex items-start space-x-2">
-              <div className="flex-shrink-0">
-                <FileText className="w-4 h-4 text-red-500" />
+
+      switch (component.format) {
+        case "IMAGE":
+          return (
+            <div className="mb-4">
+              <img src={mediaUrl} alt="Header" className="w-full h-auto rounded-md" />
+            </div>
+          );
+        case "VIDEO":
+          return (
+            <div className="mb-4">
+              <video controls className="w-full rounded-md">
+                <source src={mediaUrl} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          );
+        case "DOCUMENT":
+          return (
+            <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gray-100 rounded-md">
+                  
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-900">PDF Document</span>
+                  <span className="text-xs text-gray-500">Attached</span>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-white text-xs font-medium truncate">{fileName}</p>
-                <p className="text-zinc-400 text-xs mt-0.5">Microsoft Edge PDF Document</p>
-              </div>
+              <a 
+                href={mediaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm py-2 rounded transition-colors"
+              >
+                <FileText className="w-6 h-6 text-gray-600" />
+              </a>
             </div>
-            <button 
-              className="mt-2 w-full py-1.5 px-3 text-xs text-center text-white bg-zinc-700 hover:bg-zinc-600 rounded-md transition-colors"
-            >
-              Download
-            </button>
-          </div>
-        );
-      } 
-    }
-
-    if (component.format === "LOCATION") {
-      return (
-        <div className="bg-gray-400 rounded-lg p-3 w-[300px] mb-4">
-          <div className="flex items-start space-x-2">
-            <div className="flex-shrink-0">
-              <MapPin className="w-4 h-4 text-red-500" />
+          );
+        case "LOCATION":
+          return (
+            <div className="mb-4 flex items-center gap-2">
+              <MapPin className="text-gray-500" size={16} />
+              <span>{text || "Current Location"}</span>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white text-xs font-medium">Current Location</p>
-              <textarea
-                value={text}
-                onChange={(e) => handleTextChange(index, "text", e.target.value)}
-                className="w-full bg-transparent outline-none border-none p-0 text-white text-xs leading-normal resize-none"
-                placeholder="Location text here"
-              />
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    if (component.format === "TEXT" || !component.format) {
-      return (
-        <div className="mb-4 text-gray-800">
-          {editable ? (
-            <AutoResizeTextArea
-              value={text}
-              onChange={(e) => handleTextChange(index, "text", e.target.value)}
-              className="w-full bg-transparent outline-none border-none p-0 text-gray-800 placeholder:text-gray-500 text-base leading-normal"
-              placeholder="Header text here"
-            />
-          ) : (
-            <div
-              dangerouslySetInnerHTML={{ __html: getFormattedText(text, "HEADER") }}
-              className="whitespace-pre-wrap text-base leading-normal"
-            />
-          )}
-        </div>
-      );
-    }
-    // Render text if no media is present
-    
-    return (
-      <div className="mb-4 text-gray-800">
-        {editable ? (
-          <AutoResizeTextArea
-            value={text}
-            onChange={(e) => handleTextChange(index, "text", e.target.value)}
-            className="w-full bg-transparent outline-none border-none p-0 text-gray-800 placeholder:text-gray-500 text-base leading-normal"
-            placeholder="Header text here"
-          />
-        ) : (
-          <div
-            dangerouslySetInnerHTML={{ __html: getFormattedText(text, "HEADER") }}
-            className="whitespace-pre-wrap text-base leading-normal"
-          />
-        )}
-      </div>
-    );
-  };
-
-  const renderBody = (component: { type: string; text?: string; example?: { body_text?: string[] } }, index: number) => {
-    if (component.type !== "BODY") return null;
-    let text = component.text || "";
-    
-    if (component.example?.body_text?.[0]) {
-      const bodyText = component.example.body_text[0];
-      for (let idx = 0; idx < bodyText.length; idx++) {
-        text = text.replace(`{{${idx + 1}}}`, bodyText[idx]);
+          );
+        default:
+          return null;
       }
     }
 
-
-    return (
-      <div className="mb-4 text-gray-800">
-        {editable ? (
-          <AutoResizeTextArea
-            value={text}
-            onChange={(e) => handleTextChange(index, "text", e.target.value)}
-            className="w-full bg-transparent outline-none border-none p-0 text-gray-800 placeholder:text-gray-500 text-base leading-normal"
-            placeholder="Message body will appear here"
-          />
-        ) : (
-          <div
-            dangerouslySetInnerHTML={{ __html: getFormattedText(text, "BODY") }}
-            className="whitespace-pre-wrap text-base leading-normal"
-          />
-        )}
-      </div>
-    );
+    return(
+      <h3 className="text-[16px] font-semibold text-[#1a1a1a] mb-3">
+        {renderVariableText(text, exampleValues || [], true)}
+      </h3>
+      )
   };
 
-  const renderFooter = (component: { type: string; text?: string }, index: number) => {
-    if (component.type !== "FOOTER") return null;
+  // Render Body Component
+  const renderBody = (component: { type: string; text?: string; example?: { body_text?: string[] } }, index: number) => {
+    if (component.type !== "BODY") return null;
+  
+    const text = component.text || "";
+    const exampleValues = component.example?.body_text?.[0];
+  
+    // Process markdown and variables
+    const processText = (text: string) => {
+      const parts = text.split(/(\{\{\d+\}\})|(\*\*.*?\*\*)|(_.*?_)|(~~.*?~~)|(`.*?`)/g);
+      
+      return parts.map((part, idx) => {
+        if (!part) return null;
+        
+        const varMatch = part.match(/\{\{(\d+)\}\}/);
+        if (varMatch) {
+          const varIndex = parseInt(varMatch[1]) - 1;
+          const exampleValue = exampleValues?.[varIndex] || '';
+          return (
+            <input
+              key={idx}
+              type="text"
+              defaultValue={exampleValue}
+              placeholder={exampleValue}
+              className="inline-block px-1 mx-1"
+              style={{ width: `${calculateInputWidth(exampleValue)}px` }}
+            />
+          );
+        }
+  
+        // Process markdown
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={idx}>{part.slice(2, -2)}</strong>;
+        }
+        if (part.startsWith('_') && part.endsWith('_')) {
+          return <em key={idx}>{part.slice(1, -1)}</em>;
+        }
+        if (part.startsWith('~~') && part.endsWith('~~')) {
+          return <del key={idx}>{part.slice(2, -2)}</del>;
+        }
+        if (part.startsWith('`') && part.endsWith('`')) {
+          return <code key={idx}>{part.slice(1, -1)}</code>;
+        }
+  
+        return <span key={idx}>{part}</span>;
+      });
+    };
+  
+    // Split text by newlines and create multiple paragraphs
+    const paragraphs = text.split('\n').filter(Boolean);
+  
     return (
-      <div className="mt-2 mb-4 text-sm text-gray-500">
-        {editable ? (
-          <AutoResizeTextArea
-            value={component.text || ""}
-            onChange={(e) => handleTextChange(index, "text", e.target.value)}
-            className="w-full bg-transparent outline-none border-none p-0 text-gray-500 placeholder:text-gray-400 text-sm leading-normal"
-            placeholder="Footer text here"
-          />
-        ) : (
-          <div
-            dangerouslySetInnerHTML={{ __html: component.text || "" }}
-            className="whitespace-pre-wrap text-sm leading-normal"
-          />
-        )}
-      </div>
-    );
-  };
-
-  const renderButtons = (component: { type: string; buttons: { type: string; text: string }[] }, index: number) => {
-    if (component.type !== "BUTTONS") return null;
-    return (
-      <div className="space-y-2">
-        {component.buttons.map((button, btnIndex) => (
-          <button
-            key={btnIndex}
-            className="w-full p-3 text-center bg-gray-50 text-blue-500 rounded-md hover:bg-gray-100 transition-colors text-sm font-medium"
-          >
-            {editable ? (
-              <AutoResizeTextArea
-                value={button.text || ""}
-                onChange={(e) =>
-                  handleTextChange(index, `buttons-${btnIndex}`, e.target.value)
-                }
-                className="w-full bg-transparent outline-none border-none p-0 text-blue-500 placeholder:text-gray-400 text-center text-sm font-medium"
-                placeholder={`Button ${btnIndex + 1}`}
-              />
-            ) : (
-              <span dangerouslySetInnerHTML={{ __html: button.text || "" }} />
-            )}
-          </button>
+      <div className="text-gray-800 mb-4">
+        {paragraphs.map((paragraph, idx) => (
+          <p key={idx} className={idx < paragraphs.length - 1 ? 'mb-2' : ''}>
+            {processText(paragraph)}
+          </p>
         ))}
       </div>
     );
   };
 
 
+
+  // Render Footer Component
+  const renderFooter = (component: { type: string; text?: string }) => {
+    if (component.type !== "FOOTER") return null;
+
+    return <p className="text-[13px] text-gray-500 italic mb-2">{component.text}</p>;
+  };
+
+  // Render Buttons Component
+  const renderButtons = (component: { type: string; buttons: { text: string }[] }) => {
+    if (component.type !== "BUTTONS") return null;
+
+    return (
+      <div className="flex flex-col gap-2 w-full">
+        {component.buttons.map((button: { text: string }, index: number) => (
+          <button
+            key={index}
+            className="w-full px-4 py-2 bg-[#25D366] text-white rounded-md text-sm hover:bg-[#128C7E] transition-colors"
+          >
+            {button.text}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div className="max-w-md mx-auto">
-      <ScrollArea className="h-[350px] rounded-lg">
-        <div className="bg-[#E5DDD5] rounded-lg p-6">
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            {editableTemplate.components?.map((component, index) => (
-              <div key={index}>
-                {renderHeader(component, index)}
-                {renderBody(component, index)}
-                {renderFooter(component, index)}
-                {component.buttons ? renderButtons({ ...component, buttons: component.buttons || [] }, index) : null}
-              </div>
-            ))}
-          </div>
+    <ScrollArea className="max-h-[400px]">
+      <div className="bg-[#f0f2f5] p-4 min-h-[300px]">
+        <div className="max-w-[600px] mx-auto bg-white rounded-lg shadow-sm p-4 space-y-3">
+          {template.components?.map((component, index) => (
+            <div key={index} className="message-bubble">
+              {renderHeader(component)}
+              {renderBody(component,index)}
+              {renderFooter(component)}
+              {component.buttons && (
+                <div className="border-t border-gray-200 pt-3 mt-3">
+                  {renderButtons({ type: component.type, buttons: component.buttons.filter(button => button.text) })}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
-      </ScrollArea>
-    </div>
+      </div>
+    </ScrollArea>
   );
 };

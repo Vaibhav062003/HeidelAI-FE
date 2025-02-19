@@ -31,12 +31,12 @@ export const WhatsAppTemplateDialog = ({
           <DialogTitle>Template Preview</DialogTitle>
         </DialogHeader>
         <div className="py-2">
-          <WhatsAppTemplateContent template={template} editable={true} />
+          <WhatsAppTemplateContent template={template} />
         </div>
         <div className="flex justify-end mt-2">
           <Button 
             onClick={onSend} 
-            className="w-full sm:w-auto bg-gray-500"
+            className="w-full sm:w-auto bg-white text-black border hover:bg-white border-gray-300 hover:border-gray-400"
           >
             Share in Chat
           </Button>
