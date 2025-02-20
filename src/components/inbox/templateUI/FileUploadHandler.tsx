@@ -16,16 +16,18 @@ const s3 = new AWS.S3({
   s3ForcePathStyle: true,
 });
 
-interface ImageUploadProps {
-  onUploadComplete: (url: string) => void;
+interface FileUploadHandlerProps {
+  setPreviewFile: (file: string | null) => void;
+  onUploadComplete: (fileHandle: string) => void;
+  accept: string;
   className?: string;
-  accept?: string;
 }
 
-const ImageUploadHandler: React.FC<ImageUploadProps> = ({ 
-  onUploadComplete, 
-  className = '',
-  accept = 'image/*'
+const FileUploadHandler: React.FC<FileUploadHandlerProps> = ({
+  setPreviewFile,
+  onUploadComplete,
+  accept,
+  className
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,4 +105,4 @@ const ImageUploadHandler: React.FC<ImageUploadProps> = ({
   );
 };
 
-export default ImageUploadHandler;
+export default FileUploadHandler;
