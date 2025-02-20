@@ -263,6 +263,7 @@ const Sidebar = ({
                 setTemplates={setTemplates}
                 searchTemplate={searchTemplate}
                 setSearchTemplate={setSearchTemplate}
+                
                 />
               </div>
             ) : (

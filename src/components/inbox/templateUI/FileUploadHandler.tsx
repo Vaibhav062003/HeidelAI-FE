@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AWS from 'aws-sdk';
 import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 
+
 // Configure AWS SDK for Supabase S3-compatible storage
 AWS.config.update({
   accessKeyId: "ae71b2dfaa0c52ee96397e53906aa99e",

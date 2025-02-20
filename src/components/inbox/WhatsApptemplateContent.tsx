@@ -4,169 +4,209 @@ import { Badge } from "@/components/ui/badge";
  // Adjust the import path accordingly
 import { WhatsAppTemplate } from "../types/template";
 import { ScrollArea } from "../ui/scroll-area";
-import { Variable } from "../types/template_types";
+import { FileText, MapPin } from "lucide-react";
 
 interface WhatsAppTemplateContentProps {
   template: WhatsAppTemplate;
-  editable?: boolean;
-  onTemplateChange?: (template: WhatsAppTemplate) => void;
 }
 
-const AutoResizeTextArea = ({
-  value,
-  onChange,
-  placeholder,
-  className,
-}: {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  placeholder?: string;
-  className?: string;
-}) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [value]);
-
-  return (
-    <textarea
-      ref={textareaRef}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className={`${className} min-h-[24px]`}
-      style={{
-        resize: "none",
-        overflowY: "hidden",
-        wordWrap: "break-word",
-      }}
-    />
-  );
-};
-
-export const WhatsAppTemplateContent = ({
-  template,
-  editable = false,
-  onTemplateChange,
-}: WhatsAppTemplateContentProps) => {
-  const [editableTemplate, setEditableTemplate] = useState(template);
-  const [variables, setVariables] = useState<Variable[]>([]);
-
-  const getFormatedText = (text: string, type: string) => {
-    let formattedText = text;
-  
-    // Handle formatting (bold, italic, strikethrough, monospace)
-    formattedText = formattedText
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold
-    .replace(/_(.*?)_/g, '<em>$1</em>')               // Italic
-    .replace(/~~(.*?)~~/g, '<del>$1</del>')           // Strikethrough
-    .replace(/`(.*?)`/g, '<code>$1</code>');   // Monospace
-  
-
-    return formattedText;
+export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { onInputChange: (key: string, value: string) => void }> = ({ template, onInputChange }) => {
+  const calculateInputWidth = (text: string, fontSize: number = 14): number => {
+    const span = document.createElement("span");
+    span.style.visibility = "hidden";
+    span.style.position = "absolute";
+    span.style.fontSize = `${fontSize}px`;
+    span.style.fontFamily = "inherit";
+    span.innerText = text || "";
+    document.body.appendChild(span);
+    const width = span.offsetWidth;
+    document.body.removeChild(span);
+    return width + 25; // Add padding
   };
 
-  const handleTextChange = (
-    componentIndex: number,
-    field: string,
-    value: string
-  ) => {
-    const updatedComponents = [...(editableTemplate.components || [])];
-    if (field === "text") {
-      updatedComponents[componentIndex].text = value;
-    } else if (
-      field.startsWith("buttons-") &&
-      Array.isArray(updatedComponents[componentIndex].buttons)
-    ) {
-      const btnIndex = Number(field.split("-")[1]);
-      updatedComponents[componentIndex].buttons = updatedComponents[
-        componentIndex
-      ].buttons.map((btn: any, index: number) =>
-        index === btnIndex ? { ...btn, text: value } : btn
-      );
-    }
-    const newTemplate = { ...editableTemplate, components: updatedComponents };
-    setEditableTemplate(newTemplate);
-    onTemplateChange?.(newTemplate);
+  const calculateHeaderInputWidth = (text: string): number => {
+    const span = document.createElement('span');
+    span.style.visibility = 'hidden';
+    span.style.position = 'absolute';
+    span.style.fontSize = '16px';
+    span.style.fontFamily = 'inherit';
+    span.style.fontWeight = '600'; // Add bold font weight for header
+    span.innerText = text;
+    document.body.appendChild(span);
+    const width = span.offsetWidth;
+    document.body.removeChild(span);
+    return width + 20;
   };
 
-  const renderBody = (component: any, index: number) => {
+  const renderVariableText = (text: string, variables: string[] = [], isHeader: boolean = false) => {
+    const parts = text.split(/(\{\{\d+\}\})/g);
+
+    return parts.map((part, index) => {
+      const match = part.match(/\{\{(\d+)\}\}/);
+      if (match) {
+        const varIndex = parseInt(match[1], 10) - 1;
+        const exampleValue = variables[varIndex] || "";
+        return (
+          <input
+            key={index}
+            type="text"
+            defaultValue={exampleValue}
+            placeholder={exampleValue || "Enter value"}
+            className={`inline-block px-1 mx-1 ${isHeader ? 'font-semibold' : ''}`}
+            style={{ width: `${isHeader ? calculateHeaderInputWidth(exampleValue) : calculateInputWidth(exampleValue)}px` }}
+            onChange={(e) => onInputChange(`${isHeader ? 'header' : 'body'}_${varIndex}`, e.target.value)}
+          />
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
+  const renderHeader = (component: { type: string; text?: string; format?: string; example?: { header_text?: string[], header_handle?: string[] } }) => {
+    if (component.type !== "HEADER") return null;
+
+    const text = component.text || "";
+    const exampleValues = component.example?.header_text;
+
+    // Render media if present
+    if (component.format && component.example?.header_handle?.[0]) {
+      const mediaUrl = component.example.header_handle[0];
+
+      switch (component.format) {
+        case "IMAGE":
+          return (
+            <div className="mb-4">
+              <img src={mediaUrl} alt="Header" className="w-full h-auto rounded-md" />
+            </div>
+          );
+        case "VIDEO":
+          return (
+            <div className="mb-4">
+              <video controls className="w-full rounded-md">
+                <source src={mediaUrl} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          );
+        case "DOCUMENT":
+          return (
+            <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gray-100 rounded-md">
+                  <FileText className="w-6 h-6 text-gray-600" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-900">PDF Document</span>
+                  <span className="text-xs text-gray-500">Attached</span>
+                </div>
+              </div>
+              <a 
+                href={mediaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm py-2 rounded transition-colors"
+              >
+                <FileText className="w-6 h-6 text-gray-600" />
+              </a>
+            </div>
+          );
+        case "LOCATION":
+          return (
+            <div className="mb-4 flex items-center gap-2">
+              <MapPin className="text-gray-500" size={16} />
+              <span>{text || "Current Location"}</span>
+            </div>
+          );
+        default:
+          return null;
+      }
+    }
+
+    return (
+      <h3 className="text-[16px] font-semibold text-[#1a1a1a] mb-3">
+        {renderVariableText(text, exampleValues || [], true)}
+      </h3>
+    );
+  };
+
+  const renderBody = (component: { type: string; text?: string; example?: { body_text?: string[] } }, index: number) => {
     if (component.type !== "BODY") return null;
 
-    let text = component.text || "";
-    if (component.example?.body_text?.[0]) {
-      component.example.body_text[0].forEach((value: string, idx: number) => {
-        text = text.replace(`{{${idx + 1}}}`, value);
+    const text = component.text || "";
+    const exampleValues = component.example?.body_text?.[0];
+
+    // Process markdown and variables
+    const processText = (text: string) => {
+      const parts = text.split(/(\{\{\d+\}\})|(\*\*.*?\*\*)|(_.*?_)|(~~.*?~~)|(`.*?`)/g);
+
+      return parts.map((part, idx) => {
+        if (!part) return null;
+
+        const varMatch = part.match(/\{\{(\d+)\}\}/);
+        if (varMatch) {
+          const varIndex = parseInt(varMatch[1]) - 1;
+          const exampleValue = exampleValues?.[varIndex] || '';
+          return (
+            <input
+              key={idx}
+              type="text"
+              defaultValue={exampleValue}
+              placeholder={exampleValue}
+              className="inline-block px-1 mx-1 border border-gray-300 rounded focus:outline-none focus:border-[#25D366] text-sm"
+              style={{ width: `${calculateInputWidth(exampleValue)}px` }}
+              onChange={(e) => onInputChange(`body_${varIndex}`, e.target.value)}
+            />
+          );
+        }
+
+        // Process markdown
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={idx}>{part.slice(2, -2)}</strong>;
+        }
+        if (part.startsWith('_') && part.endsWith('_')) {
+          return <em key={idx}>{part.slice(1, -1)}</em>;
+        }
+        if (part.startsWith('~~') && part.endsWith('~~')) {
+          return <del key={idx}>{part.slice(2, -2)}</del>;
+        }
+        if (part.startsWith('`') && part.endsWith('`')) {
+          return <code key={idx}>{part.slice(1, -1)}</code>;
+        }
+
+        return <span key={idx}>{part}</span>;
       });
-    }
+    };
+
+    // Split text by newlines and create multiple paragraphs
+    const paragraphs = text.split('\n').filter(Boolean);
 
     return (
-      <div className="mb-4 text-gray-800">
-        {editable ? (
-          <AutoResizeTextArea
-            value={text}
-            onChange={(e) => handleTextChange(index, "text", e.target.value)}
-            className="w-full bg-transparent outline-none border-none p-0 text-gray-800 placeholder:text-gray-500 text-base leading-normal"
-            placeholder="Message body will appear here"
-          />
-        ) : (
-          <div
-            dangerouslySetInnerHTML={{ __html: getFormatedText(text, "BODY") }}
-            className="whitespace-pre-wrap text-base leading-normal"
-          />
-        )}
+      <div className="text-gray-800 mb-4">
+        {paragraphs.map((paragraph, idx) => (
+          <p key={idx} className={idx < paragraphs.length - 1 ? 'mb-2' : ''}>
+            {processText(paragraph)}
+          </p>
+        ))}
       </div>
     );
   };
 
-  const renderFooter = (component: any, index: number) => {
+  const renderFooter = (component: { type: string; text?: string }) => {
     if (component.type !== "FOOTER") return null;
-
-    return (
-      <div className="mt-2 mb-4 text-sm text-gray-500">
-        {editable ? (
-          <AutoResizeTextArea
-            value={component.text || ""}
-            onChange={(e) => handleTextChange(index, "text", e.target.value)}
-            className="w-full bg-transparent outline-none border-none p-0 text-gray-500 placeholder:text-gray-400 text-sm leading-normal"
-            placeholder="Footer text here"
-          />
-        ) : (
-          <div
-            dangerouslySetInnerHTML={{ __html: component.text || "" }}
-            className="whitespace-pre-wrap text-sm leading-normal"
-          />
-        )}
-      </div>
-    );
+    return <p className="text-[13px] text-gray-500 italic mb-2">{component.text}</p>;
   };
 
-  const renderButtons = (component: any, index: number) => {
+  const renderButtons = (component: { type: string; buttons: { text: string }[] }) => {
     if (component.type !== "BUTTONS") return null;
 
     return (
-      <div className="space-y-2">
-        {component.buttons.map((button: any, btnIndex: number) => (
+      <div className="flex flex-col gap-2 w-full">
+        {component.buttons.map((button: { text: string }, index: number) => (
           <button
-            key={btnIndex}
-            className="w-full p-3 text-center bg-gray-50 text-blue-500 rounded-md hover:bg-gray-100 transition-colors text-sm font-medium"
+            key={index}
+            className="w-full px-4 py-2 bg-[#25D366] text-white rounded-md text-sm hover:bg-[#128C7E] transition-colors"
           >
-            {editable ? (
-              <AutoResizeTextArea
-                value={button.text || ""}
-                onChange={(e) =>
-                  handleTextChange(index, `buttons-${btnIndex}`, e.target.value)
-                }
-                className="w-full bg-transparent outline-none border-none p-0 text-blue-500 placeholder:text-gray-400 text-center text-sm font-medium"
-                placeholder={`Button ${btnIndex + 1}`}
-              />
-            ) : (
-              <span dangerouslySetInnerHTML={{ __html: button.text || "" }} />
-            )}
+            {button.text}
           </button>
         ))}
       </div>
@@ -174,20 +214,19 @@ export const WhatsAppTemplateContent = ({
   };
 
   return (
-    <div className="max-w-md mx-auto">
-      <ScrollArea className="h-[350px] rounded-lg">
-        <div className="bg-[#E5DDD5] rounded-lg p-6">
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            {editableTemplate.components?.map((component, index) => (
-              <div key={index}>
-                {renderBody(component, index)}
-                {renderFooter(component, index)}
-                {renderButtons(component, index)}
-              </div>
-            ))}
-          </div>
+    <ScrollArea className="max-h-[400px]">
+      <div className="bg-[#f0f2f5] p-4 min-h-[300px]">
+        <div className="max-w-[600px] mx-auto bg-white rounded-lg shadow-sm p-4 space-y-3">
+          {template.components?.map((component, index) => (
+            <div key={index} className="message-bubble">
+              {renderHeader(component)}
+              {renderBody(component, index)}
+              {renderFooter(component)}
+              {component.buttons && renderButtons({ type: component.type, buttons: component.buttons.filter(button => button && button.text) })}
+            </div>
+          ))}
         </div>
-      </ScrollArea>
-    </div>
+      </div>
+    </ScrollArea>
   );
 };

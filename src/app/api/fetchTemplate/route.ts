@@ -18,7 +18,7 @@ export async function GET() {
       throw new Error(`External api error: ${response.status}`);
     }
 
-    const data: any = await response.json(); 
+    const data: { data: WhatsAppTemplate[] } = await response.json(); 
    
     const templates: WhatsAppTemplate[] = data.data || [];
 
