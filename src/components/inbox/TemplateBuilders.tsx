@@ -539,7 +539,9 @@ const sendPostRequest = async (data:any) => {
       throw new Error(`HTTP error! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
     }
 
-    console.log("POST request successful:");
+    const result = await response.json();
+
+    console.log("POST request successful:", result);
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error during POST request:", error.message);

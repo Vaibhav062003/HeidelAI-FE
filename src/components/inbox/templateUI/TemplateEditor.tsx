@@ -169,10 +169,14 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     "6 hours",
   ];
 
-  const handleFileUploadComplete = ( fileHandle: string) => {
+  const handleFileUploadComplete = (s3Url: string, fileHandle: string) => {
+    // Set the S3 URL as the preview file
+    setPreviewFile(s3Url);
 
     // Set the file_handle as the header content
     setHeaderContent(fileHandle);
+
+    console.log('S3 URL:', s3Url);
     console.log('File Handle:', fileHandle);
   };
 
@@ -426,6 +430,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                   <FileUploadHandler
                     setPreviewFile={setPreviewFile}
                     onUploadComplete={handleFileUploadComplete}
+                    setHeaderContent={setHeaderContent}
                     accept={
                       headerType === "image"
                         ? "image/*"
