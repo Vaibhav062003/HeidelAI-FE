@@ -7,9 +7,7 @@ interface WhatsAppTemplateContentProps {
   template: WhatsAppTemplate;
 }
 
-export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps> = ({ template }) => {
-
-  // Add this helper function at the top of your component
+export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { onInputChange: (key: string, value: string) => void }> = ({ template, onInputChange }) => {
   const calculateInputWidth = (text: string, fontSize: number = 14): number => {
     const span = document.createElement("span");
     span.style.visibility = "hidden";
@@ -23,11 +21,21 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps> = (
     return width + 25; // Add padding
   };
 
-  const renderVariableText = (
-    text: string,
-    variables: string[] = [],
-    isHeader: boolean = false
-  ): React.ReactNode => {
+  const calculateHeaderInputWidth = (text: string): number => {
+    const span = document.createElement('span');
+    span.style.visibility = 'hidden';
+    span.style.position = 'absolute';
+    span.style.fontSize = '16px';
+    span.style.fontFamily = 'inherit';
+    span.style.fontWeight = '600'; // Add bold font weight for header
+    span.innerText = text;
+    document.body.appendChild(span);
+    const width = span.offsetWidth;
+    document.body.removeChild(span);
+    return width + 20;
+  };
+
+  const renderVariableText = (text: string, variables: string[] = [], isHeader: boolean = false) => {
     const parts = text.split(/(\{\{\d+\}\})/g);
 
     return parts.map((part, index) => {
@@ -41,10 +49,9 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps> = (
             type="text"
             defaultValue={exampleValue}
             placeholder={exampleValue || "Enter value"}
-            className="inline-block px-1 mx-1 "
-            style={{
-              width: `${isHeader ? calculateInputWidth(exampleValue, 16) : calculateInputWidth(exampleValue)}px`,
-            }}
+            className={`inline-block px-1 mx-1 ${isHeader ? 'font-semibold' : ''}`}
+            style={{ width: `${isHeader ? calculateHeaderInputWidth(exampleValue) : calculateInputWidth(exampleValue)}px` }}
+            onChange={(e) => onInputChange(`${isHeader ? 'header' : 'body'}_${varIndex}`, e.target.value)}
           />
         );
       }
@@ -52,10 +59,6 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps> = (
     });
   };
 
-
-  // Helper function to replace placeholders with example value
-
-  // Render Header Component
   const renderHeader = (component: { type: string; text?: string; format?: string; example?: { header_text?: string[], header_handle?: string[] } }) => {
     if (component.type !== "HEADER") return null;
 
@@ -87,7 +90,7 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps> = (
             <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-3">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-gray-100 rounded-md">
-                  
+                  <FileText className="w-6 h-6 text-gray-600" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-gray-900">PDF Document</span>
@@ -116,27 +119,26 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps> = (
       }
     }
 
-    return(
+    return (
       <h3 className="text-[16px] font-semibold text-[#1a1a1a] mb-3">
         {renderVariableText(text, exampleValues || [], true)}
       </h3>
-      )
+    );
   };
 
-  // Render Body Component
   const renderBody = (component: { type: string; text?: string; example?: { body_text?: string[] } }, index: number) => {
     if (component.type !== "BODY") return null;
-  
+
     const text = component.text || "";
     const exampleValues = component.example?.body_text?.[0];
-  
+
     // Process markdown and variables
     const processText = (text: string) => {
       const parts = text.split(/(\{\{\d+\}\})|(\*\*.*?\*\*)|(_.*?_)|(~~.*?~~)|(`.*?`)/g);
-      
+
       return parts.map((part, idx) => {
         if (!part) return null;
-        
+
         const varMatch = part.match(/\{\{(\d+)\}\}/);
         if (varMatch) {
           const varIndex = parseInt(varMatch[1]) - 1;
@@ -147,12 +149,13 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps> = (
               type="text"
               defaultValue={exampleValue}
               placeholder={exampleValue}
-              className="inline-block px-1 mx-1"
+              className="inline-block px-1 mx-1 border border-gray-300 rounded focus:outline-none focus:border-[#25D366] text-sm"
               style={{ width: `${calculateInputWidth(exampleValue)}px` }}
+              onChange={(e) => onInputChange(`body_${varIndex}`, e.target.value)}
             />
           );
         }
-  
+
         // Process markdown
         if (part.startsWith('**') && part.endsWith('**')) {
           return <strong key={idx}>{part.slice(2, -2)}</strong>;
@@ -166,14 +169,14 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps> = (
         if (part.startsWith('`') && part.endsWith('`')) {
           return <code key={idx}>{part.slice(1, -1)}</code>;
         }
-  
+
         return <span key={idx}>{part}</span>;
       });
     };
-  
+
     // Split text by newlines and create multiple paragraphs
     const paragraphs = text.split('\n').filter(Boolean);
-  
+
     return (
       <div className="text-gray-800 mb-4">
         {paragraphs.map((paragraph, idx) => (
@@ -185,16 +188,11 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps> = (
     );
   };
 
-
-
-  // Render Footer Component
   const renderFooter = (component: { type: string; text?: string }) => {
     if (component.type !== "FOOTER") return null;
-
     return <p className="text-[13px] text-gray-500 italic mb-2">{component.text}</p>;
   };
 
-  // Render Buttons Component
   const renderButtons = (component: { type: string; buttons: { text: string }[] }) => {
     if (component.type !== "BUTTONS") return null;
 
@@ -219,13 +217,9 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps> = (
           {template.components?.map((component, index) => (
             <div key={index} className="message-bubble">
               {renderHeader(component)}
-              {renderBody(component,index)}
+              {renderBody(component, index)}
               {renderFooter(component)}
-              {component.buttons && (
-                <div className="border-t border-gray-200 pt-3 mt-3">
-                  {renderButtons({ type: component.type, buttons: component.buttons.filter(button => button.text) })}
-                </div>
-              )}
+              {component.buttons && renderButtons({ type: component.type, buttons: component.buttons.filter(button => button && button.text) })}
             </div>
           ))}
         </div>

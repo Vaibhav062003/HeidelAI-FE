@@ -20,6 +20,7 @@ type TemplateBuildersProps ={
   setTemplates: React.Dispatch<React.SetStateAction<WhatsAppTemplate[]>>;
   searchTemplate: string;
   setSearchTemplate: React.Dispatch<React.SetStateAction<string>>;
+
 }
 
 // Helper function to format template name
