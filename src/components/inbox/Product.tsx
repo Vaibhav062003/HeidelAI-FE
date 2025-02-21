@@ -52,31 +52,29 @@ interface ProductsTabProps {
 
 const LoadingState = () => (
   <div className="p-3 mb-2 bg-white shadow-sm">
-          <div className="flex flex-col sm:flex-row gap-2 mb-4">
-        <div className="flex-1 relative">
-          <Input
-            placeholder="Search products..."
-            className="pl-8 pr-3 py-1.5 text-sm border-gray-300 focus:ring-1 focus:ring-blue-500"
-          />
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-        </div>
-        {/* Updated Add Product button with dropdown */}
-        <div className="relative">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="outline"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Add new product</TooltipContent>
-          </Tooltip>
-
-          
-        </div>
+    <div className="flex flex-col sm:flex-row gap-2 mb-4">
+      <div className="flex-1 relative">
+        <Input
+          placeholder="Search products..."
+          className="pl-8 pr-3 py-1.5 text-sm border-gray-300 focus:ring-1 focus:ring-blue-500"
+        />
+        <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
       </div>
+      {/* Updated Add Product button with dropdown */}
+      <div className="relative">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              variant="outline"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Add new product</TooltipContent>
+        </Tooltip>
+      </div>
+    </div>
     <div className="space-y-4">
       {[1, 2, 3, 4, 5, 6, 7].map((i) => (
         <div key={i} className="flex items-center gap-4 p-3 bg-white rounded-lg border border-gray-200">
@@ -125,9 +123,11 @@ const ProductsTab = ({ onProductSelect, selectedConversationId }: ProductsTabPro
       
       const data = await response.json();
 
-      if (!data || data['status'] !== 'success') {
-        throw new Error('Failed to fech products');
+      if (data['status'] == "error") {
+        setError('Failed to fech products');
+        return;
       }
+      setError("")
       console.log(data)
       setProducts(data['data']);
       setFilteredProducts(data['data']);
@@ -193,7 +193,7 @@ const ProductsTab = ({ onProductSelect, selectedConversationId }: ProductsTabPro
 
   // Filter products when search or category changes
   useEffect(() => {
-    const filtered = products.filter((product) => {
+    const filtered = products?.filter((product) => {
       const matchesSearch = product.name
         .toLowerCase()
         .includes(searchProduct.toLowerCase());
@@ -216,11 +216,37 @@ const ProductsTab = ({ onProductSelect, selectedConversationId }: ProductsTabPro
 
   if (error) {
     return (
+      <div className="p-3 h-screen mb-2 bg-white shadow-sm">
+
+      <div className="flex flex-col sm:flex-row gap-2 mb-4">
+      <div className="flex-1 relative">
+        <Input
+          placeholder="Search products..."
+          className="pl-8 pr-3 py-1.5 text-sm border-gray-300 focus:ring-1 focus:ring-blue-500"
+        />
+        <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+      </div>
+      {/* Updated Add Product button with dropdown */}
+      <div className="relative">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              variant="outline"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Add new product</TooltipContent>
+        </Tooltip>
+      </div>
+    </div>
       <div className="p-4 my-4 text-red-500 bg-white rounded-lg border border-red-200">
         <div className="flex items-center gap-2">
           <AlertTriangle className="h-5 w-5" />
           <p className="text-sm">Failed fetch products</p>
         </div>
+      </div>
       </div>
     );
   }
