@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-interface Metadata {
+interface Product {
+  id: string;
   category: string;
   description: string;
   images: string;
@@ -25,12 +26,6 @@ interface Metadata {
   sale_price: string; // Use `number` if parsed as numeric values
   slug: string;
   stock_quantity: number;
-}
-
-interface Product {
-  id: string;
-  category: string;
-  metadata: Metadata;
 }
 
 type MetadataValue = string | number | boolean;
@@ -59,7 +54,7 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
       icon: <Tag className="h-5 w-5" />,
       fields: [
         { key: "regular_price", label: "Regular Price" },
-        { key: "sale_price", label: "Sale Price", condition: product.metadata.on_sale },
+        { key: "sale_price", label: "Sale Price", condition: product.on_sale },
         { key: "price", label: "Current Price" },
       ],
     },
@@ -86,20 +81,20 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
         <div className="flex justify-between items-start mb-6">
           <div className="flex items-center gap-4">
             <img
-              src={product.metadata.images}
-              alt={product.metadata.name}
+              src={product.images}
+              alt={product.name}
               className="w-20 h-20 object-cover rounded-lg border"
             />
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-1">
-                {product.metadata.name}
+                {product.name}
               </h2>
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-sm">
                   {product.category}
                 </Badge>
                 <span className="text-sm text-gray-500">
-                  ID: {product.metadata.product_id}
+                  ID: {product.product_id}
                 </span>
               </div>
             </div>
@@ -119,8 +114,8 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
             {/* Product Image */}
             <div className="border rounded-lg overflow-hidden">
               <img
-                src={product.metadata.images}
-                alt={product.metadata.name}
+                src={product.images}
+                alt={product.name}
                 className="w-full h-48 object-contain bg-gray-50"
               />
             </div>
@@ -132,19 +127,19 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">SKU:</span>
                   <span className="font-medium text-gray-900">
-                    {product.metadata.product_id}
+                    {product.product_id}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Slug:</span>
                   <span className="font-medium text-gray-900 text-xs">
-                    {product.metadata.slug}
+                    {product.slug}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Permalink:</span>
                   <a
-                    href={product.metadata.permalink}
+                    href={product.permalink}
                     target="_blank"
                     rel="noopener"
                     className="text-blue-600 hover:underline text-xs"
@@ -167,13 +162,13 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Stock Quantity:</span>
                   <span className="font-medium text-gray-900">
-                    {product.metadata.stock_quantity}
+                    {product.stock_quantity}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Purchasable:</span>
-                  <Badge variant={product.metadata.purchasable === 'true' ? "default" : "destructive"}>
-                    {product.metadata.purchasable === 'true' ? "Available" : "Available"}
+                  <Badge variant={product.purchasable === 'true' ? "default" : "destructive"}>
+                    {product.purchasable === 'true' ? "Available" : "Available"}
                   </Badge>
                 </div>
               </div>
@@ -186,19 +181,19 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Regular Price:</span>
                   <span className="font-medium text-gray-900">
-                    ₹{product.metadata.regular_price}
+                    ₹{product.regular_price}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Sale Price:</span>
                   <span className="font-medium text-gray-900">
-                    ₹{product.metadata.sale_price}
+                    ₹{product.sale_price}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Current Price:</span>
                   <span className="font-medium text-gray-900">
-                    ₹{product.metadata.price}
+                    ₹{product.price}
                   </span>
                 </div>
               </div>

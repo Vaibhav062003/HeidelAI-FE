@@ -37,7 +37,8 @@ import { WhatsAppTemplate } from "../types/template";
 import TemplateBuilders from "./TemplateBuilders";
 import { WhatsAppTemplateDialog } from "./WhatsAppTemplateDialog";
 
-interface Metadata {
+interface Product {
+  id: string;
   category: string;
   description: string;
   images: string;
@@ -51,12 +52,6 @@ interface Metadata {
   sale_price: string; // Use `number` if parsed as numeric values
   slug: string;
   stock_quantity: number;
-}
-
-interface Product {
-  id: string;
-  category: string;
-  metadata: Metadata;
 }
 
 type PlatformType = "pinecone" | "shopify" | "other";
@@ -75,11 +70,6 @@ interface SidebarProps {
 }
 
 const Sidebar = ({
-  // templates = [
-  //   { id: "1", title: "Order Status Update", category: "Support" },
-  //   { id: "2", title: "Product Information", category: "Sales" },
-  //   { id: "3", title: "Welcome Message", category: "Greeting" },
-  // ],
   selectedConversationId,
   analytics = {
     responseTime: "2m 30s",
@@ -134,8 +124,8 @@ const Sidebar = ({
   useEffect(() => {
     const filtered = products.filter((product: Product) => {
       const matchesSearch =
-        product.metadata.name &&
-        product.metadata.name
+        product.name &&
+        product.name
           .toLowerCase()
           .includes(searchProduct.toLowerCase());
   
@@ -320,8 +310,8 @@ const Sidebar = ({
             )}
           </TabsContent>
 
-          <TabsContent className="h-full" value="products">
-            <ProductsTab onProductSelect={(product: Product) => setSelectedProduct(product)} />
+          <TabsContent className="max-h-screen" value="products">
+            <ProductsTab selectedConversationId={selectedConversationId} onProductSelect={(product: Product) => setSelectedProduct(product)} />
           </TabsContent>
 
           <TabsContent value="analytics" className="p-4">
@@ -354,6 +344,7 @@ const Sidebar = ({
             </div>
           </TabsContent>
           </Tabs>
+
         {selectedProduct && (
           <ProductPreview
             product={selectedProduct}

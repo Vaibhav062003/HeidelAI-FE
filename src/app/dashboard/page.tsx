@@ -143,7 +143,7 @@ export default function DashboardPage() {
             <TabsContent value="inbox" className="flex-1 flex overflow-hidden h-full m-0">
             <div className="flex w-full">
               {/* Conversation List - Fixed width */}
-              <div className="w-[320px] min-w-[280px] border-r border-gray-200">
+              <div className="w-[290px] min-w-[280px] border-r border-gray-200">
                 <ConversationList
                   selectedConversationId={selectedConversationId}
                   onConversationSelect={setSelectedConversationId}
