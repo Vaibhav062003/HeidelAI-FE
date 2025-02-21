@@ -48,6 +48,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'pagedone.io',
       },
+      {
+        protocol: 'https',
+        hostname: 'egeniestores.com',
+      },
     ],
   }
   

@@ -8,10 +8,30 @@ import {
   ShoppingCart,
   Link2,
   Share2,
+  ExternalLink,
+  Copy,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import {toast} from 'sonner'
 
-interface Metadata {
+
+
+interface Product {
+  id: string;
   category: string;
   description: string;
   images: string;
@@ -27,210 +47,182 @@ interface Metadata {
   stock_quantity: number;
 }
 
-interface Product {
-  id: string;
-  category: string;
-  metadata: Metadata;
-}
-
 type MetadataValue = string | number | boolean;
 
 interface ProductPreviewProps {
   product: Product;
   onClose: () => void;
+  onShare: (product: Product) => void; 
+  open: boolean;
 }
 
 
 const ProductPreview: React.FC<ProductPreviewProps> = ({
   product,
   onClose,
+  onShare,
+  open
 }) => {
-  const fieldGroups = [
-    {
-      title: "Product Information",
-      icon: <Package className="h-5 w-5" />,
-      fields: [
-        { key: "name", label: "Product Name" },
-        { key: "product_id", label: "SKU/ID" },
-      ],
-    },
-    {
-      title: "Pricing",
-      icon: <Tag className="h-5 w-5" />,
-      fields: [
-        { key: "regular_price", label: "Regular Price" },
-        { key: "sale_price", label: "Sale Price", condition: product.metadata.on_sale },
-        { key: "price", label: "Current Price" },
-      ],
-    },
-    {
-      title: "Inventory",
-      icon: <Warehouse className="h-5 w-5" />,
-      fields: [
-        { key: "stock_quantity", label: "Stock Available" },
-        { key: "purchasable", label: "Status" },
-      ],
-    },
-  ];
-
-  const formatValue = (key: string, value: MetadataValue): string => {
-    if (key === "purchasable") return String(value) === "true" ? "In Stock" : "Out of Stock";
-    if (key.includes("price")) return `₹${value}`;
-    return value?.toString() || "N/A";
-  };
-
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-lg shadow-xl w-full min-w-[500px] max-w-xl p-6 relative">
-        {/* Header Section */}
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex items-center gap-4">
-            <img
-              src={product.metadata.images}
-              alt={product.metadata.name}
-              className="w-20 h-20 object-cover rounded-lg border"
-            />
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-1">
-                {product.metadata.name}
-              </h2>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-sm">
-                  {product.category}
-                </Badge>
-                <span className="text-sm text-gray-500">
-                  ID: {product.metadata.product_id}
-                </span>
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-         {/* Main Content */}
-        <div className="grid grid-cols-2 gap-6 mb-6">
-          {/* Left Column */}
-          <div className="space-y-6">
-            {/* Product Image */}
-            <div className="border rounded-lg overflow-hidden">
-              <img
-                src={product.metadata.images}
-                alt={product.metadata.name}
-                className="w-full h-48 object-contain bg-gray-50"
-              />
-            </div>
-
-            {/* Product Identifiers */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-gray-700">Identifiers</h3>
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">SKU:</span>
-                  <span className="font-medium text-gray-900">
-                    {product.metadata.product_id}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Slug:</span>
-                  <span className="font-medium text-gray-900 text-xs">
-                    {product.metadata.slug}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Permalink:</span>
-                  <a
-                    href={product.metadata.permalink}
-                    target="_blank"
-                    rel="noopener"
-                    className="text-blue-600 hover:underline text-xs"
-                  >
-                    View Link
-                  </a>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+            {/* <Package className="h-5 w-5" /> */}
+            Product Preview
+          </DialogTitle>
+        </DialogHeader>
+        
+        <ScrollArea className="max-h-[80vh]">
+          <div className="flex flex-col space-y-6 pr-4">
+            {/* Main Product Section */}
+            <div className="flex gap-6">
+              {/* Left: Image */}
+              <div className="w-1/2">
+                <div className="aspect-square relative rounded-lg border overflow-hidden">
+                  <img
+                    src={product.images}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {product.on_sale === 'true' && (
+                    <Badge className="absolute top-2 left-2" variant="destructive">
+                      On Sale
+                    </Badge>
+                  )}
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* Pricing Section - Keep existing */}
+              {/* Right: Basic Info */}
+              <div className="w-1/2 space-y-4">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <h2 className="text-xl font-normal">
+                      {/* {product.name.length > 50 
+                        ? `${product.name.substring(0, 50)}...` 
+                        : product.name} */}
+                        {product.name}
+                    </h2>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[300px] break-words">
+                    <p>{product.name}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
 
-            {/* Inventory & Availability */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-gray-700">Stock Details</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Stock Quantity:</span>
-                  <span className="font-medium text-gray-900">
-                    {product.metadata.stock_quantity}
-                  </span>
+                {/* Pricing */}
+                <div className="space-y-2">
+                  <div className="flex items-baseline gap-2">
+                    {product.sale_price ? (
+                      <>
+                        <span className="text-2xl font-bold text-green-600">
+                          ₹{product.sale_price}
+                        </span>
+                        <span className="text-sm text-gray-500 line-through">
+                          ₹{product.regular_price}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-2xl font-bold">
+                        ₹{product.regular_price}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Purchasable:</span>
-                  <Badge variant={product.metadata.purchasable === 'true' ? "default" : "destructive"}>
-                    {product.metadata.purchasable === 'true' ? "Available" : "Available"}
+
+                {/* Stock Status */}
+                <div className="flex items-center gap-2">
+                  <Warehouse className="h-4 w-4 text-gray-500" />
+                  <Badge variant={product.purchasable === 'true' ? "success" : "destructive"}>
+                    {product.purchasable === 'true' 
+                      ? `In Stock (${product.stock_quantity})` 
+                      : "Out of Stock"}
                   </Badge>
                 </div>
+
+                {/* Quick Info Grid */}
+                <div className="grid grid-cols-2 gap-4 pt-4">
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-500 flex items-center gap-1">
+                      <Tag className="h-4 w-4" />
+                      Category
+                    </p>
+                    <p className="font-medium">{product.category}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-500 flex items-center gap-1">
+                      <ShoppingCart className="h-4 w-4" />
+                      Product ID
+                    </p>
+                    <p className="font-medium">{product.product_id}</p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Price Details */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-gray-700">Price Breakdown</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Regular Price:</span>
-                  <span className="font-medium text-gray-900">
-                    ₹{product.metadata.regular_price}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Sale Price:</span>
-                  <span className="font-medium text-gray-900">
-                    ₹{product.metadata.sale_price}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Current Price:</span>
-                  <span className="font-medium text-gray-900">
-                    ₹{product.metadata.price}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Section */}
-        <div className="border-t pt-5">
-          <div className="flex flex-col gap-3">
-            <button className="w-full flex items-center justify-center gap-2 py-3 px-4 
-              bg-blue-50 border border-blue-200 rounded-lg text-blue-600 hover:bg-blue-100 
-              transition-colors">
-              <Share2 className="h-5 w-5" />
-              <span className="font-medium">Share in Chat</span>
-            </button>
-            
-            {/* {product.metadata.url && (
-              <a
-                href={product.metadata.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-center text-sm text-gray-600 hover:text-gray-900 underline"
-              >
-                View full product page ↗
-              </a>
-            )} */}
-          </div>
-        </div>
-      </div>
+            {/* Additional Details */}
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+            <div className="space-y-2">
+    <p className="text-sm text-gray-500 flex items-center gap-1">
+      <Link2 className="h-4 w-4" />
+      Product Link
+    </p>
+    <div className="flex gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        className="flex items-center gap-1"
+        onClick={() => window.open(product.permalink, '_blank')}
+      >
+        <ExternalLink className="h-4 w-4" />
+        View
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        className="flex items-center gap-1"
+        onClick={() => {
+          navigator.clipboard.writeText(product.permalink);
+          toast.success("Link copied to clipboard");
+        }}
+      >
+        <Copy className="h-4 w-4" />
+        Copy
+      </Button>
     </div>
+  </div>
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500 flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  Last Updated
+                </p>
+                <p className="font-medium text-sm">
+                  {new Date().toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+
+        {/* Share Button - Fixed at bottom */}
+        <div className="pt-4 mt-4 flex border-t justify-end">
+          <Button 
+            onClick={() => {
+              onShare(product);
+              onClose();
+            }}
+            variant="outline"
+          >
+            <Share2 className="h-5 w-5" />
+            <span className="font-medium">Share in Chat</span>
+          </Button>
+          
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
+
 
 export default ProductPreview;

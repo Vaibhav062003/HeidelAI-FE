@@ -66,7 +66,7 @@ const ConversationPreview = ({
                 <User2 className="h-4 w-4 text-green-500" />
               ) : null} */}
             </div>
-            <span className="text-sm text-gray-500">{getRelativeTime(timestamp)}</span>
+            <span className="text-xs text-gray-500">{getRelativeTime(timestamp)}</span>
           </div>
           <p className="text-sm text-gray-600 truncate">{lastMessage}</p>
           <div className="flex items-center gap-2 mt-2">
