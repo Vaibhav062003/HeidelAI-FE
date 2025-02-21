@@ -32,7 +32,22 @@ import {
 import { EmojiProvider } from '@/components/EmojiProvider';
 
 
-
+interface Product {
+  id: string;
+  category: string;
+  description: string;
+  images: string;
+  name: string;
+  on_sale: string; // Use boolean if the data contains `true/false` instead of `"True"/"False"`
+  permalink: string;
+  price: number;
+  product_id: number;
+  purchasable: string; // Use boolean if the data contains `true/false`
+  regular_price: string; // Use `number` if parsed as numeric values
+  sale_price: string; // Use `number` if parsed as numeric values
+  slug: string;
+  stock_quantity: number;
+}
 
 // const Home = ({
 //   selectedChannels = ["all"],
@@ -52,6 +67,8 @@ export default function DashboardPage() {
     useState<string>("");
   const [isAIEnabled, setIsAIEnabled] = useState(false);
   const [showContact, setShowContact] = useState(false);
+  const [sharedProduct, setSharedProduct] = useState<Product | null>(null);
+
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -152,16 +169,21 @@ export default function DashboardPage() {
 
               {/* Chat View - Flexible width */}
               <div className="flex-1 flex flex-col h-full min-w-[400px]">
-                <ChatView selectedConversationId={selectedConversationId} />
+              <ChatView 
+                selectedConversationId={selectedConversationId} 
+                sharedProduct={sharedProduct}
+                onClearSharedProduct={() => setSharedProduct(null)}
+              />              
               </div>
 
               {/* Right Sidebar - Fixed width */}
               <div className="w-[360px] min-w-[280px] border-l border-gray-200">
                 {selectedConversationId && (
                   <Sidebar 
-                    selectedConversationId={selectedConversationId}
-                    onConversationSelect={setSelectedConversationId} 
-                  />
+                  selectedConversationId={selectedConversationId}
+                  onConversationSelect={setSelectedConversationId}
+                  onShareProduct={(product) => setSharedProduct(product)}
+                />
                 )}
                 {showTeamPanel && (
                   <div className="mt-4">

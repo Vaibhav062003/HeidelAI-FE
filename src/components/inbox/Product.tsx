@@ -48,6 +48,7 @@ interface Product {
 interface ProductsTabProps {
   selectedConversationId?: string;
   onProductSelect: (product: Product) => void;
+  onShareProduct: (product: Product) => void; // Add this line
 }
 
 const LoadingState = () => (
@@ -92,7 +93,11 @@ const LoadingState = () => (
   </div>
 );
 
-const ProductsTab = ({ onProductSelect, selectedConversationId }: ProductsTabProps) => {
+const ProductsTab = ({ 
+  onProductSelect, 
+  selectedConversationId,
+  onShareProduct 
+}: ProductsTabProps) => {
   const [searchProduct, setSearchProduct] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [products, setProducts] = useState<Product[]>([]);
@@ -364,17 +369,17 @@ const ProductsTab = ({ onProductSelect, selectedConversationId }: ProductsTabPro
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent parent div's click
-                        console.log("Share", product);
-                      }}
-                    >
-                      <Share2 className="h-4 w-4" />
-                    </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onShareProduct(product);
+                    }}
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
                   </TooltipTrigger>
                   <TooltipContent>Share product</TooltipContent>
                 </Tooltip>
@@ -383,20 +388,10 @@ const ProductsTab = ({ onProductSelect, selectedConversationId }: ProductsTabPro
           ))}
         </div>
 
-        {loading && (
-          <div className="text-center py-6 text-sm text-gray-500">
-            Loading products...
-          </div>
-        )}
-
         {!loading && !error && filteredProducts.length === 0 && (
           <div className="text-center py-6 text-sm text-gray-500">
             No products found matching your criteria
           </div>
-        )}
-
-        {error && (
-          <div className="text-center py-6 text-sm text-red-500">{error}</div>
         )}
       </ScrollArea>
 

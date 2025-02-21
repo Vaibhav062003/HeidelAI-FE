@@ -61,13 +61,15 @@ interface SidebarProps {
   onConversationSelect?: (id: string) => void;
   templates?: Array<{ id: string; title: string; category: string }>;
   products?: Array<Product>; // Update this line to use the main Product interface
-
+  onShareProduct: (product: Product) => void;
   analytics?: {
     responseTime: string;
     resolutionRate: string;
     customerSatisfaction: string;
   };
 }
+
+
 
 const Sidebar = ({
   selectedConversationId,
@@ -76,6 +78,7 @@ const Sidebar = ({
     resolutionRate: "94%",
     customerSatisfaction: "4.8/5",
   },
+  onShareProduct
 }: SidebarProps) => {
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
   const [searchTemplate, setSearchTemplate] = useState("");
@@ -311,7 +314,11 @@ const Sidebar = ({
           </TabsContent>
 
           <TabsContent className="max-h-screen" value="products">
-            <ProductsTab selectedConversationId={selectedConversationId} onProductSelect={(product: Product) => setSelectedProduct(product)} />
+          <ProductsTab 
+            selectedConversationId={selectedConversationId} 
+            onProductSelect={(product: Product) => setSelectedProduct(product)}
+            onShareProduct={onShareProduct}
+          />
           </TabsContent>
 
           <TabsContent value="analytics" className="p-4">
@@ -349,6 +356,11 @@ const Sidebar = ({
           <ProductPreview
             product={selectedProduct}
             onClose={() => setSelectedProduct(null)}
+            onShare={(product) => {
+              onShareProduct(product);
+              setSelectedProduct(null)
+            }}
+            open={!!selectedProduct}
           />
         )}
       </Card>

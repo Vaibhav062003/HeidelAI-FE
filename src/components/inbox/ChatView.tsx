@@ -62,6 +62,7 @@ import {
 import ReminderDialog from "./ReminderDialog";
 
 import '../../app/dashboard/dashboard.css';
+import Image from "next/image";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -74,6 +75,23 @@ interface ProductData {
   permalink: string;
   price: number;
   regular_price: string;
+}
+
+interface Product {
+  id: string;
+  category: string;
+  description: string;
+  images: string;
+  name: string;
+  on_sale: string; // Use boolean if the data contains `true/false` instead of `"True"/"False"`
+  permalink: string;
+  price: number;
+  product_id: number;
+  purchasable: string; // Use boolean if the data contains `true/false`
+  regular_price: string; // Use `number` if parsed as numeric values
+  sale_price: string; // Use `number` if parsed as numeric values
+  slug: string;
+  stock_quantity: number;
 }
 
 interface Reminder {
@@ -108,7 +126,9 @@ interface Message {
 }
 
 interface ChatViewProps {
-  selectedConversationId?: string;
+  selectedConversationId: string;
+  sharedProduct: Product | null;
+  onClearSharedProduct: () => void;
 }
 
 interface CartProductData {
@@ -226,6 +246,41 @@ const LoadingState = () => (
 //     return [];
 //   }
 // };
+
+
+const SharedProductPreview = ({ product, onRemove }: {
+  product: Product;
+  onRemove: () => void;
+}) => (
+  <div className="flex items-center w-fit gap-3 p-2 bg-gray-50 rounded-lg border border-gray-200 mb-2">
+    <div className="w-15 h-15 relative">
+      <Image
+        src={product.images}
+        alt={product.name}
+        height={80}
+        width={80}
+        className="rounded object-cover"
+      />
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-base font-medium text-gray-900 ">
+        {product.name.length > 50 
+          ? `${product.name.substring(0, 50)}...` 
+          : product.name}
+      </p>
+      <p className="text-sm text-gray-500">₹{product.price}</p>
+    </div>
+    <Button
+      variant="ghost"
+      size="sm"
+      className="h-8 w-8 p-0"
+      onClick={onRemove}
+    >
+      <X className="h-4 w-4" />
+    </Button>
+  </div>
+);
+
 
 const RemindersPopover = ({ 
   reminders, 
@@ -511,8 +566,10 @@ const FilePreview = ({
 // };
 
 
-const ChatView = ({
-  selectedConversationId,
+const ChatView = ({ 
+  selectedConversationId, 
+  sharedProduct, 
+  onClearSharedProduct 
 }: ChatViewProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
@@ -607,7 +664,45 @@ const ChatView = ({
     }
   };
   
+  const handleShareProduct = async (messageText: string, product: Product) => {
+    if (!selectedConversationId) return;
+
+    if (!messageText.trim()) {
+      toast.error("Cannot send empty message", {description: "Please add a message to send with the product"});
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const response = await fetch('https://egenie-whatsapp.koyeb.app/api/send_single_product', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          conversation_id: selectedConversationId,
+          product_id: product.product_id,
+          message: messageText.trim() || undefined // Only send message if not empty
+        }),
+        credentials: 'include'
+      });
   
+      if (!response.ok) {
+        throw new Error('Failed to share product');
+      }
+  
+      // Clear the message input and shared product
+      setMessage('');
+      onClearSharedProduct();
+      
+      toast.success('Product shared successfully');
+    } catch (error) {
+      console.error('Error sharing product:', error);
+      toast.error('Failed to share product');
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   const sendMessage = async () => {
     if (!message.trim() || !selectedConversationId || isSending) return;
@@ -1056,7 +1151,7 @@ const ChatView = ({
             const productInfo = message.content ? extractProductInfo(message.content) : null;
             const botProductInfo = message.content ? extractBotProductInfo(message.content) : null;
             const addressData = message.content ? extractAddressData(message.content) : null;
-
+            const agentProductInfo = message.content ? extractAgentProductInfo(message.content) : null;
             // console.log("productInfo", productInfo);
             // console.log("botProductInfo", botProductInfo);
             
@@ -1137,6 +1232,9 @@ const ChatView = ({
                   {botProductInfo && message.role === "ai" && (
                     <img className="w-80 rounded-lg border mb-2" src={botProductInfo[0].image_url}/>
                   )}
+                  {agentProductInfo && message.role === "ai" && (
+                    <img className="w-80 rounded-lg border mb-2" src={agentProductInfo[0].image_url}/>
+                  )}
 
 
 
@@ -1186,7 +1284,7 @@ const ChatView = ({
                   
 
                   
-                  {(message.type === "text" || !message.type) && !productInfo  && !botProductInfo && !extractCartData(message.content) && !checkAIMessage(message) && !addressData &&(
+                  {(message.type === "text" || !message.type) && !productInfo && !agentProductInfo  && !botProductInfo && !extractCartData(message.content) && !checkAIMessage(message) && !addressData &&(
                     <p>{message.content}</p>
                   )}
                   {(message.type === "text" || !message.type) && message.role === "ai" && checkAIMessage(message) && (
@@ -1221,6 +1319,32 @@ const ChatView = ({
                     
                     <span className="text-gray-200 text-sm"> <i>To contact us, simply type Live Agent </i></span>
                      </p>
+                  </>
+                  )}
+                  {(message.type === "text" || !message.type) && agentProductInfo && message.role === "ai" && (
+                    <>
+                    <p className="w-fit">
+                    <b>
+                      {agentProductInfo[0].name.slice(0, 40)}
+                      {agentProductInfo[0].name.length > 40 && (
+                        <>
+                          <br/>
+                          {agentProductInfo[0].name.slice(40)}
+                        </>
+                      )}
+                    </b><br/>  <br/> 
+                    <span className="text-white font-semibold">{agentProductInfo[0].sale_price}</span>
+                    {(!agentProductInfo[0].sale_price) && (
+                      <><span className="text-white font-semibold">{agentProductInfo[0].price}</span>  <br/>  <br/> </>
+                    )}
+                    {(agentProductInfo[0].sale_price) && (
+                      <><span className="text-gray-200 line-through text-sm ml-2">{agentProductInfo[0].price}</span> <br/>  <br/> </>
+                    )} 
+
+                    {extractAgentProductText(message.content) && (
+                            <span className="block mb-2">{extractAgentProductText(message.content)}</span>
+                          )}
+                    </p>
                   </>
                   )}
 
@@ -1312,9 +1436,9 @@ const ChatView = ({
             <div ref={lastMessageRef} />
         </ScrollArea>
 
-        <div className="p-4 border-t">
-          <div className="flex gap-2 mb-4 overflow-x-auto">
-            {/* {suggestedResponses.map((response, index) => (
+        <div className={` p-4 border-t `}>
+          {/* <div className="flex gap-2 mb-4 overflow-x-auto">
+            {suggestedResponses.map((response, index) => (
               <Button
                 key={index}
                 variant="secondary"
@@ -1323,8 +1447,17 @@ const ChatView = ({
               >
                 {response}
               </Button>
-            ))} */}
-          </div>
+            ))}
+          </div> */}
+
+          {sharedProduct && (
+            <div className="flex justify-start ml-36 mr-12">
+              <SharedProductPreview 
+                product={sharedProduct} 
+                onRemove={onClearSharedProduct} 
+              />
+              </div>
+            )}
 
           <div className="flex items-center gap-2">
           <Popover>
@@ -1411,16 +1544,20 @@ const ChatView = ({
               </TooltipContent>
             </Tooltip>
 
+            
             <div className="flex-1 relative">
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="w-full"
-              onKeyPress={(e) => {
+              placeholder={sharedProduct ? "Add a message about this product..." : "Type a message"}
+              onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  sendMessage();
+                  if (sharedProduct) {
+                    handleShareProduct(message, sharedProduct);
+                  } else {
+                    sendMessage();
+                  }
                 }
               }}
             />
@@ -1457,8 +1594,14 @@ const ChatView = ({
               <TooltipTrigger asChild>
               <Button 
                 size="icon" 
-                onClick={sendMessage}
-                disabled={isSending || !message.trim()}
+                onClick={() => {
+                  if (sharedProduct) {
+                    handleShareProduct(message, sharedProduct);
+                  } else {
+                    sendMessage();
+                  }
+                }}
+                disabled={isSending || (!message.trim() && !sharedProduct)}
               >
                 {isSending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -1581,6 +1724,36 @@ const extractBotProductInfo = (content: string) => {
     return null;
   } catch (error) {
     console.error('Error parsing product info:', error);
+    return null;
+  }
+};
+
+const extractAgentProductInfo = (content: string) => {
+  try {
+    // Extract product info between =(...)]
+    const match = content.match(/send_product_request_from_agent=\(.*?\)=(\[.*?\])/);
+    if (match) {
+      const jsonStr = match[1].replace(/'/g, '"');
+      return JSON.parse(jsonStr);
+    }
+    return null;
+  } catch (error) {
+    console.error('Error parsing agent product info:', error);
+    return null;
+  }
+};
+
+const extractAgentProductText = (content: string): string | null => {
+  try {
+    // Extract text between parentheses
+    const match = content.match(/send_product_request_from_agent=\((.*?)\)=/);
+    if (match && match[1]) {
+      console.log("match", match[1]);
+      return match[1];
+    }
+    return null;
+  } catch (error) {
+    console.error('Error parsing agent product text:', error);
     return null;
   }
 };
