@@ -175,6 +175,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
     // Set the file_handle as the header content
     setHeaderContent(fileHandle);
+    
 
     console.log('S3 URL:', s3Url);
     console.log('File Handle:', fileHandle);

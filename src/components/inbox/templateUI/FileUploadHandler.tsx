@@ -82,6 +82,7 @@ const FileUploadHandler: React.FC<FileUploadProps> = ({
       // Pass both S3 URL and file_handle to the parent component
       setPreviewFile(s3PublicUrl);
       setHeaderContent(fileHandle);
+      onUploadComplete(s3PublicUrl, fileHandle);
     } catch (err) {
       console.error("Upload error:", err);
       setError(err instanceof Error ? err.message : "Failed to upload file");

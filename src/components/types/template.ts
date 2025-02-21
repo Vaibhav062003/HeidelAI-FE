@@ -2,6 +2,7 @@ export interface WhatsAppTemplate {
   id?: string; 
   type: string;
   name: string;
+  code: string;
   status: 'APPROVED' | 'PENDING' | 'REJECTED';
   category: 'MARKETING' | 'UTILITY' | 'AUTHENTICATION';
   language: string;

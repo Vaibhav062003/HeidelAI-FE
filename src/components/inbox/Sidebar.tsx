@@ -33,9 +33,11 @@ import {
   ExternalLink,
 } from "lucide-react";
 import ConversationSummary from "./ConversationSummary";
-import { WhatsAppTemplate } from "../types/template";
+
+
 import TemplateBuilders from "./TemplateBuilders";
 import { WhatsAppTemplateDialog } from "./WhatsAppTemplateDialog";
+import { WhatsAppTemplate } from "../types/template";
 
 interface Metadata {
   category: string;
@@ -92,14 +94,14 @@ const Sidebar = ({
   const [searchProduct, setSearchProduct] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showOptions, setShowOptions] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformType | "">("");
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
 
   // Fetch products from API
@@ -203,7 +205,7 @@ const Sidebar = ({
 
       
     <TooltipProvider>
-      {selectedTemplate && (
+      {selectedTemplate && selectedConversationId && (
         <WhatsAppTemplateDialog
         template={selectedTemplate}
         isOpen={!!selectedTemplate}
@@ -213,6 +215,8 @@ const Sidebar = ({
           console.log("Sending template:", selectedTemplate);
           setSelectedTemplate(null);
     }}
+        selectedConversationId={selectedConversationId}
+        languageCode={selectedTemplate.language}
       />
       )}
      
@@ -263,7 +267,6 @@ const Sidebar = ({
                 setTemplates={setTemplates}
                 searchTemplate={searchTemplate}
                 setSearchTemplate={setSearchTemplate}
-                
                 />
               </div>
             ) : (

@@ -444,7 +444,7 @@ const handleNext = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewFile(reader.result as string);
-        setHeaderContent(file.name);
+        setHeaderContent(file.name)
       };
       reader.readAsDataURL(file);
     }
@@ -547,7 +547,7 @@ const sendPostRequest = async (data:any) => {
       console.error("Error during POST request:", error.message);
     } else {
       console.error("Error during POST request:", error);
-    }
+    } 
   }
 };
 
