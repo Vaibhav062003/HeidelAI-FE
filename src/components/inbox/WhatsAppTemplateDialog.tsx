@@ -82,7 +82,7 @@ export const WhatsAppTemplateDialog = ({
     } catch (error) {
       console.error("Error sending message:", error);
     }
-    
+  
     onClose();
   };
 

@@ -96,6 +96,7 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
             if (response.ok) {
               const data = await response.json();
               setMediaId(data.media_id); // Save the media_id from the response
+              console.log("Uploaded media_id:", data.media_id); // Log the media_id to the console
             } else {
               console.error("Failed to upload media");
             }
