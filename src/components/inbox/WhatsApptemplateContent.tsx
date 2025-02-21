@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { WhatsAppTemplate } from "../types/template";
 import { ScrollArea } from "../ui/scroll-area";
 import { FileText, MapPin } from "lucide-react";
-import { Upload, X } from "lucide-react";
+import { Upload, X, Loader2 } from "lucide-react";
 
 interface WhatsAppTemplateContentProps {
   template: WhatsAppTemplate;
@@ -16,6 +16,8 @@ interface WhatsAppTemplateContentProps {
 export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { onInputChange: (key: string, value: string) => void }> = ({ template, onInputChange, languageCode, setMediaId, setPreviewFile }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [localPreviewFile, setLocalPreviewFile] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+const [error, setError] = useState<string | null>(null);
 
   const calculateInputWidth = (text: string, fontSize: number = 14): number => {
     const span = document.createElement("span");
@@ -68,6 +70,49 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
     });
   };
 
+  
+
+  const processText = (text: string, exampleValues: string[] = [], isHeader: boolean = false) => {
+    const parts = text.split(/(\{\{\d+\}\})|(\*\*.*?\*\*)|(_.*?_)|(~~.*?~~)|(`.*?`)/g);
+  
+    return parts.map((part, idx) => {
+      if (!part) return null;
+  
+      const varMatch = part.match(/\{\{(\d+)\}\}/);
+      if (varMatch) {
+        const varIndex = parseInt(varMatch[1]) - 1;
+        const exampleValue = exampleValues?.[varIndex] || '';
+        return (
+          <input
+            key={idx}
+            type="text"
+            defaultValue={exampleValue}
+            placeholder={exampleValue}
+            className={`inline-block px-1 mx-1 border border-gray-300 rounded focus:outline-none focus:border-[#25D366] text-sm ${isHeader ? 'font-semibold' : ''}`}
+            style={{ width: `${isHeader ? calculateHeaderInputWidth(exampleValue) : calculateInputWidth(exampleValue)}px` }}
+            onChange={(e) => onInputChange(`${isHeader ? 'header' : 'body'}_${varIndex}`, e.target.value)}
+          />
+        );
+      }
+  
+      // Process markdown
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={idx}>{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith('_') && part.endsWith('_')) {
+        return <em key={idx}>{part.slice(1, -1)}</em>;
+      }
+      if (part.startsWith('~~') && part.endsWith('~~')) {
+        return <del key={idx}>{part.slice(2, -2)}</del>;
+      }
+      if (part.startsWith('`') && part.endsWith('`')) {
+        return <code key={idx}>{part.slice(1, -1)}</code>;
+      }
+  
+      return <span key={idx}>{part}</span>;
+    });
+  };
+  
   const renderHeader = (component: { type: string; text?: string; format?: string; example?: { header_text?: string[], header_handle?: string[] } }) => {
     if (component.type !== "HEADER") return null;
   
@@ -75,33 +120,39 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
     const exampleValues = component.example?.header_text;
   
     // Render media upload option if present
-    if (component.format) {
+    if (component.format === "IMAGE" || component.format === "VIDEO" || component.format === "DOCUMENT") {
       const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
           const fileUrl = URL.createObjectURL(file);
           setLocalPreviewFile(fileUrl);
           setPreviewFile(fileUrl);
-      
+          setIsUploading(true);
+          setError(null);
+  
           // Upload the file to the endpoint
           const formData = new FormData();
           formData.append("file", file);
-      
+  
           try {
             const response = await fetch("https://egenie-whatsapp.koyeb.app/api/media/upload", {
               method: "POST",
               body: formData,
             });
-      
+  
             if (response.ok) {
               const data = await response.json();
               setMediaId(data.media_id); // Save the media_id from the response
               console.log("Uploaded media_id:", data.media_id); // Log the media_id to the console
             } else {
               console.error("Failed to upload media");
+              setError("Failed to upload media");
             }
           } catch (error) {
             console.error("Error uploading media:", error);
+            setError("Error uploading media");
+          } finally {
+            setIsUploading(false);
           }
         }
       };
@@ -117,13 +168,42 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
       return (
         <div className="mb-4">
           {!localPreviewFile ? (
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center justify-center w-full px-4 py-2 bg-gray-400 text-white rounded-md text-sm hover:bg-[#128C7E] transition-colors"
-            >
-              <Upload className="w-5 h-5 mr-2" />
-              Upload {component.format.toLowerCase()}
-            </button>
+            <div className="relative">
+              <input
+                type="file"
+                onChange={handleFileChange}
+                accept={component.format === "IMAGE" ? "image/*" : component.format === "VIDEO" ? "video/*" : component.format === "DOCUMENT" ? "application/pdf" : ""}
+                className="hidden"
+                id="file-upload"
+                disabled={isUploading}
+                ref={fileInputRef}
+              />
+              <label
+                htmlFor="file-upload"
+                className={`
+                  flex flex-col items-center justify-center p-6 
+                  border-2 border-dashed rounded-lg cursor-pointer
+                  transition-colors duration-200
+                  ${isUploading ? 'bg-gray-50' : 'hover:bg-gray-50'}
+                `}
+                aria-label="Upload file"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-8 h-8 mb-2 animate-spin text-blue-500" />
+                    <p className="text-sm text-gray-600">Uploading...</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                    <p className="text-sm text-gray-600">Click to upload file (images, PDFs, videos)</p>
+                  </>
+                )}
+              </label>
+              {error && (
+                <p className="mt-2 text-sm text-red-600">{error}</p>
+              )}
+            </div>
           ) : (
             <div className="relative">
               {component.format === "IMAGE" && (
@@ -160,12 +240,6 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
                   </a>
                 </div>
               )}
-              {component.format === "LOCATION" && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="text-gray-500" size={16} />
-                  <span>{text || "Current Location"}</span>
-                </div>
-              )}
               <button
                 onClick={handleRemoveFile}
                 className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors"
@@ -174,11 +248,17 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
               </button>
             </div>
           )}
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="hidden"
-            onChange={handleFileChange}
+        </div>
+      );
+    }
+  
+    if (component.format === "LOCATION") {
+      return (
+        <div className="mb-4">
+          <textarea
+            className="w-full p-2 border border-gray-300 rounded-md"
+            placeholder="Enter location address"
+            onChange={(e) => onInputChange('header_location', e.target.value)}
           />
         </div>
       );
@@ -186,7 +266,7 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
   
     return (
       <h3 className="text-[16px] font-semibold text-[#1a1a1a] mb-3">
-        {renderVariableText(text, exampleValues || [], true)}
+        {processText(text, exampleValues || [], true)}
       </h3>
     );
   };
