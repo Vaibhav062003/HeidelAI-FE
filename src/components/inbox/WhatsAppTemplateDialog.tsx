@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { WhatsAppTemplate } from "../types/template";
 import { WhatsAppTemplateContent } from "./WhatsApptemplateContent";
-import { Upload, X } from "lucide-react";
+import { Share2, Upload, X } from "lucide-react";
 
 interface WhatsAppTemplateDialogProps {
   template: WhatsAppTemplate | null;
@@ -82,7 +82,7 @@ export const WhatsAppTemplateDialog = ({
     } catch (error) {
       console.error("Error sending message:", error);
     }
-  
+    console.log("Payload:",JSON.stringify(payload));
     onClose();
   };
 
@@ -156,17 +156,6 @@ export const WhatsAppTemplateDialog = ({
       });
     }
 
-    // Footer Component
-    if (template.components?.some((c) => c.type === "FOOTER")) {
-      const footerComponent = template.components.find((c) => c.type === "FOOTER");
-      const footerText = footerComponent?.text || "";
-
-      components.push({
-        "type": "footer",
-        "text": footerText,
-      });
-    }
-
     // Buttons Component
     if (template.components?.some((c) => c.type === "BUTTONS")) {
       const buttonsComponent = template.components.find((c) => c.type === "BUTTONS");
@@ -235,6 +224,7 @@ export const WhatsAppTemplateDialog = ({
         </div>
         <div className="flex justify-end mt-2">
           <Button
+            variant="outline"
             onClick={() => {
               if (template && selectedConversationId) {
                 const payload = constructPayload(template, selectedConversationId);
@@ -242,7 +232,8 @@ export const WhatsAppTemplateDialog = ({
               }
             }}
           >
-            Share in Chat
+            <Share2 className="h-5 w-5" />
+            <span className="font-medium">Share in Chat</span>
           </Button>
         </div>
       </DialogContent>

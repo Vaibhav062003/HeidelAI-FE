@@ -165,9 +165,8 @@ const Sidebar = ({
 
   useEffect(() => {
     const loadTemplates = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-  
         const response = await fetch('/api/fetchTemplate');
         console.log("Response:", response);
   
@@ -291,15 +290,21 @@ const Sidebar = ({
                     <TooltipContent>Create new template</TooltipContent>
                   </Tooltip>
                 </div>
-                <ScrollArea className="h-screen">
-                    {loading ?(
-                      <div className="flex items-center justify-center h-20">
-                        <p>Loading templates...</p>
+                <ScrollArea className="h-[calc(100vh-160px)]"> {/* Adjusted height */}
+                    {loading===true ? (
+                      <div className="flex items-center justify-center h-40 w-full">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                          <p className="text-sm text-gray-600">Loading templates...</p>
+                        </div>
                       </div>
-                    ): error ?(
-                      <div className="flex items-center justify-center h-20 text-red-500">
-                      {error}
-                    </div>
+                    ) : error ? (
+                      <div className="flex items-center justify-center h-40 text-red-500">
+                        <div className="flex flex-col items-center gap-2">
+                          <X className="h-8 w-8" />
+                          <p>{error}</p>
+                        </div>
+                      </div>
                     ):(
                       filteredTemplates.map((template) => (
                         <Card 

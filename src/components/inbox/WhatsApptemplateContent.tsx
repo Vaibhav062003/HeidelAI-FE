@@ -5,6 +5,7 @@ import { WhatsAppTemplate } from "../types/template";
 import { ScrollArea } from "../ui/scroll-area";
 import { FileText, MapPin } from "lucide-react";
 import { Upload, X, Loader2 } from "lucide-react";
+import { Button } from "../ui/button";
 
 interface WhatsAppTemplateContentProps {
   template: WhatsAppTemplate;
@@ -344,12 +345,19 @@ const [error, setError] = useState<string | null>(null);
     return (
       <div className="flex flex-col gap-2 w-full">
         {component.buttons.map((button: { text: string }, index: number) => (
-          <button
+          // <button
+          //   key={index}
+          //   className="w-full px-4 py-2 bg-white text-blue-500 rounded-md text-sm "
+          // >
+          //   {button.text}
+          // </button>
+          <Button
             key={index}
-            className="w-full px-4 py-2 bg-[#25D366] text-white rounded-md text-sm hover:bg-[#128C7E] transition-colors"
+            variant="outline"
+            className="text-blue-500"
           >
             {button.text}
-          </button>
+          </Button>
         ))}
       </div>
     );
@@ -357,7 +365,7 @@ const [error, setError] = useState<string | null>(null);
 
   return (
     <ScrollArea className="max-h-[400px] overflow-y-auto">
-      <div className="bg-[#f0f2f5] p-4 min-h-[300px]">
+      <div className="bg-[#f6f2e0aa] p-4 min-h-[300px]">
         <div className="max-w-[600px] mx-auto bg-white rounded-lg shadow-sm p-4 space-y-3">
           {template.components?.map((component, index) => (
             <div key={index} className="message-bubble">
