@@ -16,7 +16,7 @@ interface WhatsAppTemplateDialogProps {
   onClose: () => void;
   onSend?: () => void;
   selectedConversationId?: string;
-  languageCode?: string; 
+  languageCode?: string;
 }
 
 export const WhatsAppTemplateDialog = ({
@@ -82,21 +82,21 @@ export const WhatsAppTemplateDialog = ({
     } catch (error) {
       console.error("Error sending message:", error);
     }
-    console.log("Payload:",JSON.stringify(payload));
+    console.log("Payload:", JSON.stringify(payload));
     onClose();
   };
 
   const constructPayload = (template: WhatsAppTemplate, selectedConversationId: string) => {
     const [messagingProduct, recipientPhoneNumber] = selectedConversationId.split('_');
     const components = [];
-
+  
     // Header Component
     if (template.components?.some((c) => c.type === "HEADER")) {
       const headerComponent = template.components.find((c) => c.type === "HEADER");
-
+  
       if (headerComponent?.format === "TEXT") {
         const headerText = variables["header_0"] || headerComponent?.example?.header_text?.[0] || "";
-
+        
         components.push({
           "type": "header",
           "parameters": [
@@ -120,7 +120,7 @@ export const WhatsAppTemplateDialog = ({
         });
       } else if (headerComponent?.format === "LOCATION") {
         const locationText = headerComponent?.text || "Current Location";
-
+  
         components.push({
           "type": "header",
           "parameters": [
@@ -137,16 +137,16 @@ export const WhatsAppTemplateDialog = ({
         });
       }
     }
-
+  
     // Body Component
     if (template.components?.some((c) => c.type === "BODY")) {
       const bodyComponent = template.components.find((c) => c.type === "BODY");
       const bodyTextValues = Array.isArray(bodyComponent?.example?.body_text?.[0])
         ? bodyComponent.example.body_text[0]
         : [];
-
+  
       const updatedBodyTextValues = bodyTextValues.map((value, index) => variables[`body_${index}`] || value);
-
+  
       components.push({
         "type": "body",
         "parameters": updatedBodyTextValues.map((value) => ({
@@ -155,12 +155,12 @@ export const WhatsAppTemplateDialog = ({
         })),
       });
     }
-
+  
     // Buttons Component
     if (template.components?.some((c) => c.type === "BUTTONS")) {
       const buttonsComponent = template.components.find((c) => c.type === "BUTTONS");
       const buttons = buttonsComponent?.buttons || [];
-
+  
       buttons.forEach((button, index) => {
         const parameters = [];
         if (button.type === "url") {
@@ -179,7 +179,7 @@ export const WhatsAppTemplateDialog = ({
             phone_number: button.text,
           });
         }
-
+  
         components.push({
           type: "button",
           sub_type: button.type === "reply" ? "quick_reply" : button.type,
@@ -188,7 +188,69 @@ export const WhatsAppTemplateDialog = ({
         });
       });
     }
-
+  
+    // Carousel Component
+    if (template.components?.some((c) => c.type === "CAROUSEL")) {
+      const carouselComponent = template.components.find((c) => c.type === "CAROUSEL");
+  
+      if (carouselComponent) {
+        const carouselCards = carouselComponent.cards?.map((card, cardIndex) => {
+          const cardComponents = card.components.map((cardComponent) => {
+            if (cardComponent.type === "HEADER" && cardComponent.format === "IMAGE") {
+              return {
+                type: "header",
+                parameters: [
+                  {
+                    type: "image",
+                    image: {
+                      id: mediaId, // Use the media_id from the uploaded file
+                    },
+                  },
+                ],
+              };
+            } else if (cardComponent.type === "BODY") {
+              const bodyTextValues = Array.isArray(cardComponent.example?.body_text?.[0])
+                ? cardComponent.example?.body_text[0]
+                : [];
+  
+              const updatedBodyTextValues = bodyTextValues.map((value, index) => variables[`body_${index}`] || value);
+  
+              return {
+                type: "body",
+                parameters: updatedBodyTextValues.map((value) => ({
+                  type: "text",
+                  text: value,
+                })),
+              };
+            } else if (cardComponent.type === "BUTTONS") {
+              const buttons = cardComponent.buttons || [];
+  
+              return {
+                type: "button",
+                sub_type: "quick_reply",
+                index: "0",
+                parameters: buttons.map((button) => ({
+                  type: "text",
+                  text: button.text,
+                })),
+              };
+            }
+            return null;
+          }).filter(Boolean);
+  
+          return {
+            card_index: cardIndex,
+            components: cardComponents,
+          };
+        });
+  
+        components.push({
+          type: "carousel",
+          cards: carouselCards,
+        });
+      }
+    }
+  
     // Final Payload
     return {
       "messaging_product": messagingProduct,
@@ -209,7 +271,7 @@ export const WhatsAppTemplateDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Template Preview</DialogTitle>
           <p>{template.name}</p>
@@ -225,10 +287,15 @@ export const WhatsAppTemplateDialog = ({
         <div className="flex justify-end mt-2">
           <Button
             variant="outline"
-            onClick={() => {
+            onClick={async () => {
               if (template && selectedConversationId) {
+                // Wait for mediaId to be set before sending the payload
+                if (!mediaId && previewFile) {
+                  console.log("Waiting for media upload...");
+                  return;
+                }
                 const payload = constructPayload(template, selectedConversationId);
-                sendMessage(payload); // Send the payload to the endpoint
+                await sendMessage(payload); // Send the payload to the endpoint
               }
             }}
           >

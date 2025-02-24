@@ -6,6 +6,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { FileText, MapPin } from "lucide-react";
 import { Upload, X, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
+import { Card } from "../ui/card";
 
 interface WhatsAppTemplateContentProps {
   template: WhatsAppTemplate;
@@ -15,10 +16,10 @@ interface WhatsAppTemplateContentProps {
 }
 
 export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { onInputChange: (key: string, value: string) => void }> = ({ template, onInputChange, languageCode, setMediaId, setPreviewFile }) => {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [localPreviewFile, setLocalPreviewFile] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState<boolean>(false);
-const [error, setError] = useState<string | null>(null);
+  const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+  const [localPreviewFiles, setLocalPreviewFiles] = useState<{ [key: string]: string | null }>({});
+  const [isUploading, setIsUploading] = useState<{ [key: string]: boolean }>({});
+  const [errors, setErrors] = useState<{ [key: string]: string | null }>({});
 
   const calculateInputWidth = (text: string, fontSize: number = 14): number => {
     const span = document.createElement("span");
@@ -71,8 +72,6 @@ const [error, setError] = useState<string | null>(null);
     });
   };
 
-  
-
   const processText = (text: string, exampleValues: string[] = [], isHeader: boolean = false) => {
     const parts = text.split(/(\{\{\d+\}\})|(\*\*.*?\*\*)|(_.*?_)|(~~.*?~~)|(`.*?`)/g);
   
@@ -114,11 +113,12 @@ const [error, setError] = useState<string | null>(null);
     });
   };
   
-  const renderHeader = (component: { type: string; text?: string; format?: string; example?: { header_text?: string[], header_handle?: string[] } }) => {
+  const renderHeader = (component: { type: string; text?: string; format?: string; example?: { header_text?: string[], header_handle?: string[] } }, cardIndex: number, componentIndex: number) => {
     if (component.type !== "HEADER") return null;
   
     const text = component.text || "";
     const exampleValues = component.example?.header_text;
+    const uniqueKey = `${cardIndex}-${componentIndex}`;
   
     // Render media upload option if present
     if (component.format === "IMAGE" || component.format === "VIDEO" || component.format === "DOCUMENT") {
@@ -126,70 +126,70 @@ const [error, setError] = useState<string | null>(null);
         const file = e.target.files?.[0];
         if (file) {
           const fileUrl = URL.createObjectURL(file);
-          setLocalPreviewFile(fileUrl);
+          setLocalPreviewFiles(prev => ({ ...prev, [uniqueKey]: fileUrl }));
           setPreviewFile(fileUrl);
-          setIsUploading(true);
-          setError(null);
-  
+          setIsUploading(prev => ({ ...prev, [uniqueKey]: true }));
+          setErrors(prev => ({ ...prev, [uniqueKey]: null }));
+      
           // Upload the file to the endpoint
           const formData = new FormData();
           formData.append("file", file);
-  
+      
           try {
             const response = await fetch("https://egenie-whatsapp.koyeb.app/api/media/upload", {
               method: "POST",
               body: formData,
             });
-  
+      
             if (response.ok) {
               const data = await response.json();
               setMediaId(data.media_id); // Save the media_id from the response
               console.log("Uploaded media_id:", data.media_id); // Log the media_id to the console
             } else {
               console.error("Failed to upload media");
-              setError("Failed to upload media");
+              setErrors(prev => ({ ...prev, [uniqueKey]: "Failed to upload media" }));
             }
           } catch (error) {
             console.error("Error uploading media:", error);
-            setError("Error uploading media");
+            setErrors(prev => ({ ...prev, [uniqueKey]: "Error uploading media" }));
           } finally {
-            setIsUploading(false);
+            setIsUploading(prev => ({ ...prev, [uniqueKey]: false }));
           }
         }
       };
   
       const handleRemoveFile = () => {
-        setLocalPreviewFile(null);
+        setLocalPreviewFiles(prev => ({ ...prev, [uniqueKey]: null }));
         setMediaId(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
+        if (fileInputRefs.current[uniqueKey]) {
+          fileInputRefs.current[uniqueKey].value = "";
         }
       };
   
       return (
         <div className="mb-4">
-          {!localPreviewFile ? (
+          {!localPreviewFiles[uniqueKey] ? (
             <div className="relative">
               <input
                 type="file"
                 onChange={handleFileChange}
                 accept={component.format === "IMAGE" ? "image/*" : component.format === "VIDEO" ? "video/*" : component.format === "DOCUMENT" ? "application/pdf" : ""}
                 className="hidden"
-                id="file-upload"
-                disabled={isUploading}
-                ref={fileInputRef}
+                id={`file-upload-${uniqueKey}`}
+                disabled={isUploading[uniqueKey]}
+                ref={el => { fileInputRefs.current[uniqueKey] = el; }}
               />
               <label
-                htmlFor="file-upload"
+                htmlFor={`file-upload-${uniqueKey}`}
                 className={`
                   flex flex-col items-center justify-center p-6 
                   border-2 border-dashed rounded-lg cursor-pointer
                   transition-colors duration-200
-                  ${isUploading ? 'bg-gray-50' : 'hover:bg-gray-50'}
+                  ${isUploading[uniqueKey] ? 'bg-gray-50' : 'hover:bg-gray-50'}
                 `}
                 aria-label="Upload file"
               >
-                {isUploading ? (
+                {isUploading[uniqueKey] ? (
                   <>
                     <Loader2 className="w-8 h-8 mb-2 animate-spin text-blue-500" />
                     <p className="text-sm text-gray-600">Uploading...</p>
@@ -201,22 +201,22 @@ const [error, setError] = useState<string | null>(null);
                   </>
                 )}
               </label>
-              {error && (
-                <p className="mt-2 text-sm text-red-600">{error}</p>
+              {errors[uniqueKey] && (
+                <p className="mt-2 text-sm text-red-600">{errors[uniqueKey]}</p>
               )}
             </div>
           ) : (
             <div className="relative">
               {component.format === "IMAGE" && (
                 <img
-                  src={localPreviewFile}
+                  src={localPreviewFiles[uniqueKey]}
                   alt="Header"
                   className="w-full h-auto max-h-[300px] object-contain rounded-md"
                 />
               )}
               {component.format === "VIDEO" && (
                 <video controls className="w-full rounded-md max-h-[300px] object-contain">
-                  <source src={localPreviewFile} type="video/mp4" />
+                  <source src={localPreviewFiles[uniqueKey]} type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
               )}
@@ -232,7 +232,7 @@ const [error, setError] = useState<string | null>(null);
                     </div>
                   </div>
                   <a 
-                    href={localPreviewFile}
+                    href={localPreviewFiles[uniqueKey]}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-2 w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm py-2 rounded transition-colors"
@@ -345,12 +345,6 @@ const [error, setError] = useState<string | null>(null);
     return (
       <div className="flex flex-col gap-2 w-full">
         {component.buttons.map((button: { text: string }, index: number) => (
-          // <button
-          //   key={index}
-          //   className="w-full px-4 py-2 bg-white text-blue-500 rounded-md text-sm "
-          // >
-          //   {button.text}
-          // </button>
           <Button
             key={index}
             variant="outline"
@@ -363,16 +357,41 @@ const [error, setError] = useState<string | null>(null);
     );
   };
 
+  const renderCarousel = (component: { type: string; cards: any[] }) => {
+    if (component.type !== "CAROUSEL") return null;
+  
+    return (
+      <div className="carousel-container flex overflow-x-auto space-x-4 w-[400px] scrollbar-hide">
+        {component.cards.map((card, cardIndex) => (
+          <Card key={cardIndex} className="carousel-card p-2 flex-shrink-0 w-[300px]">
+            {card.components.map((cardComponent: any, componentIndex: number) => (
+              <div key={componentIndex} className="mb-5 component-wrapper">
+                {renderHeader(cardComponent, cardIndex, componentIndex)}
+                {renderBody(cardComponent, componentIndex)}
+                {renderFooter(cardComponent)}
+                {cardComponent.buttons && renderButtons({ type: cardComponent.type, buttons: cardComponent.buttons.filter((button: { text: string }) => button && button.text) })}
+              </div>
+            ))}
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <ScrollArea className="max-h-[400px] overflow-y-auto">
+    <ScrollArea className="max-h-[400px] overflow-y-auto scrollbar-hide">
       <div className="bg-[#f6f2e0aa] p-4 min-h-[300px]">
         <div className="max-w-[600px] mx-auto bg-white rounded-lg shadow-sm p-4 space-y-3">
           {template.components?.map((component, index) => (
             <div key={index} className="message-bubble">
-              {renderHeader(component)}
-              {renderBody(component, index)}
-              {renderFooter(component)}
-              {component.buttons && renderButtons({ type: component.type, buttons: component.buttons.filter(button => button && button.text) })}
+              {component.type === "CAROUSEL" && 'cards' in component ? renderCarousel(component as { type: string; cards: any[] }) : (
+                <>
+                  {renderHeader(component, index, index)}
+                  {renderBody(component, index)}
+                  {renderFooter(component)}
+                  {component.buttons && renderButtons({ type: component.type, buttons: component.buttons.filter(button => button && button.text) })}
+                </>
+              )}
             </div>
           ))}
         </div>

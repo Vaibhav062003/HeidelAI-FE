@@ -37,9 +37,10 @@ export interface WhatsAppTemplate {
     header_handle?: string[];
   };
   components: WhatsAppTemplateComponent[];
+  
 }
 export interface WhatsAppTemplateComponent {
-  type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS' | 'MEDIA' | 'LOCATION' | 'TEXT';
+  type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS' | 'MEDIA' | 'LOCATION' | 'TEXT' | "CAROUSEL";
   format?: string
   text?: string;
   buttons?: { type: string; text: string; value?: string }[];
@@ -49,5 +50,8 @@ export interface WhatsAppTemplateComponent {
     footer_text?: string[];
     header_handle?: string[];
   };
+  cards?: Array<{
+    components: WhatsAppTemplateComponent[];
+  }>;
 }
 
