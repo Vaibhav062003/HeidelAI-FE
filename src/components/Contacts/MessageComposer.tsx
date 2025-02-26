@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageSquare } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
-import { WhatsAppTemplateContent } from "../Contacts/WhatsAppTemplateContent";
+import { WhatsAppTemplateContent } from "./WhatsAppTemplateContent";
 import { WhatsAppTemplate } from "../types/template";
 import { ScrollArea } from "../ui/scroll-area";
 
@@ -133,7 +133,7 @@ export const MessageComposer = ({ onMessageSend }: MessageComposerProps) => {
       <button
         ref={triggerButtonRef}
         onClick={() => setIsMessageMenuOpen(!isMessageMenuOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors shadow-sm"
+        className="flex items-center gap-2 px-4 py-2 bg-white text-black border border-gray-300 rounded-lg hover:border-blue-600 transition-colors shadow-sm"
       >
         <MessageSquare className="h-5 w-5" />
         <span className="font-medium">Message</span>

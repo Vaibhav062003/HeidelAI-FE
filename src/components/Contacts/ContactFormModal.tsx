@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { createClient, PostgrestError } from "@supabase/supabase-js";
+import { Button } from "../ui/button";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -364,7 +365,7 @@ if (formData.phone) {
         />
       </div>
 
-      {/* Bio */}
+      {/* Bio
       <div className="col-span-2">
         <label className="block text-sm font-medium mb-1">Bio</label>
         <textarea
@@ -372,7 +373,7 @@ if (formData.phone) {
           value={formData.bio || ""}
           onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
         />
-      </div>
+      </div> */}
 
       {/* Tags Dropdown */}
       <div className="col-span-2 relative" ref={dropdownRef}>
@@ -450,16 +451,16 @@ if (formData.phone) {
         <button
           type="button"
           onClick={onClose}
-          className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg"
+          className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-300 rounded-lg"
         >
           Cancel
         </button>
-        <button
+        <Button
           type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
+          className="w-half bg-white text-black border border-gray-300 hover:border-blue-600"
+          >
           Save Contact
-        </button>
+        </Button>
       </div>
     </form>
   );

@@ -35,11 +35,24 @@ const countryPrefixes: { [key: string]: string } = {
   Canada: "+1"
 };
 
+// Colors for the avatar background
+const avatarColors = [
+  "bg-blue-500",
+  "bg-indigo-500",
+  "bg-purple-500",
+  "bg-pink-500",
+  "bg-red-500",
+  "bg-orange-500",
+  "bg-amber-500",
+  "bg-green-500",
+  "bg-teal-500",
+  "bg-cyan-500",
+];
 
 interface ContactItemProps {
   contact: Contact;
-  onEdit: (id: string) => void;  // Changed from number to string
-  onDelete: (id: string) => void;  // Changed from number to string
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 const FlagImage = ({ country }: { country: string }) => {
@@ -56,21 +69,44 @@ const FlagImage = ({ country }: { country: string }) => {
   );
 };
 
+const ProfileAvatar = ({ firstName, lastName }: { firstName: string; lastName?: string }) => {
+  // Get first letter of first name
+  const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
+  
+  // Get first letter of last name if it exists
+  const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
+  
+  // Combine initials
+  const initials = lastInitial ? `${firstInitial}${lastInitial}` : firstInitial;
+  
+  // Select a color based on the first name (for consistency)
+  const colorIndex = firstName.charCodeAt(0) % avatarColors.length;
+  const bgColor = avatarColors[colorIndex];
+  
+  return (
+    <div className={`flex items-center justify-center w-12 h-12 rounded-full ${bgColor} text-white font-medium text-lg`}>
+      {initials}
+    </div>
+  );
+};
+
 export const ContactItem = ({ contact, onEdit, onDelete }: ContactItemProps) => {
   const formattedTags = Array.isArray(contact.tags) && contact.tags.length > 0
     ? contact.tags.join(', ')
     : '';
 
-    const formattedPhone = contact.phone && contact.country
+  const formattedPhone = contact.phone && contact.country
     ? `${countryPrefixes[contact.country] ?? ""} ${contact.phone}`
     : contact.phone;
   
   return (
     <div className="group bg-white rounded-xl shadow-sm p-4 mb-3 transition-all border border-gray-100 hover:shadow-lg hover:border-indigo-50">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start gap-4">
+        <ProfileAvatar firstName={contact.firstName} lastName={contact.lastName} />
+        
         <div className="flex-1 min-w-0">
           <h3 className="text-lg font-semibold text-gray-900 mb-3">
-            {contact.firstName}
+            {contact.firstName} {contact.lastName}
           </h3>
 
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600">

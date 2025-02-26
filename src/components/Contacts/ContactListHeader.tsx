@@ -1,32 +1,19 @@
 import { MoreVertical, Plus, Upload } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { MessageComposer } from "../Contacts/Message";
+import { MessageComposer } from "./MessageComposer";
 
-interface Tag {
-  id: string;
-  name: string;
-  tag_description: string;
-  created_at?: string;
-}
-
-interface Contact {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  country?: string;
-}
 
 interface ContactListHeaderProps {
   searchValue: string;
   onSearch: (value: string) => void;
   onAddContact: () => void;
   onImportCSV: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onMessageSend: (data: { tag?: string; platform: "whatsapp" | "instagram"; template: string; }) => void;
+  onMessageSend: (data: {
+    tag?: string;
+    platform: "whatsapp" | "instagram";
+    template: string;
+  }) => void;
 }
-
 
 export const ContactListHeader = ({
   searchValue,
@@ -65,12 +52,7 @@ export const ContactListHeader = ({
     <div className="border-b border-gray-200 p-4 flex items-center justify-between bg-white">
       <h1 className="text-xl font-semibold text-gray-900">Contacts</h1>
       <div className="flex gap-4 items-center">
-      <MessageComposer 
-          onMessageSend={(data) => {
-            // Handle the message data here if needed before passing it up
-            onMessageSend(data);
-          }}
-        />
+        <MessageComposer onMessageSend={onMessageSend} />
 
         {/* Search Input */}
         <input
