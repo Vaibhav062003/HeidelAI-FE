@@ -134,13 +134,13 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-4xl p-6">
+      <div className="w-full h-full p-4">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-700 rounded w-1/4 mb-4"></div>
-          <div className="h-4 bg-gray-700 rounded w-3/4 mb-6"></div>
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-6"></div>
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-20 bg-gray-700 rounded"></div>
+              <div key={i} className="h-20 bg-gray-200 rounded"></div>
             ))}
           </div>
         </div>
@@ -149,48 +149,50 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
   }
 
   return (
-    <div className="w-half max-w-4xl mx-auto p-1 bg-white rounded-lg shadow-sm">
-      <div className="bg-white p-6 rounded-lg border border-gray-200">
-        {error && (
-          <div className="bg-red-100 text-red-700 p-1 rounded-md mb-4 border border-red-200">
-            {error}
+    <div className="w-full h-full">
+      <div className="flex flex-col h-full">
+        {/* Header Section */}
+        <div className="bg-white p-4 rounded-t-lg border-b mb-4">
+          {error && (
+            <div className="bg-red-100 text-red-700 p-1 rounded-md mb-4 border border-red-200">
+              {error}
+              <button
+                onClick={() => setError(null)}
+                className="float-right text-red-700"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          )}
+
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Canned Responses
+            </h2>
             <button
-              onClick={() => setError(null)}
-              className="float-right text-red-700"
+              onClick={() => setIsModalOpen(true)}
+              className="bg-white text-black border border-gray-300 px-4 py-2 rounded-md flex items-center gap-2 transition-colors hover:border-blue-600"
             >
-              <X size={20} />
+              <Plus size={20} />
+              Add Response
             </button>
           </div>
-        )}
 
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Canned Responses
-          </h2>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors"
-          >
-            <Plus size={20} />
-            Add Response
-          </button>
+          <p className="text-gray-600 mb-2 text-sm">
+            Canned Responses are pre-written reply templates that help you
+            quickly respond to conversations. Use the '/' character followed by
+            the shortcode to insert a response.
+          </p>
         </div>
 
-        <p className="text-gray-600 mb-6 text-sm">
-          Canned Responses are pre-written reply templates that help you quickly
-          respond to conversations. Use the '/' character followed by the
-          shortcode to insert a response.
-        </p>
-
-        {responses.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
-            <MessageSquare className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-            No canned responses found
-          </div>
-        ) : (
-          <div className="max-h-[600px] overflow-y-auto pr-2">
-            {" "}
-            {/* Added scroll container */}
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
+          {responses.length === 0 ? (
+            <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg bg-white">
+              <MessageSquare className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+              No canned responses found
+            </div>
+          ) : (
             <div className="space-y-3">
               {responses.map((response) => (
                 <div
@@ -222,71 +224,72 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      </div>
 
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 backdrop-blur-sm">
-            <div className="bg-white rounded-lg p-6 w-full max-w-lg border border-gray-200 shadow-xl">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {editingResponse ? "Edit Response" : "New Canned Response"}
-                </h3>
-                <button
-                  onClick={resetForm}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X size={20} />
-                </button>
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg p-6 w-full max-w-3xl border border-gray-200 shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {editingResponse ? "Edit Response" : "New Canned Response"}
+              </h3>
+              <button
+                onClick={resetForm}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-700 mb-2 font-medium">
+                  Shortcode
+                </label>
+                <input
+                  type="text"
+                  value={newShortcode}
+                  onChange={(e) => setNewShortcode(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g. shipping-info"
+                />
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-gray-700 mb-2 font-medium">
-                    Shortcode
-                  </label>
-                  <input
-                    type="text"
-                    value={newShortcode}
-                    onChange={(e) => setNewShortcode(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="e.g. shipping-info"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-2 font-medium">
+                  Message
+                </label>
+                <textarea
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg px-3 py-2 h-40 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter your template message..."
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm text-gray-700 mb-2 font-medium">
-                    Message
-                  </label>
-                  <textarea
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg px-3 py-2 h-32 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter your template message..."
-                  />
-                </div>
-
-                <div className="flex justify-end gap-3 mt-6 border-t pt-4">
-                  <button
-                    onClick={resetForm}
-                    className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={
-                      editingResponse ? handleUpdateResponse : handleAddResponse
-                    }
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                  >
-                    {editingResponse ? "Save Changes" : "Save Response"}
-                  </button>
-                </div>
+              <div className="flex justify-end gap-3 mt-6 border-t pt-4">
+                <button
+                  onClick={resetForm}
+                  className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={
+                    editingResponse ? handleUpdateResponse : handleAddResponse
+                  }
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  {editingResponse ? "Save Changes" : "Save Response"}
+                </button>
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
