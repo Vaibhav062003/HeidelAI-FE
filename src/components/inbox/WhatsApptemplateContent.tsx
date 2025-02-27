@@ -7,19 +7,28 @@ import { FileText, MapPin } from "lucide-react";
 import { Upload, X, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
+// import Map from "./Map";
+import dynamic from 'next/dynamic'
+
+const Map = dynamic(() => import('./Map'), {
+  ssr: false,
+})
 
 interface WhatsAppTemplateContentProps {
   template: WhatsAppTemplate;
   languageCode?: string;
   setMediaId: (id: string | null) => void;
   setPreviewFile: (url: string | null) => void;
+  onLocationSelect: (location: { lat: number; lng: number; address: string }) => void; // Add this prop
 }
 
-export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { onInputChange: (key: string, value: string) => void }> = ({ template, onInputChange, languageCode, setMediaId, setPreviewFile }) => {
+export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { onInputChange: (key: string, value: string) => void }> = ({ template, onInputChange, languageCode, setMediaId, setPreviewFile, onLocationSelect }) => {
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const [localPreviewFiles, setLocalPreviewFiles] = useState<{ [key: string]: string | null }>({});
   const [isUploading, setIsUploading] = useState<{ [key: string]: boolean }>({});
   const [errors, setErrors] = useState<{ [key: string]: string | null }>({});
+  const [mediaIdMap, setMediaIdMap] = useState<{ [key: string]: string | null }>({});
+  const [uploadSuccess, setUploadSuccess] = useState<{ [key: string]: boolean }>({});
 
   const calculateInputWidth = (text: string, fontSize: number = 14): number => {
     const span = document.createElement("span");
@@ -50,7 +59,7 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
 
   const renderVariableText = (text: string, variables: string[] = [], isHeader: boolean = false) => {
     const parts = text.split(/(\{\{\d+\}\})/g);
-  
+
     return parts.map((part, index) => {
       const match = part.match(/\{\{(\d+)\}\}/);
       if (match) {
@@ -74,10 +83,10 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
 
   const processText = (text: string, exampleValues: string[] = [], isHeader: boolean = false) => {
     const parts = text.split(/(\{\{\d+\}\})|(\*\*.*?\*\*)|(_.*?_)|(~~.*?~~)|(`.*?`)/g);
-  
+
     return parts.map((part, idx) => {
       if (!part) return null;
-  
+
       const varMatch = part.match(/\{\{(\d+)\}\}/);
       if (varMatch) {
         const varIndex = parseInt(varMatch[1]) - 1;
@@ -94,7 +103,7 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
           />
         );
       }
-  
+
       // Process markdown
       if (part.startsWith('**') && part.endsWith('**')) {
         return <strong key={idx}>{part.slice(2, -2)}</strong>;
@@ -108,18 +117,18 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
       if (part.startsWith('`') && part.endsWith('`')) {
         return <code key={idx}>{part.slice(1, -1)}</code>;
       }
-  
+
       return <span key={idx}>{part}</span>;
     });
   };
-  
+
   const renderHeader = (component: { type: string; text?: string; format?: string; example?: { header_text?: string[], header_handle?: string[] } }, cardIndex: number, componentIndex: number) => {
     if (component.type !== "HEADER") return null;
-  
+
     const text = component.text || "";
     const exampleValues = component.example?.header_text;
     const uniqueKey = `${cardIndex}-${componentIndex}`;
-  
+
     // Render media upload option if present
     if (component.format === "IMAGE" || component.format === "VIDEO" || component.format === "DOCUMENT") {
       const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,24 +139,29 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
           setPreviewFile(fileUrl);
           setIsUploading(prev => ({ ...prev, [uniqueKey]: true }));
           setErrors(prev => ({ ...prev, [uniqueKey]: null }));
-      
+          setUploadSuccess(prev => ({ ...prev, [uniqueKey]: false }));
+
           // Upload the file to the endpoint
           const formData = new FormData();
           formData.append("file", file);
-      
+
           try {
             const response = await fetch("https://egenie-whatsapp.koyeb.app/api/media/upload", {
               method: "POST",
               body: formData,
             });
-      
+
             if (response.ok) {
               const data = await response.json();
-              setMediaId(data.media_id); // Save the media_id from the response
-              console.log("Uploaded media_id:", data.media_id); // Log the media_id to the console
+              const mediaId = data.media_id;
+              setMediaId(mediaId); // Save the media_id from the response
+              setMediaIdMap(prev => ({ ...prev, [uniqueKey]: mediaId }));
+              setUploadSuccess(prev => ({ ...prev, [uniqueKey]: true })); // Save the media_id from the response
+              console.log("Uploaded media_id:", mediaId); // Log the media_id to the console
             } else {
               console.error("Failed to upload media");
               setErrors(prev => ({ ...prev, [uniqueKey]: "Failed to upload media" }));
+              setUploadSuccess(prev => ({ ...prev, [uniqueKey]: false }));
             }
           } catch (error) {
             console.error("Error uploading media:", error);
@@ -157,19 +171,21 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
           }
         }
       };
-  
+
       const handleRemoveFile = () => {
         setLocalPreviewFiles(prev => ({ ...prev, [uniqueKey]: null }));
         setMediaId(null);
+        setMediaIdMap(prev => ({ ...prev, [uniqueKey]: null }));
+        setUploadSuccess(prev => ({ ...prev, [uniqueKey]: false }));
         if (fileInputRefs.current[uniqueKey]) {
           fileInputRefs.current[uniqueKey].value = "";
         }
       };
-  
+
       return (
         <div className="mb-4">
           {!localPreviewFiles[uniqueKey] ? (
-            <div className="relative">
+            <div className="relative mb-4">
               <input
                 type="file"
                 onChange={handleFileChange}
@@ -207,38 +223,93 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
             </div>
           ) : (
             <div className="relative">
-              {component.format === "IMAGE" && (
-                <img
-                  src={localPreviewFiles[uniqueKey]}
-                  alt="Header"
-                  className="w-full h-auto max-h-[300px] object-contain rounded-md"
-                />
+              {component.format === "IMAGE" && localPreviewFiles[uniqueKey] && (
+                <div className="flex flex-col">
+                  <img
+                    src={localPreviewFiles[uniqueKey]}
+                    alt="Header"
+                    className="w-full h-auto max-h-[300px] object-contain rounded-md"
+                  />
+                  {uploadSuccess[uniqueKey] && mediaIdMap[uniqueKey] && (
+                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm text-green-700">
+                            Image uploaded successfully!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
               )}
-              {component.format === "VIDEO" && (
-                <video controls className="w-full rounded-md max-h-[300px] object-contain">
-                  <source src={localPreviewFiles[uniqueKey]} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
+              {component.format === "VIDEO" && localPreviewFiles[uniqueKey] && (
+                <div>
+                  <video controls className="w-full rounded-md max-h-[100px] object-contain">
+                    <source src={localPreviewFiles[uniqueKey]} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                  {uploadSuccess[uniqueKey] && mediaIdMap[uniqueKey] && (
+                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm text-green-700">
+                            Image uploaded successfully!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
-              {component.format === "DOCUMENT" && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gray-100 rounded-md">
+              {component.format === "DOCUMENT" && localPreviewFiles[uniqueKey] && (
+                <div>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gray-100 rounded-md">
+                        <FileText className="w-6 h-6 text-gray-600" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-gray-900">PDF Document</span>
+                        <span className="text-xs text-gray-500">Attached</span>
+                      </div>
+                    </div>
+                    <a
+                      href={localPreviewFiles[uniqueKey]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm py-2 rounded transition-colors"
+                    >
                       <FileText className="w-6 h-6 text-gray-600" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-900">PDF Document</span>
-                      <span className="text-xs text-gray-500">Attached</span>
-                    </div>
+                    </a>
+                    {uploadSuccess[uniqueKey] && mediaIdMap[uniqueKey] && (
+                      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-sm text-green-700">
+                              Image uploaded successfully!
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <a 
-                    href={localPreviewFiles[uniqueKey]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm py-2 rounded transition-colors"
-                  >
-                    <FileText className="w-6 h-6 text-gray-600" />
-                  </a>
                 </div>
               )}
               <button
@@ -252,19 +323,15 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
         </div>
       );
     }
-  
+
     if (component.format === "LOCATION") {
       return (
         <div className="mb-4">
-          <textarea
-            className="w-full p-2 border border-gray-300 rounded-md"
-            placeholder="Enter location address"
-            onChange={(e) => onInputChange('header_location', e.target.value)}
-          />
+          <Map onLocationSelect={onLocationSelect}/>
         </div>
       );
     }
-  
+
     return (
       <h3 className="text-[16px] font-semibold text-[#1a1a1a] mb-3">
         {processText(text, exampleValues || [], true)}
@@ -359,9 +426,9 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
 
   const renderCarousel = (component: { type: string; cards: any[] }) => {
     if (component.type !== "CAROUSEL") return null;
-  
+
     return (
-      <div className="carousel-container flex overflow-x-auto space-x-4 w-[400px] scrollbar-hide">
+      <div className="carousel-container flex overflow-x-auto space-x-4 w-[350px] scrollbar-hide">
         {component.cards.map((card, cardIndex) => (
           <Card key={cardIndex} className="carousel-card p-2 flex-shrink-0 w-[300px]">
             {card.components.map((cardComponent: any, componentIndex: number) => (
@@ -379,8 +446,10 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
   };
 
   return (
-    <ScrollArea className="max-h-[400px] overflow-y-auto scrollbar-hide">
-      <div className="bg-[#f6f2e0aa] p-4 min-h-[300px]">
+
+
+    <ScrollArea className="max-h-[400px] overflow-y-auto">
+      <div className="bg-[#f6f2e0aa] min-h-[300px] p-4">
         <div className="max-w-[600px] mx-auto bg-white rounded-lg shadow-sm p-4 space-y-3">
           {template.components?.map((component, index) => (
             <div key={index} className="message-bubble">

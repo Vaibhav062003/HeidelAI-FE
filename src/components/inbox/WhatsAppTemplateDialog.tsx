@@ -31,6 +31,7 @@ export const WhatsAppTemplateDialog = ({
   const [previewFile, setPreviewFile] = useState<string | null>(null);
   const [mediaId, setMediaId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [location, setLocation] = useState<{ lat: number; lng: number; address: string } | null>(null); // Add state for location
 
   useEffect(() => {
     if (template) {
@@ -51,6 +52,8 @@ export const WhatsAppTemplateDialog = ({
       setVariables(initialVariables);
     }
   }, [template]);
+
+ 
 
   const handleInputChange = (key: string, value: string) => {
     setVariables((prev) => ({ ...prev, [key]: value }));
@@ -89,11 +92,11 @@ export const WhatsAppTemplateDialog = ({
   const constructPayload = (template: WhatsAppTemplate, selectedConversationId: string) => {
     const [messagingProduct, recipientPhoneNumber] = selectedConversationId.split('_');
     const components = [];
-  
+
     // Header Component
     if (template.components?.some((c) => c.type === "HEADER")) {
       const headerComponent = template.components.find((c) => c.type === "HEADER");
-  
+
       if (headerComponent?.format === "TEXT") {
         const headerText = variables["header_0"] || headerComponent?.example?.header_text?.[0] || "";
         
@@ -120,33 +123,33 @@ export const WhatsAppTemplateDialog = ({
         });
       } else if (headerComponent?.format === "LOCATION") {
         const locationText = headerComponent?.text || "Current Location";
-  
+
         components.push({
           "type": "header",
           "parameters": [
             {
               "type": "location",
               "location": {
-                "longitude": -122.425332, // Replace with actual longitude
-                "latitude": 37.758056, // Replace with actual latitude
+                "longitude": location?.lng || 0, // Use the selected longitude
+                "latitude": location?.lat || 0, // Use the selected latitude
                 "name": locationText,
-                "address": "Address here", // Replace with actual address
+                "address": location?.address || "", // Use the selected address
               },
             },
           ],
         });
       }
     }
-  
+
     // Body Component
     if (template.components?.some((c) => c.type === "BODY")) {
       const bodyComponent = template.components.find((c) => c.type === "BODY");
       const bodyTextValues = Array.isArray(bodyComponent?.example?.body_text?.[0])
         ? bodyComponent.example.body_text[0]
         : [];
-  
+
       const updatedBodyTextValues = bodyTextValues.map((value, index) => variables[`body_${index}`] || value);
-  
+
       components.push({
         "type": "body",
         "parameters": updatedBodyTextValues.map((value) => ({
@@ -155,12 +158,12 @@ export const WhatsAppTemplateDialog = ({
         })),
       });
     }
-  
+
     // Buttons Component
     if (template.components?.some((c) => c.type === "BUTTONS")) {
       const buttonsComponent = template.components.find((c) => c.type === "BUTTONS");
       const buttons = buttonsComponent?.buttons || [];
-  
+
       buttons.forEach((button, index) => {
         const parameters = [];
         if (button.type === "url") {
@@ -179,7 +182,7 @@ export const WhatsAppTemplateDialog = ({
             phone_number: button.text,
           });
         }
-  
+
         components.push({
           type: "button",
           sub_type: button.type === "reply" ? "quick_reply" : button.type,
@@ -188,69 +191,7 @@ export const WhatsAppTemplateDialog = ({
         });
       });
     }
-  
-    // Carousel Component
-    if (template.components?.some((c) => c.type === "CAROUSEL")) {
-      const carouselComponent = template.components.find((c) => c.type === "CAROUSEL");
-  
-      if (carouselComponent) {
-        const carouselCards = carouselComponent.cards?.map((card, cardIndex) => {
-          const cardComponents = card.components.map((cardComponent) => {
-            if (cardComponent.type === "HEADER" && cardComponent.format === "IMAGE") {
-              return {
-                type: "header",
-                parameters: [
-                  {
-                    type: "image",
-                    image: {
-                      id: mediaId, // Use the media_id from the uploaded file
-                    },
-                  },
-                ],
-              };
-            } else if (cardComponent.type === "BODY") {
-              const bodyTextValues = Array.isArray(cardComponent.example?.body_text?.[0])
-                ? cardComponent.example?.body_text[0]
-                : [];
-  
-              const updatedBodyTextValues = bodyTextValues.map((value, index) => variables[`body_${index}`] || value);
-  
-              return {
-                type: "body",
-                parameters: updatedBodyTextValues.map((value) => ({
-                  type: "text",
-                  text: value,
-                })),
-              };
-            } else if (cardComponent.type === "BUTTONS") {
-              const buttons = cardComponent.buttons || [];
-  
-              return {
-                type: "button",
-                sub_type: "quick_reply",
-                index: "0",
-                parameters: buttons.map((button) => ({
-                  type: "text",
-                  text: button.text,
-                })),
-              };
-            }
-            return null;
-          }).filter(Boolean);
-  
-          return {
-            card_index: cardIndex,
-            components: cardComponents,
-          };
-        });
-  
-        components.push({
-          type: "carousel",
-          cards: carouselCards,
-        });
-      }
-    }
-  
+
     // Final Payload
     return {
       "messaging_product": messagingProduct,
@@ -271,7 +212,7 @@ export const WhatsAppTemplateDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-l">
         <DialogHeader>
           <DialogTitle>Template Preview</DialogTitle>
           <p>{template.name}</p>
@@ -282,22 +223,19 @@ export const WhatsAppTemplateDialog = ({
             onInputChange={handleInputChange} 
             setMediaId={setMediaId} 
             setPreviewFile={setPreviewFile} 
+            onLocationSelect={setLocation} // Pass the setLocation function as a callback prop
           />
         </div>
         <div className="flex justify-end mt-2">
           <Button
             variant="outline"
-            onClick={async () => {
+            onClick={() => {
               if (template && selectedConversationId) {
-                // Wait for mediaId to be set before sending the payload
-                if (!mediaId && previewFile) {
-                  console.log("Waiting for media upload...");
-                  return;
-                }
                 const payload = constructPayload(template, selectedConversationId);
-                await sendMessage(payload); // Send the payload to the endpoint
+                sendMessage(payload); // Send the payload to the endpoint
               }
             }}
+            disabled={!mediaId && !location}
           >
             <Share2 className="h-5 w-5" />
             <span className="font-medium">Share in Chat</span>
