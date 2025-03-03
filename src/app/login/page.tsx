@@ -7,6 +7,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { Toaster, toast } from 'sonner';
+import {
+  IconBrandFacebook,
+  IconBrandGithub,
+  IconBrandGoogle,
+  IconBrandOnlyfans,
+} from "@tabler/icons-react";
+import { signIn } from "next-auth/react";
+
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -87,10 +95,29 @@ export default function LoginPage() {
           >
             {isSignUp ? "Sign Up" : "Log in"} &rarr;
             <BottomGradient />
-          </button>
+            </button>
+            <div className="flex items-center my-8">
+            <div className="flex-grow bg-neutral-800  h-[1px]" />
+            <span className="text-neutral-300 text-sm text-center mx-4">or</span>
+            <div className="flex-grow bg-neutral-800 h-[1px]" />
+            </div>
+ <div className="flex flex-col space-y-4">
+   <button
+    className="bg-gradient-to-br relative group/btn flex space-x-2 items-center justify-center px-4 rounded-[0.5rem] from-zinc-900 to-zinc-900  bg-zinc-800 w-full text-white h-10 font-medium shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
+    type="button"
+    onClick={() => signIn("facebook")}
+   >
+     <IconBrandFacebook className="h-4 w-4 text-neutral-300" />
+     <span className="text-neutral-300 text-base">
+       Continue with Facebook
+     </span>
+     <BottomGradient />
+   </button>
+   
+ </div>
         </form>
 
-        <div className="bg-gradient-to-r from-transparent via-neutral-700 to-transparent my-8 h-[1px] w-full" />
+        {/* <div className="bg-gradient-to-r from-transparent via-neutral-700 to-transparent my-8 h-[1px] w-full" />
 
         <div className="flex flex-col space-y-4">
           <button
@@ -100,7 +127,7 @@ export default function LoginPage() {
             {isSignUp ? "Already have an account? Log in" : "Don't have an account? Sign up"}
             <BottomGradient />
           </button>
-        </div>
+        </div> */}
       </div>
     </section>
   );

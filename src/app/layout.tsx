@@ -21,6 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      
       <head>
         <title>HeidelAI - AI-Powered Customer Engagement & Analytics Platform</title>
         <meta name="description" content="Transform your business with HeidelAI's AI-powered tools for customer engagement, real-time analytics, and smart chatbots." />
@@ -36,7 +37,9 @@ export default function RootLayout({
         <meta name="twitter:description" content="Transform your business with HeidelAI's AI-powered tools for customer engagement, real-time analytics, and smart chatbots." />
         <meta name="twitter:image" content="/heidelai_mockup.png" />
       </head>
+      <body>
         {children}
+      </body>
     </html>
   )
 }

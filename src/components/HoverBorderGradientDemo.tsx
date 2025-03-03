@@ -157,11 +157,18 @@ export function HoverBorderGradientDemo() {
     </div>
     <div className=" flex justify-center space-x-2 text-center">
       <Drawer.Root repositionInputs={false} open={isOpen} onOpenChange={setIsOpen}>
-      <Drawer.Trigger className="bg-black/50 backdrop-blur-sm hover:cursor-pointer border border-white/[0.2] py-2 px-4 rounded-full text-white flex items-center space-x-2">
+      <HoverBorderGradient
+        containerClassName="rounded-full"
+        className="bg-black/50 backdrop-blur-sm text-white flex items-center space-x-2"
+      >
+      {/* <Drawer.Trigger className="bg-black/50 backdrop-blur-sm hover:cursor-pointer border border-white/[0.2] py-2 px-4 rounded-full text-white flex items-center space-x-2"> */}
+      <Drawer.Trigger className="focus-visible:border-none">
+
       
         <span>Request Demo</span>
       
       </Drawer.Trigger>
+      </HoverBorderGradient>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40" />
         <Drawer.Content className="bg-white flex flex-col  fixed bottom-0  left-0 right-0 max-h-[85vh] rounded-t-[10px] z-[999]">
@@ -226,13 +233,21 @@ export function HoverBorderGradientDemo() {
       </Drawer.Portal>
     </Drawer.Root>
       
-      <Drawer.Root>
+      
+
+        
+    </div>
+    </>
+  );
+}
+
+{/* <Drawer.Root>
       
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40" />
         <Drawer.Content className="bg-white flex flex-col rounded-t-[10px] mt-24 h-[85vh] md:h-[90vh] lg:h-[90vh] fixed bottom-0 left-0 right-0 outline-none z-[999]">
           <div className="p-4 overflow-y-auto bg-white rounded-t-[10px] flex flex-col justify-center">
-            {/* Header */}
+
 
       <div className="w-full px-0 lg:px-6 md:px-6 z-20 sticky top-0 bg-white">
         <div aria-hidden className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-4" />
@@ -251,7 +266,6 @@ export function HoverBorderGradientDemo() {
         </div>
       </div>
 
-      {/* Chat Area */}
       <ScrollArea className="flex-grow relative h-[70vh] bg-white z-10 " ref={scrollAreaRef}>
         <div className="space-y-6 max-w-3xl mx-auto">
           {messages.map((message, index) => (
@@ -282,7 +296,6 @@ export function HoverBorderGradientDemo() {
         </div>
       </ScrollArea>
 
-      {/* Input Area */}
       <form onSubmit={handleSubmit} className="sticky bg-white w-full z-10 pt-6  bottom-0 ">
         <div className="w-full lg:max-w-3xl mx-auto flex gap-2">
           <Input
@@ -313,11 +326,4 @@ export function HoverBorderGradientDemo() {
           <span>Pitch Deck</span>
         </Drawer.Trigger>
       </HoverBorderGradient>
-        </Drawer.Root>
-
-        
-    </div>
-    </>
-  );
-}
-
+        </Drawer.Root> */}

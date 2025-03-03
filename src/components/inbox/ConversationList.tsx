@@ -32,7 +32,7 @@ const ConversationItemSkeleton = () => (
 );
 
 const EmptyState = ({ message }: { message: string }) => (
-  <div className="flex flex-col items-center justify-center h-full p-4 text-center text-gray-500">
+  <div className="flex flex-col items-center justify-center h-[85vh] overflow-y-hidden p-4 text-center text-gray-500">
     <p className="text-sm">{message}</p>
   </div>
 );

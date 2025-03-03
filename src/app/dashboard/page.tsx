@@ -26,10 +26,14 @@ import {
   Contact,
   Contact2Icon,
   ContactRoundIcon,
+  BotMessageSquare
   // Wand2,
   // Users,
 } from "lucide-react";
 import { EmojiProvider } from '@/components/EmojiProvider';
+import TalkToDataTab from "@/components/TalkToData/TalkToDataTab";
+import Image from "next/image";
+import Link from "next/link";
 
 
 interface Product {
@@ -60,7 +64,7 @@ interface Product {
 export default function DashboardPage() {
   const router = useRouter();
   const [activeView, setActiveView] = useState<
-    "inbox" | "analytics" | "billing" | "settings"
+    "inbox" | "analytics" | "billing" | "settings" | "talktodata"
   >("inbox");
   const [showTeamPanel, setShowTeamPanel] = useState(false);
   const [selectedConversationId, setSelectedConversationId] =
@@ -97,6 +101,12 @@ export default function DashboardPage() {
           {/* Left Sidebar */}
           <div className="w-16 hover:w-48 transition-all duration-300 ease-in-out fixed left-0 h-full z-20">
             <TabsList className="h-full flex-col items-start justify-start gap-4 pt-6 bg-white/90 backdrop-blur-sm border-r">
+              <div className="w-full flex justify-center items-center mb-6">
+                <Link href="/">
+              <Image src='/Heidelai Favicon.ico.ico' alt="logo" width={30} height={30}/>
+              </Link>
+              </div>
+
               <TabsTrigger
                 value="inbox"
                 className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
@@ -126,6 +136,17 @@ export default function DashboardPage() {
                 <ContactRoundIcon className="h-5 w-5" />
                 <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   Contacts
+                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
+                </span>
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="talktodata"
+                className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
+              >
+                <BotMessageSquare className="h-5 w-5" />
+                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  Talk to Data
                   <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
               </TabsTrigger>
@@ -208,6 +229,13 @@ export default function DashboardPage() {
             >
               <AnalyticsDashboard />
             </TabsContent> */}
+
+            <TabsContent
+              value="talktodata"
+              className="m-0 flex-1 fixed top-0 w-[96vw] h-full overflow-hidden"
+            >
+              <TalkToDataTab />
+            </TabsContent>
 
             <TabsContent
               value="billing"
