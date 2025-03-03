@@ -444,7 +444,7 @@ const handleNext = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewFile(reader.result as string);
-        setHeaderContent(file.name);
+        setHeaderContent(file.name)
       };
       reader.readAsDataURL(file);
     }
@@ -539,13 +539,15 @@ const sendPostRequest = async (data:any) => {
       throw new Error(`HTTP error! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
     }
 
-    console.log("POST request successful:");
+    const result = await response.json();
+
+    console.log("POST request successful:", result);
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error during POST request:", error.message);
     } else {
       console.error("Error during POST request:", error);
-    }
+    } 
   }
 };
 

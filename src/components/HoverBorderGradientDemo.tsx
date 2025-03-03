@@ -307,11 +307,10 @@ export function HoverBorderGradientDemo() {
       
       <HoverBorderGradient
         containerClassName="rounded-full"
-        
         className="bg-black/50 backdrop-blur-sm text-white flex items-center space-x-2"
       >
         <Drawer.Trigger className="focus-visible:border-none">
-        <span >Pitch Deck</span>
+          <span>Pitch Deck</span>
         </Drawer.Trigger>
       </HoverBorderGradient>
         </Drawer.Root>
