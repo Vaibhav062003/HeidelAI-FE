@@ -59,6 +59,7 @@ export default function LoginPage() {
         if (error) {
           toast.error('Invalid email or password');
         } else {
+          toast.success('Login successful! Redirecting...');
           // console.log("user_detail",user);
           const { data: { user } } = await supabase.auth.getUser()
           console.log("user data",user);

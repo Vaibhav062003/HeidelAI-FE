@@ -28,7 +28,8 @@ import {
   Contact,
   Contact2Icon,
   ContactRoundIcon,
-  BotMessageSquare
+  BotMessageSquare,
+  LogOut
   // Wand2,
   // Users,
 } from "lucide-react";
@@ -36,6 +37,14 @@ import { EmojiProvider } from '@/components/EmojiProvider';
 import TalkToDataTab from "@/components/TalkToData/TalkToDataTab";
 import Image from "next/image";
 import Link from "next/link";
+import { createClient } from '@supabase/supabase-js';
+import { toast } from 'sonner';
+
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 
 
 interface Product {
@@ -53,6 +62,12 @@ interface Product {
   sale_price: string; // Use `number` if parsed as numeric values
   slug: string;
   stock_quantity: number;
+}
+
+interface UserProfile {
+  email?: string;
+  avatar_url?: string;
+  full_name?: string;
 }
 
 // const Home = ({
@@ -74,15 +89,44 @@ export default function DashboardPage() {
   const [isAIEnabled, setIsAIEnabled] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const [sharedProduct, setSharedProduct] = useState<Product | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await supabase.auth.signOut();
+      toast.success('Successfully logged out');
+      router.push('/login');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast.error('Failed to log out. Please try again.');
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (!user) {
-        router.push("/login");
+    const checkUser = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        router.push('/login');
+        return;
+      }
+      setUser(user);
+    };
+
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        router.push('/login');
       }
     });
-    return () => unsubscribe();
+
+    return () => subscription.unsubscribe();
   }, [router]);
 
   const handleConversationSelect = (id: string) => {
@@ -101,9 +145,9 @@ export default function DashboardPage() {
           className="flex-1 flex overflow-hidden"
         >
           {/* Left Sidebar */}
-          <div className="w-16 hover:w-48 transition-all duration-300 ease-in-out fixed left-0 h-full z-20">
-            <TabsList className="h-full flex-col items-start justify-start gap-4 pt-6 bg-white/90 backdrop-blur-sm border-r">
-              <div className="w-full flex justify-center items-center mb-6">
+          <div className="max-w-10 fixed left-0 h-full z-20">
+          <TabsList className="h-full flex-col items-start justify-start gap-4 pt-6 bg-white/90 backdrop-blur-sm border-r">
+          <div className="w-full flex justify-center items-center mb-6">
                 <Link href="/">
               <Image src='/Heidelai Favicon.ico.ico' alt="logo" width={30} height={30}/>
               </Link>
@@ -174,6 +218,50 @@ export default function DashboardPage() {
                   <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
               </TabsTrigger>
+<div className="mt-auto mb-6 w-full">
+  {user && (
+    <div className="relative ">
+      {/* Always visible logout button */}
+      <button
+  onClick={handleLogout}
+  disabled={isLoggingOut}
+  className={`w-full mb-2 p-2 py-3 
+    flex items-center justify-center gap-2
+    text-red-600 hover:bg-red-50
+    rounded-lg transition-colors duration-200
+    ${isLoggingOut ? 'opacity-50 cursor-not-allowed' : ''}`}
+>
+  {isLoggingOut ? (
+    <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
+  ) : (
+    <LogOut className="h-5 w-5" />
+  )}
+</button>
+
+      {/* Profile Section */}
+      <div className="cursor-pointer hover:bg-gray-100 rounded-lg p-2 relative group">
+        {user.avatar_url ? (
+          <img
+            src={user.avatar_url}
+            alt="Profile"
+            className="w-8 h-8 rounded-full"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+            <span className="text-gray-600 text-sm">
+              {user.email?.[0].toUpperCase()}
+            </span>
+          </div>
+        )}
+        {/* Email tooltip on hover */}
+        <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+          {user.email}
+          <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
+        </span>
+      </div>
+    </div>
+  )}
+</div>
             </TabsList>{" "}
           </div>
 
