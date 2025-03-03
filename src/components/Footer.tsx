@@ -41,7 +41,7 @@ export default function Footer() {
             </div> */}
             <div className="py-7 border-t border-neutral-700">
                 <div className="flex items-center justify-center flex-col lg:justify-between lg:flex-row">
-                    <span className="text-sm text-neutral-400 ">©<a href="#">Heidel AI</a> 2024, All rights reserved.</span>
+                    <span className="text-sm text-neutral-400 ">©<a href="#">Heidel AI</a> 2025, All rights reserved.</span>
                     <div className="flex mt-4 space-x-4 sm:justify-center lg:mt-0 ">
                         <a href="javascript:;"  className="w-8 h-8 rounded-full transition-all duration-500 flex justify-center items-center  hover:bg-gray-900">
                           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">

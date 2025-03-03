@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { WhatsAppTemplate } from "@/components/types/template";
 import { NextResponse } from "next/server";
 

@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -9,11 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Toaster, toast } from 'sonner';
 import {
   IconBrandFacebook,
-  IconBrandGithub,
-  IconBrandGoogle,
-  IconBrandOnlyfans,
 } from "@tabler/icons-react";
-import { signIn } from "next-auth/react";
 
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -25,6 +22,24 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false); // Toggle between login and signup
   const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (data?.user) setUser(data.user);
+    };
+    fetchUser();
+  }, []);
+
+  const loginWithFacebook = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "facebook",
+    });
+
+    if (error) console.error("Login error:", error.message);
+  };
+
 
   // Handle email/password login or signup
   const handleAuth = async (e: React.FormEvent) => {
@@ -105,7 +120,7 @@ export default function LoginPage() {
    <button
     className="bg-gradient-to-br relative group/btn flex space-x-2 items-center justify-center px-4 rounded-[0.5rem] from-zinc-900 to-zinc-900  bg-zinc-800 w-full text-white h-10 font-medium shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
     type="button"
-    onClick={() => signIn("facebook")}
+    onClick={loginWithFacebook}
    >
      <IconBrandFacebook className="h-4 w-4 text-neutral-300" />
      <span className="text-neutral-300 text-base">
