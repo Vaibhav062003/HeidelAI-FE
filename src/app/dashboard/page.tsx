@@ -149,7 +149,7 @@ export default function DashboardPage() {
           <TabsList className="h-full flex-col items-start justify-start gap-4 pt-6 bg-white/90 backdrop-blur-sm border-r">
           <div className="w-full flex justify-center items-center mb-6">
                 <Link href="/">
-              <Image src='/Heidelai Favicon.ico.ico' alt="logo" width={30} height={30}/>
+              <Image src='/logo.png' alt="logo" width={30} height={30}/>
               </Link>
               </div>
 
@@ -237,6 +237,8 @@ export default function DashboardPage() {
     <LogOut className="h-5 w-5" />
   )}
 </button>
+
+
 
       {/* Profile Section */}
       <div className="cursor-pointer hover:bg-gray-100 rounded-lg p-2 relative group">
