@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -66,6 +65,13 @@ import Image from "next/image";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
+
+interface CustomerInfo {
+  name: string;
+  phone: string;
+  address?: AddressData;
+  cart?: CartItem[];
+}
 
 interface ProductData {
   id: number;
@@ -591,6 +597,9 @@ const ChatView = ({
   const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
   const [showCannedResponses, setShowCannedResponses] = useState(false);
   const [filteredResponses, setFilteredResponses] = useState<CannedResponse[]>([]);
+  const [showCustomerInfo, setShowCustomerInfo] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+
 
     // Add this useEffect for loading canned responses
     useEffect(() => {
@@ -1055,14 +1064,128 @@ const ChatView = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>View Customer Info</DropdownMenuItem>
-                <DropdownMenuItem>Block Contact</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowCustomerInfo(true)}>
+                  View Customer Info
+                </DropdownMenuItem>
+                {/* <DropdownMenuItem>Block Contact</DropdownMenuItem>
                 <DropdownMenuItem>Clear Chat</DropdownMenuItem>
-                <DropdownMenuItem>Export Chat</DropdownMenuItem>
+                <DropdownMenuItem>Export Chat</DropdownMenuItem> */}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
+
+        {/* Customer Info Dialog */}
+        <Dialog open={showCustomerInfo} onOpenChange={setShowCustomerInfo}>
+  <DialogContent className="sm:max-w-[800px]">
+    <DialogHeader>
+      <DialogTitle className="text-2xl">Customer Information</DialogTitle>
+    </DialogHeader>
+
+    {/* Contact Details Section */}
+    <div className="space-y-6">
+      <div className=" rounded-lg p-6">
+        <h3 className="text-lg font-medium mb-4">Contact Details</h3>
+        <div className="grid grid-cols-2 gap-4 text-base">
+          <div className="space-y-1">
+            <div className="text-gray-500">Name</div>
+            <div className="font-medium">{conversation?.customer_name}</div>
+          </div>
+          <div className="space-y-1">
+            <div className="text-gray-500">Phone</div>
+            <div className="font-medium">
+              {selectedConversationId?.split('_')[1]?.replace(/^(\d{2})(\d+)/, '+$1 $2')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="h-px bg-gray-200" />
+
+      {/* Address and Cart Container */}
+      <div className="grid pl-4 grid-cols-2 gap-6">
+        {/* Address Information */}
+        {messages.some(m => extractAddressData(m.content)) && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-medium">Latest Address</h3>
+            {messages
+              .filter(m => extractAddressData(m.content))
+              .slice(-1)
+              .map((m, idx) => {
+                const addressData = extractAddressData(m.content);
+                return (
+                  <div key={idx} className=" rounded-lg py-4 space-y-3">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex gap-2">
+                        <div className="text-gray-500 w-20">Full Name</div>
+                        <div className="font-medium">{addressData?.address.full_name}</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="text-gray-500 w-20">Email</div>
+                        <div className="font-medium">{addressData?.address.email}</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="text-gray-500 w-20">Address</div>
+                        <div className="font-medium">{addressData?.address.address}</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="text-gray-500 w-20">City</div>
+                        <div className="font-medium">
+                          {addressData?.address.city}, {addressData?.address.state} {addressData?.address.pin_code}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="text-gray-500 w-20">Country</div>
+                        <div className="font-medium">{addressData?.address.country.replace('0_', '')}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+
+        {/* Cart Information */}
+        {messages.some(m => extractCartData(m.content)) && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-medium">Latest Cart</h3>
+            {messages
+              .filter(m => extractCartData(m.content))
+              .slice(-1)
+              .map((m, idx) => {
+                const cartItems = extractCartData(m.content);
+                return (
+                  <div key={idx} className="rounded-lg p-4 space-y-4">
+                    <div className="space-y-4">
+                      {cartItems?.map((item, itemIdx) => (
+                        <div key={itemIdx} className="flex gap-3 text-sm border-b pb-4 last:border-0 last:pb-0">
+                          <img 
+                            src={item.product_data.image_url} 
+                            alt={item.product_data.name}
+                            className="w-16 h-16 rounded object-cover"
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium line-clamp-2">{item.product_data.name}</div>
+                            <div className="text-gray-500 mt-1">
+                              {item.quantity} × {item.currency} {item.item_price}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="text-base font-medium ">
+                        Total: {cartItems?.[0].currency} {cartItems?.reduce((sum, item) => sum + (item.item_price * item.quantity), 0)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </div>
+    </div>
+  </DialogContent>
+</Dialog>
 
         {  /* Modal for attaching files */}
         <Dialog open={isFileModalOpen} onOpenChange={setIsFileModalOpen}>
