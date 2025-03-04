@@ -4,6 +4,6 @@ new commit
 new commit
 .
 Rounak : yeah ive added env variables in vercel
-one more
+one more.
 Sample
 Rounak commit
