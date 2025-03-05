@@ -35,6 +35,11 @@ export default function LoginPage() {
   const loginWithFacebook = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "facebook",
+      options: {
+        queryParams: {
+          config_id: '1078509157648485'
+        }
+      }
     });
 
     if (error) console.error("Login error:", error.message);
