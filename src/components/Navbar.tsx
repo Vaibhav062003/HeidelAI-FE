@@ -66,6 +66,7 @@ export default function Navbar() {
                   <a href="#pricing" className="text-gray-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium">
                     Pricing
                   </a>
+              <button className="text-gray-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium" onClick={() => router.push('/admin-signup')}>Get Started</button>
               <button className="text-gray-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium" onClick={() => router.push('/login')}>Login</button>
                 </div>
               </div>

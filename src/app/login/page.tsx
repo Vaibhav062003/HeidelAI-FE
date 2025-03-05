@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { Toaster, toast } from 'sonner';
-import { motion } from 'framer-motion'; // Simplified import
+import { motion } from 'framer-motion';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -15,7 +15,6 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -24,33 +23,50 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) {
-          toast.error(error.message);
-        } else if (data.user) {
-          toast.success('Sign-up successful! Please check your email to confirm your account.');
-          setIsSignUp(false);
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-          toast.error('Invalid email or password');
-        } else {
-          toast.success('Login successful!');
-          // Use setTimeout for smoother transition between states
-          setTimeout(() => router.push('/dashboard'), 1000);
-        }
+      // Sign in with email/password
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
+
+      if (authError) {
+        toast.error('Invalid email or password');
+        return;
       }
+
+      // Fetch user details from users table
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('id, email, role, company_id')
+        .eq('id', authData.user?.id)
+        .single();
+
+      if (userError || !userData) {
+        toast.error('User account not found');
+        await supabase.auth.signOut();
+        return;
+      }
+
+      // Validate user role
+      if (!userData.role || !['admin', 'agent'].includes(userData.role)) {
+        toast.error('Unauthorized access');
+        await supabase.auth.signOut();
+        return;
+      }
+
+      toast.success('Login successful!');
+      setTimeout(() => {
+        router.push(userData.role === 'admin' ? '/dashboard' : '/agent');
+      }, 1000);
+
     } catch (error) {
       toast.error('An unexpected error occurred');
-      console.error('Error during authentication:', error);
+      console.error('Authentication error:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Simpler fade animation variants
   const fadeVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1 },
@@ -71,7 +87,7 @@ export default function LoginPage() {
       >
         <div className="max-w-md w-full mx-auto rounded-none md:rounded-2xl p-4 md:p-8 shadow-input bg-black">
           <h2 className="font-semibold pb-6 text-xl text-center text-neutral-200">
-            {isSignUp ? "Create an Account" : "Sign in to your account"}
+            Sign in to your account
           </h2>
 
           <form className="my-8" onSubmit={handleAuth}>
@@ -81,8 +97,9 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="border border-white/[0.1] rounded-[0.5rem] h-[45px] bg-zinc-800 placeholder:text-zinc-400 text-white"
-                placeholder="projectmayhem@fc.com"
+                placeholder="email@company.com"
                 type="email"
+                required
               />
             </LabelInputContainer>
             <LabelInputContainer className="mb-4">
@@ -93,6 +110,7 @@ export default function LoginPage() {
                 className="border border-white/[0.2] rounded-[0.5rem] h-[45px] bg-zinc-800 placeholder:text-zinc-400 text-white"
                 placeholder="••••••••"
                 type="password"
+                required
               />
             </LabelInputContainer>
 
@@ -106,10 +124,10 @@ export default function LoginPage() {
               {isLoading ? (
                 <span className="flex items-center justify-center">
                   <LoadingSpinner />
-                  <span className="ml-2">Processing...</span>
+                  <span className="ml-2">Authenticating...</span>
                 </span>
               ) : (
-                <>{isSignUp ? "Sign Up" : "Log in"} &rarr;</>
+                <>Log in &rarr;</>
               )}
               <BottomGradient />
             </motion.button>
@@ -117,16 +135,8 @@ export default function LoginPage() {
 
           <div className="bg-gradient-to-r from-transparent via-neutral-700 to-transparent my-8 h-[1px] w-full" />
 
-          <div className="flex flex-col space-y-4">
-            <motion.button
-              className="bg-gradient-to-br relative group/btn rounded-[0.5rem] from-zinc-900 to-zinc-900 block bg-zinc-800 w-full text-white h-10 font-medium shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
-              onClick={() => setIsSignUp(!isSignUp)}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {isSignUp ? "Already have an account? Log in" : "Don't have an account? Sign up"}
-              <BottomGradient />
-            </motion.button>
+          <div className="text-center text-sm text-neutral-400">
+            <p>Don't have an account? Contact your administrator</p>
           </div>
         </div>
       </motion.section>
@@ -134,7 +144,6 @@ export default function LoginPage() {
   );
 }
 
-// Simple loading spinner component
 const LoadingSpinner = () => (
   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

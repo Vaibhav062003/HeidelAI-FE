@@ -1,17 +1,48 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { AuthProvider } from '@/contexts/AuthContext';
+import React from 'react';
 
-const inter = Inter({ subsets: ['latin'] })
-
-import dotenv from 'dotenv';
-dotenv.config();
-
-
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-inter' 
+})
 
 export const metadata: Metadata = {
-  title: 'AI Startup',
-  description: 'AI Startup Landing Page',
+  metadataBase: new URL('https://heidelai.com'),
+  title: {
+    default: 'HeidelAI - AI-Powered Customer Engagement & Analytics Platform',
+    template: '%s | HeidelAI'
+  },
+  description: 'Transform your business with HeidelAI\'s AI-powered tools for customer engagement, real-time analytics, and smart chatbots.',
+  keywords: [
+    'AI customer engagement tools', 
+    'real-time business analytics', 
+    'AI chatbots for businesses', 
+    'ads optimization platform', 
+    'influencer marketing analytics', 
+    'WhatsApp chatbots', 
+    'Telegram chatbots', 
+    'conversation analytics tools', 
+    'business growth with AI insights'
+  ],
+  authors: [{ name: 'HeidelAI' }],
+  icons: {
+    icon: '/HeidelAi Favicon.ico.ico',
+  },
+  openGraph: {
+    title: 'HeidelAI - AI-Powered Customer Engagement & Analytics Platform',
+    description: 'Transform your business with HeidelAI\'s AI-powered tools for customer engagement, real-time analytics, and smart chatbots.',
+    images: ['/heidelai_mockup.png'],
+    type: 'website'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'HeidelAI - AI-Powered Customer Engagement & Analytics Platform',
+    description: 'Transform your business with HeidelAI\'s AI-powered tools for customer engagement, real-time analytics, and smart chatbots.',
+    images: ['/heidelai_mockup.png']
+  }
 }
 
 export default function RootLayout({
@@ -20,23 +51,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <head>
-        <title>HeidelAI - AI-Powered Customer Engagement & Analytics Platform</title>
-        <meta name="description" content="Transform your business with HeidelAI's AI-powered tools for customer engagement, real-time analytics, and smart chatbots." />
-        <meta name="keywords" content="AI customer engagement tools, real-time business analytics, AI chatbots for businesses, ads optimization platform, influencer marketing analytics, WhatsApp chatbots, Telegram chatbots, conversation analytics tools, business growth with AI insights" />
-        <meta name="author" content="HeidelAI" />
-        <link rel="icon" href="/HeidelAi Favicon.ico.ico" />
-        <meta property="og:title" content="HeidelAI - AI-Powered Customer Engagement & Analytics Platform" />
-        <meta property="og:description" content="Transform your business with HeidelAI's AI-powered tools for customer engagement, real-time analytics, and smart chatbots." />
-        <meta property="og:image" content="/heidelai_mockup.png" />
-        <meta property="og:url" content="https://heidelai.com" />
-        <meta name="twitter:card" content="/heidelai_mockup.png" />
-        <meta name="twitter:title" content="HeidelAI - AI-Powered Customer Engagement & Analytics Platform" />
-        <meta name="twitter:description" content="Transform your business with HeidelAI's AI-powered tools for customer engagement, real-time analytics, and smart chatbots." />
-        <meta name="twitter:image" content="/heidelai_mockup.png" />
-      </head>
-        {children}
+    <html lang="en" className={inter.variable}>
+      <body className={`bg-black text-white font-sans ${inter.className}`}>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   )
 }
