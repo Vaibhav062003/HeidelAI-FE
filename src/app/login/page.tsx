@@ -37,8 +37,8 @@ export default function LoginPage() {
       // Fetch user details from users table
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('id, email, role, company_id')
-        .eq('id', authData.user?.id)
+        .select('user_id, email, role, company_id')
+        .eq('user_id', authData.user?.id)
         .single();
 
       if (userError || !userData) {
@@ -46,7 +46,7 @@ export default function LoginPage() {
         await supabase.auth.signOut();
         return;
       }
-
+      
       // Validate user role
       if (!userData.role || !['admin', 'agent'].includes(userData.role)) {
         toast.error('Unauthorized access');
