@@ -12,9 +12,10 @@ import { toast, Toaster } from 'sonner';
 // import { toZonedTime } from 'date-fns-tz';
 import { Conversation } from '../types/conversation';
 import { ShoppingCart, MapPin, Upload, FileText, FileImage, FileVideo, Music, File, Loader2, X } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogTrigger } from "../ui/dialog";
 import dynamic from 'next/dynamic';
 import { useReminders } from '../hooks/useReminders';
+import { H1, H2, H3, Body, Small } from "@/components/typography";
 
 import { Plus } from "lucide-react";
 import { createClient } from '@supabase/supabase-js';
@@ -599,6 +600,7 @@ const ChatView = ({
   const [filteredResponses, setFilteredResponses] = useState<CannedResponse[]>([]);
   const [showCustomerInfo, setShowCustomerInfo] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+  const [ShowInfo, setShowInfo] = useState(false);
 
 
     // Add this useEffect for loading canned responses
@@ -960,10 +962,41 @@ const ChatView = ({
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <img src={avatarSource} alt="Platform avatar"  />
+              <img src={avatarSource} alt="Platform avatar"/>
             </Avatar>
             <div>
-              <h3 className="font-semibold">{conversation?.customer_name}</h3>
+              <Dialog>
+                <DialogTrigger>
+                  <h3 className="font-semibold">{conversation?.customer_name}</h3>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[800px]">
+                <div className="space-y-6">
+                  <div className=" rounded-lg p-6">
+                    <H3 className="text-lg font-medium mb-4">Contact Details</H3>
+                  
+                    <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <Small>Name</Small>
+          <Body className="font-medium">{conversation?.customer_name}</Body>
+        </div>
+        <div className="space-y-1">
+          <Small>
+            {conversation?.platform === "whatsapp" ? "Phone" : "Username"}
+          </Small>
+          <Body className="font-medium">
+            {conversation?.platform === "whatsapp"
+              ? selectedConversationId?.split('_')[1]?.replace(/^(\d{2})(\d+)/, '+$1 $2')
+              : selectedConversationId?.split('_')[1]
+            }
+          </Body>
+        </div>
+      </div>
+    </div>
+  </div>
+</DialogContent>
+              </Dialog>
+              
+              
               {/* <div className="flex items-center gap-2">
                 <Badge variant="secondary" className="text-xs">
                   Active
