@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, use } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -601,6 +601,52 @@ const ChatView = ({
   const [showCustomerInfo, setShowCustomerInfo] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [ShowInfo, setShowInfo] = useState(false);
+  const [audioURL, setAudioURL] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const [audioBlob,setAudioBlob] = useState<Blob | null>(null);
+  const [audioModalOpen,setIsAudioModalOpen]= useState(false);
+
+
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus' // Ensure WebM format with Opus codec
+      });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+  
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+  
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudioURL(audioUrl);
+        setIsRecording(false);
+      };
+  
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      toast.error('Error accessing microphone. Please check your permissions.');
+    }
+  };
+
+  const stopRecording =()=>{
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      // Stop all audio tracks
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    }
+  }
 
 
     // Add this useEffect for loading canned responses
@@ -634,6 +680,63 @@ const ChatView = ({
 
   const handleMicClick = () => {
     setIsRecording(!isRecording);
+  };
+
+  const handleSendAudio = async () => {
+    if (!audioURL || !selectedConversationId) return;
+  
+    setIsSending(true);
+    try {
+      // Create a new FormData instance
+      const formData = new FormData();
+      
+      // Convert the audioURL blob to a File object
+      const audioBlob = await fetch(audioURL).then(r => r.blob());
+      const audioFile = new window.File([audioBlob], 'voice-message.webm', { 
+        type: 'audio/webm' // Keep original WebM format from recording
+      });
+      
+      // Add required metadata
+      formData.append('file', audioFile);
+      formData.append('type', 'audio');
+      formData.append('messaging_product', 'whatsapp');
+      formData.append('conversation_id', selectedConversationId);
+  
+      // Send the audio file
+      const response = await fetch(`https://egenie-whatsapp.koyeb.app/media/${selectedConversationId}/upload`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `Server error: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      
+      // Add the voice message to the messages array
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        content: data.fileUrl || audioURL,
+        type: 'voice',
+        role: 'agent',
+        conversation_id: selectedConversationId,
+        timestamp: new Date().toISOString(),
+        sender_id: 'agent',
+        fileUrl: data.fileUrl || audioURL
+      }]);
+  
+      // Clear the audio state
+      setAudioURL(null);
+      toast.success('Voice message sent successfully');
+    } catch (error) {
+      console.error('Error sending audio message:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to send voice message');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleFileUpload = async (file: File | null, recipient: string) => {
@@ -970,10 +1073,9 @@ const ChatView = ({
                   <h3 className="font-semibold">{conversation?.customer_name}</h3>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[800px]">
+                  <DialogTitle>Customer Info</DialogTitle>
                 <div className="space-y-6">
                   <div className=" rounded-lg p-6">
-                    <H3 className="text-lg font-medium mb-4">Contact Details</H3>
-                  
                     <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
           <Small>Name</Small>
@@ -1687,7 +1789,13 @@ const ChatView = ({
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={handleMicClick}
+                  onClick={() => {
+                    if (isRecording) {
+                      stopRecording(); // Stop recording if already recording
+                    } else {
+                      startRecording(); // Start recording if not recording
+                    }
+                  }}
                   className={isRecording ? "bg-red-100" : ""}
                 >
                   <Mic
@@ -1702,22 +1810,35 @@ const ChatView = ({
 
             
             <div className="flex-1 relative">
-            <Input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder={sharedProduct ? "Add a message about this product..." : "Type a message"}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  if (sharedProduct) {
-                    handleShareProduct(message, sharedProduct);
-                  } else {
-                    sendMessage();
+              {audioURL? (
+                <div className="flex items-center gap-2">
+                  <audio controls src={audioURL} className="w-full " />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setAudioURL(null)} // Clear the audio preview
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+              </div>
+              ): (
+                <Input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder={sharedProduct ? "Add a message about this product..." : "Type a message"}
+                  onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (sharedProduct) {
+                      handleShareProduct(message, sharedProduct);
+                    } else {
+                      sendMessage();
+                    }
                   }
-                }
-              }}
-            />
-            
+                }}
+              />
+              )}
+  
             {showCannedResponses && (
               <div className="absolute bottom-14 left-0 w-full bg-white border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
                 {filteredResponses.map(response => (
@@ -1753,6 +1874,25 @@ const ChatView = ({
                 onClick={() => {
                   if (sharedProduct) {
                     handleShareProduct(message, sharedProduct);
+                  } else if (audioURL) {
+                    handleSendAudio();
+                  } else {
+                    sendMessage();
+                  }
+                }}
+                disabled={isSending || (!message.trim() && !sharedProduct && !audioURL)}
+              >
+                {isSending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+              {/* <Button 
+                size="icon" 
+                onClick={() => {
+                  if (sharedProduct) {
+                    handleShareProduct(message, sharedProduct);
                   } else {
                     sendMessage();
                   }
@@ -1764,7 +1904,7 @@ const ChatView = ({
                 ) : (
                   <Send className="h-4 w-4" />
                 )}
-              </Button>
+              </Button> */}
               </TooltipTrigger>
               <TooltipContent>Send message</TooltipContent>
             </Tooltip>
