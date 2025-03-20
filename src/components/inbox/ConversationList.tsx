@@ -177,7 +177,7 @@ const ConversationList = ({
         </div>
         <Tabs defaultValue="all" className="mt-4">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">ME</TabsTrigger>
+            <TabsTrigger value="all">Me</TabsTrigger>
             <TabsTrigger value="live_agent">Live Agent</TabsTrigger>
             <TabsTrigger value="AI">AI</TabsTrigger>
           </TabsList>
@@ -239,7 +239,7 @@ const ConversationList = ({
           </div>
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabValue)} className="mt-4">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="all">ME</TabsTrigger>
+              <TabsTrigger value="all">Me</TabsTrigger>
               <TabsTrigger value="live_agent">Live Agent</TabsTrigger>
               <TabsTrigger value="AI">AI</TabsTrigger>
             </TabsList>
