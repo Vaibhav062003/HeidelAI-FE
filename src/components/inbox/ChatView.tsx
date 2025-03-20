@@ -63,6 +63,7 @@ import ReminderDialog from "./ReminderDialog";
 
 import '../../app/dashboard/dashboard.css';
 import Image from "next/image";
+import CustomerInfo from './CustomerInfo';
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -896,6 +897,38 @@ const ChatView = ({
     }
   };
 
+  const saveCustomerInfo = async (updatedData: {
+    name: string;
+    email: string;
+    billingaddress: string;
+    shippingaddress: string;
+    gstin: string;
+  }) => {
+    try {
+      const response = await fetch(
+        `https://your-api-endpoint/conversations/${selectedConversationId}/update_customer_info`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
+  
+      if (!response.ok) {
+        throw new Error("Failed to update customer info");
+      }
+  
+      const updatedConversation = await response.json();
+      setConversation(updatedConversation); // Update the state with the new data
+      toast.success("Customer information updated successfully!");
+    } catch (error) {
+      console.error("Error updating customer info:", error);
+      toast.error("Failed to update customer information.");
+    }
+  };
+
 
   useEffect(() => {
     if (!selectedConversationId) return;
@@ -1068,11 +1101,28 @@ const ChatView = ({
               <img src={avatarSource} alt="Platform avatar"/>
             </Avatar>
             <div>
-              <Dialog>
-                <DialogTrigger>
-                  <h3 className="font-semibold">{conversation?.customer_name}</h3>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[800px]">
+            <Dialog>
+      <DialogTrigger asChild>
+        <h3 className="font-semibold cursor-pointer">{conversation?.customer_name}</h3>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[900px] sm:max-h-[600px]">
+  <DialogHeader>
+    <DialogTitle className="text-2xl">{conversation?.customer_name} Information</DialogTitle>
+  </DialogHeader>
+  {conversation && (
+    <CustomerInfo
+      name={conversation?.customer_name || "Unknown"}
+      email={conversation?.email || "Unknown"}
+      billingaddress={conversation?.billingAddress || "Unknown"}
+      shippingaddress={conversation?.shippingAddress || "Unknown"}
+      platform={conversation?.platform || ""}
+      selectedConversationId={selectedConversationId}
+      saveCustomerInfo={saveCustomerInfo} // Pass the save function
+  />
+  )}
+</DialogContent>
+    </Dialog>
+                {/* <DialogContent className="sm:max-w-[800px]">
                   <DialogTitle>Customer Info</DialogTitle>
                 <div className="space-y-6">
                   <div className=" rounded-lg p-6">
@@ -1095,8 +1145,8 @@ const ChatView = ({
       </div>
     </div>
   </div>
-</DialogContent>
-              </Dialog>
+</DialogContent> */}
+            
               
               
               {/* <div className="flex items-center gap-2">
