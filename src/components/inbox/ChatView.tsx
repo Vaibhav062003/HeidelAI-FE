@@ -64,6 +64,7 @@ import ReminderDialog from "./ReminderDialog";
 import '../../app/dashboard/dashboard.css';
 import Image from "next/image";
 import CustomerInfo from './CustomerInfo';
+import LandingDashboard from "./LandingDashboard";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -1089,8 +1090,9 @@ const ChatView = ({
       {!selectedConversationId ? (
         <Card className="h-full flex flex-col bg-white  items-center justify-center">
           <div className="text-center text-gray-500">
-            <h3 className="text-3xl font-bold text-black mb-2">Welcome to your dashboard!</h3>
-            <p>Select a conversation from the list to continue</p>
+            <LandingDashboard/>
+            {/* <h3 className="text-3xl font-bold text-black mb-2">Welcome to your dashboard!</h3>
+            <p>Select a conversation from the list to continue</p> */}
           </div>
         </Card>
       ) : (
