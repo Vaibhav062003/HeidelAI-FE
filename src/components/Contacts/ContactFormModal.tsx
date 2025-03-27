@@ -250,10 +250,10 @@ if (formData.phone) {
     <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 p-6">
       {/* First Name */}
       <div>
-        <label className="block text-sm font-medium mb-1">First Name *</label>
+        <label className="block text-sm font-medium mb-1 text-black">First Name *</label>
         <input
           required
-          className="w-full px-3 py-2 border rounded-lg"
+          className="w-full px-3 py-2 border rounded-lg text-black"
           value={formData.firstName || ""}
           onChange={(e) =>
             setFormData({ ...formData, firstName: e.target.value })
@@ -263,10 +263,10 @@ if (formData.phone) {
 
       {/* Last Name */}
       <div>
-        <label className="block text-sm font-medium mb-1">Last Name *</label>
+        <label className="block text-sm font-medium mb-1 text-black">Last Name *</label>
         <input
           required
-          className="w-full px-3 py-2 border rounded-lg"
+          className="w-full px-3 py-2 border rounded-lg text-black"
           value={formData.lastName || ""}
           onChange={(e) =>
             setFormData({ ...formData, lastName: e.target.value })
@@ -276,11 +276,11 @@ if (formData.phone) {
 
       {/* Email */}
       <div>
-        <label className="block text-sm font-medium mb-1">Email *</label>
+        <label className="block text-sm font-medium mb-1 text-black">Email *</label>
         <input
           required
           type="email"
-          className="w-full px-3 py-2 border rounded-lg"
+          className="w-full px-3 py-2 border rounded-lg text-black"
           value={formData.email || ""}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
         />
@@ -288,10 +288,10 @@ if (formData.phone) {
 
       {/* Phone */}
       <div>
-        <label className="block text-sm font-medium mb-1">Phone</label>
+        <label className="block text-sm font-medium mb-1 text-black">Phone</label>
         <input
           type="tel"
-          className="w-full px-3 py-2 border rounded-lg"
+          className="w-full px-3 py-2 border rounded-lg text-black"
           value={formData.phone || ""}
           onChange={(e) => {
             // Allow only numbers
@@ -306,9 +306,9 @@ if (formData.phone) {
 
       {/* City */}
       <div>
-        <label className="block text-sm font-medium mb-1">City</label>
+        <label className="block text-sm font-medium mb-1 text-black">City</label>
         <input
-          className="w-full px-3 py-2 border rounded-lg"
+          className="w-full px-3 py-2 border rounded-lg text-black"
           value={formData.city || ""}
           onChange={(e) => setFormData({ ...formData, city: e.target.value })}
         />
@@ -316,9 +316,9 @@ if (formData.phone) {
 
       {/* Country */}
       <div>
-        <label className="block text-sm font-medium mb-1">Country</label>
+        <label className="block text-sm font-medium mb-1 text-black">Country</label>
         <select
-          className="w-full px-3 py-2 border rounded-lg"
+          className="w-full px-3 py-2 border rounded-lg text-black"
           value={formData.country || ""}
           onChange={(e) =>
             setFormData({ ...formData, country: e.target.value })
@@ -335,9 +335,9 @@ if (formData.phone) {
 
       {/* Platform */}
       <div>
-        <label className="block text-sm font-medium mb-1">Platform</label>
+        <label className="block text-sm font-medium mb-1 text-black">Platform</label>
         <select
-          className="w-full px-3 py-2 border rounded-lg"
+          className="w-full px-3 py-2 border rounded-lg text-black"
           value={formData.platform || ""}
           onChange={(e) =>
             setFormData({ ...formData, platform: e.target.value })
@@ -354,10 +354,10 @@ if (formData.phone) {
 
       {/* Instagram ID */}
       <div className={formData.platform === "Instagram" ? "block" : "hidden"}>
-        <label className="block text-sm font-medium mb-1">Instagram ID *</label>
+        <label className="block text-sm font-medium mb-1 text-black">Instagram ID *</label>
         <input
           required={formData.platform === "Instagram"}
-          className="w-full px-3 py-2 border rounded-lg"
+          className="w-full px-3 py-2 border rounded-lg text-black"
           value={formData.user_name || ""}
           onChange={(e) =>
             setFormData({ ...formData, user_name: e.target.value })
@@ -377,13 +377,13 @@ if (formData.phone) {
 
       {/* Tags Dropdown */}
       <div className="col-span-2 relative" ref={dropdownRef}>
-        <label className="block text-sm font-medium mb-1">Tags</label>
+        <label className="block text-sm font-medium mb-1 text-black">Tags</label>
         <div className="relative">
           <div
             className="w-full px-3 py-2 border rounded-lg cursor-pointer flex items-center justify-between bg-white"
             onClick={() => setIsTagsOpen(!isTagsOpen)}
           >
-            <div className="flex flex-wrap gap-1 flex-1 mr-2">
+            <div className="flex flex-wrap gap-1 flex-1 mr-2 text-black">
               {Array.isArray(formData.tags) &&
                 formData.tags.map((tagName) => (
                   <span

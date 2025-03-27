@@ -147,18 +147,18 @@ export const MessageComposer = ({ onMessageSend }: MessageComposerProps) => {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl flex">
             {/* Left Form Section */}
             <div className="w-1/2 p-6 border-r border-gray-200 flex flex-col">
-              <h2 className="text-xl font-semibold mb-6">Compose Message</h2>
+              <h2 className="text-xl font-semibold mb-6 text-black">Compose Message</h2>
 
               <div className="space-y-6 flex-1">
                 {/* Tags Dropdown */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-sm font-medium mb-2 text-black">
                     Select Tag
                   </label>
                   <select
                     value={selectedTag}
                     onChange={(e) => setSelectedTag(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 text-black"
                   >
                     <option value="">All Tags</option>
                     {tags.map((tag) => (
@@ -171,14 +171,14 @@ export const MessageComposer = ({ onMessageSend }: MessageComposerProps) => {
 
                 {/* Platform Selection */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-sm font-medium mb-2 text-black">
                     Platform
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setSelectedPlatform("whatsapp")}
-                      className={`p-3 rounded-lg border ${
+                      className={`p-3 rounded-lg border text-black ${
                         selectedPlatform === "whatsapp"
                           ? "border-blue-500 bg-blue-50"
                           : "border-gray-200 hover:border-gray-300"
@@ -189,7 +189,7 @@ export const MessageComposer = ({ onMessageSend }: MessageComposerProps) => {
                     <button
                       type="button"
                       onClick={() => setSelectedPlatform("instagram")}
-                      className={`p-3 rounded-lg border ${
+                      className={`p-3 rounded-lg border text-black ${
                         selectedPlatform === "instagram"
                           ? "border-blue-500 bg-blue-50"
                           : "border-gray-200 hover:border-gray-300"
@@ -202,7 +202,7 @@ export const MessageComposer = ({ onMessageSend }: MessageComposerProps) => {
 
                 {/* Template Selection */}
                 <div className="relative" ref={templateDropdownRef}>
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-sm font-medium mb-2 text-black">
                     Select Template
                   </label>
                   <div className="relative">
@@ -211,7 +211,7 @@ export const MessageComposer = ({ onMessageSend }: MessageComposerProps) => {
                       placeholder="Search templates..."
                       value={templateSearch}
                       onChange={(e) => setTemplateSearch(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 text-black"
                       onFocus={() => setIsTemplateDropdownOpen(true)}
                     />
 
@@ -221,7 +221,7 @@ export const MessageComposer = ({ onMessageSend }: MessageComposerProps) => {
                           <div
                             key={template.id}
                             onClick={() => handleTemplateSelect(template)}
-                            className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0"
+                            className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0 text-black"
                           >
                             <div className="font-medium">{template.name}</div>
                             <div className="text-sm text-gray-500 mt-1">

@@ -13,7 +13,7 @@ import {
   X,
   Search,
 } from "lucide-react";
-import data from "@emoji-mart/data";
+import data from "@emoji-mart/react";
 import Picker from "@emoji-mart/react";
 import { insertFormatting } from "./textFormatting";
 import { Input } from "@/components/ui/input";
