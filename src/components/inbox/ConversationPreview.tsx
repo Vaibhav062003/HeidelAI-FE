@@ -48,7 +48,7 @@ const ConversationPreview = ({
       onClick={onClick}
     >
       <div className="flex items-start gap-4">
-        <Avatar>
+        <Avatar className="shrink-0">
           {channelType === "whatsapp" && <img src="/features/whatsapp.png" alt="WhatsApp" />}
           {channelType === "telegram" && <img src="/features/telegram.png" alt="Telegram" />}
           {channelType === "instagram" && <img src="/features/instagram.png" alt="Instagram" />}
@@ -72,7 +72,16 @@ const ConversationPreview = ({
             </div>
             <span className="text-xs text-gray-500">{getRelativeTime(timestamp)}</span>
           </div>
-          <p className="text-sm text-gray-600 truncate">{lastMessage}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-600 truncate pr-2">{lastMessage}</p>
+            <div className="flex items-center gap-2 shrink-0">
+              {isAiEnabled ? (
+                <Bot className="h-4 w-4 text-blue-500" />
+              ) : assignedAgentId ? (
+                <User2 className="h-4 w-4 text-green-500" />
+              ) : null}
+            </div>
+          </div>
           <div className="flex items-center gap-2 mt-2">
             {priority === "low" && (
               <Badge variant="outline" className="bg-green-100 text-green-600">
@@ -94,11 +103,6 @@ const ConversationPreview = ({
                 {unreadCount}
               </Badge>
             )}
-            {isAiEnabled ? (
-              <Bot className="h-4 w-4 text-blue-500 ml-2" />
-            ) : assignedAgentId ? (
-              <User2 className="h-4 w-4 text-green-500 ml-2" />
-            ) : null}
           </div>
         </div>
       </div>
