@@ -19,6 +19,7 @@ type TemplateBuildersProps ={
   setTemplates: React.Dispatch<React.SetStateAction<WhatsAppTemplate[]>>;
   searchTemplate: string;
   setSearchTemplate: React.Dispatch<React.SetStateAction<string>>;
+
 }
 
 // Helper function to format template name
@@ -443,7 +444,7 @@ const handleNext = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewFile(reader.result as string);
-        setHeaderContent(file.name);
+        setHeaderContent(file.name)
       };
       reader.readAsDataURL(file);
     }
@@ -533,192 +534,176 @@ const sendPostRequest = async (data:any) => {
       body: JSON.stringify(data),
     });
 
-    if (!response.ok) {
+    if (!response.ok) { 
       const errorDetails = await response.json(); // Try to get error details from the server
       throw new Error(`HTTP error! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
     }
 
-    console.log("POST request successful:");
+    const result = await response.json();
+
+    console.log("POST request successful:", result);
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error during POST request:", error.message);
     } else {
       console.error("Error during POST request:", error);
-    }
+    } 
   }
 };
 
-const exportData = async () => {
-  try {
-    // Map language to ISO code
-    const languageCode = languageMapping[language as keyof typeof languageMapping] || "en";
+  const exportData = async () => {
+    try {
+      // Map language to ISO code
+      const languageCode = languageMapping[language as keyof typeof languageMapping] || "en";
 
-    // Validate required fields
-    if (!templateName || !languageCode) {
-      throw new Error("Template name and language are required.");
-    }
-
-    let payload;
-
-    if (templateType === "one-time_Passcode") {
-      // One-Time Passcode Template
-      if (!apps || apps.length === 0) {
-        throw new Error("At least one app with packageName and signatureHash is required.");
+      // Validate required fields
+      if (!templateName || !languageCode) {
+        throw new Error("Template name and language are required.");
       }
 
-      payload = {
-        name: templateName.toLowerCase(),
-        language: languageCode,
-        category: "authentication", // Lowercase as per the desired format
-        message_send_ttl_seconds: 60, // TTL for the message
-        components: [
-          {
-            type: "body", // Lowercase as per the desired format
-            add_security_recommendation: addSecurityRecommendation || false, // Default to false if not provided
-          },
-          customValidityPeriod && {
-            type: "footer", // Lowercase as per the desired format
-            code_expiration_minutes: parseInt(validityPeriod.split(" ")[0]) || undefined,
-          },
-          {
-            type: "buttons", // Lowercase as per the desired format
-            buttons: [
-              {
-                type: "otp",
-                otp_type: codeDeliveryMethod || "one-tap", // Default to "one-tap" if not provided
-                text: copyCodeText || "Copy code", // Default button text
-                autofill_text: autofillText || "Autofill", // Default autofill text
-                package_name: apps[0]?.packageName || "", // Package name
-                signature_hash: apps[0]?.signatureHash || "", // Signature hash
-              },
-            ],
-          },
-        ].filter(Boolean), // Remove any undefined components
-      };
-    } else if (templateType === "catalog") {
-      // Catalog Template
-      payload = {
-        name: templateName.toLowerCase(),
-        language: languageCode,
-        category: "MARKETING",
-        components: [
-          {
-            type: "BODY",
-            text: messageBody,
-            example: {
-              body_text: [
-                variables
-                  .filter((v) => v.section === "body")
-                  .map((variable) => variable.example),
+      let payload;
+
+      if (templateType === "one-time_Passcode") {
+        // One-Time Passcode Template
+        payload = {
+          name: templateName.toLowerCase(),
+          language: languageCode,
+          category: "authentication",
+          message_send_ttl_seconds: 60,
+          components: [
+            {
+              type: "body",
+              add_security_recommendation: false,
+            },
+            {
+              type: "buttons",
+              buttons: [
+                {
+                  type: "otp",
+                  otp_type: "one-tap",
+                  text: "Copy code",
+                  autofill_text: "Autofill",
+                  package_name: "",
+                  signature_hash: "",
+                },
               ],
             },
-          },
-          footer && {
-            type: "FOOTER",
-            text: footer,
-          },
-          {
-            type: "BUTTONS",
-            buttons: [
-              {
-                type: "CATALOG",
-                text: "View catalog",
-              },
-            ],
-          },
-        ].filter(Boolean),
-      };
-    } else {
-      // Custom Template
-      payload = {
-        name: templateName.toLowerCase(),
-        language: languageCode,
-        category: activeTab.toUpperCase(),
-        components: [
-          headerType !== "none" && {
-            type: "HEADER",
-            format: headerType.toUpperCase(),
-            ...(headerType === "text" && {
-              text: header,
+          ].filter(Boolean),
+        };
+      } else if (templateType === "catalog") {
+        // Catalog Template
+        payload = {
+          name: templateName.toLowerCase(),
+          language: languageCode,
+          category: "MARKETING",
+          components: [
+            {
+              type: "BODY",
+              text: messageBody,
               example: {
-                header_text: headerVariables.map((variable) => variable.example),
-              },
-            }),
-            ...(["image", "video", "document"].includes(headerType) && {
-              example: {
-                header_handle: [headerContent], // Use the uploaded media handle here
-              },
-            }),
-          },
-          {
-            type: "BODY",
-            text: messageBody,
-            example: {
-              body_text: [
-                variables
+                body_text: variables
                   .filter((v) => v.section === "body")
                   .map((variable) => variable.example),
+              },
+            },
+            footer && {
+              type: "FOOTER",
+              text: footer,
+            },
+            {
+              type: "BUTTONS",
+              buttons: [
+                {
+                  type: "CATALOG",
+                  text: "View catalog",
+                },
               ],
             },
-          },
-          footer &&
-            (activeTab === "marketing"
-              ? {
-                  type: "FOOTER",
-                  text: footer, // Only footer text for marketing tab
+          ].filter(Boolean),
+        };
+      } else {
+        // Custom Template
+        payload = {
+          name: templateName.toLowerCase(),
+          language: languageCode,
+          category: activeTab.toUpperCase(),
+          components: [
+            headerType !== "none" && {
+              type: "HEADER",
+              format: headerType.toUpperCase(),
+              ...(headerType === "text" && {
+                text: header,
+                example: {
+                  header_text: variables
+                    .filter((v) => v.section === "header")
+                    .map((variable) => variable.example),
+                },
+              }),
+              ...(["image", "video", "document"].includes(headerType) && {
+                example: {
+                  header_handle: [headerContent],
+                },
+              }),
+            },
+            {
+              type: "BODY",
+              text: messageBody,
+              example: {
+                body_text: variables
+                  .filter((v) => v.section === "body")
+                  .map((variable) => variable.example),
+              },
+            },
+            footer && {
+              type: "FOOTER",
+              text: footer,
+            },
+            {
+              type: "BUTTONS",
+              buttons: button.map((btn) => {
+                if (btn.type === "reply") {
+                  return {
+                    type: "QUICK_REPLY",
+                    text: btn.text,
+                  };
+                } else if (btn.type === "url") {
+                  return {
+                    type: "URL",
+                    text: btn.text,
+                    url: btn.value,
+                  };
+                } else if (btn.type === "phone") {
+                  return {
+                    type: "PHONE_NUMBER",
+                    text: btn.text,
+                    phone_number: btn.value,
+                  };
+                } else if (btn.type === "copy") {
+                  return {
+                    type: "COPY_TEXT",
+                    text: btn.text,
+                    copy_text: btn.value,
+                  };
                 }
-              : activeTab === "utility" && {
-                  type: "FOOTER",
-                  text: [
-                    footer,
-                    isChecked && selectedTime && `Valid for ${selectedTime}`,
-                  ]
-                    .filter(Boolean) // Remove any undefined or empty values
-                    .join(", "), // Combine with a comma if both are present
-                }),
-          {
-            type: "BUTTONS",
-            buttons: button.map((btn) => {
-              if (btn.type === "reply") {
-                return {
-                  type: "QUICK_REPLY",
-                  text: btn.text,
-                };
-              } else if (btn.type === "url") {
-                return {
-                  type: "URL",
-                  text: btn.text,
-                  url: btn.value,
-                };
-              } else if (btn.type === "phone") {
-                return {
-                  type: "PHONE_NUMBER",
-                  text: btn.text,
-                  phone_number: btn.value,
-                };
-              } else if (btn.type === "copy") {
-                return {
-                  type: "COPY_TEXT",
-                  text: btn.text,
-                  copy_text: btn.value,
-                };
-              }
-              return null;
-            }).filter(Boolean), // Remove any invalid buttons
-          },
-        ].filter(Boolean),
+                return null;
+              }).filter(Boolean),
+            },
+          ].filter(Boolean),
+        };
       }
-      
+
+      console.log("Sending payload:", JSON.stringify(payload, null, 2));
+
+      // Send POST request
+        await sendPostRequest(payload);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error("Error during exportData:", error.message);
+      } else {
+        console.error("Error during exportData:", error);
+      }
     }
-    await sendPostRequest(payload);
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error("Error during exportData:", error.message);
-    } else {
-      console.error("Error during exportData:", error);
-    }
-  }
-};
+  };
 // Helper function to send POST request
 
 
@@ -809,6 +794,7 @@ const exportData = async () => {
                     setFooter={setFooter}
                     button={button}
                     showButtonModal={showButtonModal}
+                    handleFileUpload={handleFileUpload}
                     setShowButtonModal={setShowButtonModal}
                     newButton={newButton}
                     headerType={headerType}
@@ -827,7 +813,6 @@ const exportData = async () => {
                     setHeaderContent={setHeaderContent}  
                     previewFile={previewFile}
                     setPreviewFile={setPreviewFile}
-                    handleFileUpload={handleFileUpload}
                     insertVariable={insertVariable}
                     removeVariable={removeVariable}
                     removeButton={removeButton}

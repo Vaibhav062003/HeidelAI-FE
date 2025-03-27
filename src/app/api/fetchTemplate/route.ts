@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { WhatsAppTemplate } from "@/components/types/template";
 import { NextResponse } from "next/server";
 
@@ -18,7 +20,7 @@ export async function GET() {
       throw new Error(`External api error: ${response.status}`);
     }
 
-    const data: any = await response.json(); 
+    const data: { data: WhatsAppTemplate[] } = await response.json(); 
    
     const templates: WhatsAppTemplate[] = data.data || [];
 

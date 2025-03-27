@@ -33,11 +33,14 @@ import {
   ExternalLink,
 } from "lucide-react";
 import ConversationSummary from "./ConversationSummary";
-import { WhatsAppTemplate } from "../types/template";
+
+
 import TemplateBuilders from "./TemplateBuilders";
 import { WhatsAppTemplateDialog } from "./WhatsAppTemplateDialog";
+import { WhatsAppTemplate } from "../types/template";
 
-interface Metadata {
+interface Product {
+  id: string;
   category: string;
   description: string;
   images: string;
@@ -53,12 +56,6 @@ interface Metadata {
   stock_quantity: number;
 }
 
-interface Product {
-  id: string;
-  category: string;
-  metadata: Metadata;
-}
-
 type PlatformType = "pinecone" | "shopify" | "other";
 
 interface SidebarProps {
@@ -66,7 +63,7 @@ interface SidebarProps {
   onConversationSelect?: (id: string) => void;
   templates?: Array<{ id: string; title: string; category: string }>;
   products?: Array<Product>; // Update this line to use the main Product interface
-
+  onShareProduct: (product: Product) => void;
   analytics?: {
     responseTime: string;
     resolutionRate: string;
@@ -74,32 +71,30 @@ interface SidebarProps {
   };
 }
 
+
+
 const Sidebar = ({
-  // templates = [
-  //   { id: "1", title: "Order Status Update", category: "Support" },
-  //   { id: "2", title: "Product Information", category: "Sales" },
-  //   { id: "3", title: "Welcome Message", category: "Greeting" },
-  // ],
   selectedConversationId,
   analytics = {
     responseTime: "2m 30s",
     resolutionRate: "94%",
     customerSatisfaction: "4.8/5",
   },
+  onShareProduct
 }: SidebarProps) => {
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
   const [searchTemplate, setSearchTemplate] = useState("");
   const [searchProduct, setSearchProduct] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showOptions, setShowOptions] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformType | "">("");
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
 
   // Fetch products from API
@@ -134,8 +129,8 @@ const Sidebar = ({
   useEffect(() => {
     const filtered = products.filter((product: Product) => {
       const matchesSearch =
-        product.metadata.name &&
-        product.metadata.name
+        product.name &&
+        product.name
           .toLowerCase()
           .includes(searchProduct.toLowerCase());
   
@@ -163,9 +158,8 @@ const Sidebar = ({
 
   useEffect(() => {
     const loadTemplates = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-  
         const response = await fetch('/api/fetchTemplate');
         console.log("Response:", response);
   
@@ -203,7 +197,7 @@ const Sidebar = ({
 
       
     <TooltipProvider>
-      {selectedTemplate && (
+      {selectedTemplate && selectedConversationId && (
         <WhatsAppTemplateDialog
         template={selectedTemplate}
         isOpen={!!selectedTemplate}
@@ -213,6 +207,8 @@ const Sidebar = ({
           console.log("Sending template:", selectedTemplate);
           setSelectedTemplate(null);
     }}
+        selectedConversationId={selectedConversationId}
+        languageCode={selectedTemplate.language}
       />
       )}
      
@@ -287,15 +283,21 @@ const Sidebar = ({
                     <TooltipContent>Create new template</TooltipContent>
                   </Tooltip>
                 </div>
-                <ScrollArea className="h-screen">
-                    {loading ?(
-                      <div className="flex items-center justify-center h-20">
-                        <p>Loading templates...</p>
+                <ScrollArea className="h-[calc(100vh-160px)]"> {/* Adjusted height */}
+                    {loading===true ? (
+                      <div className="flex items-center justify-center h-40 w-full">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                          <p className="text-sm text-gray-600">Loading templates...</p>
+                        </div>
                       </div>
-                    ): error ?(
-                      <div className="flex items-center justify-center h-20 text-red-500">
-                      {error}
-                    </div>
+                    ) : error ? (
+                      <div className="flex items-center justify-center h-40 text-red-500">
+                        <div className="flex flex-col items-center gap-2">
+                          <X className="h-8 w-8" />
+                          <p>{error}</p>
+                        </div>
+                      </div>
                     ):(
                       filteredTemplates.map((template) => (
                         <Card 
@@ -320,8 +322,12 @@ const Sidebar = ({
             )}
           </TabsContent>
 
-          <TabsContent className="h-full" value="products">
-            <ProductsTab onProductSelect={(product: Product) => setSelectedProduct(product)} />
+          <TabsContent className="max-h-screen" value="products">
+          <ProductsTab 
+            selectedConversationId={selectedConversationId} 
+            onProductSelect={(product: Product) => setSelectedProduct(product)}
+            onShareProduct={onShareProduct}
+          />
           </TabsContent>
 
           <TabsContent value="analytics" className="p-4">
@@ -354,10 +360,16 @@ const Sidebar = ({
             </div>
           </TabsContent>
           </Tabs>
+
         {selectedProduct && (
           <ProductPreview
             product={selectedProduct}
             onClose={() => setSelectedProduct(null)}
+            onShare={(product) => {
+              onShareProduct(product);
+              setSelectedProduct(null)
+            }}
+            open={!!selectedProduct}
           />
         )}
       </Card>

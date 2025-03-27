@@ -1,13 +1,18 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext';
 import React from 'react';
+import { Inter } from 'next/font/google';
 
 const inter = Inter({ 
   subsets: ['latin'],
   variable: '--font-inter' 
 })
+
+import dotenv from 'dotenv';
+dotenv.config();
+
+
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://heidelai.com'),

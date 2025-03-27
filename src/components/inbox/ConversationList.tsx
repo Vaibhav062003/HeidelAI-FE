@@ -33,7 +33,7 @@ const ConversationItemSkeleton = () => (
 );
 
 const EmptyState = ({ message }: { message: string }) => (
-  <div className="flex flex-col items-center justify-center h-full p-4 text-center text-gray-500">
+  <div className="flex flex-col items-center justify-center h-[85vh] overflow-y-hidden p-4 text-center text-gray-500">
     <p className="text-sm">{message}</p>
   </div>
 );
@@ -169,7 +169,7 @@ const ConversationList = ({
         }
       `}
     </ style >
-      <div className="w-80 max-h-screen bg-white border-r border-gray-200 flex flex-col">
+      <div className="w-[290px] max-h-screen bg-white border-r border-gray-200 flex flex-col">
       <div className="p-4 border-b border-gray-200">
         <div className="relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -202,7 +202,7 @@ const ConversationList = ({
 
   if (error) {
     return (
-      <div className="w-80 h-full bg-white border-r border-gray-200 flex flex-col">
+      <div className="w-[290px] h-full bg-white border-r border-gray-200 flex flex-col">
       <div className="p-4 border-b border-gray-200">
         <div className="relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -259,7 +259,7 @@ const ConversationList = ({
       `}
     </ style >
     
-    <div className="w-80 max-h-screen bg-white border-r border-gray-200 flex flex-col">
+    <div className="w-[290px] max-h-screen bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
           <div className="relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />

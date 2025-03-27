@@ -2,11 +2,12 @@ export interface WhatsAppTemplate {
   id?: string; 
   type: string;
   name: string;
+  code: string;
   status: 'APPROVED' | 'PENDING' | 'REJECTED';
   category: 'MARKETING' | 'UTILITY' | 'AUTHENTICATION';
   language: string;
   header?: {
-    type: 'none' | 'text' | 'media';
+    type: 'none' | 'text' | 'media'| 'location';
     content?: string;
   };
   template?: 'custom' | 'catalog' | 'one-time_Passcode';
@@ -25,17 +26,32 @@ export interface WhatsAppTemplate {
     example: string;
     section: 'body'
   }[];
-  components?: WhatsAppTemplateComponent[];
+  cards?: {
+    type: string;
+    title: string;
+    description: string;
+  }[];
+  example?: {
+    header_text?: string[];
+    body_text?: string[][];
+    header_handle?: string[];
+  };
+  components: WhatsAppTemplateComponent[];
+  
 }
-
-
 export interface WhatsAppTemplateComponent {
-  type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS' | 'MEDIA' | 'LOCATION';
+  type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS' | 'MEDIA' | 'LOCATION' | 'TEXT' | "CAROUSEL";
+  format?: string
   text?: string;
-  buttons?: { text: string }[];
+  buttons?: { type: string; text: string; value?: string }[];
   example?: {
     header_text?: string[];
     body_text?: string[];
     footer_text?: string[];
+    header_handle?: string[];
   };
+  cards?: Array<{
+    components: WhatsAppTemplateComponent[];
+  }>;
 }
+

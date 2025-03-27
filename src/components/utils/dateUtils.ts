@@ -7,8 +7,8 @@ export const getRelativeTime = (timestamp: string): string => {
     const istDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
     
     return formatDistanceToNow(istDate, { 
-      addSuffix: true,
-      includeSeconds: true
+      addSuffix: false,
+      includeSeconds: false
     });
   } catch (error) {
     console.error('Error parsing date:', error);

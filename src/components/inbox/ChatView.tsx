@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -62,9 +61,17 @@ import {
 import ReminderDialog from "./ReminderDialog";
 
 import '../../app/dashboard/dashboard.css';
+import Image from "next/image";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
+
+interface CustomerInfo {
+  name: string;
+  phone: string;
+  address?: AddressData;
+  cart?: CartItem[];
+}
 
 interface ProductData {
   id: number;
@@ -74,6 +81,23 @@ interface ProductData {
   permalink: string;
   price: number;
   regular_price: string;
+}
+
+interface Product {
+  id: string;
+  category: string;
+  description: string;
+  images: string;
+  name: string;
+  on_sale: string; // Use boolean if the data contains `true/false` instead of `"True"/"False"`
+  permalink: string;
+  price: number;
+  product_id: number;
+  purchasable: string; // Use boolean if the data contains `true/false`
+  regular_price: string; // Use `number` if parsed as numeric values
+  sale_price: string; // Use `number` if parsed as numeric values
+  slug: string;
+  stock_quantity: number;
 }
 
 interface Reminder {
@@ -108,7 +132,9 @@ interface Message {
 }
 
 interface ChatViewProps {
-  selectedConversationId?: string;
+  selectedConversationId: string;
+  sharedProduct: Product | null;
+  onClearSharedProduct: () => void;
 }
 
 interface CartProductData {
@@ -226,6 +252,41 @@ const LoadingState = () => (
 //     return [];
 //   }
 // };
+
+
+const SharedProductPreview = ({ product, onRemove }: {
+  product: Product;
+  onRemove: () => void;
+}) => (
+  <div className="flex items-center w-fit gap-3 p-2 bg-gray-50 rounded-lg border border-gray-200 mb-2">
+    <div className="w-15 h-15 relative">
+      <Image
+        src={product.images}
+        alt={product.name}
+        height={80}
+        width={80}
+        className="rounded object-cover"
+      />
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-base font-medium text-gray-900 ">
+        {product.name.length > 50 
+          ? `${product.name.substring(0, 50)}...` 
+          : product.name}
+      </p>
+      <p className="text-sm text-gray-500">₹{product.price}</p>
+    </div>
+    <Button
+      variant="ghost"
+      size="sm"
+      className="h-8 w-8 p-0"
+      onClick={onRemove}
+    >
+      <X className="h-4 w-4" />
+    </Button>
+  </div>
+);
+
 
 const RemindersPopover = ({ 
   reminders, 
@@ -511,8 +572,10 @@ const FilePreview = ({
 // };
 
 
-const ChatView = ({
-  selectedConversationId,
+const ChatView = ({ 
+  selectedConversationId, 
+  sharedProduct, 
+  onClearSharedProduct 
 }: ChatViewProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
@@ -534,6 +597,9 @@ const ChatView = ({
   const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
   const [showCannedResponses, setShowCannedResponses] = useState(false);
   const [filteredResponses, setFilteredResponses] = useState<CannedResponse[]>([]);
+  const [showCustomerInfo, setShowCustomerInfo] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+
 
     // Add this useEffect for loading canned responses
     useEffect(() => {
@@ -607,7 +673,45 @@ const ChatView = ({
     }
   };
   
+  const handleShareProduct = async (messageText: string, product: Product) => {
+    if (!selectedConversationId) return;
+
+    if (!messageText.trim()) {
+      toast.error("Cannot send empty message", {description: "Please add a message to send with the product"});
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const response = await fetch('https://egenie-whatsapp.koyeb.app/api/send_single_product', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          conversation_id: selectedConversationId,
+          product_id: product.product_id,
+          message: messageText.trim() || undefined // Only send message if not empty
+        }),
+        credentials: 'include'
+      });
   
+      if (!response.ok) {
+        throw new Error('Failed to share product');
+      }
+  
+      // Clear the message input and shared product
+      setMessage('');
+      onClearSharedProduct();
+      
+      toast.success('Product shared successfully');
+    } catch (error) {
+      console.error('Error sharing product:', error);
+      toast.error('Failed to share product');
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   const sendMessage = async () => {
     if (!message.trim() || !selectedConversationId || isSending) return;
@@ -960,14 +1064,128 @@ const ChatView = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>View Customer Info</DropdownMenuItem>
-                <DropdownMenuItem>Block Contact</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowCustomerInfo(true)}>
+                  View Customer Info
+                </DropdownMenuItem>
+                {/* <DropdownMenuItem>Block Contact</DropdownMenuItem>
                 <DropdownMenuItem>Clear Chat</DropdownMenuItem>
-                <DropdownMenuItem>Export Chat</DropdownMenuItem>
+                <DropdownMenuItem>Export Chat</DropdownMenuItem> */}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
+
+        {/* Customer Info Dialog */}
+        <Dialog open={showCustomerInfo} onOpenChange={setShowCustomerInfo}>
+  <DialogContent className="sm:max-w-[800px]">
+    <DialogHeader>
+      <DialogTitle className="text-2xl">Customer Information</DialogTitle>
+    </DialogHeader>
+
+    {/* Contact Details Section */}
+    <div className="space-y-6">
+      <div className=" rounded-lg p-6">
+        <h3 className="text-lg font-medium mb-4">Contact Details</h3>
+        <div className="grid grid-cols-2 gap-4 text-base">
+          <div className="space-y-1">
+            <div className="text-gray-500">Name</div>
+            <div className="font-medium">{conversation?.customer_name}</div>
+          </div>
+          <div className="space-y-1">
+            <div className="text-gray-500">Phone</div>
+            <div className="font-medium">
+              {selectedConversationId?.split('_')[1]?.replace(/^(\d{2})(\d+)/, '+$1 $2')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="h-px bg-gray-200" />
+
+      {/* Address and Cart Container */}
+      <div className="grid pl-4 grid-cols-2 gap-6">
+        {/* Address Information */}
+        {messages.some(m => extractAddressData(m.content)) && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-medium">Latest Address</h3>
+            {messages
+              .filter(m => extractAddressData(m.content))
+              .slice(-1)
+              .map((m, idx) => {
+                const addressData = extractAddressData(m.content);
+                return (
+                  <div key={idx} className=" rounded-lg py-4 space-y-3">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex gap-2">
+                        <div className="text-gray-500 w-20">Full Name</div>
+                        <div className="font-medium">{addressData?.address.full_name}</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="text-gray-500 w-20">Email</div>
+                        <div className="font-medium">{addressData?.address.email}</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="text-gray-500 w-20">Address</div>
+                        <div className="font-medium">{addressData?.address.address}</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="text-gray-500 w-20">City</div>
+                        <div className="font-medium">
+                          {addressData?.address.city}, {addressData?.address.state} {addressData?.address.pin_code}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="text-gray-500 w-20">Country</div>
+                        <div className="font-medium">{addressData?.address.country.replace('0_', '')}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+
+        {/* Cart Information */}
+        {messages.some(m => extractCartData(m.content)) && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-medium">Latest Cart</h3>
+            {messages
+              .filter(m => extractCartData(m.content))
+              .slice(-1)
+              .map((m, idx) => {
+                const cartItems = extractCartData(m.content);
+                return (
+                  <div key={idx} className="rounded-lg p-4 space-y-4">
+                    <div className="space-y-4">
+                      {cartItems?.map((item, itemIdx) => (
+                        <div key={itemIdx} className="flex gap-3 text-sm border-b pb-4 last:border-0 last:pb-0">
+                          <img 
+                            src={item.product_data.image_url} 
+                            alt={item.product_data.name}
+                            className="w-16 h-16 rounded object-cover"
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium line-clamp-2">{item.product_data.name}</div>
+                            <div className="text-gray-500 mt-1">
+                              {item.quantity} × {item.currency} {item.item_price}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="text-base font-medium ">
+                        Total: {cartItems?.[0].currency} {cartItems?.reduce((sum, item) => sum + (item.item_price * item.quantity), 0)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </div>
+    </div>
+  </DialogContent>
+</Dialog>
 
         {  /* Modal for attaching files */}
         <Dialog open={isFileModalOpen} onOpenChange={setIsFileModalOpen}>
@@ -1056,7 +1274,7 @@ const ChatView = ({
             const productInfo = message.content ? extractProductInfo(message.content) : null;
             const botProductInfo = message.content ? extractBotProductInfo(message.content) : null;
             const addressData = message.content ? extractAddressData(message.content) : null;
-
+            const agentProductInfo = message.content ? extractAgentProductInfo(message.content) : null;
             // console.log("productInfo", productInfo);
             // console.log("botProductInfo", botProductInfo);
             
@@ -1137,6 +1355,9 @@ const ChatView = ({
                   {botProductInfo && message.role === "ai" && (
                     <img className="w-80 rounded-lg border mb-2" src={botProductInfo[0].image_url}/>
                   )}
+                  {agentProductInfo && message.role === "ai" && (
+                    <img className="w-80 rounded-lg border mb-2" src={agentProductInfo[0].image_url}/>
+                  )}
 
 
 
@@ -1186,7 +1407,7 @@ const ChatView = ({
                   
 
                   
-                  {(message.type === "text" || !message.type) && !productInfo  && !botProductInfo && !extractCartData(message.content) && !checkAIMessage(message) && !addressData &&(
+                  {(message.type === "text" || !message.type) && !productInfo && !agentProductInfo  && !botProductInfo && !extractCartData(message.content) && !checkAIMessage(message) && !addressData &&(
                     <p>{message.content}</p>
                   )}
                   {(message.type === "text" || !message.type) && message.role === "ai" && checkAIMessage(message) && (
@@ -1221,6 +1442,32 @@ const ChatView = ({
                     
                     <span className="text-gray-200 text-sm"> <i>To contact us, simply type Live Agent </i></span>
                      </p>
+                  </>
+                  )}
+                  {(message.type === "text" || !message.type) && agentProductInfo && message.role === "ai" && (
+                    <>
+                    <p className="w-fit">
+                    <b>
+                      {agentProductInfo[0].name.slice(0, 40)}
+                      {agentProductInfo[0].name.length > 40 && (
+                        <>
+                          <br/>
+                          {agentProductInfo[0].name.slice(40)}
+                        </>
+                      )}
+                    </b><br/>  <br/> 
+                    <span className="text-white font-semibold">{agentProductInfo[0].sale_price}</span>
+                    {(!agentProductInfo[0].sale_price) && (
+                      <><span className="text-white font-semibold">{agentProductInfo[0].price}</span>  <br/>  <br/> </>
+                    )}
+                    {(agentProductInfo[0].sale_price) && (
+                      <><span className="text-gray-200 line-through text-sm ml-2">{agentProductInfo[0].price}</span> <br/>  <br/> </>
+                    )} 
+
+                    {extractAgentProductText(message.content) && (
+                            <span className="block mb-2">{extractAgentProductText(message.content)}</span>
+                          )}
+                    </p>
                   </>
                   )}
 
@@ -1312,9 +1559,9 @@ const ChatView = ({
             <div ref={lastMessageRef} />
         </ScrollArea>
 
-        <div className="p-4 border-t">
-          <div className="flex gap-2 mb-4 overflow-x-auto">
-            {/* {suggestedResponses.map((response, index) => (
+        <div className={` p-4 border-t `}>
+          {/* <div className="flex gap-2 mb-4 overflow-x-auto">
+            {suggestedResponses.map((response, index) => (
               <Button
                 key={index}
                 variant="secondary"
@@ -1323,8 +1570,17 @@ const ChatView = ({
               >
                 {response}
               </Button>
-            ))} */}
-          </div>
+            ))}
+          </div> */}
+
+          {sharedProduct && (
+            <div className="flex justify-start ml-36 mr-12">
+              <SharedProductPreview 
+                product={sharedProduct} 
+                onRemove={onClearSharedProduct} 
+              />
+              </div>
+            )}
 
           <div className="flex items-center gap-2">
           <Popover>
@@ -1411,16 +1667,20 @@ const ChatView = ({
               </TooltipContent>
             </Tooltip>
 
+            
             <div className="flex-1 relative">
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="w-full"
-              onKeyPress={(e) => {
+              placeholder={sharedProduct ? "Add a message about this product..." : "Type a message"}
+              onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  sendMessage();
+                  if (sharedProduct) {
+                    handleShareProduct(message, sharedProduct);
+                  } else {
+                    sendMessage();
+                  }
                 }
               }}
             />
@@ -1457,8 +1717,14 @@ const ChatView = ({
               <TooltipTrigger asChild>
               <Button 
                 size="icon" 
-                onClick={sendMessage}
-                disabled={isSending || !message.trim()}
+                onClick={() => {
+                  if (sharedProduct) {
+                    handleShareProduct(message, sharedProduct);
+                  } else {
+                    sendMessage();
+                  }
+                }}
+                disabled={isSending || (!message.trim() && !sharedProduct)}
               >
                 {isSending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -1581,6 +1847,36 @@ const extractBotProductInfo = (content: string) => {
     return null;
   } catch (error) {
     console.error('Error parsing product info:', error);
+    return null;
+  }
+};
+
+const extractAgentProductInfo = (content: string) => {
+  try {
+    // Extract product info between =(...)]
+    const match = content.match(/send_product_request_from_agent=\(.*?\)=(\[.*?\])/);
+    if (match) {
+      const jsonStr = match[1].replace(/'/g, '"');
+      return JSON.parse(jsonStr);
+    }
+    return null;
+  } catch (error) {
+    console.error('Error parsing agent product info:', error);
+    return null;
+  }
+};
+
+const extractAgentProductText = (content: string): string | null => {
+  try {
+    // Extract text between parentheses
+    const match = content.match(/send_product_request_from_agent=\((.*?)\)=/);
+    if (match && match[1]) {
+      console.log("match", match[1]);
+      return match[1];
+    }
+    return null;
+  } catch (error) {
+    console.error('Error parsing agent product text:', error);
     return null;
   }
 };
