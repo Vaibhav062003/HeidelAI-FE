@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import AgentsSettings from './Agent_management';
 import TeamsConfiguration from './Team_configuration';
 import { InboxSettings, LabelsSettings, CustomAttributesSettings, AutomationSettings, MacrosSettings, IntegrationsSettings, AuditLogsSettings, CustomRolesSettings, SLASettings } from './SidebarItem';
@@ -57,7 +58,7 @@ const SettingsSections = [
   },
   { 
     icon: List, 
-    name: 'Canned Responses', 
+    name: 'CannedResponses', 
     component: () => <CannedResponses onInsertResponse={(message: string) => {
       // Handle the response insertion here
       console.log('Inserting response:', message);
@@ -87,8 +88,23 @@ const SettingsSections = [
   }
 ];
 
-const SettingsDashboard = () => {
+const SettingsDashboard = () => { 
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState(SettingsSections[0]);
+
+  // Handle navigation based on URL hash
+  useEffect(() => {
+    const hash = window.location.hash.replace('#', '');
+    const section = SettingsSections.find((s) => s.name.toLowerCase() === hash.toLowerCase());
+    if (section) {
+      setActiveSection(section);
+    }
+  }, []);
+
+  const handleSectionChange = (section: typeof SettingsSections[0]) => {
+    setActiveSection(section);
+    router.push(`#${section.name.toLowerCase()}`); // Update the URL hash
+  };
 
   return (
     <Card className="w-full h-screen">
@@ -102,7 +118,7 @@ const SettingsDashboard = () => {
                 key={section.name}
                 variant={activeSection.name === section.name ? 'secondary' : 'ghost'}
                 className="w-full justify-start"
-                onClick={() => setActiveSection(section)}
+                onClick={() => handleSectionChange(section)}
               >
                 <section.icon className="mr-2 h-4 w-4" />
                 {section.name}

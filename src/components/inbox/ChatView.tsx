@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, use } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,9 +12,10 @@ import { toast, Toaster } from 'sonner';
 // import { toZonedTime } from 'date-fns-tz';
 import { Conversation } from '../types/conversation';
 import { ShoppingCart, MapPin, Upload, FileText, FileImage, FileVideo, Music, File, Loader2, X } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogTrigger } from "../ui/dialog";
 import dynamic from 'next/dynamic';
 import { useReminders } from '../hooks/useReminders';
+import { H1, H2, H3, Body, Small } from "@/components/typography";
 
 import { Plus } from "lucide-react";
 import { createClient } from '@supabase/supabase-js';
@@ -62,6 +63,8 @@ import ReminderDialog from "./ReminderDialog";
 
 import '../../app/dashboard/dashboard.css';
 import Image from "next/image";
+import CustomerInfo from './CustomerInfo';
+import LandingDashboard from "./LandingDashboard";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -599,6 +602,53 @@ const ChatView = ({
   const [filteredResponses, setFilteredResponses] = useState<CannedResponse[]>([]);
   const [showCustomerInfo, setShowCustomerInfo] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+  const [ShowInfo, setShowInfo] = useState(false);
+  const [audioURL, setAudioURL] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const [audioBlob,setAudioBlob] = useState<Blob | null>(null);
+  const [audioModalOpen,setIsAudioModalOpen]= useState(false);
+
+
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus' // Ensure WebM format with Opus codec
+      });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+  
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+  
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudioURL(audioUrl);
+        setIsRecording(false);
+      };
+  
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      toast.error('Error accessing microphone. Please check your permissions.');
+    }
+  };
+
+  const stopRecording =()=>{
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      // Stop all audio tracks
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    }
+  }
 
 
     // Add this useEffect for loading canned responses
@@ -632,6 +682,63 @@ const ChatView = ({
 
   const handleMicClick = () => {
     setIsRecording(!isRecording);
+  };
+
+  const handleSendAudio = async () => {
+    if (!audioURL || !selectedConversationId) return;
+  
+    setIsSending(true);
+    try {
+      // Create a new FormData instance
+      const formData = new FormData();
+      
+      // Convert the audioURL blob to a File object
+      const audioBlob = await fetch(audioURL).then(r => r.blob());
+      const audioFile = new window.File([audioBlob], 'voice-message.webm', { 
+        type: 'audio/webm' // Keep original WebM format from recording
+      });
+      
+      // Add required metadata
+      formData.append('file', audioFile);
+      formData.append('type', 'audio');
+      formData.append('messaging_product', 'whatsapp');
+      formData.append('conversation_id', selectedConversationId);
+  
+      // Send the audio file
+      const response = await fetch(`https://egenie-whatsapp.koyeb.app/media/${selectedConversationId}/upload`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `Server error: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      
+      // Add the voice message to the messages array
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        content: data.fileUrl || audioURL,
+        type: 'voice',
+        role: 'agent',
+        conversation_id: selectedConversationId,
+        timestamp: new Date().toISOString(),
+        sender_id: 'agent',
+        fileUrl: data.fileUrl || audioURL
+      }]);
+  
+      // Clear the audio state
+      setAudioURL(null);
+      toast.success('Voice message sent successfully');
+    } catch (error) {
+      console.error('Error sending audio message:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to send voice message');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleFileUpload = async (file: File | null, recipient: string) => {
@@ -788,6 +895,38 @@ const ChatView = ({
       toast.error('Failed to toggle AI status');
     } finally {
       setIsToggling(false);
+    }
+  };
+
+  const saveCustomerInfo = async (updatedData: {
+    name: string;
+    email: string;
+    billingaddress: string;
+    shippingaddress: string;
+    gstin: string;
+  }) => {
+    try {
+      const response = await fetch(
+        `https://your-api-endpoint/conversations/${selectedConversationId}/update_customer_info`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
+  
+      if (!response.ok) {
+        throw new Error("Failed to update customer info");
+      }
+  
+      const updatedConversation = await response.json();
+      setConversation(updatedConversation); // Update the state with the new data
+      toast.success("Customer information updated successfully!");
+    } catch (error) {
+      console.error("Error updating customer info:", error);
+      toast.error("Failed to update customer information.");
     }
   };
 
@@ -951,8 +1090,9 @@ const ChatView = ({
       {!selectedConversationId ? (
         <Card className="h-full flex flex-col bg-white  items-center justify-center">
           <div className="text-center text-gray-500">
-            <h3 className="text-3xl font-bold text-black mb-2">Welcome to your dashboard!</h3>
-            <p>Select a conversation from the list to continue</p>
+            <LandingDashboard/>
+            {/* <h3 className="text-3xl font-bold text-black mb-2">Welcome to your dashboard!</h3>
+            <p>Select a conversation from the list to continue</p> */}
           </div>
         </Card>
       ) : (
@@ -960,10 +1100,57 @@ const ChatView = ({
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <img src={avatarSource} alt="Platform avatar"  />
+              <img src={avatarSource} alt="Platform avatar"/>
             </Avatar>
             <div>
-              <h3 className="font-semibold">{conversation?.customer_name}</h3>
+            <Dialog>
+      <DialogTrigger asChild>
+        <h3 className="font-semibold cursor-pointer">{conversation?.customer_name}</h3>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[900px] sm:max-h-[600px]">
+  <DialogHeader>
+    <DialogTitle className="text-2xl">{conversation?.customer_name} Information</DialogTitle>
+  </DialogHeader>
+  {conversation && (
+    <CustomerInfo
+      name={conversation?.customer_name || "Unknown"}
+      email={conversation?.email || "Unknown"}
+      billingaddress={conversation?.billingAddress || "Unknown"}
+      shippingaddress={conversation?.shippingAddress || "Unknown"}
+      platform={conversation?.platform || ""}
+      selectedConversationId={selectedConversationId}
+      saveCustomerInfo={saveCustomerInfo} // Pass the save function
+  />
+  )}
+</DialogContent>
+    </Dialog>
+                {/* <DialogContent className="sm:max-w-[800px]">
+                  <DialogTitle>Customer Info</DialogTitle>
+                <div className="space-y-6">
+                  <div className=" rounded-lg p-6">
+                    <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <Small>Name</Small>
+          <Body className="font-medium">{conversation?.customer_name}</Body>
+        </div>
+        <div className="space-y-1">
+          <Small>
+            {conversation?.platform === "whatsapp" ? "Phone" : "Username"}
+          </Small>
+          <Body className="font-medium">
+            {conversation?.platform === "whatsapp"
+              ? selectedConversationId?.split('_')[1]?.replace(/^(\d{2})(\d+)/, '+$1 $2')
+              : selectedConversationId?.split('_')[1]
+            }
+          </Body>
+        </div>
+      </div>
+    </div>
+  </div>
+</DialogContent> */}
+            
+              
+              
               {/* <div className="flex items-center gap-2">
                 <Badge variant="secondary" className="text-xs">
                   Active
@@ -1654,7 +1841,13 @@ const ChatView = ({
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={handleMicClick}
+                  onClick={() => {
+                    if (isRecording) {
+                      stopRecording(); // Stop recording if already recording
+                    } else {
+                      startRecording(); // Start recording if not recording
+                    }
+                  }}
                   className={isRecording ? "bg-red-100" : ""}
                 >
                   <Mic
@@ -1669,22 +1862,35 @@ const ChatView = ({
 
             
             <div className="flex-1 relative">
-            <Input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder={sharedProduct ? "Add a message about this product..." : "Type a message"}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  if (sharedProduct) {
-                    handleShareProduct(message, sharedProduct);
-                  } else {
-                    sendMessage();
+              {audioURL? (
+                <div className="flex items-center gap-2">
+                  <audio controls src={audioURL} className="w-full " />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setAudioURL(null)} // Clear the audio preview
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+              </div>
+              ): (
+                <Input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder={sharedProduct ? "Add a message about this product..." : "Type a message"}
+                  onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (sharedProduct) {
+                      handleShareProduct(message, sharedProduct);
+                    } else {
+                      sendMessage();
+                    }
                   }
-                }
-              }}
-            />
-            
+                }}
+              />
+              )}
+  
             {showCannedResponses && (
               <div className="absolute bottom-14 left-0 w-full bg-white border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
                 {filteredResponses.map(response => (
@@ -1720,6 +1926,25 @@ const ChatView = ({
                 onClick={() => {
                   if (sharedProduct) {
                     handleShareProduct(message, sharedProduct);
+                  } else if (audioURL) {
+                    handleSendAudio();
+                  } else {
+                    sendMessage();
+                  }
+                }}
+                disabled={isSending || (!message.trim() && !sharedProduct && !audioURL)}
+              >
+                {isSending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+              {/* <Button 
+                size="icon" 
+                onClick={() => {
+                  if (sharedProduct) {
+                    handleShareProduct(message, sharedProduct);
                   } else {
                     sendMessage();
                   }
@@ -1731,7 +1956,7 @@ const ChatView = ({
                 ) : (
                   <Send className="h-4 w-4" />
                 )}
-              </Button>
+              </Button> */}
               </TooltipTrigger>
               <TooltipContent>Send message</TooltipContent>
             </Tooltip>
