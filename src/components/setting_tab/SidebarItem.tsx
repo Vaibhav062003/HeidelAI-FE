@@ -15,6 +15,11 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 import { 
   Table, 
   TableBody, 
@@ -23,6 +28,19 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
+
+const loginWithFacebook = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "facebook",
+    options: {
+      queryParams: {
+        config_id: '1078509157648485'
+      }
+    }
+  });
+
+  if (error) console.error("Login error:", error.message);
+};
 
 export default function DashboardPage() {
   const handleInsertResponse = (message: string) => {
@@ -154,23 +172,97 @@ export const MacrosSettings = () => (
 
 
 export const IntegrationsSettings = () => (
-  <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
-    <div className="max-w-md space-y-4">
-      <div className="mx-auto bg-orange-100 rounded-full p-4 w-fit">
-        <Construction className="h-8 w-8 text-orange-600" />
+  <div className="min-h-[300px] flex flex-col items-start p-8">
+    <h2 className="text-2xl font-bold mb-6">Platform Integrations</h2>
+    
+    <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Facebook Integration Card */}
+      <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+        <div className="space-y-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-[#1877F2] rounded-lg p-2">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Facebook</h3>
+                <p className="text-sm text-gray-600">Connect your Facebook pages</p>
+              </div>
+            </div>
+            <Button
+              onClick={loginWithFacebook}
+              className="bg-[#1877F2] hover:bg-[#0c5bdb] text-white"
+            >
+              Connect
+            </Button>
+          </div>
+        </div>
       </div>
-      <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
-        Coming Soon...
-      </h2>
-      <p className="text-lg text-gray-600">
-        Our team is working hard to bring you this feature. Stay tuned for updates!
-      </p>
-      <div className="pt-4 border-t border-gray-200 mt-8">
-        <p className="text-sm text-gray-500">
-          Integration functionality will be available in our next release.
-          Check back soon or follow us for updates!
-        </p>
+
+      {/* WordPress Integration Card */}
+      <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+        <div className="space-y-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-[#21759B] rounded-lg p-2">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M21.469 6.825c.84 1.537 1.318 3.3 1.318 5.175 0 3.979-2.156 7.456-5.363 9.325l3.295-9.527c.615-1.54.82-2.771.82-3.864 0-.405-.026-.78-.07-1.11m-7.981.105c.647-.03 1.232-.105 1.232-.105.581-.075.513-.93-.067-.899 0 0-1.748.135-2.878.135-1.06 0-2.841-.15-2.841-.15-.585-.03-.661.855-.075.885 0 0 .54.061 1.125.09l1.68 4.605-2.37 7.08L5.354 6.9c.649-.03 1.234-.1 1.234-.1.585-.075.516-.93-.065-.896 0 0-1.746.138-2.874.138-.2 0-.438-.008-.69-.015C4.911 3.15 8.235 1.215 12 1.215c2.809 0 5.365 1.072 7.286 2.833-.046-.003-.091-.009-.141-.009-1.06 0-1.812.923-1.812 1.914 0 .89.513 1.643 1.06 2.531.411.72.89 1.643.89 2.977 0 .915-.354 1.994-.821 3.479l-1.075 3.585-3.9-11.61.001.014zM12 22.784c-1.059 0-2.081-.153-3.048-.437l3.237-9.406 3.315 9.087c.024.053.05.101.078.149-1.12.393-2.325.609-3.582.609M1.211 12c0-1.564.336-3.05.935-4.39L7.29 21.709C3.694 19.96 1.212 16.271 1.212 12M12 0C5.385 0 0 5.385 0 12s5.385 12 12 12 12-5.385 12-12S18.615 0 12 0"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">WordPress</h3>
+                <p className="text-sm text-gray-600">Connect your WordPress site</p>
+              </div>
+            </div>
+            <Button
+              className="bg-[#21759B] hover:bg-[#1a5b7a] text-white"
+            >
+              Connect
+            </Button>
+          </div>
+        </div>
       </div>
+
+      {/* Shopify Integration Card */}
+      <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+        <div className="space-y-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-[#96bf48] rounded-lg p-2">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M15.337 23.979l7.216-1.561s-2.604-17.613-2.625-17.73c-.018-.116-.114-.192-.211-.192s-1.929-.136-1.929-.136-1.275-1.274-1.439-1.411c-.045-.037-.075-.057-.121-.074l-.914 21.104h.023zm-11.25-11.37l-.837 2.517s-1.346-.706-2.829-1.411c0 0 1.514-12.533 1.536-12.65.021-.116.097-.192.194-.192s2.201-.136 2.201-.136 .085-.079.15-.098l-.415 11.97zm1.787-12.124s1.929-.136 2.01-.136c.079 0 .132.039.158.097l.263 2.201-1.167.831s-1.138-1.083-1.203-1.167c-.063-.079-.08-.177-.044-.266.035-.089.247-1.329.247-1.329l-.264-.231zm1.293 4.324l1.495-1.079 1.371 4.152s-1.555 1.063-3.084 1.982l.218-5.055zm9.51 11.026c.069-.231-1.497-.673-1.497-.673l-.73-2.156-2.112 1.26s1.882.696 2.144.891c.231.15 2.126.909 2.195.678z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Shopify</h3>
+                <p className="text-sm text-gray-600">Connect your Shopify store</p>
+              </div>
+            </div>
+            <Button
+              className="bg-[#96bf48] hover:bg-[#7da039] text-white"
+            >
+              Connect
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* More Integrations Coming Soon Card */}
+        {/* <div className="border rounded-lg p-4 bg-gray-50">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="bg-orange-100 rounded-full p-4">
+              <Construction className="h-6 w-6 text-orange-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">More Platforms Coming Soon</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                We&apos;re working on adding more platform integrations
+              </p>
+            </div>
+          </div>  
+        </div> */}
     </div>
   </div>
 );
