@@ -1,5 +1,13 @@
 
 import React, { useState } from 'react';
+import WooCommerceRestApi from "@woocommerce/woocommerce-rest-api";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -40,6 +48,92 @@ const loginWithFacebook = async () => {
   });
 
   if (error) console.error("Login error:", error.message);
+};
+
+const WooCommerceDialog = () => {
+  const [credentials, setCredentials] = useState({
+    siteUrl: '',
+    consumerKey: '',
+    consumerSecret: ''
+  });
+
+  const handleConnect = async () => {
+    try {
+      const api = new WooCommerceRestApi({
+        url: credentials.siteUrl,
+        consumerKey: credentials.consumerKey,
+        consumerSecret: credentials.consumerSecret,
+        version: "wc/v3"
+      });
+      
+      // Test the connection by fetching products
+      const response = await api.get("products", { per_page: 1 });
+      console.log("Connection successful:", response.data);
+      // Add your success handling here
+      
+    } catch (error) {
+      console.error("WooCommerce connection error:", error);
+      // Add your error handling here
+    }
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button className="bg-[#96588A] hover:bg-[#804674] text-white">
+          Connect
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Connect WooCommerce Store</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <label htmlFor="siteUrl">Site URL</label>
+            <Input
+              id="siteUrl"
+              placeholder="https://your-store.com"
+              value={credentials.siteUrl}
+              onChange={(e) => setCredentials(prev => ({
+                ...prev,
+                siteUrl: e.target.value
+              }))}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label htmlFor="consumerKey">Consumer Key</label>
+            <Input
+              id="consumerKey"
+              type="password"
+              placeholder="ck_xxxxxx"
+              value={credentials.consumerKey}
+              onChange={(e) => setCredentials(prev => ({
+                ...prev,
+                consumerKey: e.target.value
+              }))}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label htmlFor="consumerSecret">Consumer Secret</label>
+            <Input
+              id="consumerSecret"
+              type="password"
+              placeholder="cs_xxxxxx"
+              value={credentials.consumerSecret}
+              onChange={(e) => setCredentials(prev => ({
+                ...prev,
+                consumerSecret: e.target.value
+              }))}
+            />
+          </div>
+          <Button onClick={handleConnect} className="bg-[#96588A] hover:bg-[#804674] text-white">
+            Authenticate
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 };
 
 export default function DashboardPage() {
@@ -201,29 +295,27 @@ export const IntegrationsSettings = () => (
         </div>
       </div>
 
-      {/* WordPress Integration Card */}
+      
+      {/* WooCommerce Integration Card */}
       <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
         <div className="space-y-4">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-[#21759B] rounded-lg p-2">
+              <div className="bg-[#96588A] rounded-lg p-2">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M21.469 6.825c.84 1.537 1.318 3.3 1.318 5.175 0 3.979-2.156 7.456-5.363 9.325l3.295-9.527c.615-1.54.82-2.771.82-3.864 0-.405-.026-.78-.07-1.11m-7.981.105c.647-.03 1.232-.105 1.232-.105.581-.075.513-.93-.067-.899 0 0-1.748.135-2.878.135-1.06 0-2.841-.15-2.841-.15-.585-.03-.661.855-.075.885 0 0 .54.061 1.125.09l1.68 4.605-2.37 7.08L5.354 6.9c.649-.03 1.234-.1 1.234-.1.585-.075.516-.93-.065-.896 0 0-1.746.138-2.874.138-.2 0-.438-.008-.69-.015C4.911 3.15 8.235 1.215 12 1.215c2.809 0 5.365 1.072 7.286 2.833-.046-.003-.091-.009-.141-.009-1.06 0-1.812.923-1.812 1.914 0 .89.513 1.643 1.06 2.531.411.72.89 1.643.89 2.977 0 .915-.354 1.994-.821 3.479l-1.075 3.585-3.9-11.61.001.014zM12 22.784c-1.059 0-2.081-.153-3.048-.437l3.237-9.406 3.315 9.087c.024.053.05.101.078.149-1.12.393-2.325.609-3.582.609M1.211 12c0-1.564.336-3.05.935-4.39L7.29 21.709C3.694 19.96 1.212 16.271 1.212 12M12 0C5.385 0 0 5.385 0 12s5.385 12 12 12 12-5.385 12-12S18.615 0 12 0"/>
+                  <path d="M19.2,6.2c-0.8-1.1-2.1-1.8-3.5-1.8c-0.8,0-1.6,0.2-2.2,0.6C12.9,4.4,12,4,11,4c-1.4,0-2.7,0.7-3.5,1.8C6.7,4.7,5.4,4,4,4C1.8,4,0,5.8,0,8c0,0.8,0.2,1.5,0.6,2.2C0.2,11.5,0,12.7,0,14c0,4.4,3.6,8,8,8h8c4.4,0,8-3.6,8-8c0-1.3-0.2-2.5-0.6-3.8C23.8,9.5,24,8.8,24,8C24,5.8,22.2,4,20,4C18.6,4,17.3,4.7,16.5,6.2z M11,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S11,15.6,11,15z M7,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S7,15.6,7,15z M15,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S15,15.6,15,15z"/>
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold">WordPress</h3>
-                <p className="text-sm text-gray-600">Connect your WordPress site</p>
+                <h3 className="text-lg font-semibold">WooCommerce</h3>
+                <p className="text-sm text-gray-600">Connect your WooCommerce store</p>
               </div>
             </div>
-            <Button
-              className="bg-[#21759B] hover:bg-[#1a5b7a] text-white"
-            >
-              Connect
-            </Button>
+            <WooCommerceDialog />
           </div>
         </div>
       </div>
+
 
       {/* Shopify Integration Card */}
       <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
