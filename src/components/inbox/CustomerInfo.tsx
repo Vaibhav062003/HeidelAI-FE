@@ -2,15 +2,7 @@ import { useState } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 
-const CustomerInfo = ({
-  name,
-  email,
-  billingaddress,
-  shippingaddress,
-  platform,
-  selectedConversationId,
-  saveCustomerInfo, // New prop for saving data
-}: {
+interface CustomerInfoProps {
   name: string;
   email: string;
   billingaddress: string;
@@ -23,9 +15,20 @@ const CustomerInfo = ({
     billingaddress: string;
     shippingaddress: string;
     gstin: string;
-    phoneOrUserId: string;
-  }) => Promise<void>; // Function to save data
-}) => {
+    phoneNumber: string;
+    userId: string;
+  }) => Promise<void>;
+}
+
+const CustomerInfo = ({
+  name,
+  email,
+  billingaddress,
+  shippingaddress,
+  platform,
+  selectedConversationId,
+  saveCustomerInfo,
+}: CustomerInfoProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name,
@@ -33,10 +36,12 @@ const CustomerInfo = ({
     billingaddress,
     shippingaddress,
     gstin: "",
-    phoneOrUserId:
-      platform === "whatsapp"
-        ? selectedConversationId?.split("_")[1]?.replace(/^(\d{2})(\d+)/, "+$1 $2")
-        : selectedConversationId?.split("_")[1] || "",
+    phoneNumber: platform === "whatsapp" 
+      ? selectedConversationId?.split("_")[1]?.replace(/^(\d{2})(\d+)/, "+$1 $2")
+      : "",
+    userId: platform !== "whatsapp"
+      ? selectedConversationId?.split("_")[1] || ""
+      : "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,13 +93,27 @@ const CustomerInfo = ({
 
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            {platform === "whatsapp" ? "Phone Number" : "User ID"}
+            Phone Number
           </label>
           <Input
-            name="phoneOrUserId"
-            value={formData.phoneOrUserId}
+            name="phoneNumber"
+            value={formData.phoneNumber}
             onChange={handleInputChange}
             readOnly={!isEditing}
+            placeholder="Enter phone number"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            User ID
+          </label>
+          <Input
+            name="userId"
+            value={formData.userId}
+            onChange={handleInputChange}
+            readOnly={!isEditing}
+            placeholder="Enter platform user ID"
           />
         </div>
 
