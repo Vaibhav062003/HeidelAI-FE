@@ -25,6 +25,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { createClient } from '@supabase/supabase-js';
 
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -36,6 +37,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
+import { Shopify } from '@shopify/shopify-api';
 
 const loginWithFacebook = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -56,8 +58,25 @@ const WooCommerceDialog = () => {
     consumerKey: '',
     consumerSecret: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const handleConnect = async () => {
+    setIsLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    const resetForm = () => {
+      setCredentials({
+        siteUrl: '',
+        consumerKey: '',
+        consumerSecret: ''
+      });
+      setError(null);
+      setSuccess(false);
+    };
+
     try {
       const api = new WooCommerceRestApi({
         url: credentials.siteUrl,
@@ -67,13 +86,25 @@ const WooCommerceDialog = () => {
       });
       
       // Test the connection by fetching products
-      const response = await api.get("products", { per_page: 1 });
+      const response = await api.get("products", { per_page: 3 });
       console.log("Connection successful:", response.data);
-      // Add your success handling here
+      setSuccess(true);
+      
+      // Store the credentials securely (you can implement your storage method here)
+      localStorage.setItem('woocommerce_credentials', JSON.stringify({
+        url: credentials.siteUrl,
+        key: credentials.consumerKey,
+      }));
+
+      setTimeout(() => {
+        resetForm();
+      }, 2000);
       
     } catch (error) {
       console.error("WooCommerce connection error:", error);
-      // Add your error handling here
+      setError(error instanceof Error ? error.message : 'Failed to connect to WooCommerce');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -127,14 +158,131 @@ const WooCommerceDialog = () => {
               }))}
             />
           </div>
-          <Button onClick={handleConnect} className="bg-[#96588A] hover:bg-[#804674] text-white">
-            Authenticate
+          {error && (
+            <div className="text-sm text-red-500 bg-red-50 p-2 rounded">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="text-sm text-green-500 bg-green-50 p-2 rounded">
+              Successfully connected to WooCommerce store!
+            </div>
+          )}
+          <Button 
+            onClick={handleConnect} 
+            className="bg-[#96588A] hover:bg-[#804674] text-white"
+            disabled={isLoading || !credentials.siteUrl || !credentials.consumerKey || !credentials.consumerSecret}
+          >
+            {isLoading ? "Connecting..." : "Authenticate"}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
+
+
+
+const ShopifyDialog = () => {
+  const [credentials, setCredentials] = useState({
+    shopName: '',
+    accessToken: '',
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleConnect = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const cleanShopName = credentials.shopName
+        .replace(/^https?:\/\//, '')
+        .replace(/\/$/, '');
+
+      const response = await fetch('/api/shopify/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          shopName: cleanShopName,
+          accessToken: credentials.accessToken,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      console.log("Connection successful:", result.data);
+      // Add success handling here
+      
+    } catch (error) {
+      console.error("Shopify connection error:", error);
+      setError(error instanceof Error ? error.message : 'Failed to connect to Shopify');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button className="bg-[#96bf48] hover:bg-[#7da039] text-white">
+          Connect
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Connect Shopify Store</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <label htmlFor="shopName">Shop Name</label>
+            <Input
+              id="shopName"
+              placeholder="your-store.myshopify.com"
+              value={credentials.shopName}
+              onChange={(e) => setCredentials(prev => ({
+                ...prev,
+                shopName: e.target.value
+              }))}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label htmlFor="accessToken">Access Token</label>
+            <Input
+              id="accessToken"
+              type="password"
+              placeholder="shpat_xxxxxx"
+              value={credentials.accessToken}
+              onChange={(e) => setCredentials(prev => ({
+                ...prev,
+                accessToken: e.target.value
+              }))}
+            />
+          </div>
+          {error && (
+            <div className="text-sm text-red-500 bg-red-50 p-2 rounded">
+              {error}
+            </div>
+          )}
+          <Button 
+            onClick={handleConnect} 
+            className="bg-[#96bf48] hover:bg-[#7da039] text-white"
+            disabled={isLoading || !credentials.shopName || !credentials.accessToken}
+          >
+            {isLoading ? "Connecting..." : "Authenticate"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 
 export default function DashboardPage() {
   const handleInsertResponse = (message: string) => {
@@ -319,27 +467,23 @@ export const IntegrationsSettings = () => (
 
       {/* Shopify Integration Card */}
       <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-        <div className="space-y-4">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-[#96bf48] rounded-lg p-2">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M15.337 23.979l7.216-1.561s-2.604-17.613-2.625-17.73c-.018-.116-.114-.192-.211-.192s-1.929-.136-1.929-.136-1.275-1.274-1.439-1.411c-.045-.037-.075-.057-.121-.074l-.914 21.104h.023zm-11.25-11.37l-.837 2.517s-1.346-.706-2.829-1.411c0 0 1.514-12.533 1.536-12.65.021-.116.097-.192.194-.192s2.201-.136 2.201-.136 .085-.079.15-.098l-.415 11.97zm1.787-12.124s1.929-.136 2.01-.136c.079 0 .132.039.158.097l.263 2.201-1.167.831s-1.138-1.083-1.203-1.167c-.063-.079-.08-.177-.044-.266.035-.089.247-1.329.247-1.329l-.264-.231zm1.293 4.324l1.495-1.079 1.371 4.152s-1.555 1.063-3.084 1.982l.218-5.055zm9.51 11.026c.069-.231-1.497-.673-1.497-.673l-.73-2.156-2.112 1.26s1.882.696 2.144.891c.231.15 2.126.909 2.195.678z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold">Shopify</h3>
-                <p className="text-sm text-gray-600">Connect your Shopify store</p>
-              </div>
-            </div>
-            <Button
-              className="bg-[#96bf48] hover:bg-[#7da039] text-white"
-            >
-              Connect
-            </Button>
-          </div>
+  <div className="space-y-4">
+    <div className="flex items-start justify-between">
+      <div className="flex items-center gap-3">
+        <div className="bg-[#96bf48] rounded-lg p-2">
+          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M15.337 23.979l7.216-1.561s-2.604-17.613-2.625-17.73c-.018-.116-.114-.192-.211-.192s-1.929-.136-1.929-.136-1.275-1.274-1.439-1.411c-.045-.037-.075-.057-.121-.074l-.914 21.104h.023zm-11.25-11.37l-.837 2.517s-1.346-.706-2.829-1.411c0 0 1.514-12.533 1.536-12.65.021-.116.097-.192.194-.192s2.201-.136 2.201-.136 .085-.079.15-.098l-.415 11.97zm1.787-12.124s1.929-.136 2.01-.136c.079 0 .132.039.158.097l.263 2.201-1.167.831s-1.138-1.083-1.203-1.167c-.063-.079-.08-.177-.044-.266.035-.089.247-1.329.247-1.329l-.264-.231zm1.293 4.324l1.495-1.079 1.371 4.152s-1.555 1.063-3.084 1.982l.218-5.055zm9.51 11.026c.069-.231-1.497-.673-1.497-.673l-.73-2.156-2.112 1.26s1.882.696 2.144.891c.231.15 2.126.909 2.195.678z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold">Shopify</h3>
+          <p className="text-sm text-gray-600">Connect your Shopify store</p>
         </div>
       </div>
+      <ShopifyDialog />
+    </div>
+  </div>
+</div>
 
       {/* More Integrations Coming Soon Card */}
         {/* <div className="border rounded-lg p-4 bg-gray-50">
