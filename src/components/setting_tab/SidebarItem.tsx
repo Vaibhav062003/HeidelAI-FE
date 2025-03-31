@@ -201,7 +201,7 @@ const ShopifyDialog = () => {
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <label htmlFor="shopName">Shop Name</label>
+            <label htmlFor="shopName">Name</label>
             <Input
               id="shopName"
               placeholder="your-store.myshopify.com"
@@ -431,7 +431,7 @@ export const IntegrationsSettings = () => (
         </div>
         <div>
           <h3 className="text-lg font-semibold">Shopify</h3>
-          <p className="text-sm text-gray-600">Connect your Shopify store</p>
+          <p className="text-sm text-gray-600">Connect to your Shopify store</p>
         </div>
       </div>
       <ShopifyDialog />
