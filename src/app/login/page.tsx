@@ -32,18 +32,6 @@ export default function LoginPage() {
     fetchUser();
   }, []);
 
-  const loginWithFacebook = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "facebook",
-      options: {
-        queryParams: {
-          config_id: '1078509157648485'
-        }
-      }
-    });
-
-    if (error) console.error("Login error:", error.message);
-  };
 
 
   // Handle email/password login or signup
@@ -122,20 +110,6 @@ export default function LoginPage() {
             <span className="text-neutral-300 text-sm text-center mx-4">or</span>
             <div className="flex-grow bg-neutral-800 h-[1px]" />
             </div>
- <div className="flex flex-col space-y-4">
-   <button
-    className="bg-gradient-to-br relative group/btn flex space-x-2 items-center justify-center px-4 rounded-[0.5rem] from-zinc-900 to-zinc-900  bg-zinc-800 w-full text-white h-10 font-medium shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
-    type="button"
-    onClick={loginWithFacebook}
-   >
-     <IconBrandFacebook className="h-4 w-4 text-neutral-300" />
-     <span className="text-neutral-300 text-base">
-       Continue with Facebook
-     </span>
-     <BottomGradient />
-   </button>
-   
- </div>
         </form>
 
         {/* <div className="bg-gradient-to-r from-transparent via-neutral-700 to-transparent my-8 h-[1px] w-full" />
