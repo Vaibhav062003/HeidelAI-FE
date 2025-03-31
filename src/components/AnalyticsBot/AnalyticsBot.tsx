@@ -14,17 +14,22 @@ interface ProcessingState {
   currentStep: string;
   progress: number;
   platform: keyof typeof PLATFORM_THINKING_MESSAGES | '';
+  phase?: 'initial' | 'platform-analysis' | 'final-refinement'; // Add this line
 }
 
 const STORAGE_KEY = 'analyticsBot_messages';
 
 const THINKING_ANIMATION_STEPS = [
-  { message: "🤔 Let me think about this...", duration: 1500 },
-  { message: "🔍 Analyzing query patterns...", duration: 2000 },
-  { message: "🌐 Searching across multiple platforms...", duration: 2500 },
-  { message: "📊 Processing data streams...", duration: 2000 },
-  { message: "🔄 Synthesizing information...", duration: 1500 },
+  { message: "🤔 Let me think about this...", duration: 2000 },
+  { message: "🔍 Analyzing query patterns...", duration: 3000 },
+  { message: "🔄 Synthesizing information...", duration: 3000 },
   { message: "✨ Preparing insights...", duration: 1500 }
+];
+
+const REFINEMENT_ANIMATION_STEPS = [
+  { message: "🤔 Processing platform analyses...", duration: 1500 },
+  { message: "🎯 Refining context...", duration: 2000 },
+  { message: "✨ Preparing final insights...", duration: 2000 }
 ];
 
 const processingOverlayStyles = `
@@ -206,7 +211,7 @@ const AnalyticsBot = () => {
   }, [messages]);
 
   useEffect(() => {
-    const wsUrl = 'ws://localhost:8000/ws';
+    const wsUrl = 'wss://backend-chatbot.koyeb.app/ws2 ';
     ws.current = new WebSocket(wsUrl);
     
     ws.current.onopen = () => {
@@ -256,7 +261,19 @@ const AnalyticsBot = () => {
 
       switch (data.type) {
         case "status":
-          if (data.content.includes("Starting")) {
+          if (data.content.includes("Starting query refinement")) {
+            setProcessingState(prev => ({
+              ...prev,
+              phase: 'initial',
+              isVisible: true,
+            }));
+            await animateThinking();
+          } else if (data.content.includes("Starting data collection")) {
+            setProcessingState(prev => ({
+              ...prev,
+              phase: 'platform-analysis',
+              isVisible: true,
+            }));
             await animateThinking();
           } else {
             const platform = data.content.toLowerCase().match(/analyzing (youtube|reddit|google|instagram)/)?.[1] as keyof typeof PLATFORM_THINKING_MESSAGES;
@@ -276,7 +293,9 @@ const AnalyticsBot = () => {
           await new Promise(resolve => setTimeout(resolve, 1000));
           const questionMessage: ChatMessage = {
             type: 'incoming',
-            content: `🤔 ${data.content}`
+            content: data.content.includes("candidate") || data.content.includes("political party")
+              ? `🎯 ${data.content}` // Use different emoji for refinement questions
+              : `🤖 ${data.content}`
           };
           setMessages(prev => [...prev, questionMessage]);
           setIsWaitingForAnswer(true);
