@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-
 "use client";
 // import {toast, Toaster} from 'sonner';
 import { useEffect } from "react";
@@ -39,7 +38,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
-
+// Add this with other imports at the top
+import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -81,8 +81,8 @@ interface UserProfile {
 export default function DashboardPage() {
   const router = useRouter();
   const [activeView, setActiveView] = useState<
-    "inbox" | "analytics" | "billing" | "settings" | "talktodata"
-  >("inbox");
+  "inbox" | "analytics" | "billing" | "settings" | "talktodata" | "analyticsbot"
+>("inbox");
   const [showTeamPanel, setShowTeamPanel] = useState(false);
   const [selectedConversationId, setSelectedConversationId] =
     useState<string>("");
@@ -193,6 +193,17 @@ export default function DashboardPage() {
                 <BotMessageSquare className="h-5 w-5" />
                 <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   Talk to Data
+                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
+                </span>
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="analyticsbot"
+                className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
+              >
+                <BarChart2 className="h-5 w-5" />
+                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  Analytics Bot
                   <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
               </TabsTrigger>
@@ -329,6 +340,14 @@ export default function DashboardPage() {
               <TalkToDataTab />
             </TabsContent>
 
+
+            <TabsContent
+              value="analyticsbot"
+              className="m-0 flex-1 fixed top-0 w-[96vw] h-full overflow-hidden"
+            >
+              <AnalyticsBot />
+            </TabsContent>
+            
             <TabsContent
               value="billing"
               className="m-0 fixed top-0 w-[96vw] flex-1 p-6 overflow-auto"

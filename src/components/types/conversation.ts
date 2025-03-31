@@ -1,8 +1,13 @@
+// Type definition for conversation object
 export interface Conversation {
   id: string;
   platform: string;
   customer_id: string;
   customer_name: string;
+  email: string;
+  billingAddress: string;
+  shippingAddress: string;
+  gstin: string;
   last_message: string;
   timestamp: string;
   unread_count: number;
