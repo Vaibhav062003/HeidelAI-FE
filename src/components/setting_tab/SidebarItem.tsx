@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import WooCommerceRestApi from "@woocommerce/woocommerce-rest-api";
 import {
@@ -188,45 +187,6 @@ const ShopifyDialog = () => {
     shopName: '',
     accessToken: '',
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleConnect = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const cleanShopName = credentials.shopName
-        .replace(/^https?:\/\//, '')
-        .replace(/\/$/, '');
-
-      const response = await fetch('/api/shopify/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          shopName: cleanShopName,
-          accessToken: credentials.accessToken,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      console.log("Connection successful:", result.data);
-      // Add success handling here
-      
-    } catch (error) {
-      console.error("Shopify connection error:", error);
-      setError(error instanceof Error ? error.message : 'Failed to connect to Shopify');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <Dialog>
@@ -265,17 +225,11 @@ const ShopifyDialog = () => {
               }))}
             />
           </div>
-          {error && (
-            <div className="text-sm text-red-500 bg-red-50 p-2 rounded">
-              {error}
-            </div>
-          )}
           <Button 
-            onClick={handleConnect} 
             className="bg-[#96bf48] hover:bg-[#7da039] text-white"
-            disabled={isLoading || !credentials.shopName || !credentials.accessToken}
+            onClick={() => console.log('Shopify connection clicked')}
           >
-            {isLoading ? "Connecting..." : "Authenticate"}
+            Connect
           </Button>
         </div>
       </DialogContent>
