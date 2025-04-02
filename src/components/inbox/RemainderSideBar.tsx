@@ -106,37 +106,35 @@ const RemainderSideBar = () => {
 
   return (
     <div className="h-full flex flex-col bg-gray-50">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-white border-b shadow-sm">
+      {/* Header - reduced padding */}
+      <div className="flex items-center justify-between p-3 bg-white border-b shadow-sm">
         <div className="flex items-center gap-2">
-          <Bell className="text-blue-600" size={20} />
-          <h1 className="text-xl font-semibold text-gray-800">Reminders</h1>
+          <Bell className="text-blue-600" size={18} />
+          <h1 className="text-lg font-semibold text-gray-800">Reminders</h1>
         </div>
-        <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+        <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
           {remainder.length} Active
         </span>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto p-4 space-y-4">
+      {/* Content - reduced padding and spacing */}
+      <div className="flex-1 overflow-auto p-3 space-y-3">
         {isloading ? (
-          <p className="text-center text-gray-600 py-8">
-            Reminders are being loaded, please be patient...
-          </p>
+          <p className="text-center text-gray-600 py-4">Loading reminders...</p>
         ) : error ? (
-          <div className="flex items-center justify-center p-6 bg-red-50 rounded-lg">
-            <AlertCircle className="text-red-500 mr-2" size={20} />
+          <div className="flex items-center justify-center p-4 bg-red-50 rounded-lg">
+            <AlertCircle className="text-red-500 mr-2" size={18} />
             <p className="text-red-600">{error}</p>
           </div>
         ) : remainder.length > 0 ? (
           remainder.map((reminder) => (
             <Card key={reminder._id} className="transition-all hover:shadow-md">
-              <CardHeader className="pb-2">
+              <CardHeader className="p-3 pb-2">
                 <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className=" flex gap-3 text-lg font-semibold">
+                  <div className="space-y-0.5">
+                    <CardTitle className="flex gap-2 text-base font-semibold">
                       {reminder.title}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         {getPriorityBadge(reminder.dateTime)}
                         <Badge 
                           variant="outline" 
@@ -146,27 +144,25 @@ const RemainderSideBar = () => {
                           }
                         >
                           {reminder.status}
-                    </Badge>
-                  </div>
+                        </Badge>
+                      </div>
                     </CardTitle>
-                   
-                    <CardDescription className="flex items-center gap-2 text-xs text-gray-500">
+                    <CardDescription className="flex items-center gap-1 text-xs text-gray-500">
                       <span>Customer: {getCustomerName(reminder.conversationId)}</span>
-                      •
-                      <span>Assigned: {reminder.user?.full_name || reminder.recipient_email}</span>
+                      {/* •
+                      <span>Assigned: {reminder.user?.full_name || reminder.recipient_email}</span> */}
                     </CardDescription>
                   </div>
-                  
                 </div>
               </CardHeader>
               
-              <CardContent className="py-2">
+              <CardContent className="px-3 pb-1">
                 <p className="text-sm text-gray-600">{reminder.notes}</p>
               </CardContent>
 
-              <CardFooter className="flex justify-between pt-2 border-t">
+              <CardFooter className="flex justify-between px-3 py-2 border-t">
                 <div className="flex items-center text-xs text-gray-500">
-                  <Calendar className="h-4 w-4 mr-2" />
+                  <Calendar className="h-3 w-3 mr-1" />
                   {new Date(reminder.dateTime).toLocaleDateString('en-US', {
                     weekday: 'short',
                     month: 'short',
@@ -176,7 +172,7 @@ const RemainderSideBar = () => {
                   })}
                 </div>
                 <div className="flex items-center text-xs text-gray-500">
-                  <Clock className="h-4 w-4 mr-2" />
+                  <Clock className="h-3 w-3 mr-1" />
                   Created: {new Date(reminder.created_at).toLocaleDateString('en-US', {
                     month: 'short',
                     day: 'numeric',
