@@ -40,6 +40,7 @@ import { createClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 // Add this with other imports at the top
 import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
+import RemainderSideBar from "@/components/inbox/RemainderSideBar";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -77,6 +78,7 @@ interface UserProfile {
 // }: HomeProps) => {
   
 // import { Phone, Video, MessageSquare, Globe, Smile, Paperclip, Send } from 'lucide-react'
+
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -148,8 +150,8 @@ export default function DashboardPage() {
           <div className="max-w-10 fixed left-0 h-full z-20">
           <TabsList className="h-full flex-col items-start justify-start gap-4 pt-6 bg-white/90 backdrop-blur-sm border-r">
           <div className="w-full flex justify-center items-center mb-6">
-                <Link href="/">
-              <Image src='/logo.png' alt="logo" width={30} height={30}/>
+                <Link href="/dashboard" onClick={() => { setSelectedConversationId(""); }}>
+                  <Image src='/logo.png' alt="logo" width={30} height={30}/>
               </Link>
               </div>
 
@@ -302,12 +304,14 @@ export default function DashboardPage() {
 
               {/* Right Sidebar - Fixed width */}
               <div className="w-[360px] min-w-[280px] border-l border-gray-200">
-                {selectedConversationId && (
+                {selectedConversationId ? (
                   <Sidebar 
                   selectedConversationId={selectedConversationId}
                   onConversationSelect={setSelectedConversationId}
                   onShareProduct={(product) => setSharedProduct(product)}
                 />
+                ):(
+                  <RemainderSideBar/>
                 )}
                 {showTeamPanel && (
                   <div className="mt-4">
