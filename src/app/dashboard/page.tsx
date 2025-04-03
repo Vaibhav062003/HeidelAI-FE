@@ -41,6 +41,8 @@ import { toast } from 'sonner';
 // Add this with other imports at the top
 import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
 import RemainderSideBar from "@/components/inbox/RemainderSideBar";
+import { InstagramLogoIcon } from "@radix-ui/react-icons";
+import InfluencerBot from "@/components/influencerBot/influencerbot";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -211,6 +213,17 @@ export default function DashboardPage() {
               </TabsTrigger>
 
               <TabsTrigger
+          value="influencerbot"
+          className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
+                >
+                <InstagramLogoIcon className="h-5 w-5" />
+                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  Influencer Analysis
+                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
+                </span>
+              </TabsTrigger>
+
+              <TabsTrigger
                 value="billing"
                 className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
               >
@@ -350,6 +363,13 @@ export default function DashboardPage() {
               className="m-0 flex-1 fixed top-0 w-[96vw] h-full overflow-hidden"
             >
               <AnalyticsBot />
+            </TabsContent>
+
+            <TabsContent
+              value="influencerbot"
+              className="m-0 flex-1 fixed top-0 w-[96vw] h-full overflow-hidden"
+            >
+              <InfluencerBot />
             </TabsContent>
             
             <TabsContent
