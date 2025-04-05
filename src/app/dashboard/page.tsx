@@ -40,6 +40,9 @@ import { createClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 // Add this with other imports at the top
 import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
+import RemainderSideBar from "@/components/inbox/RemainderSideBar";
+import { InstagramLogoIcon } from "@radix-ui/react-icons";
+import InfluencerBot from "@/components/influencerBot/influencerbot";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -77,6 +80,7 @@ interface UserProfile {
 // }: HomeProps) => {
   
 // import { Phone, Video, MessageSquare, Globe, Smile, Paperclip, Send } from 'lucide-react'
+
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -148,12 +152,13 @@ export default function DashboardPage() {
           <div className="max-w-10 fixed left-0 h-full z-20">
           <TabsList className="h-full flex-col items-start justify-start gap-4 pt-6 bg-white/90 backdrop-blur-sm border-r">
           <div className="w-full flex justify-center items-center mb-6">
-                <Link href="/">
-              <Image src='/logo.png' alt="logo" width={30} height={30}/>
+                <Link href="/" >
+                  <Image src='/logo.png' alt="logo" width={30} height={30}/>
               </Link>
               </div>
 
               <TabsTrigger
+                onClick={() => { setSelectedConversationId(""); }}
                 value="inbox"
                 className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
               >
@@ -204,6 +209,17 @@ export default function DashboardPage() {
                 <BarChart2 className="h-5 w-5" />
                 <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   Analytics Bot
+                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
+                </span>
+              </TabsTrigger>
+
+              <TabsTrigger
+          value="influencerbot"
+          className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
+                >
+                <InstagramLogoIcon className="h-5 w-5" />
+                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  Influencer Analysis
                   <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
               </TabsTrigger>
@@ -302,12 +318,14 @@ export default function DashboardPage() {
 
               {/* Right Sidebar - Fixed width */}
               <div className="w-[360px] min-w-[280px] border-l border-gray-200">
-                {selectedConversationId && (
+                {selectedConversationId ? (
                   <Sidebar 
                   selectedConversationId={selectedConversationId}
                   onConversationSelect={setSelectedConversationId}
                   onShareProduct={(product) => setSharedProduct(product)}
                 />
+                ):(
+                  <RemainderSideBar/>
                 )}
                 {showTeamPanel && (
                   <div className="mt-4">
@@ -346,6 +364,13 @@ export default function DashboardPage() {
               className="m-0 flex-1 fixed top-0 w-[96vw] h-full overflow-hidden"
             >
               <AnalyticsBot />
+            </TabsContent>
+
+            <TabsContent
+              value="influencerbot"
+              className="m-0 flex-1 fixed top-0 w-[96vw] h-full overflow-hidden"
+            >
+              <InfluencerBot />
             </TabsContent>
             
             <TabsContent
