@@ -117,7 +117,7 @@ const InfluencerBot = () => {
   }, []);
 
   useEffect(() => {
-    const wsUrl = 'ws://localhost:8001/ws/influencer';
+    const wsUrl = 'wss://backend-chatbot.koyeb.app/ws/influencer';
     
     const connectWebSocket = () => {
       ws.current = new WebSocket(wsUrl);
