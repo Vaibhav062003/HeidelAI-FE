@@ -12,11 +12,10 @@ interface ChatMessage {
 interface ProcessingState {
   isVisible: boolean;
   currentStep: string;
-  progress: number;
-  phase?: 'analysis' | 'comparison';
 }
 
 const STORAGE_KEY = 'influencerBot_messages';
+const WELCOME_SHOWN_KEY = 'influencerBot_welcomeShown';
 
 const processingOverlayStyles = `
   .processing-overlay {
@@ -88,26 +87,21 @@ const processingOverlayStyles = `
   }
 `;
 
-// Update the THINKING_ANIMATION_STEPS to remove duration
-const THINKING_ANIMATION_STEPS = [
-  { message: "🔍 Starting analysis...", step: 0 },
-  { message: "📊 Fetching Instagram data...", step: 1 },
-  { message: "🎯 Processing profile metrics...", step: 2 },
-  { message: "📈 Generating insights...", step: 3 },
-  { message: "🔄 Comparing accounts...", step: 4 }
-];
-
 const InfluencerBot = () => {
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.error('Error loading messages from localStorage:', error);
+      return [];
+    }
   });
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [processingState, setProcessingState] = useState<ProcessingState>({
     isVisible: false,
-    currentStep: '',
-    progress: 0
+    currentStep: ''
   });
   const [showProcessing, setShowProcessing] = useState(true);
   const ws = useRef<WebSocket | null>(null);
@@ -130,35 +124,38 @@ const InfluencerBot = () => {
 
       ws.current.onopen = () => {
         console.log('Connected to local FastAPI backend');
-        const welcomeMessage: ChatMessage = {
-          type: 'incoming',
-          content: '👋 Hello! I can analyze Instagram profiles. Enter usernames (comma-separated) to begin analysis.\n\nExample: username1, username2'
-        };
-        setMessages(prev => {
-          if (prev.length === 0) {
-            return [welcomeMessage];
-          }
-          return prev;
-        });
+        const hasShownWelcome = localStorage.getItem(WELCOME_SHOWN_KEY);
+        
+        if (!hasShownWelcome) {
+          const welcomeMessage: ChatMessage = {
+            type: 'incoming',
+            content: '👋 Hello! I can analyze Instagram profiles. Enter usernames (comma-separated) to begin analysis.\n\nExample: username1, username2'
+          };
+          setMessages([welcomeMessage]); // Replace existing messages with welcome message
+          localStorage.setItem(WELCOME_SHOWN_KEY, 'true');
+        }
       };
 
       ws.current.onmessage = handleWebSocketMessage;
-
+      
       ws.current.onerror = (error) => {
         console.error('WebSocket error:', error);
-        const errorMessage: ChatMessage = {
+        setMessages(prev => [...prev, {
           type: 'incoming',
-          content: 'Reconneting to server. Please try again later.'
-        };
-        setMessages(prev => [...prev, errorMessage]);
+          content: '❌ Connection error. Please try again later.'
+        }]);
       };
 
       ws.current.onclose = () => {
         console.log('WebSocket closed. Attempting to reconnect...');
+        // Clear the welcome shown flag when connection is lost
+        localStorage.removeItem(WELCOME_SHOWN_KEY);
         setTimeout(connectWebSocket, 3000);
       };
     };
 
+    // Clear welcome flag on component mount to ensure it shows after reconnection
+    localStorage.removeItem(WELCOME_SHOWN_KEY);
     connectWebSocket();
 
     return () => {
@@ -168,73 +165,61 @@ const InfluencerBot = () => {
     };
   }, []);
 
-  // Update the animateProgress function
-  const animateProgress = () => {
-    let step = 0;
-    const animateStep = () => {
-      if (step < THINKING_ANIMATION_STEPS.length) {
-        setProcessingState(prev => ({
-          ...prev,
-          currentStep: THINKING_ANIMATION_STEPS[step].message,
-          progress: ((step + 1) / THINKING_ANIMATION_STEPS.length) * 100,
-          isVisible: true
-        }));
-        step++;
-        setTimeout(animateStep, 1500); // Change step every 1.5 seconds
-      }
-    };
-    animateStep();
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    } catch (error) {
+      console.error('Error saving messages to localStorage:', error);
+    }
+  }, [messages]);
+  
+  const showProcessingState = (step: string) => {
+    setProcessingState({
+      isVisible: true,
+      currentStep: step
+    });
   };
 
-  // Update the handleWebSocketMessage function
   const handleWebSocketMessage = async (event: MessageEvent) => {
     try {
+      if (!event.data) return;
+      
       const data = JSON.parse(event.data);
+      if (!data?.type) return;
 
       switch (data.type) {
         case "status":
-          if (data.content.includes("Starting analysis")) {
-            animateProgress();
-          }
           setIsTyping(true);
+          showProcessingState(data.content || 'Processing...');
           break;
 
         case "analysis":
-          const analysisMessage: ChatMessage = {
-            type: 'incoming',
-            content: `📊 Analysis for @${data.content.username}:\n${data.content.analysis}`
-          };
-          setMessages(prev => [...prev, analysisMessage]);
-          scrollToBottom();
-          break;
-
-        case "comparison":
-          const comparisonMessage: ChatMessage = {
-            type: 'incoming',
-            content: `🔄 Comparison Results:\n${data.content}`
-          };
-          setMessages(prev => [...prev, comparisonMessage]);
-          scrollToBottom();
+          if (data.content?.username && data.content?.analysis) {
+            const analysisMessage: ChatMessage = {
+              type: 'incoming',
+              content: `📊 Analysis for @${data.content.username}:\n${data.content.analysis}`
+            };
+            setMessages(prev => [...prev, analysisMessage]);
+          }
           break;
 
         case "complete":
-          setProcessingState(prev => ({
-            ...prev,
-            isVisible: false
-          }));
           setIsTyping(false);
+          setProcessingState({ isVisible: false, currentStep: '' });
           const completeMessage: ChatMessage = {
             type: 'incoming',
-            content: '✅ Analysis complete! Enter more usernames to analyze.'
+            content: '✅ Analysis complete! Enter more Instagram profiles to analyze.'
           };
           setMessages(prev => [...prev, completeMessage]);
           scrollToBottom();
           break;
 
         case "error":
+          setIsTyping(false);
+          setProcessingState({ isVisible: false, currentStep: '' });
           const errorMessage: ChatMessage = {
             type: 'incoming',
-            content: `❌ ${data.content}`
+            content: `❌ ${data.content || 'An unexpected error occurred'}`
           };
           setMessages(prev => [...prev, errorMessage]);
           scrollToBottom();
@@ -245,7 +230,6 @@ const InfluencerBot = () => {
     }
   };
 
-  // Add useEffect for immediate scroll on messages update
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
@@ -286,6 +270,21 @@ const InfluencerBot = () => {
     setInputMessage('');
   };
 
+  const clearChat = useCallback(() => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      setMessages([]);
+      // Show welcome message again after clearing
+      const welcomeMessage: ChatMessage = {
+        type: 'incoming',
+        content: '👋 Hello! I can analyze Instagram profiles. Enter usernames (comma-separated) to begin analysis.\n\nExample: username1, username2'
+      };
+      setMessages([welcomeMessage]);
+    } catch (error) {
+      console.error('Error clearing chat history:', error);
+    }
+  }, []);
+
   return (
     <Card className="h-screen m-4">
       <style>{processingOverlayStyles}</style>
@@ -294,6 +293,14 @@ const InfluencerBot = () => {
           <div className="border-b pb-4 mb-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Instagram Influencer Analysis</h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearChat}
+                className="text-gray-500 hover:text-pink-500"
+              >
+                Clear Chat
+              </Button>
             </div>
             {showProcessing && processingState.isVisible && (
               <div className="text-sm text-gray-500">
@@ -385,26 +392,9 @@ const InfluencerBot = () => {
               </button>
             </div>
             <div className="processing-steps">
-              {THINKING_ANIMATION_STEPS.map((step, index) => (
-                <div
-                  key={index}
-                  className={`processing-step ${
-                    index === Math.floor((processingState.progress / 100) * THINKING_ANIMATION_STEPS.length)
-                      ? 'active'
-                      : index < Math.floor((processingState.progress / 100) * THINKING_ANIMATION_STEPS.length)
-                      ? 'completed'
-                      : ''
-                  }`}
-                >
-                  {step.message}
-                </div>
-              ))}
-            </div>
-            <div className="progress-bar">
-              <div
-                className="progress-bar-fill"
-                style={{ width: `${processingState.progress}%` }}
-              />
+              <div className="processing-step active">
+                {processingState.currentStep}
+              </div>
             </div>
           </div>
         )}

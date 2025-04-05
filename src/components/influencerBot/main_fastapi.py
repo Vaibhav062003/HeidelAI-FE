@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -53,6 +54,12 @@ async def websocket_endpoint(websocket: WebSocket):
                     if data and 'business_discovery' in data:
                         logger.info(f"Successfully fetched data for {username}")
                         
+                        # Send status update
+                        await websocket.send_json({
+                            "type": "status",
+                            "content": f"Analyzing {username}'s profile..."
+                        })
+                        
                         logger.info(f"Starting analysis for {username}")
                         analysis = analyze_with_gemini(data)
                         analyses[username] = analysis
@@ -66,11 +73,12 @@ async def websocket_endpoint(websocket: WebSocket):
                             }
                         })
                         logger.info(f"Analysis sent for {username}")
+                        
                     else:
                         logger.error(f"Failed to fetch data for {username}")
                         await websocket.send_json({
                             "type": "error",
-                            "content": f"Failed to fetch data for @{username}"
+                            "content": f"Failed to fetch data for @{username}. Please ensure the username is correct and the account is public."
                         })
                         
                 except Exception as e:
@@ -81,9 +89,14 @@ async def websocket_endpoint(websocket: WebSocket):
                     })
             
             # Compare accounts if multiple usernames provided
-            if len(usernames) > 1:
+            if len(usernames) > 1 and len(analyses) > 1:
                 logger.info("Starting account comparison")
                 try:
+                    await websocket.send_json({
+                        "type": "status",
+                        "content": "Generating comparison analysis..."
+                    })
+                    
                     comparison = compare_accounts_with_gemini(
                         analyses[usernames[0]],
                         analyses[usernames[1]],
@@ -104,6 +117,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         "content": f"Error generating comparison: {str(e)}"
                     })
             
+            # Send completion message
             await websocket.send_json({
                 "type": "complete",
                 "content": "Analysis complete"
@@ -114,9 +128,13 @@ async def websocket_endpoint(websocket: WebSocket):
         logger.info("Client disconnected")
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-    finally:
-        await websocket.close()
-        logger.info("WebSocket connection closed")
+        try:
+            await websocket.send_json({
+                "type": "error",
+                "content": f"An unexpected error occurred: {str(e)}"
+            })
+        except:
+            pass
 
 if __name__ == "__main__":
     import uvicorn

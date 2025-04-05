@@ -152,12 +152,13 @@ export default function DashboardPage() {
           <div className="max-w-10 fixed left-0 h-full z-20">
           <TabsList className="h-full flex-col items-start justify-start gap-4 pt-6 bg-white/90 backdrop-blur-sm border-r">
           <div className="w-full flex justify-center items-center mb-6">
-                <Link href="/dashboard" onClick={() => { setSelectedConversationId(""); }}>
+                <Link href="/" >
                   <Image src='/logo.png' alt="logo" width={30} height={30}/>
               </Link>
               </div>
 
               <TabsTrigger
+                onClick={() => { setSelectedConversationId(""); }}
                 value="inbox"
                 className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
               >
