@@ -8,3 +8,4 @@ Rounak : yeah ive added env variables in vercel
 one more.
 Sample.  
 Rounak commit
+prithal
