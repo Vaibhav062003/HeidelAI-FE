@@ -11,7 +11,7 @@ import ChatView from "@/components/inbox/ChatView";
 import Sidebar from "@/components/inbox/Sidebar";
 import StatusBar from "@/components/inbox/StatusBar";
 import ConversationSummary from "@/components/inbox/ConversationSummary";
-import AnalyticsDashboard from "@/components/inbox/AnalyticsDashboard";
+// import AnalyticsDashboard from "@/components/inbox/AnalyticsDashboard";
 import UsageMetrics from "@/components/inbox/UsageMetrics";
 import BillingPlans from "@/components/inbox/BillingPlans";
 import TeamCollaboration from "@/components/inbox/TeamCollaboration";
@@ -39,10 +39,10 @@ import Link from "next/link";
 import { createClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 // Add this with other imports at the top
-import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
+// import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
 import RemainderSideBar from "@/components/inbox/RemainderSideBar";
-import { InstagramLogoIcon } from "@radix-ui/react-icons";
-import InfluencerBot from "@/components/influencerBot/influencerbot";
+// import { InstagramLogoIcon } from "@radix-ui/react-icons";
+// import InfluencerBot from "@/components/influencerBot/influencerbot";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -85,7 +85,7 @@ interface UserProfile {
 export default function DashboardPage() {
   const router = useRouter();
   const [activeView, setActiveView] = useState<
-  "inbox" | "analytics" | "billing" | "settings" | "talktodata" | "analyticsbot"
+  "inbox" | "analytics" | "billing" | "settings" | "talktodata" 
 >("inbox");
   const [showTeamPanel, setShowTeamPanel] = useState(false);
   const [selectedConversationId, setSelectedConversationId] =
@@ -202,7 +202,7 @@ export default function DashboardPage() {
                 </span>
               </TabsTrigger>
 
-              <TabsTrigger
+              {/* <TabsTrigger
                 value="analyticsbot"
                 className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
               >
@@ -211,9 +211,9 @@ export default function DashboardPage() {
                   Analytics Bot
                   <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
-              </TabsTrigger>
+              </TabsTrigger> */}
 
-              <TabsTrigger
+              {/* <TabsTrigger
           value="influencerbot"
           className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
                 >
@@ -222,7 +222,7 @@ export default function DashboardPage() {
                   Influencer Analysis
                   <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
-              </TabsTrigger>
+              </TabsTrigger> */}
 
               <TabsTrigger
                 value="billing"
@@ -359,19 +359,19 @@ export default function DashboardPage() {
             </TabsContent>
 
 
-            <TabsContent
+            {/* <TabsContent
               value="analyticsbot"
               className="m-0 flex-1 fixed top-0 w-[96vw] h-full overflow-hidden"
             >
               <AnalyticsBot />
-            </TabsContent>
+            </TabsContent> */}
 
-            <TabsContent
+            {/* <TabsContent
               value="influencerbot"
               className="m-0 flex-1 fixed top-0 w-[96vw] h-full overflow-hidden"
             >
               <InfluencerBot />
-            </TabsContent>
+            </TabsContent> */}
             
             <TabsContent
               value="billing"
