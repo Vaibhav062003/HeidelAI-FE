@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import WooCommerceRestApi from "@woocommerce/woocommerce-rest-api";
 import {
   Dialog,
@@ -237,6 +237,178 @@ const ShopifyDialog = () => {
   );
 };
 
+const InstagramDialog = () => {
+  const [connected, setConnected] = useState(false);
+  const [accountInfo, setAccountInfo] = useState<{
+    username: string;
+    profileImage: string;
+  } | null>(null);
+  
+  // Instagram business login URL with heidelai.com domain
+  const instagramLoginUrl = "https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=https://www.heidelai.com/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights";
+
+  // Check if user has already connected Instagram
+  useEffect(() => {
+    const checkConnection = async () => {
+      // Check local storage for existing connection
+      const instagramConnection = localStorage.getItem('instagram_connection');
+      if (instagramConnection) {
+        const parsedData = JSON.parse(instagramConnection);
+        setConnected(true);
+        setAccountInfo(parsedData);
+      }
+      
+      // Check for auth code in URL (after redirect back from Instagram)
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('instagram_code');
+      
+      if (code) {
+        try {
+          // Call your FastAPI backend to exchange the code for a token
+          const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ code }),
+          });
+          
+          if (!response.ok) {
+            throw new Error('Failed to authenticate with Instagram');
+          }
+          
+          const data = await response.json();
+          
+          // Store the connection info
+          localStorage.setItem('instagram_connection', JSON.stringify({
+            username: data.username,
+            profileImage: data.profile_picture || '/default-avatar.png',
+            token: data.access_token,
+            userId: data.user_id
+          }));
+          
+          setConnected(true);
+          setAccountInfo({
+            username: data.username,
+            profileImage: data.profile_picture || '/default-avatar.png'
+          });
+          
+          // Remove the code from URL to prevent reprocessing
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (error) {
+          console.error('Error exchanging code for token:', error);
+        }
+      }
+    };
+    
+    checkConnection();
+  }, []);
+
+  const handleInstagramLogin = () => {
+    // Direct user to the Instagram authorization URL
+    window.location.href = instagramLoginUrl;
+  };
+
+  const disconnectInstagram = async () => {
+    try {
+      // Call your FastAPI backend to revoke the token
+      const instagramConnection = localStorage.getItem('instagram_connection');
+      if (instagramConnection) {
+        const parsedData = JSON.parse(instagramConnection);
+        
+        await fetch('https://api.heidelai.com/instagram/disconnect', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            token: parsedData.token,
+            user_id: parsedData.userId
+          }),
+        });
+      }
+      
+      // Clear the connection from local storage
+      localStorage.removeItem('instagram_connection');
+      setConnected(false);
+      setAccountInfo(null);
+    } catch (error) {
+      console.error('Error disconnecting Instagram:', error);
+    }
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white">
+          {connected ? 'Manage' : 'Connect'}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{connected ? 'Manage Instagram Connection' : 'Connect Instagram Account'}</DialogTitle>
+        </DialogHeader>
+        
+        {connected && accountInfo ? (
+          <div className="py-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <img 
+                src={accountInfo.profileImage} 
+                alt={accountInfo.username}
+                className="h-12 w-12 rounded-full object-cover"
+              />
+              <div>
+                <p className="font-medium">{accountInfo.username}</p>
+                <p className="text-sm text-green-600">Connected</p>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Permissions granted:</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>✓ Access to messages</li>
+                <li>✓ Send messages</li>
+                <li>✓ Access basic profile data</li>
+                <li>✓ Business account management</li>
+              </ul>
+            </div>
+            
+            <Button 
+              variant="destructive" 
+              className="w-full mt-4" 
+              onClick={disconnectInstagram}
+            >
+              Disconnect Account
+            </Button>
+          </div>
+        ) : (
+          <div className="py-4 space-y-4">
+            <p className="text-sm text-gray-600">
+              Connect your Instagram business account to manage messages directly from this dashboard.
+            </p>
+            
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">This will allow HeidelAI to:</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Access your messages</li>
+                <li>• Send messages on your behalf</li>
+                <li>• Access your business account information</li>
+                <li>• Manage your business messaging</li>
+              </ul>
+            </div>
+            
+            <Button 
+              className="w-full mt-4 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white" 
+              onClick={handleInstagramLogin}
+            >
+              Connect with Instagram
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export default function DashboardPage() {
   const handleInsertResponse = (message: string) => {
@@ -435,6 +607,26 @@ export const IntegrationsSettings = () => (
         </div>
       </div>
       <ShopifyDialog />
+    </div>
+  </div>
+</div>
+
+{/* // Instagram Integration Card */}
+<div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+  <div className="space-y-4">
+    <div className="flex items-start justify-between">
+      <div className="flex items-center gap-3">
+        <div className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-lg p-2">
+          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold">Instagram</h3>
+          <p className="text-sm text-gray-600">Connect your Instagram business account</p>
+        </div>
+      </div>
+      <InstagramDialog />
     </div>
   </div>
 </div>
