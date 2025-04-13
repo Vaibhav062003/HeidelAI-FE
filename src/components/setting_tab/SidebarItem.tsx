@@ -242,6 +242,12 @@ const InstagramDialog = () => {
   const [accountInfo, setAccountInfo] = useState<{
     username: string;
     profileImage: string;
+    businessInfo?: {
+      account_type?: string;
+      follower_count?: number;
+      media_count?: number;
+      username?: string;
+    };
   } | null>(null);
   
   // Instagram business login URL with heidelai.com domain
@@ -253,9 +259,17 @@ const InstagramDialog = () => {
       // Check local storage for existing connection
       const instagramConnection = localStorage.getItem('instagram_connection');
       if (instagramConnection) {
-        const parsedData = JSON.parse(instagramConnection);
-        setConnected(true);
-        setAccountInfo(parsedData);
+        try {
+          const parsedData = JSON.parse(instagramConnection);
+          setConnected(true);
+          setAccountInfo({
+            username: parsedData.username,
+            profileImage: parsedData.profileImage || '/default-avatar.png',
+            businessInfo: parsedData.businessInfo || {}
+          });
+        } catch (error) {
+          console.error('Error parsing Instagram connection data:', error);
+        }
       }
       
       // Check for auth code in URL (after redirect back from Instagram)
@@ -280,17 +294,21 @@ const InstagramDialog = () => {
           const data = await response.json();
           
           // Store the connection info
-          localStorage.setItem('instagram_connection', JSON.stringify({
+          const connectionData = {
             username: data.username,
             profileImage: data.profile_picture || '/default-avatar.png',
             token: data.access_token,
-            userId: data.user_id
-          }));
+            userId: data.user_id,
+            businessInfo: data.business_info || {}
+          };
+          
+          localStorage.setItem('instagram_connection', JSON.stringify(connectionData));
           
           setConnected(true);
           setAccountInfo({
             username: data.username,
-            profileImage: data.profile_picture || '/default-avatar.png'
+            profileImage: data.profile_picture || '/default-avatar.png',
+            businessInfo: data.business_info || {}
           });
           
           // Remove the code from URL to prevent reprocessing
@@ -350,26 +368,75 @@ const InstagramDialog = () => {
         </DialogHeader>
         
         {connected && accountInfo ? (
-          <div className="py-4 space-y-4">
-            <div className="flex items-center gap-3">
+          <div className="py-4 space-y-6">
+            <div className="flex items-center gap-4">
               <img 
                 src={accountInfo.profileImage} 
                 alt={accountInfo.username}
-                className="h-12 w-12 rounded-full object-cover"
+                className="h-16 w-16 rounded-full object-cover border-2 border-pink-200"
               />
               <div>
-                <p className="font-medium">{accountInfo.username}</p>
-                <p className="text-sm text-green-600">Connected</p>
+                <p className="font-medium text-lg">{accountInfo.username}</p>
+                <div className="flex items-center gap-1 text-sm text-green-600">
+                  <span className="inline-block h-2 w-2 rounded-full bg-green-600"></span>
+                  <span>Connected</span>
+                </div>
               </div>
             </div>
+            
+            {accountInfo.businessInfo && (
+              <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                <h4 className="text-sm font-medium">Business Account Details</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {accountInfo.businessInfo.account_type && (
+                    <div className="space-y-1">
+                      <div className="text-gray-500">Account Type</div>
+                      <div className="font-medium">{accountInfo.businessInfo.account_type}</div>
+                    </div>
+                  )}
+                  {accountInfo.businessInfo.follower_count && (
+                    <div className="space-y-1">
+                      <div className="text-gray-500">Followers</div>
+                      <div className="font-medium">{accountInfo.businessInfo.follower_count.toLocaleString()}</div>
+                    </div>
+                  )}
+                  {accountInfo.businessInfo.media_count && (
+                    <div className="space-y-1">
+                      <div className="text-gray-500">Posts</div>
+                      <div className="font-medium">{accountInfo.businessInfo.media_count.toLocaleString()}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Permissions granted:</h4>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>✓ Access to messages</li>
-                <li>✓ Send messages</li>
-                <li>✓ Access basic profile data</li>
-                <li>✓ Business account management</li>
+                <li className="flex items-center gap-2">
+                  <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Access to messages
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Send messages
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Access basic profile data
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Business account management
+                </li>
               </ul>
             </div>
             

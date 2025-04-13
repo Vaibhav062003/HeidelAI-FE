@@ -12,11 +12,57 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 export default function AuthCallback() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Exchange the code for a session
+        // Check for Instagram code in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        
+        if (code) {
+          setSuccessMessage("Instagram authorization code received. Processing...");
+          
+          try {
+            // Call backend to exchange code for token
+            const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ code }),
+            });
+            
+            if (!response.ok) {
+              throw new Error('Failed to authenticate with Instagram');
+            }
+            
+            const data = await response.json();
+            
+            // Store the connection info with additional business data
+            localStorage.setItem('instagram_connection', JSON.stringify({
+              username: data.username,
+              profileImage: data.profile_picture || '/default-avatar.png',
+              token: data.access_token,
+              userId: data.user_id,
+              businessInfo: data.business_info || {}
+            }));
+            
+            setSuccessMessage("Instagram account connected successfully!");
+            
+            // Redirect to dashboard page after successful connection
+            setTimeout(() => router.push('/dashboard'), 1500);
+            return;
+          } catch (err) {
+            console.error('Error processing Instagram code:', err);
+            setError('Failed to connect Instagram account');
+            setTimeout(() => router.push('/settings?error=instagram'), 2000);
+            return;
+          }
+        }
+        
+        // If no Instagram code, check Supabase auth
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -27,39 +73,14 @@ export default function AuthCallback() {
         }
         
         if (data?.session) {
-          // Extract the user info and Instagram token
-          const { provider_token, provider_refresh_token } = data.session;
+          // Extract provider token if present
+          const { provider_token } = data.session;
           
           if (provider_token) {
-            try {
-              // Get Instagram user profile if needed
-              const response = await fetch('https://graph.instagram.com/me?fields=id,username', {
-                headers: {
-                  Authorization: `Bearer ${provider_token}`
-                }
-              });
-              
-              const instagramData = await response.json();
-              
-              // Store connection info in localStorage or your backend
-              localStorage.setItem('instagram_connection', JSON.stringify({
-                username: instagramData.username,
-                userId: instagramData.id,
-                token: provider_token,
-                refresh_token: provider_refresh_token
-              }));
-              
-              // Redirect to settings with success message
-              router.push('/settings?success=instagram');
-            } catch (err) {
-              console.error('Error fetching Instagram data:', err);
-              setError('Failed to get Instagram profile');
-              setTimeout(() => router.push('/settings?error=profile'), 2000);
-            }
+            setSuccessMessage("Authentication successful!");
+            setTimeout(() => router.push('/dashboard'), 1500);
           } else {
-            // No provider token found
-            setError('No Instagram access token received');
-            setTimeout(() => router.push('/settings?error=no-token'), 2000);
+            router.push('/dashboard');
           }
         } else {
           setError('No session found');
@@ -91,9 +112,13 @@ export default function AuthCallback() {
               <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
             </div>
             <h1 className="text-xl font-bold">Processing Your Authorization</h1>
-            <p className="text-gray-600">
-              Please wait while we finish connecting your Instagram account...
-            </p>
+            {successMessage ? (
+              <p className="text-green-600 font-medium">{successMessage}</p>
+            ) : (
+              <p className="text-gray-600">
+                Please wait while we finish connecting your account...
+              </p>
+            )}
           </div>
         )}
       </div>
