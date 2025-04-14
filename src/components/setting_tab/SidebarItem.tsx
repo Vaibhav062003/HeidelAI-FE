@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import AgentsSettings from './Agent_management';
 import TeamsConfiguration from './Team_configuration';
 import CannedResponses from './CannedResponsesContext';
-import { Construction } from 'lucide-react';
+import { Construction, Loader2 } from 'lucide-react';
 import { 
   Select, 
   SelectContent, 
@@ -37,6 +37,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Shopify } from '@shopify/shopify-api';
+import { toast } from 'sonner';
 
 const loginWithFacebook = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -237,6 +238,7 @@ const ShopifyDialog = () => {
   );
 };
 
+// Update in SidebarItem.tsx (InstagramDialog component)
 const InstagramDialog = () => {
   const [connected, setConnected] = useState(false);
   const [accountInfo, setAccountInfo] = useState<{
@@ -249,6 +251,7 @@ const InstagramDialog = () => {
       username?: string;
     };
   } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Instagram business login URL with heidelai.com domain
   const instagramLoginUrl = "https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=https://www.heidelai.com/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights";
@@ -256,66 +259,79 @@ const InstagramDialog = () => {
   // Check if user has already connected Instagram
   useEffect(() => {
     const checkConnection = async () => {
-      // Check local storage for existing connection
-      const instagramConnection = localStorage.getItem('instagram_connection');
-      if (instagramConnection) {
-        try {
-          const parsedData = JSON.parse(instagramConnection);
-          setConnected(true);
-          setAccountInfo({
-            username: parsedData.username,
-            profileImage: parsedData.profileImage || '/default-avatar.png',
-            businessInfo: parsedData.businessInfo || {}
-          });
-        } catch (error) {
-          console.error('Error parsing Instagram connection data:', error);
+      setIsLoading(true);
+      
+      try {
+        // First check localStorage for quick loading
+        const instagramConnection = localStorage.getItem('instagram_connection');
+        if (instagramConnection) {
+          try {
+            const parsedData = JSON.parse(instagramConnection);
+            setConnected(true);
+            setAccountInfo({
+              username: parsedData.username,
+              profileImage: parsedData.profileImage || '/default-avatar.png',
+              businessInfo: parsedData.businessInfo || {}
+            });
+            setIsLoading(false);
+            return;
+          } catch (error) {
+            console.error('Error parsing Instagram connection data:', error);
+          }
         }
-      }
-      
-      // Check for auth code in URL (after redirect back from Instagram)
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('instagram_code');
-      
-      if (code) {
+        
+        // If not in localStorage, check with backend using dedicated Instagram collection API
         try {
-          // Call your FastAPI backend to exchange the code for a token
-          const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ code }),
-          });
+          // Get Instagram ID from localStorage (if available from previous connection)
+          const storedInstagramId = localStorage.getItem('instagram_user_id');
           
-          if (!response.ok) {
-            throw new Error('Failed to authenticate with Instagram');
+          // Or get app user ID to check for connections linked to this user
+          const appUserId = localStorage.getItem('user_id');
+          
+          // Construct the API query based on available IDs
+          let apiUrl = 'https://egenie-whatsapp.koyeb.app/instagram/status';
+          if (storedInstagramId) {
+            apiUrl += `?instagram_id=${storedInstagramId}`;
+          } else if (appUserId) {
+            apiUrl += `?app_user_id=${appUserId}`;
+          } else {
+            // If no IDs are available, we can't check for connections
+            setIsLoading(false);
+            return;
           }
           
-          const data = await response.json();
+          const response = await fetch(apiUrl);
           
-          // Store the connection info
-          const connectionData = {
-            username: data.username,
-            profileImage: data.profile_picture || '/default-avatar.png',
-            token: data.access_token,
-            userId: data.user_id,
-            businessInfo: data.business_info || {}
-          };
-          
-          localStorage.setItem('instagram_connection', JSON.stringify(connectionData));
-          
-          setConnected(true);
-          setAccountInfo({
-            username: data.username,
-            profileImage: data.profile_picture || '/default-avatar.png',
-            businessInfo: data.business_info || {}
-          });
-          
-          // Remove the code from URL to prevent reprocessing
-          window.history.replaceState({}, document.title, window.location.pathname);
+          if (response.ok) {
+            const data = await response.json();
+            
+            if (data.instagram_connected) {
+              // Store in localStorage for future fast access
+              localStorage.setItem('instagram_connection', JSON.stringify({
+                username: data.instagram_data.username,
+                profileImage: data.instagram_data.profile_picture || '/default-avatar.png',
+                token: data.instagram_data.access_token,
+                userId: data.instagram_data.user_id,
+                businessInfo: data.instagram_data.business_info || {},
+                connected: true
+              }));
+              
+              // Also store the Instagram ID separately for future quick lookups
+              localStorage.setItem('instagram_user_id', data.instagram_data.user_id);
+              
+              setConnected(true);
+              setAccountInfo({
+                username: data.instagram_data.username,
+                profileImage: data.instagram_data.profile_picture || '/default-avatar.png',
+                businessInfo: data.instagram_data.business_info || {}
+              });
+            }
+          }
         } catch (error) {
-          console.error('Error exchanging code for token:', error);
+          console.error('Error fetching Instagram status from backend:', error);
         }
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -329,29 +345,39 @@ const InstagramDialog = () => {
 
   const disconnectInstagram = async () => {
     try {
-      // Call your FastAPI backend to revoke the token
+      setIsLoading(true);
+      
+      // Call your backend to revoke the token
       const instagramConnection = localStorage.getItem('instagram_connection');
       if (instagramConnection) {
         const parsedData = JSON.parse(instagramConnection);
         
-        await fetch('https://api.heidelai.com/instagram/disconnect', {
+        // Call your backend to disconnect using the dedicated Instagram API
+        await fetch('https://egenie-whatsapp.koyeb.app/instagram/disconnect', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ 
             token: parsedData.token,
-            user_id: parsedData.userId
+            user_id: parsedData.userId,
+            app_user_id: localStorage.getItem('user_id')
           }),
         });
+        
+        // Clear the connection from local storage
+        localStorage.removeItem('instagram_connection');
+        localStorage.removeItem('instagram_user_id');
+        setConnected(false);
+        setAccountInfo(null);
+        
+        toast.success('Instagram account disconnected successfully');
       }
-      
-      // Clear the connection from local storage
-      localStorage.removeItem('instagram_connection');
-      setConnected(false);
-      setAccountInfo(null);
     } catch (error) {
       console.error('Error disconnecting Instagram:', error);
+      toast.error('Failed to disconnect Instagram account');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -359,7 +385,16 @@ const InstagramDialog = () => {
     <Dialog>
       <DialogTrigger asChild>
         <Button className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white">
-          {connected ? 'Manage' : 'Connect'}
+          {isLoading ? (
+            <span className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Checking...
+            </span>
+          ) : connected ? (
+            'Manage'
+          ) : (
+            'Connect'
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
@@ -367,7 +402,11 @@ const InstagramDialog = () => {
           <DialogTitle>{connected ? 'Manage Instagram Connection' : 'Connect Instagram Account'}</DialogTitle>
         </DialogHeader>
         
-        {connected && accountInfo ? (
+        {isLoading ? (
+          <div className="py-8 flex justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+          </div>
+        ) : connected && accountInfo ? (
           <div className="py-4 space-y-6">
             <div className="flex items-center gap-4">
               <img 
@@ -384,7 +423,7 @@ const InstagramDialog = () => {
               </div>
             </div>
             
-            {accountInfo.businessInfo && (
+            {accountInfo.businessInfo && Object.keys(accountInfo.businessInfo).length > 0 && (
               <div className="bg-gray-50 p-4 rounded-lg space-y-3">
                 <h4 className="text-sm font-medium">Business Account Details</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -444,8 +483,16 @@ const InstagramDialog = () => {
               variant="destructive" 
               className="w-full mt-4" 
               onClick={disconnectInstagram}
+              disabled={isLoading}
             >
-              Disconnect Account
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processing...
+                </span>
+              ) : (
+                'Disconnect Account'
+              )}
             </Button>
           </div>
         ) : (
@@ -467,8 +514,16 @@ const InstagramDialog = () => {
             <Button 
               className="w-full mt-4 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white" 
               onClick={handleInstagramLogin}
+              disabled={isLoading}
             >
-              Connect with Instagram
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processing...
+                </span>
+              ) : (
+                'Connect with Instagram'
+              )}
             </Button>
           </div>
         )}
