@@ -325,13 +325,11 @@ const ProductsTab = ({
               onClick={() => onProductSelect(product)} // Add this line
             >
               <div className="w-20  bg-gray-50 rounded-md overflow-hidden">
-                <Image
-                  height={100}
-                  width={100}
-                  src={product.images}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
-                />
+                <img 
+  src={product.images} 
+  alt={product.name}
+  className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
+/>
               </div>
 
               <div className="flex-1 min-w-0">
