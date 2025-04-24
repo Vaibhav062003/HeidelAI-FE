@@ -254,7 +254,8 @@ const InstagramDialog = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   // Instagram business login URL with heidelai.com domain
-  const instagramLoginUrl = "https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=https://www.heidelai.com/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights";
+  // const instagramLoginUrl = "https://www.instagram.com/oauth/authorize?client_id=1197084761515978&redirect_uri=https://www.heidelai.com/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%";
+  const instagramLoginUrl = 'https://www.facebook.com/dialog/oauth?client_id=509681741462833&display=page&extras={"setup":{"channel":"IG_API_ONBOARDING"}}&redirect_uri=https://heidelai.com/auth/instagram/callback&response_type=token&scope=instagram_basic';
 
   // Check if user has already connected Instagram
   useEffect(() => {
@@ -500,6 +501,11 @@ const InstagramDialog = () => {
             <p className="text-sm text-gray-600">
               Connect your Instagram business account to manage messages directly from this dashboard.
             </p>
+            <div className="p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm rounded">
+              <p>
+              You need to have a Facebook page linked to your Instagram account to use this feature.
+              </p>
+            </div>
             
             <div className="space-y-2">
               <h4 className="text-sm font-medium">This will allow HeidelAI to:</h4>
@@ -512,17 +518,17 @@ const InstagramDialog = () => {
             </div>
             
             <Button 
-              className="w-full mt-4 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white" 
+              className="w-full mt-4 bg-[#1877F2] hover:bg-[#0c5bdb] text-white" 
               onClick={handleInstagramLogin}
               disabled={isLoading}
             >
               {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Processing...
-                </span>
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Processing...
+              </span>
               ) : (
-                'Connect with Instagram'
+              'Login with Facebook'
               )}
             </Button>
           </div>
