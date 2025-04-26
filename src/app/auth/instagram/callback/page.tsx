@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation'; // Changed from next/router
 import { supabase } from '@/components/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -61,17 +61,20 @@ export default function InstagramCallback() {
         const data = await response.json();
         
         // Store connection data in localStorage
-        localStorage.setItem('instagram_connection', JSON.stringify({
-          username: data.username,
-          profileImage: data.profile_picture,
-          token: data.access_token,
-          userId: data.user_id,
-          businessInfo: data.business_info || {},
-          connected: true
-        }));
-        
-        // Also store the Instagram ID separately for future quick lookups
-        localStorage.setItem('instagram_user_id', data.user_id);
+        // This needs to be done in a useEffect since localStorage isn't available during server rendering
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('instagram_connection', JSON.stringify({
+            username: data.username,
+            profileImage: data.profile_picture,
+            token: data.access_token,
+            userId: data.user_id,
+            businessInfo: data.business_info || {},
+            connected: true
+          }));
+          
+          // Also store the Instagram ID separately for future quick lookups
+          localStorage.setItem('instagram_user_id', data.user_id);
+        }
         
         setStatus('success');
         setMessage('Instagram connected successfully!');
@@ -93,11 +96,9 @@ export default function InstagramCallback() {
       }
     };
 
-    // Only proceed if we have a code in the URL
-    if (router.isReady) {
-      handleCallback();
-    }
-  }, [router.isReady, router]);
+    // In App Router, we don't need to check for router.isReady
+    handleCallback();
+  }, []); // Remove router.isReady, router from dependencies
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
