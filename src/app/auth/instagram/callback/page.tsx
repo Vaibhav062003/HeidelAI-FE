@@ -1,156 +1,136 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
+import { supabase } from '@/components/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function InstagramCallback() {
   const router = useRouter();
-  const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
-  const [message, setMessage] = useState('Processing your Instagram authorization...');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [message, setMessage] = useState('Processing your Instagram connection...');
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Get the code from the URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
+        // Get the session from Supabase
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (!code) {
+        if (sessionError || !session) {
           setStatus('error');
-          setMessage('No authorization code received from Instagram');
+          setMessage('Authentication failed: No valid session found');
           setTimeout(() => {
             router.push('/dashboard');
-            toast.error('Instagram connection failed: No authorization code received');
+            toast.error('Instagram connection failed: Authentication error');
           }, 1500);
           return;
         }
         
-        // Process the code here with our dedicated Instagram API
-        setStatus('processing');
-        setMessage('Connecting your Instagram account...');
+        // Get access token from the session
+        const accessToken = session.provider_token;
+        const userId = session.user.id;
         
-        try {
-          // Call your backend to exchange the code for token and account info
-          const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-              code,
-              redirect_uri: 'https://www.heidelai.com/auth/instagram/callback'
-            }),
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Authentication failed: ${response.statusText}`);
-          }
-          
-          const data = await response.json();
-          
-          // Store the Instagram connection data in localStorage
-          localStorage.setItem('instagram_connection', JSON.stringify({
-            username: data.username,
-            profileImage: data.profile_picture || '/default-avatar.png',
-            token: data.access_token,
-            userId: data.user_id,
-            businessInfo: data.business_info || {},
-            connected: true
-          }));
-          
-          // Also store Instagram ID separately for quick lookups later
-          localStorage.setItem('instagram_user_id', data.user_id);
-          
-          // Link this Instagram account to the current app user if a user ID exists
-          const appUserId = localStorage.getItem('user_id');
-          if (appUserId) {
-            try {
-              await fetch('https://egenie-whatsapp.koyeb.app/instagram/link-user', {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  instagram_id: data.user_id,
-                  app_user_id: appUserId
-                }),
-              });
-            } catch (linkError) {
-              // If linking fails, we can still continue - the connection exists in the Instagram collection
-              console.error('Error linking Instagram to user:', linkError);
-            }
-          }
-          
-          setStatus('success');
-          setMessage('Instagram account connected successfully!');
-          
-          // Redirect to dashboard with success message after showing success UI
-          setTimeout(() => {
-            router.push('/dashboard');
-            toast.success('Instagram account connected successfully!');
-          }, 1500);
-          
-        } catch (error) {
-          console.error('Error processing Instagram code:', error);
+        if (!accessToken) {
           setStatus('error');
-          setMessage('Failed to connect Instagram account: ' + (error instanceof Error ? error.message : 'Unknown error'));
+          setMessage('No access token received from Facebook/Instagram');
           setTimeout(() => {
             router.push('/dashboard');
-            toast.error('Failed to connect Instagram account. Please try again.');
+            toast.error('Instagram connection failed: No access token received');
           }, 1500);
+          return;
         }
         
+        // Call your backend to save the token and get account info
+        const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            access_token: accessToken,
+            user_id: userId,
+            redirect_uri: 'https://heidelai.com/auth/instagram/callback'
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Authentication failed: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Store connection data in localStorage
+        localStorage.setItem('instagram_connection', JSON.stringify({
+          username: data.username,
+          profileImage: data.profile_picture,
+          token: data.access_token,
+          userId: data.user_id,
+          businessInfo: data.business_info || {},
+          connected: true
+        }));
+        
+        // Also store the Instagram ID separately for future quick lookups
+        localStorage.setItem('instagram_user_id', data.user_id);
+        
+        setStatus('success');
+        setMessage('Instagram connected successfully!');
+        
+        // Redirect back to dashboard after a short delay
+        setTimeout(() => {
+          router.push('/dashboard');
+          toast.success('Instagram account connected successfully!');
+        }, 1500);
       } catch (error) {
         console.error('Error in Instagram callback:', error);
         setStatus('error');
-        setMessage('An unexpected error occurred');
+        setMessage('Failed to complete Instagram connection');
+        
         setTimeout(() => {
           router.push('/dashboard');
-          toast.error('An unexpected error occurred while connecting Instagram.');
+          toast.error('Instagram connection failed. Please try again.');
         }, 1500);
       }
     };
-    
-    handleCallback();
-  }, [router]);
+
+    // Only proceed if we have a code in the URL
+    if (router.isReady) {
+      handleCallback();
+    }
+  }, [router.isReady, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md text-center max-w-md w-full">
-        {status === 'processing' && (
-          <div className="space-y-4">
-            <div className="flex justify-center">
-              <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
+      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg">
+        <div className="flex flex-col items-center justify-center space-y-4 text-center">
+          {status === 'loading' && (
+            <Loader2 className="h-12 w-12 animate-spin text-purple-500" />
+          )}
+          
+          {status === 'success' && (
+            <div className="rounded-full bg-green-100 p-3">
+              <svg className="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-            <h1 className="text-xl font-bold">Processing Your Instagram Authorization</h1>
-            <p className="text-gray-600">{message}</p>
-          </div>
-        )}
-        
-        {status === 'success' && (
-          <div className="space-y-4">
-            <div className="flex justify-center">
-              <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
+          )}
+          
+          {status === 'error' && (
+            <div className="rounded-full bg-red-100 p-3">
+              <svg className="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </div>
-            <h1 className="text-xl font-bold">Connection Successful!</h1>
-            <p className="text-green-600 font-medium">{message}</p>
-            <p className="text-sm text-gray-500">Redirecting to dashboard...</p>
-          </div>
-        )}
-        
-        {status === 'error' && (
-          <div className="text-red-500">
-            <h1 className="text-xl font-bold mb-2">Authentication Error</h1>
-            <p>{message}</p>
-            <p className="mt-4 text-sm text-gray-500">Redirecting to dashboard...</p>
-          </div>
-        )}
+          )}
+          
+          <h2 className="text-2xl font-bold text-gray-900">
+            {status === 'loading' ? 'Connecting Your Instagram Account' :
+             status === 'success' ? 'Connected Successfully!' :
+             'Connection Failed'}
+          </h2>
+          
+          <p className="text-gray-600">{message}</p>
+        </div>
       </div>
     </div>
   );

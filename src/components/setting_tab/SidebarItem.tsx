@@ -44,7 +44,7 @@ const loginWithFacebook = async () => {
     provider: "facebook",
     options: {
       queryParams: {
-        config_id: '1078509157648485'
+        config_id: '4039287289647486'
       }
     }
   });
@@ -253,10 +253,6 @@ const InstagramDialog = () => {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Instagram business login URL with heidelai.com domain
-  // const instagramLoginUrl = "https://www.instagram.com/oauth/authorize?client_id=1197084761515978&redirect_uri=https://www.heidelai.com/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%";
-  const instagramLoginUrl = 'https://www.facebook.com/dialog/oauth?client_id=509681741462833&display=page&extras={"setup":{"channel":"IG_API_ONBOARDING"}}&redirect_uri=https://heidelai.com/auth/instagram/callback&response_type=token&scope=instagram_basic';
-
   // Check if user has already connected Instagram
   useEffect(() => {
     const checkConnection = async () => {
@@ -339,9 +335,34 @@ const InstagramDialog = () => {
     checkConnection();
   }, []);
 
-  const handleInstagramLogin = () => {
-    // Direct user to the Instagram authorization URL
-    window.location.href = instagramLoginUrl;
+  // Updated Instagram login using Supabase OAuth
+  const handleInstagramLogin = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Use Supabase Facebook OAuth with Instagram config
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "facebook",
+        options: {
+          queryParams: {
+            config_id: '1617579675586830' // Your Facebook App's Instagram config ID
+          },
+          redirectTo: 'https://heidelai.com/auth/instagram/callback',
+        }
+      });
+
+      if (error) {
+        console.error("Instagram login error:", error.message);
+        toast.error("Failed to initialize Instagram login");
+        setIsLoading(false);
+      }
+      
+      // No need to set isLoading to false here, as the page will redirect to Instagram login
+    } catch (error) {
+      console.error('Error during Instagram login:', error);
+      toast.error('Failed to connect to Instagram');
+      setIsLoading(false);
+    }
   };
 
   const disconnectInstagram = async () => {
