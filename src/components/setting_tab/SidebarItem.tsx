@@ -356,7 +356,9 @@ const handleInstagramLogin = () => {
         toast.error('Instagram login was cancelled or failed');
       }
     }, {
-      scope: 'instagram_basic,instagram_manage_messages,pages_show_list'
+      config_id: '1617579675586830',        // your Business-Login config
+      response_type: 'token',               // get access token directly
+      scope: 'pages_show_list,instagram_basic, instagram_manage_messages'  // at least one extra permission
     });
   } else {
     console.error('Facebook SDK not loaded');

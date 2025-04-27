@@ -5,20 +5,24 @@ import { useEffect } from 'react';
 
 
 interface FacebookSDKInterface {
-  init(options: {
-    appId: string;
-    cookie: boolean;
-    xfbml: boolean;
-    version: string;
-  }): void;
-  AppEvents: {
-    logPageView(): void;
-  };
-  login(
-    callback: (response: FacebookLoginResponse) => void,
-    options?: { scope: string }
-  ): void;
-}
+    init(options: {
+      appId: string;
+      cookie: boolean;
+      xfbml: boolean;
+      version: string;
+    }): void;
+    AppEvents: {
+      logPageView(): void;
+    };
+    login(
+      callback: (response: FacebookLoginResponse) => void,
+      options?: {
+        scope?: string;
+        config_id?: string;
+        response_type?: string;
+      }
+    ): void;
+  }
 
 export interface FacebookLoginResponse {
   authResponse?: {
