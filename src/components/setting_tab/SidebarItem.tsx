@@ -357,9 +357,8 @@ const handleInstagramLogin = () => {
       }
     }, {
       config_id: '1617579675586830',        // your Business-Login config
-      response_type: 'token',               // get access token directly
-      scope: 'pages_show_list,instagram_basic, instagram_manage_messages'  // at least one extra permission
-    });
+      response_type: 'code',               // get access token directly
+      override_default_response_type: true    });
   } else {
     console.error('Facebook SDK not loaded');
     setIsLoading(false);
