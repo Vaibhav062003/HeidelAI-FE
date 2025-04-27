@@ -26,10 +26,10 @@ interface FacebookSDKInterface {
 
 export interface FacebookLoginResponse {
   authResponse?: {
-    accessToken: string;
+    code: string;
     expiresIn: number;
-    signedRequest: string;
-    userID: string;
+    signedRequest?: string;
+    userID?: string;
   };
   status?: string;
 }

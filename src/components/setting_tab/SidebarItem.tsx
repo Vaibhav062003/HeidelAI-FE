@@ -346,7 +346,7 @@ const handleInstagramLogin = () => {
     window.FB.login(function(response: FacebookLoginResponse) {
       if (response.authResponse) {
         console.log('Facebook login successful:', response);
-        const accessToken = response.authResponse.accessToken;
+        const accessToken = response.authResponse.code;
         
         // Call your backend with the access token
         handleTokenExchange(accessToken);
