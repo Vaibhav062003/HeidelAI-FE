@@ -1279,10 +1279,14 @@ const ChatView = ({
             <div className="font-medium">{conversation?.customer_name}</div>
           </div>
           <div className="space-y-1">
-            <div className="text-gray-500">Phone</div>
-            <div className="font-medium">
-              {selectedConversationId?.split('_')[1]?.replace(/^(\d{2})(\d+)/, '+$1 $2')}
-            </div>
+          <div className="text-gray-500">
+          {conversation?.platform === "instagram" ? "Username" : "Phone"}
+        </div>
+        <div className="font-medium">
+          {conversation?.platform === "instagram" 
+            ? selectedConversationId?.split('_')[1]
+            : selectedConversationId?.split('_')[1]?.replace(/^(\d{2})(\d+)/, '+$1 $2')}
+        </div>
           </div>
         </div>
       </div>

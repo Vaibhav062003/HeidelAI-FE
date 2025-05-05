@@ -6,8 +6,12 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
+import { motion } from "motion/react";
 import { Toaster, toast } from 'sonner';
-import { motion } from 'framer-motion';
+import {
+  IconBrandFacebook,
+} from "@tabler/icons-react";
+import { Loader2 } from 'lucide-react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
