@@ -24,6 +24,10 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { createClient } from '@supabase/supabase-js';
 
+import FacebookSDK, { FacebookLoginResponse } from '@/components/facebook/FacebookSDK';
+
+
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -42,7 +46,7 @@ const loginWithFacebook = async () => {
     provider: "facebook",
     options: {
       queryParams: {
-        config_id: '1078509157648485'
+        config_id: '4039287289647486'
       }
     }
   });
@@ -119,8 +123,7 @@ const InstagramDialog = () => {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  const instagramLoginUrl = "https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=https://www.heidelai.com/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights";
-
+  // Check if user has already connected Instagram
   useEffect(() => {
     const checkConnection = async () => {
       setIsLoading(true);
@@ -193,8 +196,84 @@ const InstagramDialog = () => {
     checkConnection();
   }, []);
 
-  const handleInstagramLogin = () => {
-    window.location.href = instagramLoginUrl;
+// New login handler using Facebook SDK
+const handleInstagramLogin = () => {
+  setIsLoading(true);
+  
+  if (typeof window !== 'undefined' && window.FB) {
+    window.FB.login(function(response: FacebookLoginResponse) {
+      if (response.authResponse) {
+        console.log('Facebook login successful:', response);
+        const accessToken = response.authResponse.code;
+        
+        // Call your backend with the access token
+        handleTokenExchange(accessToken);
+      } else {
+        console.log('User cancelled login or did not fully authorize.');
+        setIsLoading(false);
+        toast.error('Instagram login was cancelled or failed');
+      }
+    }, {
+      config_id: '1617579675586830',        // your Business-Login config
+      response_type: 'code',               // get access token directly
+      override_default_response_type: true    });
+  } else {
+    console.error('Facebook SDK not loaded');
+    setIsLoading(false);
+    toast.error('Could not initialize Facebook login. Please try again later.');
+  }
+};
+  
+   // Function to handle token exchange with your backend
+   const handleTokenExchange = async (accessToken: string) => {
+    try {
+      const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          access_token: accessToken,
+          redirect_uri: 'https://heidelai.com/auth/instagram/callback'
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API error response:', errorText);
+        throw new Error(`Authentication failed: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('API success response:', data);
+      
+      // Store connection data in localStorage
+      localStorage.setItem('instagram_connection', JSON.stringify({
+        username: data.username,
+        profileImage: data.profile_picture,
+        token: data.access_token,
+        userId: data.user_id,
+        businessInfo: data.business_info || {},
+        connected: true
+      }));
+      
+      // Also store the Instagram ID separately for future quick lookups
+      localStorage.setItem('instagram_user_id', data.user_id);
+      
+      setConnected(true);
+      setAccountInfo({
+        username: data.username,
+        profileImage: data.profile_picture || '/default-avatar.png',
+        businessInfo: data.business_info || {}
+      });
+      
+      toast.success('Instagram connected successfully!');
+    } catch (error) {
+      console.error('Error exchanging token:', error);
+      toast.error('Failed to connect Instagram account');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const disconnectInstagram = async () => {
@@ -234,6 +313,9 @@ const InstagramDialog = () => {
 
   return (
     <Dialog>
+
+      <FacebookSDK />
+
       <DialogTrigger asChild>
         <Button className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white">
           {isLoading ? (
@@ -351,6 +433,11 @@ const InstagramDialog = () => {
             <p className="text-sm text-gray-600">
               Connect your Instagram business account to manage messages directly from this dashboard.
             </p>
+            <div className="p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm rounded">
+              <p>
+              You need to have a Facebook page linked to your Instagram account to use this feature.
+              </p>
+            </div>
             
             <div className="space-y-2">
               <h4 className="text-sm font-medium">This will allow HeidelAI to:</h4>
@@ -363,17 +450,17 @@ const InstagramDialog = () => {
             </div>
             
             <Button 
-              className="w-full mt-4 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white" 
+              className="w-full mt-4 bg-[#1877F2] hover:bg-[#0c5bdb] text-white" 
               onClick={handleInstagramLogin}
               disabled={isLoading}
             >
               {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Processing...
-                </span>
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Processing...
+              </span>
               ) : (
-                'Connect with Instagram'
+              'Login with Facebook'
               )}
             </Button>
           </div>
