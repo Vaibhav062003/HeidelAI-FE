@@ -11,7 +11,7 @@ import ChatView from "@/components/inbox/ChatView";
 import Sidebar from "@/components/inbox/Sidebar";
 import StatusBar from "@/components/inbox/StatusBar";
 import ConversationSummary from "@/components/inbox/ConversationSummary";
-// import AnalyticsDashboard from "@/components/inbox/AnalyticsDashboard";
+import AnalyticsDashboard from "@/components/inbox/AnalyticsDashboard";
 import UsageMetrics from "@/components/inbox/UsageMetrics";
 import BillingPlans from "@/components/inbox/BillingPlans";
 import TeamCollaboration from "@/components/inbox/TeamCollaboration";
@@ -38,15 +38,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
-<<<<<<< HEAD
-
-=======
 // Add this with other imports at the top
-// import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
-import RemainderSideBar from "@/components/inbox/RemainderSideBar";
-// import { InstagramLogoIcon } from "@radix-ui/react-icons";
-// import InfluencerBot from "@/components/influencerBot/influencerbot";
->>>>>>> 1856409d91b56afc62cbac4e787ee1f6d7ab38c5
+import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
+import RemainderSideBar from "@/components/inbox/ReminderSideBar";
+import { InstagramLogoIcon } from "@radix-ui/react-icons";
+import InfluencerBot from "@/components/influencerBot/influencerbot";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -85,16 +81,12 @@ interface UserProfile {
   
 // import { Phone, Video, MessageSquare, Globe, Smile, Paperclip, Send } from 'lucide-react'
 
+
 export default function DashboardPage() {
   const router = useRouter();
   const [activeView, setActiveView] = useState<
-<<<<<<< HEAD
-    "inbox" | "analytics" | "billing" | "settings" | "talktodata"
-  >("inbox");
-=======
-  "inbox" | "analytics" | "billing" | "settings" | "talktodata" 
+  "inbox" | "analytics" | "billing" | "settings" | "talktodata" | "analyticsbot"
 >("inbox");
->>>>>>> 1856409d91b56afc62cbac4e787ee1f6d7ab38c5
   const [showTeamPanel, setShowTeamPanel] = useState(false);
   const [selectedConversationId, setSelectedConversationId] =
     useState<string>("");
@@ -210,9 +202,7 @@ export default function DashboardPage() {
                 </span>
               </TabsTrigger>
 
-<<<<<<< HEAD
-=======
-              {/* <TabsTrigger
+              <TabsTrigger
                 value="analyticsbot"
                 className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
               >
@@ -221,9 +211,9 @@ export default function DashboardPage() {
                   Analytics Bot
                   <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
-              </TabsTrigger> */}
+              </TabsTrigger>
 
-              {/* <TabsTrigger
+              <TabsTrigger
           value="influencerbot"
           className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
                 >
@@ -232,9 +222,8 @@ export default function DashboardPage() {
                   Influencer Analysis
                   <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
-              </TabsTrigger> */}
+              </TabsTrigger>
 
->>>>>>> 1856409d91b56afc62cbac4e787ee1f6d7ab38c5
               <TabsTrigger
                 value="billing"
                 className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
@@ -329,12 +318,14 @@ export default function DashboardPage() {
 
               {/* Right Sidebar - Fixed width */}
               <div className="w-[360px] min-w-[280px] border-l border-gray-200">
-                {selectedConversationId && (
+                {selectedConversationId ? (
                   <Sidebar 
                   selectedConversationId={selectedConversationId}
                   onConversationSelect={setSelectedConversationId}
                   onShareProduct={(product) => setSharedProduct(product)}
                 />
+                ):(
+                  <RemainderSideBar/>
                 )}
                 {showTeamPanel && (
                   <div className="mt-4">
@@ -367,24 +358,21 @@ export default function DashboardPage() {
               <TalkToDataTab />
             </TabsContent>
 
-<<<<<<< HEAD
-=======
 
-            {/* <TabsContent
+            <TabsContent
               value="analyticsbot"
               className="m-0 flex-1 fixed top-0 w-[96vw] h-full overflow-hidden"
             >
               <AnalyticsBot />
-            </TabsContent> */}
+            </TabsContent>
 
-            {/* <TabsContent
+            <TabsContent
               value="influencerbot"
               className="m-0 flex-1 fixed top-0 w-[96vw] h-full overflow-hidden"
             >
               <InfluencerBot />
-            </TabsContent> */}
+            </TabsContent>
             
->>>>>>> 1856409d91b56afc62cbac4e787ee1f6d7ab38c5
             <TabsContent
               value="billing"
               className="m-0 fixed top-0 w-[96vw] flex-1 p-6 overflow-auto"
