@@ -367,56 +367,74 @@ const handleInstagramLogin = () => {
 };
   
    // Function to handle token exchange with your backend
-   const handleTokenExchange = async (accessToken: string) => {
-    try {
-      const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          access_token: accessToken,
-          redirect_uri: 'https://heidelai.com/auth/instagram/callback'
-        }),
-      });
+   // Function to handle token exchange with your backend
+const handleTokenExchange = async (accessToken: string) => {
+  try {
+    const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        access_token: accessToken,
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API error response:', errorText);
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API error response:', errorText);
-        throw new Error(`Authentication failed: ${response.statusText}`);
+      // Try to parse the error as JSON to extract the detail message
+      let errorMessage = 'Failed to connect Instagram account';
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.detail) {
+          errorMessage = errorJson.detail;
+        }
+      } catch {
+        // If parsing fails, use the raw error text if it's not too long
+        if (errorText && errorText.length < 100) {
+          errorMessage = errorText;
+        }
       }
       
-      const data = await response.json();
-      console.log('API success response:', data);
-      
-      // Store connection data in localStorage
-      localStorage.setItem('instagram_connection', JSON.stringify({
-        username: data.username,
-        profileImage: data.profile_picture,
-        token: data.access_token,
-        userId: data.user_id,
-        businessInfo: data.business_info || {},
-        connected: true
-      }));
-      
-      // Also store the Instagram ID separately for future quick lookups
-      localStorage.setItem('instagram_user_id', data.user_id);
-      
-      setConnected(true);
-      setAccountInfo({
-        username: data.username,
-        profileImage: data.profile_picture || '/default-avatar.png',
-        businessInfo: data.business_info || {}
-      });
-      
-      toast.success('Instagram connected successfully!');
-    } catch (error) {
-      console.error('Error exchanging token:', error);
-      toast.error('Failed to connect Instagram account');
-    } finally {
-      setIsLoading(false);
+      toast.error(`Instagram connection failed: ${errorMessage}`);
+      throw new Error(`Authentication failed: ${errorMessage}`);
     }
-  };
+    
+    const data = await response.json();
+    console.log('API success response:', data);
+    
+    // Store connection data in localStorage
+    localStorage.setItem('instagram_connection', JSON.stringify({
+      username: data.username,
+      profileImage: data.profile_picture,
+      token: data.access_token,
+      userId: data.user_id,
+      connected: true
+    }));
+    
+    // Also store the Instagram ID separately for future quick lookups
+    localStorage.setItem('instagram_user_id', data.user_id);
+    
+    setConnected(true);
+    setAccountInfo({
+      username: data.username,
+      profileImage: data.profile_picture || '/default-avatar.png',
+      businessInfo: data.business_info || {}
+    });
+    
+    toast.success('Instagram connected successfully!');
+  } catch (error) {
+    console.error('Error exchanging token:', error);
+    
+    // Extract and display error message
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    toast.error(`Instagram connection failed: ${errorMessage}`);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const disconnectInstagram = async () => {
     try {

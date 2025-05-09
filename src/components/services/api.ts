@@ -14,5 +14,14 @@ export const conversationService = {
   get: async (id: string): Promise<Conversation> => {
     const response = await api.get<Conversation>(`/conversations/${id}`);
     return response.data;
+  },
+
+  getInstagramConversations: async (instagramId: string) => {
+    const response = await fetch(`/api/instagram/${instagramId}/conversations`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Instagram conversations: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data.data; // Return the conversations array directly
   }
 };
