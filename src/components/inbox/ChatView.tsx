@@ -824,6 +824,7 @@ const ChatView = ({
     if (!message.trim() || !selectedConversationId || isSending) return;
 
     let contentToSend = message.trim();
+    const isInstagram = selectedConversationId.startsWith('instagram_');
     const platform = selectedConversationId.split('_')[0]; 
     const sender_id = selectedConversationId.split('_')[1]; 
 
@@ -840,24 +841,52 @@ const ChatView = ({
 
     setIsSending(true);
     try {
-      const response = await fetch('https://egenie-whatsapp.koyeb.app/conversations/send_message', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          conversation_id: selectedConversationId,
-          content: contentToSend,
-          type: 'text',
-          sender_id: sender_id,
-          platform: platform,
-        }),
-      });
+      let response;
+      
+      if (isInstagram) {
+        // Use Instagram-specific endpoint
+        const instagramId = localStorage.getItem('instagram_user_id');
+        
+        if (!instagramId) {
+          console.error('No Instagram ID found for sending message');
+          throw new Error('No Instagram ID found');
+        }
+        
+        response = await fetch(`https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/send_message`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            conversation_id: selectedConversationId,
+            content: contentToSend,
+            type: 'text',
+            sender_id: sender_id
+          }),
+        });
+      } else {
+        // Use regular endpoint for non-Instagram conversations
+        response = await fetch('https://egenie-whatsapp.koyeb.app/conversations/send_message', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            conversation_id: selectedConversationId,
+            content: contentToSend,
+            type: 'text',
+            sender_id: sender_id,
+            platform: platform,
+          }),
+        });
+      }
 
       if (!response.ok) throw new Error('Failed to send message');
       setMessage('');
     } catch (error) {
+      console.error('Error sending message:', error);
       toast.error('Failed to send message');
     } finally {
       setIsSending(false);
