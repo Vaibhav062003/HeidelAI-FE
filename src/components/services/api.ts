@@ -17,7 +17,7 @@ export const conversationService = {
   },
 
   getInstagramConversations: async (instagramId: string) => {
-    const response = await fetch(`/api/instagram/${instagramId}/conversations`);
+    const response = await fetch(`https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations`);
     if (!response.ok) {
       throw new Error(`Failed to fetch Instagram conversations: ${response.statusText}`);
     }
