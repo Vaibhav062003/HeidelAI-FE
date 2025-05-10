@@ -26,6 +26,7 @@ export function useConversations() {
         
         // Get Instagram conversations if Instagram ID exists
         const instagramId = localStorage.getItem('instagram_user_id');
+        console.log('Instagram ID:', instagramId);
         let instagramData: Conversation[] = [];
         
         if (instagramId) {
