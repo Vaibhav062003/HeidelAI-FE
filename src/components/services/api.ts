@@ -17,11 +17,14 @@ export const conversationService = {
   },
 
   getInstagramConversations: async (instagramId: string) => {
-    const response = await fetch(`https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch Instagram conversations: ${response.statusText}`);
-    }
-    const data = await response.json();
-    return data.data; // Return the conversations array directly
+    const response = await api.get(`https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations`);
+    console.log("Instagram conversations response", response);
+    return response.data;
+    // if (!response.ok) {
+    //   throw new Error(`Failed to fetch Instagram conversations: ${response.statusText}`);
+    // }
+    // const data = await response.json();
+    // console.log("Instagram conversations data", data);
+    // return data; // Return the conversations array directly
   }
 };
