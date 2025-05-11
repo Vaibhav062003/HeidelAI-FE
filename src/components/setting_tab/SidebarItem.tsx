@@ -27,6 +27,27 @@ import { createClient } from '@supabase/supabase-js';
 import FacebookSDK, { FacebookLoginResponse } from '@/components/facebook/FacebookSDK';
 
 
+// Function to fetch catalog data from the backend
+interface CatalogProduct {
+  id: string;
+  name: string;
+  description?: string;
+  price?: string;
+  [key: string]: string | number | boolean | undefined; // For any additional fields
+}
+
+interface CatalogResponse {
+  data: CatalogProduct[];
+  paging?: {
+    cursors?: {
+      before?: string;
+      after?: string;
+    };
+    next?: string;
+    previous?: string;
+  };
+}
+
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -34,7 +55,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 import { 
   Table, 
   TableBody, 
-  TableCell, 
+  TableCell,  
   TableHead, 
   TableHeader, 
   TableRow 
@@ -46,14 +67,70 @@ const loginWithFacebook = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "facebook",
     options: {
+      scopes: "catalog_management",
       queryParams: {
-        config_id: '4039287289647486'
+        config_id: '4039287289647486',
       }
     }
   });
 
   if (error) console.error("Login error:", error.message);
 };
+
+  const handleFacebookCatalogLogin = () => {
+  if (typeof window !== 'undefined' && window.FB) {
+    window.FB.login(
+      (response) => {
+        if (response.authResponse) {
+          console.log('Facebook login successful:', response);
+          const accessToken = response.authResponse.accessToken;
+
+          // Call your backend with the access token to fetch catalog data
+          fetchCatalogData(accessToken);
+        } else {
+          console.log('User cancelled login or did not fully authorize.');
+          toast.error('Facebook login was cancelled or failed.');
+        }
+      },
+      {
+        scope: 'catalog_management', // Request only catalog_management permission
+      }
+    );
+  } else {
+    console.error('Facebook SDK not loaded');
+    toast.error('Could not initialize Facebook login. Please try again later.');
+  }
+};
+
+
+
+
+const fetchCatalogData = async (accessToken: string): Promise<void> => {
+  try {
+    const response = await fetch('https://graph.facebook.com/v13.0/{catalogId}/products', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API error response:', errorText);
+      toast.error('Failed to connect Facebook Catalog.');
+      return;
+    }
+
+    const data: CatalogResponse = await response.json();
+    console.log('Catalog data:', data);
+    toast.success('Facebook Catalog connected successfully!');
+  } catch (error) {
+    console.error('Error fetching catalog data:', error);
+    toast.error('An error occurred while connecting the catalog.');
+  }
+};
+
 
 const WooCommerceDialog = () => {
   const [credentials, setCredentials] = useState({
@@ -850,6 +927,48 @@ export const IntegrationsSettings = () => (
         </div>
       </div>
       <InstagramDialog />
+    </div>
+  </div>
+</div>
+
+{/* Facebook Catalog Integration Card */}
+<div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+  <div className="space-y-4">
+    <div className="flex items-start justify-between">
+      <div className="flex items-center gap-3">
+        <div className="bg-[#4267B2] rounded-lg p-2">
+          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24h11.495v-9.294H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold">Facebook Catalog</h3>
+          <p className="text-sm text-gray-600">Connect your Facebook product catalog</p>
+        </div>
+      </div>
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button className="bg-[#4267B2] hover:bg-[#365899] text-white">
+            Connect
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Connect Facebook Catalog</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <p className="text-sm text-gray-600">
+              To connect your Facebook Catalog, you need to log in with your Facebook account and grant catalog permissions.
+            </p>
+            <Button
+              className="bg-[#4267B2] hover:bg-[#365899] text-white"
+              onClick={handleFacebookCatalogLogin}
+            >
+              Login with Facebook
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   </div>
 </div>
