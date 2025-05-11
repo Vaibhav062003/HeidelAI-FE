@@ -77,33 +77,32 @@ const loginWithFacebook = async () => {
   if (error) console.error("Login error:", error.message);
 };
 
-  const handleFacebookCatalogLogin = () => {
-  if (typeof window !== 'undefined' && window.FB) {
-    window.FB.login(
-      (response) => {
-        if (response.authResponse) {
-          console.log('Facebook login successful:', response);
-          const accessToken = response.authResponse.accessToken;
 
-          // Call your backend with the access token to fetch catalog data
-          fetchCatalogData(accessToken);
-        } else {
-          console.log('User cancelled login or did not fully authorize.');
-          toast.error('Facebook login was cancelled or failed.');
-        }
+const handleFacebookCatalogLogin = async () => {
+  const configId = '524055147308362'; // Replace with your new Facebook App config ID
+
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "facebook",
+      options: {
+        scopes: "catalog_management", // Request catalog_management permission
+        queryParams: {
+          config_id: configId, // Use the new config ID here
+        },
       },
-      {
-        scope: 'catalog_management', // Request only catalog_management permission
-      }
-    );
-  } else {
-    console.error('Facebook SDK not loaded');
-    toast.error('Could not initialize Facebook login. Please try again later.');
+    });
+
+    if (error) {
+      console.error("Login error:", error.message);
+      toast.error("Failed to log in to Facebook Catalog.");
+    } else {
+      toast.success("Facebook Catalog login successful!");
+    }
+  } catch (error) {
+    console.error("Error during Facebook Catalog login:", error);
+    toast.error("An unexpected error occurred during login.");
   }
 };
-
-
-
 
 const fetchCatalogData = async (accessToken: string): Promise<void> => {
   try {
@@ -931,6 +930,7 @@ export const IntegrationsSettings = () => (
   </div>
 </div>
 
+{/* Facebook Catalog Integration Card */}
 {/* Facebook Catalog Integration Card */}
 <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
   <div className="space-y-4">
