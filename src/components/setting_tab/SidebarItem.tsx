@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { createClient } from '@supabase/supabase-js';
-
+import InstagramProfileView from './InstagramProfileView';
 import FacebookSDK, { FacebookLoginResponse } from '@/components/facebook/FacebookSDK';
 
 
@@ -265,7 +265,6 @@ const ShopifyDialog = () => {
   );
 };
 
-// Update in SidebarItem.tsx (InstagramDialog component)
 const InstagramDialog = () => {
   const [connected, setConnected] = useState(false);
   const [accountInfo, setAccountInfo] = useState<{
@@ -279,6 +278,7 @@ const InstagramDialog = () => {
     };
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showProfileView, setShowProfileView] = useState(false);
   
   // Check if user has already connected Instagram
   useEffect(() => {
@@ -286,7 +286,7 @@ const InstagramDialog = () => {
       setIsLoading(true);
       
       try {
-        // First check localStorage for quick loading
+        // Check localStorage for quick loading
         const instagramConnection = localStorage.getItem('instagram_connection');
         if (instagramConnection) {
           try {
@@ -304,22 +304,22 @@ const InstagramDialog = () => {
           }
         }
         
-        // If not in localStorage, check with backend using dedicated Instagram collection API
+        // Check with backend using dedicated Instagram collection API
         try {
-          // Get Instagram ID from localStorage (if available from previous connection)
+          // Get ID from localStorage (if available from previous connection)
           const storedInstagramId = localStorage.getItem('instagram_user_id');
           
-          // Or get app user ID to check for connections linked to this user
+          // Check for connections linked to this user
           const appUserId = localStorage.getItem('user_id');
           
-          // Construct the API query based on available IDs
+          // Construct URL based on available IDs
           let apiUrl = 'https://egenie-whatsapp.koyeb.app/instagram/status';
           if (storedInstagramId) {
             apiUrl += `?instagram_id=${storedInstagramId}`;
           } else if (appUserId) {
             apiUrl += `?app_user_id=${appUserId}`;
           } else {
-            // If no IDs are available, we can't check for connections
+            // If no IDs available, we can't check for connections
             setIsLoading(false);
             return;
           }
@@ -330,7 +330,7 @@ const InstagramDialog = () => {
             const data = await response.json();
             
             if (data.instagram_connected) {
-              // Store in localStorage for future fast access
+              // Save in localStorage for future fast access
               localStorage.setItem('instagram_connection', JSON.stringify({
                 username: data.instagram_data.username,
                 profileImage: data.instagram_data.profile_picture || '/default-avatar.png',
@@ -340,7 +340,7 @@ const InstagramDialog = () => {
                 connected: true
               }));
               
-              // Also store the Instagram ID separately for future quick lookups
+              // Store Instagram ID separately for future quick lookups
               localStorage.setItem('instagram_user_id', data.instagram_data.user_id);
               
               setConnected(true);
@@ -362,114 +362,114 @@ const InstagramDialog = () => {
     checkConnection();
   }, []);
 
-// New login handler using Facebook SDK
-const handleInstagramLogin = () => {
-  setIsLoading(true);
-  
-  if (typeof window !== 'undefined' && window.FB) {
-    window.FB.login(function(response: FacebookLoginResponse) {
-      if (response.authResponse) {
-        console.log('Facebook login successful:', response);
-        const accessToken = response.authResponse.code;
-        
-        // Call your backend with the access token
-        handleTokenExchange(accessToken);
-      } else {
-        console.log('User cancelled login or did not fully authorize.');
-        setIsLoading(false);
-        toast.error('Instagram login was cancelled or failed');
-      }
-    }, {
-      config_id: '1617579675586830',        // your Business-Login config
-      response_type: 'code',               // get access token directly
-      override_default_response_type: true    });
-  } else {
-    console.error('Facebook SDK not loaded');
-    setIsLoading(false);
-    toast.error('Could not initialize Facebook login. Please try again later.');
-  }
-};
-  
-   // Function to handle token exchange with your backend
-   // Function to handle token exchange with your backend
-const handleTokenExchange = async (accessToken: string) => {
-  try {
-    const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        access_token: accessToken,
-      }),
-    });
+  // Handle login with Facebook SDK
+  const handleInstagramLogin = () => {
+    setIsLoading(true);
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('API error response:', errorText);
-      
-      // Try to parse the error as JSON to extract the detail message
-      let errorMessage = 'Failed to connect Instagram account';
-      try {
-        const errorJson = JSON.parse(errorText);
-        if (errorJson.detail) {
-          errorMessage = errorJson.detail;
+    if (typeof window !== 'undefined' && window.FB) {
+      window.FB.login(function(response: FacebookLoginResponse) {
+        if (response.authResponse) {
+          console.log('Facebook login successful:', response);
+          const accessToken = response.authResponse.code;
+          
+          // Exchange the access token
+          handleTokenExchange(accessToken);
+        } else {
+          console.log('User cancelled login or did not fully authorize.');
+          setIsLoading(false);
+          toast.error('Instagram login was cancelled or failed');
         }
-      } catch {
-        // If parsing fails, use the raw error text if it's not too long
-        if (errorText && errorText.length < 100) {
-          errorMessage = errorText;
-        }
-      }
-      
-      toast.error(`Instagram connection failed: ${errorMessage}`);
-      throw new Error(`Authentication failed: ${errorMessage}`);
+      }, {
+        config_id: '1617579675586830',        
+        response_type: 'code',               
+        override_default_response_type: true
+      });
+    } else {
+      console.error('Facebook SDK not loaded');
+      setIsLoading(false);
+      toast.error('Could not initialize Facebook login. Please try again later.');
     }
-    
-    const data = await response.json();
-    console.log('API success response:', data);
-    
-    // Store connection data in localStorage
-    localStorage.setItem('instagram_connection', JSON.stringify({
-      username: data.username,
-      profileImage: data.profile_picture,
-      token: data.access_token,
-      userId: data.user_id,
-      connected: true
-    }));
-    
-    // Also store the Instagram ID separately for future quick lookups
-    localStorage.setItem('instagram_user_id', data.user_id);
-    
-    setConnected(true);
-    setAccountInfo({
-      username: data.username,
-      profileImage: data.profile_picture || '/default-avatar.png',
-      businessInfo: data.business_info || {}
-    });
-    
-    toast.success('Instagram connected successfully!');
-  } catch (error) {
-    console.error('Error exchanging token:', error);
-    
-    // Extract and display error message
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    toast.error(`Instagram connection failed: ${errorMessage}`);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
+  
+  // Handle token exchange with your backend
+  const handleTokenExchange = async (accessToken: string) => {
+    try {
+      const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          access_token: accessToken,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API error response:', errorText);
+        
+        // Parse error as JSON to extract the detail message
+        let errorMessage = 'Failed to connect Instagram account';
+        try {
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.detail) {
+            errorMessage = errorJson.detail;
+          }
+        } catch {
+          // Otherwise, use the raw error text if it's not too long
+          if (errorText && errorText.length < 100) {
+            errorMessage = errorText;
+          }
+        }
+        
+        toast.error(`Instagram connection failed: ${errorMessage}`);
+        throw new Error(`Authentication failed: ${errorMessage}`);
+      }
+      
+      const data = await response.json();
+      console.log('API success response:', data);
+      
+      // Store data in localStorage
+      localStorage.setItem('instagram_connection', JSON.stringify({
+        username: data.username,
+        profileImage: data.profile_picture,
+        token: data.access_token,
+        userId: data.user_id,
+        connected: true
+      }));
+      
+      // Store Instagram ID separately for future quick lookups
+      localStorage.setItem('instagram_user_id', data.user_id);
+      
+      setConnected(true);
+      setAccountInfo({
+        username: data.username,
+        profileImage: data.profile_picture || '/default-avatar.png',
+        businessInfo: data.business_info || {}
+      });
+      
+      toast.success('Instagram connected successfully!');
+    } catch (error) {
+      console.error('Error exchanging token:', error);
+      
+      // Get error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Instagram connection failed: ${errorMessage}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const disconnectInstagram = async () => {
     try {
       setIsLoading(true);
       
-      // Call your backend to revoke the token
+      // Revoke the token
       const instagramConnection = localStorage.getItem('instagram_connection');
       if (instagramConnection) {
         const parsedData = JSON.parse(instagramConnection);
         
-        // Call your backend to disconnect using the dedicated Instagram API
+        // Disconnect using the dedicated Instagram API
         await fetch('https://egenie-whatsapp.koyeb.app/instagram/disconnect', {
           method: 'POST',
           headers: {
@@ -500,15 +500,11 @@ const handleTokenExchange = async (accessToken: string) => {
 
   return (
     <Dialog>
-
-      <FacebookSDK />
-
       <DialogTrigger asChild>
         <Button className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white">
           {isLoading ? (
             <span className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Checking...
+              <Loader2 className="h-4 w-4 animate-spin" /> Checking...
             </span>
           ) : connected ? (
             'Manage'
@@ -542,6 +538,14 @@ const handleTokenExchange = async (accessToken: string) => {
                 </div>
               </div>
             </div>
+            
+            {/* Add View Profile button */}
+            <Button 
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white" 
+              onClick={() => setShowProfileView(true)}
+            >
+              View Instagram Profile
+            </Button>
             
             {accountInfo.businessInfo && Object.keys(accountInfo.businessInfo).length > 0 && (
               <div className="bg-gray-50 p-4 rounded-lg space-y-3">
@@ -607,8 +611,7 @@ const handleTokenExchange = async (accessToken: string) => {
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Processing...
+                  <Loader2 className="h-4 w-4 animate-spin" /> Processing...
                 </span>
               ) : (
                 'Disconnect Account'
@@ -642,17 +645,24 @@ const handleTokenExchange = async (accessToken: string) => {
               disabled={isLoading}
             >
               {isLoading ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Processing...
-              </span>
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Processing...
+                </span>
               ) : (
-              'Login with Facebook'
+                'Login with Facebook'
               )}
             </Button>
           </div>
         )}
       </DialogContent>
+      
+      {connected && localStorage.getItem('instagram_user_id') && (
+        <InstagramProfileView
+          instagramId={localStorage.getItem('instagram_user_id') || ''}
+          isOpen={showProfileView}
+          onClose={() => setShowProfileView(false)}
+        />
+      )}
     </Dialog>
   );
 };
