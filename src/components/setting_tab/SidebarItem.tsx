@@ -658,49 +658,89 @@ const handleTokenExchange = async (accessToken: string) => {
 };
 
 export const FacebookCatalogIntegration = () => {
-  const [isConnected, setIsConnected] = useState(false); // Track connection status
-  const [isLoading, setIsLoading] = useState(false); // Track loading state
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // On mount: check if user is logged in and has a Facebook catalog connection
+  useEffect(() => {
+    const checkConnection = async () => {
+      setIsLoading(true);
+
+      // Check if user has an active Supabase session (OAuth token present)
+      const { data, error } = await supabase.auth.getSession();
+      const session = data?.session;
+
+      if (session) {
+        // Optional: Check if this session was from Facebook (provider_id = 'facebook')
+        const provider = session?.user?.app_metadata?.provider;
+
+        // Check if previously marked as connected (persisted flag)
+        const fbStored = localStorage.getItem("facebook_catalog_connection");
+
+        if (provider === "facebook" || fbStored) {
+          localStorage.setItem(
+            "facebook_catalog_connection",
+            JSON.stringify({ connected: true })
+          );
+          setIsConnected(true);
+          toast.success("Facebook catalog connected successfully.");
+        } else {
+          setIsConnected(false);
+        }
+      } else {
+        setIsConnected(false);
+      }
+
+      setIsLoading(false);
+    };
+
+    checkConnection();
+  }, []);
 
   const handleFacebookCatalogLogin = async () => {
-    const configId = '524055147308362'; // Replace with your new Facebook App config ID
+    setIsLoading(true);
+    const configId = "524055147308362";
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "facebook",
         options: {
-          scopes: "catalog_management", // Request catalog_management permission
+          scopes: "catalog_management",
           queryParams: {
-            config_id: configId, // Use the new config ID here
+            config_id: configId,
           },
+          redirectTo: window.location.origin, // redirect to homepage
         },
       });
 
       if (error) {
+        toast.error("Failed to initiate Facebook login.");
         console.error("Login error:", error.message);
-        toast.error("Failed to log in to Facebook Catalog.");
-      } else {
-        setIsConnected(true); // Update connection state
-        toast.success("Facebook Catalog login successful!");
+        setIsLoading(false); // only reset loading if error happens before redirect
       }
-    } catch (error) {
-      console.error("Error during Facebook Catalog login:", error);
-      toast.error("An unexpected error occurred during login.");
+
+      // ⚠️ No further code after here — user will be redirected!
+    } catch (err) {
+      toast.error("Unexpected error during login.");
+      console.error("Error during login:", err);
+      setIsLoading(false);
     }
   };
 
-  const handleLogout = async () => {
-    setIsLoading(true); // Start loading state
+  const handleDisconnect = async () => {
+    setIsLoading(true);
+
     try {
-      // Perform logout logic (e.g., revoke tokens, clear session)
-      await supabase.auth.signOut(); // Example: Supabase logout
-      localStorage.removeItem('facebook_catalog_connection'); // Clear any stored connection data
-      setIsConnected(false); // Update connection state
-      toast.success("Successfully logged out from Facebook Catalog.");
+      // await supabase.auth.signOut();
+      localStorage.removeItem("facebook_catalog_connection");
+      setIsConnected(false);
+      toast.success("Facebook catalog disconnected successfully.");
     } catch (error) {
-      console.error("Error during logout:", error);
-      toast.error("Failed to log out. Please try again.");
+      console.error("Error disconnecting Facebook catalog:", error);
+      toast.error("Failed to disconnect Facebook catalog.");
     } finally {
-      setIsLoading(false); // End loading state
+      setIsLoading(false);
+      window.location.hash = "#integrations";
     }
   };
 
@@ -719,30 +759,23 @@ export const FacebookCatalogIntegration = () => {
               <p className="text-sm text-gray-600">Connect your Facebook product catalog</p>
             </div>
           </div>
-          {isConnected ? (
-            <div className="flex gap-2">
-              <Button
-                className="bg-red-500 hover:bg-red-600 text-white"
-                onClick={handleLogout}
-                disabled={isLoading}
-              >
-                {isLoading ? "Logging out..." : "Logout"}
-              </Button>
-              <Button
-                className="bg-[#4267B2] hover:bg-[#365899] text-white"
-                onClick={handleFacebookCatalogLogin}
-                disabled={isLoading}
-              >
-                {isLoading ? "Reconnecting..." : "Reconnect"}
-              </Button>
-            </div>
+          {isLoading ? (
+            <Button className="bg-gray-400 text-white" disabled>
+              Loading...
+            </Button>
+          ) : isConnected ? (
+            <Button
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={handleDisconnect}
+            >
+              Disconnect
+            </Button>
           ) : (
             <Button
               className="bg-[#4267B2] hover:bg-[#365899] text-white"
               onClick={handleFacebookCatalogLogin}
-              disabled={isLoading}
             >
-              {isLoading ? "Connecting..." : "Connect"}
+              Connect
             </Button>
           )}
         </div>
@@ -750,6 +783,8 @@ export const FacebookCatalogIntegration = () => {
     </div>
   );
 };
+
+
 
 export default function DashboardPage() {
   const handleInsertResponse = (message: string) => {
