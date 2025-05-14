@@ -62,6 +62,7 @@ import {
 } from '@/components/ui/table';
 import { Shopify } from '@shopify/shopify-api';
 import { toast } from 'sonner';
+import { connectWebSocket } from '../../lib/websocket';
 
 const loginWithFacebook = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -78,6 +79,8 @@ const loginWithFacebook = async () => {
 };
 
 
+const [isConnected, setIsConnected] = useState(false);
+const [isLoading, setIsLoading] = useState(false);
 const handleFacebookCatalogLogin = async () => {
   const configId = '524055147308362'; // Replace with your new Facebook App config ID
 
@@ -101,6 +104,22 @@ const handleFacebookCatalogLogin = async () => {
   } catch (error) {
     console.error("Error during Facebook Catalog login:", error);
     toast.error("An unexpected error occurred during login.");
+  }
+};
+
+const handleLogout = async () => {
+  setIsLoading(true); // Start loading state
+  try {
+    // Perform logout logic (e.g., revoke tokens, clear session)
+    await supabase.auth.signOut(); // Example: Supabase logout
+    localStorage.removeItem('facebook_catalog_connection'); // Clear any stored connection data
+    setIsConnected(false); // Update connection state
+    toast.success("Successfully logged out from Facebook Catalog.");
+  } catch (error) {
+    console.error("Error during logout:", error);
+    toast.error("Failed to log out. Please try again.");
+  } finally {
+    setIsLoading(false); // End loading state
   }
 };
 
@@ -930,7 +949,7 @@ export const IntegrationsSettings = () => (
   </div>
 </div>
 
-{/* Facebook Catalog Integration Card */}
+
 {/* Facebook Catalog Integration Card */}
 <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
   <div className="space-y-4">
@@ -946,25 +965,80 @@ export const IntegrationsSettings = () => (
           <p className="text-sm text-gray-600">Connect your Facebook product catalog</p>
         </div>
       </div>
+      {isConnected ? (
+        <div className="flex gap-2">
+          <Button
+            className="bg-red-500 hover:bg-red-600 text-white"
+            onClick={handleLogout}
+            disabled={isLoading}
+          >
+            {isLoading ? "Logging out..." : "Logout"}
+          </Button>
+          <Button
+            className="bg-[#4267B2] hover:bg-[#365899] text-white"
+            onClick={handleFacebookCatalogLogin}
+            disabled={isLoading}
+          >
+            {isLoading ? "Reconnecting..." : "Reconnect"}
+          </Button>
+        </div>
+      ) : (
+        <Button
+          className="bg-[#4267B2] hover:bg-[#365899] text-white"
+          onClick={handleFacebookCatalogLogin}
+          disabled={isLoading}
+        >
+          {isLoading ? "Connecting..." : "Connect"}
+        </Button>
+      )}
+    </div>
+  </div>
+</div>
+
+{/* WhatsAPP Integration Card */}
+  {/* WhatsApp Integration Card */}
+<div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+  <div className="space-y-4">
+    <div className="flex items-start justify-between">
+      <div className="flex items-center gap-3">
+        <div className="bg-[#25D366] rounded-lg p-2">
+          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20.52 3.48A11.94 11.94 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 6.01L0 24l6.15-1.58A11.94 11.94 0 0012 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.2-3.48-8.52zM12 22.05c-1.85 0-3.67-.5-5.26-1.45l-.38-.22-3.65.94.97-3.55-.25-.37A9.94 9.94 0 012.05 12c0-5.47 4.48-9.95 9.95-9.95 2.66 0 5.17 1.04 7.05 2.93a9.94 9.94 0 012.93 7.05c0 5.47-4.48 9.95-9.95 9.95zm5.6-7.88c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.2.31-.82 1.02-1.01 1.23-.18.2-.37.22-.68.07-.31-.16-1.3-.48-2.47-1.54-.91-.81-1.52-1.81-1.7-2.12-.18-.31-.02-.48.14-.63.14-.14.31-.37.47-.56.16-.18.2-.31.31-.52.1-.2.05-.38-.02-.54-.07-.16-.71-1.7-.97-2.33-.26-.63-.52-.54-.71-.55h-.6c-.2 0-.52.07-.79.38-.27.31-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.22 3.07.16.2 2.1 3.2 5.1 4.49.71.31 1.26.5 1.69.64.71.23 1.36.2 1.87.12.57-.08 1.85-.76 2.11-1.5.26-.74.26-1.38.18-1.5-.07-.12-.29-.2-.6-.36z" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold">Add WhatsApp Number</h3>
+          <p className="text-sm text-gray-600">Connect another WhatsApp number</p>
+        </div>
+      </div>
       <Dialog>
         <DialogTrigger asChild>
-          <Button className="bg-[#4267B2] hover:bg-[#365899] text-white">
-            Connect
+          <Button className="bg-[#25D366] hover:bg-[#1DA851] text-white">
+            Add Number
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Connect Facebook Catalog</DialogTitle>
+            <DialogTitle>Add WhatsApp Number</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <p className="text-sm text-gray-600">
-              To connect your Facebook Catalog, you need to log in with your Facebook account and grant catalog permissions.
-            </p>
-            <Button
-              className="bg-[#4267B2] hover:bg-[#365899] text-white"
-              onClick={handleFacebookCatalogLogin}
-            >
-              Login with Facebook
+            <div className="grid gap-2">
+              <label htmlFor="phoneNumber">Phone Number</label>
+              <Input
+                id="phoneNumber"
+                placeholder="+1234567890"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="apiKey">API Key</label>
+              <Input
+                id="apiKey"
+                type="password"
+                placeholder="Enter your API key"
+              />
+            </div>
+            <Button className="bg-[#25D366] hover:bg-[#1DA851] text-white">
+              Connect
             </Button>
           </div>
         </DialogContent>
@@ -972,6 +1046,7 @@ export const IntegrationsSettings = () => (
     </div>
   </div>
 </div>
+
 
       {/* More Integrations Coming Soon Card */}
         {/* <div className="border rounded-lg p-4 bg-gray-50">
