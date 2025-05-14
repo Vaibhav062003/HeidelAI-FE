@@ -79,77 +79,6 @@ const loginWithFacebook = async () => {
 };
 
 
-const [isConnected, setIsConnected] = useState(false);
-const [isLoading, setIsLoading] = useState(false);
-const handleFacebookCatalogLogin = async () => {
-  const configId = '524055147308362'; // Replace with your new Facebook App config ID
-
-  try {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "facebook",
-      options: {
-        scopes: "catalog_management", // Request catalog_management permission
-        queryParams: {
-          config_id: configId, // Use the new config ID here
-        },
-      },
-    });
-
-    if (error) {
-      console.error("Login error:", error.message);
-      toast.error("Failed to log in to Facebook Catalog.");
-    } else {
-      toast.success("Facebook Catalog login successful!");
-    }
-  } catch (error) {
-    console.error("Error during Facebook Catalog login:", error);
-    toast.error("An unexpected error occurred during login.");
-  }
-};
-
-const handleLogout = async () => {
-  setIsLoading(true); // Start loading state
-  try {
-    // Perform logout logic (e.g., revoke tokens, clear session)
-    await supabase.auth.signOut(); // Example: Supabase logout
-    localStorage.removeItem('facebook_catalog_connection'); // Clear any stored connection data
-    setIsConnected(false); // Update connection state
-    toast.success("Successfully logged out from Facebook Catalog.");
-  } catch (error) {
-    console.error("Error during logout:", error);
-    toast.error("Failed to log out. Please try again.");
-  } finally {
-    setIsLoading(false); // End loading state
-  }
-};
-
-const fetchCatalogData = async (accessToken: string): Promise<void> => {
-  try {
-    const response = await fetch('https://graph.facebook.com/v13.0/{catalogId}/products', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('API error response:', errorText);
-      toast.error('Failed to connect Facebook Catalog.');
-      return;
-    }
-
-    const data: CatalogResponse = await response.json();
-    console.log('Catalog data:', data);
-    toast.success('Facebook Catalog connected successfully!');
-  } catch (error) {
-    console.error('Error fetching catalog data:', error);
-    toast.error('An error occurred while connecting the catalog.');
-  }
-};
-
-
 const WooCommerceDialog = () => {
   const [credentials, setCredentials] = useState({
     siteUrl: '',
@@ -728,6 +657,100 @@ const handleTokenExchange = async (accessToken: string) => {
   );
 };
 
+export const FacebookCatalogIntegration = () => {
+  const [isConnected, setIsConnected] = useState(false); // Track connection status
+  const [isLoading, setIsLoading] = useState(false); // Track loading state
+
+  const handleFacebookCatalogLogin = async () => {
+    const configId = '524055147308362'; // Replace with your new Facebook App config ID
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "facebook",
+        options: {
+          scopes: "catalog_management", // Request catalog_management permission
+          queryParams: {
+            config_id: configId, // Use the new config ID here
+          },
+        },
+      });
+
+      if (error) {
+        console.error("Login error:", error.message);
+        toast.error("Failed to log in to Facebook Catalog.");
+      } else {
+        setIsConnected(true); // Update connection state
+        toast.success("Facebook Catalog login successful!");
+      }
+    } catch (error) {
+      console.error("Error during Facebook Catalog login:", error);
+      toast.error("An unexpected error occurred during login.");
+    }
+  };
+
+  const handleLogout = async () => {
+    setIsLoading(true); // Start loading state
+    try {
+      // Perform logout logic (e.g., revoke tokens, clear session)
+      await supabase.auth.signOut(); // Example: Supabase logout
+      localStorage.removeItem('facebook_catalog_connection'); // Clear any stored connection data
+      setIsConnected(false); // Update connection state
+      toast.success("Successfully logged out from Facebook Catalog.");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      toast.error("Failed to log out. Please try again.");
+    } finally {
+      setIsLoading(false); // End loading state
+    }
+  };
+
+  return (
+    <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+      <div className="space-y-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-[#4267B2] rounded-lg p-2">
+              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24h11.495v-9.294H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Facebook Catalog</h3>
+              <p className="text-sm text-gray-600">Connect your Facebook product catalog</p>
+            </div>
+          </div>
+          {isConnected ? (
+            <div className="flex gap-2">
+              <Button
+                className="bg-red-500 hover:bg-red-600 text-white"
+                onClick={handleLogout}
+                disabled={isLoading}
+              >
+                {isLoading ? "Logging out..." : "Logout"}
+              </Button>
+              <Button
+                className="bg-[#4267B2] hover:bg-[#365899] text-white"
+                onClick={handleFacebookCatalogLogin}
+                disabled={isLoading}
+              >
+                {isLoading ? "Reconnecting..." : "Reconnect"}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              className="bg-[#4267B2] hover:bg-[#365899] text-white"
+              onClick={handleFacebookCatalogLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? "Connecting..." : "Connect"}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function DashboardPage() {
   const handleInsertResponse = (message: string) => {
     // Handle the canned response insertion
@@ -951,49 +974,7 @@ export const IntegrationsSettings = () => (
 
 
 {/* Facebook Catalog Integration Card */}
-<div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-  <div className="space-y-4">
-    <div className="flex items-start justify-between">
-      <div className="flex items-center gap-3">
-        <div className="bg-[#4267B2] rounded-lg p-2">
-          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24h11.495v-9.294H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
-          </svg>
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold">Facebook Catalog</h3>
-          <p className="text-sm text-gray-600">Connect your Facebook product catalog</p>
-        </div>
-      </div>
-      {isConnected ? (
-        <div className="flex gap-2">
-          <Button
-            className="bg-red-500 hover:bg-red-600 text-white"
-            onClick={handleLogout}
-            disabled={isLoading}
-          >
-            {isLoading ? "Logging out..." : "Logout"}
-          </Button>
-          <Button
-            className="bg-[#4267B2] hover:bg-[#365899] text-white"
-            onClick={handleFacebookCatalogLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? "Reconnecting..." : "Reconnect"}
-          </Button>
-        </div>
-      ) : (
-        <Button
-          className="bg-[#4267B2] hover:bg-[#365899] text-white"
-          onClick={handleFacebookCatalogLogin}
-          disabled={isLoading}
-        >
-          {isLoading ? "Connecting..." : "Connect"}
-        </Button>
-      )}
-    </div>
-  </div>
-</div>
+<FacebookCatalogIntegration />
 
 {/* WhatsAPP Integration Card */}
   {/* WhatsApp Integration Card */}
