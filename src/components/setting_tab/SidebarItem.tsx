@@ -391,7 +391,7 @@ const InstagramDialog = () => {
       localStorage.setItem('instagram_auth_state', state);
       
       // Build Instagram authorization URL
-      const authUrl = `https://api.instagram.com/oauth/authorize?client_id=${INSTAGRAM_CLIENT_ID}&redirect_uri=${encodeURIComponent(INSTAGRAM_REDIRECT_URI)}&scope=user_profile,user_media,instagram_business_basic,instagram_business_manage_messages&response_type=code&state=${state}`;
+      const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=https://www.heidelai.com/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages`;
       
       // Redirect to Instagram authorization page
       window.location.href = authUrl;

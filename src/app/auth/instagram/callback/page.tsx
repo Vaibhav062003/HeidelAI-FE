@@ -14,23 +14,22 @@ function InstagramCallbackContent() {
   useEffect(() => {
     // Process the Instagram callback as soon as the component mounts
     const code = searchParams.get('code');
-    const state = searchParams.get('state');
     
-    if (!code || !state) {
+    if (!code) {
       setStatus('error');
       setMessage("Missing required parameters from Instagram.");
       toast.error("Instagram connection failed: Missing parameters");
       return;
     }
 
-    // Validate state parameter to prevent CSRF
-    const storedState = localStorage.getItem('instagram_auth_state');
-    if (state !== storedState) {
-      setStatus('error');
-      setMessage("Invalid state parameter. Authentication attempt may have been compromised.");
-      toast.error("Instagram connection failed: Security validation failed");
-      return;
-    }
+    // // Validate state parameter to prevent CSRF
+    // const storedState = localStorage.getItem('instagram_auth_state');
+    // if (state !== storedState) {
+    //   setStatus('error');
+    //   setMessage("Invalid state parameter. Authentication attempt may have been compromised.");
+    //   toast.error("Instagram connection failed: Security validation failed");
+    //   return;
+    // }
 
     // Exchange the code for an access token
     const exchangeCodeForToken = async () => {
