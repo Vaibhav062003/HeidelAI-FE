@@ -1,24 +1,25 @@
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+"use client"
+
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function InstagramCallback() {
+function InstagramCallbackContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState("Processing Instagram authorization...");
 
   useEffect(() => {
-    // Process the Instagram callback as soon as the component mounts and URL params are available
-    const { code, state } = router.query;
+    // Process the Instagram callback as soon as the component mounts
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
     
     if (!code || !state) {
-      // Wait for query parameters to be available
-      if (Object.keys(router.query).length > 0) {
-        setStatus('error');
-        setMessage("Missing required parameters from Instagram.");
-        toast.error("Instagram connection failed: Missing parameters");
-      }
+      setStatus('error');
+      setMessage("Missing required parameters from Instagram.");
+      toast.error("Instagram connection failed: Missing parameters");
       return;
     }
 
@@ -108,7 +109,7 @@ export default function InstagramCallback() {
     // Clean up state parameter after use
     localStorage.removeItem('instagram_auth_state');
     
-  }, [router.query, router]);
+  }, [searchParams, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -150,5 +151,28 @@ export default function InstagramCallback() {
         )}
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function CallbackLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
+        <div className="flex justify-center mb-4">
+          <Loader2 className="h-12 w-12 animate-spin text-purple-500" />
+        </div>
+        <h1 className="text-xl font-semibold mb-2">Loading</h1>
+        <p className="text-gray-600">Please wait...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function InstagramCallback() {
+  return (
+    <Suspense fallback={<CallbackLoading />}>
+      <InstagramCallbackContent />
+    </Suspense>
   );
 }
