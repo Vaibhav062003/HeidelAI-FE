@@ -391,7 +391,7 @@ const InstagramDialog = () => {
       localStorage.setItem('instagram_auth_state', state);
       
       // Build Instagram authorization URL
-      const authUrl = `https://api.instagram.com/oauth/authorize?client_id=${INSTAGRAM_CLIENT_ID}&redirect_uri=${encodeURIComponent(INSTAGRAM_REDIRECT_URI)}&scope=${INSTAGRAM_SCOPE}&response_type=code&state=${state}`;
+      const authUrl = `https://api.instagram.com/oauth/authorize?client_id=${INSTAGRAM_CLIENT_ID}&redirect_uri=${encodeURIComponent(INSTAGRAM_REDIRECT_URI)}&scope=user_profile,user_media,instagram_business_basic,instagram_business_manage_messages&response_type=code&state=${state}`;
       
       // Redirect to Instagram authorization page
       window.location.href = authUrl;
