@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import AgentsSettings from './Agent_management';
 import TeamsConfiguration from './Team_configuration';
 import CannedResponses from './CannedResponsesContext';
-import { Construction, Loader2 } from 'lucide-react';
+import { Construction, Loader2, Instagram } from 'lucide-react';
 import { 
   Select, 
   SelectContent, 
@@ -25,6 +25,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { createClient } from '@supabase/supabase-js';
 import InstagramProfileView from './InstagramProfileView';
 import FacebookSDK, { FacebookLoginResponse } from '@/components/facebook/FacebookSDK';
+
+// Instagram OAuth configuration
+const INSTAGRAM_CLIENT_ID = '1197084761515978'; // Replace with your Instagram app ID
+const INSTAGRAM_REDIRECT_URI = `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/instagram/callback`;
+const INSTAGRAM_SCOPE = 'user_profile,user_media,instagram_business_basic, instagram_business_manage_messages'; // Basic permissions
 
 
 // Function to fetch catalog data from the backend
@@ -304,7 +309,21 @@ const InstagramDialog = () => {
           }
         }
         
-        // Check with backend using dedicated Instagram collection API
+        // Check for callback in URL (after redirect from Instagram)
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        
+        // If there's a code in the URL, exchange it for an access token
+        if (code && state === localStorage.getItem('instagram_auth_state')) {
+          await handleInstagramCallback(code);
+          // Clean up URL parameters after processing
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Otherwise, check with backend using dedicated Instagram collection API
         try {
           // Get ID from localStorage (if available from previous connection)
           const storedInstagramId = localStorage.getItem('instagram_user_id');
@@ -362,45 +381,39 @@ const InstagramDialog = () => {
     checkConnection();
   }, []);
 
-  // Handle login with Facebook SDK
+  // Function to initiate Instagram OAuth login
   const handleInstagramLogin = () => {
     setIsLoading(true);
     
-    if (typeof window !== 'undefined' && window.FB) {
-      window.FB.login(function(response: FacebookLoginResponse) {
-        if (response.authResponse) {
-          console.log('Facebook login successful:', response);
-          const accessToken = response.authResponse.code;
-          
-          // Exchange the access token
-          handleTokenExchange(accessToken);
-        } else {
-          console.log('User cancelled login or did not fully authorize.');
-          setIsLoading(false);
-          toast.error('Instagram login was cancelled or failed');
-        }
-      }, {
-        config_id: '1617579675586830',        
-        response_type: 'code',               
-        override_default_response_type: true
-      });
-    } else {
-      console.error('Facebook SDK not loaded');
+    try {
+      // Generate a random state to prevent CSRF attacks
+      const state = Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('instagram_auth_state', state);
+      
+      // Build Instagram authorization URL
+      const authUrl = `https://api.instagram.com/oauth/authorize?client_id=${INSTAGRAM_CLIENT_ID}&redirect_uri=${encodeURIComponent(INSTAGRAM_REDIRECT_URI)}&scope=${INSTAGRAM_SCOPE}&response_type=code&state=${state}`;
+      
+      // Redirect to Instagram authorization page
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Error initiating Instagram login:', error);
       setIsLoading(false);
-      toast.error('Could not initialize Facebook login. Please try again later.');
+      toast.error('Could not initiate Instagram login. Please try again later.');
     }
   };
   
-  // Handle token exchange with your backend
-  const handleTokenExchange = async (accessToken: string) => {
+  // Handle Instagram OAuth callback (code exchange)
+  const handleInstagramCallback = async (code: string) => {
     try {
+      // Exchange authorization code for access token via backend
       const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          access_token: accessToken,
+          code: code,
+          redirect_uri: INSTAGRAM_REDIRECT_URI
         }),
       });
       
@@ -485,6 +498,7 @@ const InstagramDialog = () => {
         // Clear the connection from local storage
         localStorage.removeItem('instagram_connection');
         localStorage.removeItem('instagram_user_id');
+        localStorage.removeItem('instagram_auth_state');
         setConnected(false);
         setAccountInfo(null);
         
@@ -539,7 +553,7 @@ const InstagramDialog = () => {
               </div>
             </div>
             
-            {/* Add View Profile button */}
+            {/* View Profile button */}
             <Button 
               className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white" 
               onClick={() => setShowProfileView(true)}
@@ -549,7 +563,7 @@ const InstagramDialog = () => {
             
             {accountInfo.businessInfo && Object.keys(accountInfo.businessInfo).length > 0 && (
               <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                <h4 className="text-sm font-medium">Business Account Details</h4>
+                <h4 className="text-sm font-medium">Account Details</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   {accountInfo.businessInfo.account_type && (
                     <div className="space-y-1">
@@ -580,25 +594,13 @@ const InstagramDialog = () => {
                   <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Access to messages
+                  Access to profile data
                 </li>
                 <li className="flex items-center gap-2">
                   <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Send messages
-                </li>
-                <li className="flex items-center gap-2">
-                  <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Access basic profile data
-                </li>
-                <li className="flex items-center gap-2">
-                  <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Business account management
+                  Access to media
                 </li>
               </ul>
             </div>
@@ -621,26 +623,26 @@ const InstagramDialog = () => {
         ) : (
           <div className="py-4 space-y-4">
             <p className="text-sm text-gray-600">
-              Connect your Instagram business account to manage messages directly from this dashboard.
+              Connect your Instagram account to manage content and access media directly from this dashboard.
             </p>
+            
             <div className="p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm rounded">
               <p>
-              You need to have a Facebook page linked to your Instagram account to use this feature.
+                You can connect any Instagram account without needing a Facebook page.
               </p>
             </div>
             
             <div className="space-y-2">
               <h4 className="text-sm font-medium">This will allow HeidelAI to:</h4>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Access your messages</li>
-                <li>• Send messages on your behalf</li>
-                <li>• Access your business account information</li>
-                <li>• Manage your business messaging</li>
+                <li>• Access your basic profile information</li>
+                <li>• View your media and content</li>
+                <li>• Display your content in this dashboard</li>
               </ul>
             </div>
             
             <Button 
-              className="w-full mt-4 bg-[#1877F2] hover:bg-[#0c5bdb] text-white" 
+              className="w-full mt-4 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white" 
               onClick={handleInstagramLogin}
               disabled={isLoading}
             >
@@ -649,7 +651,9 @@ const InstagramDialog = () => {
                   <Loader2 className="h-4 w-4 animate-spin" /> Processing...
                 </span>
               ) : (
-                'Login with Facebook'
+                <span className="flex items-center gap-2">
+                  <Instagram className="h-4 w-4" /> Connect Instagram
+                </span>
               )}
             </Button>
           </div>
