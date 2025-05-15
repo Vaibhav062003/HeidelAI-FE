@@ -13,218 +13,136 @@ import {
   Plus,
   X,
   ArrowLeft,
-  Image,
-  Grid,
-  Video,
-  LogIn,
-  User,
-  Lock,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
+import PostReelComments from "./PostReelComments";
 
-// Define types for our app objects
 interface App {
   name: string;
   category?: string;
   icon: React.ReactNode;
 }
 
-// Define props for our component
 interface FlowBuilderProps {
   onClose: () => void;
 }
 
-// Define Instagram media types
-interface InstagramMedia {
-  id: string;
-  caption?: string;
-  media_type: string;
-  media_url: string;
-  permalink: string;
-  thumbnail_url?: string;
-  timestamp: string;
-  username: string;
+interface InstagramTrigger {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  isPro?: boolean;
 }
 
 const allApps: App[] = [
+  { name: "WhatsApp", icon: <FaWhatsapp className="w-6 h-6 text-white" /> },
+  { name: "Instagram", icon: <FaInstagram className="w-6 h-6 text-white" /> },
+];
+
+const instagramTriggers: InstagramTrigger[] = [
   {
-    name: "WhatsApp",
-    icon: <FaWhatsapp className="w-6 h-6 text-white" />,
+    title: "Post or Reel Comments",
+    description: "User comments on your Post or Reel",
+    icon: <FaInstagram className="w-6 h-6 text-white" />,
   },
   {
-    name: "Instagram",
+    title: "Instagram Message",
+    description: "User sends a message",
+    icon: <FaInstagram className="w-6 h-6 text-white" />,
+  },
+  {
+    title: "Instagram Ref URL",
+    description: "User clicks a referral link",
     icon: <FaInstagram className="w-6 h-6 text-white" />,
   },
 ];
 
-// Create color mapping for app icons
 const getIconBgColor = (appName: string): string => {
   const colorMap: Record<string, string> = {
     WhatsApp: "bg-green-500",
     Instagram: "bg-[#E1306C]",
   };
-
-  // Find matching color or return default
-  for (const [key, value] of Object.entries(colorMap)) {
-    if (appName.includes(key)) return value;
-  }
-  return "bg-gray-500";
+  return colorMap[appName] || "bg-gray-500";
 };
 
 const FlowBuilder: React.FC<FlowBuilderProps> = ({ onClose }) => {
-  const [showAppPanel, setShowAppPanel] = useState<boolean>(false);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [showInstagramLogin, setShowInstagramLogin] = useState<boolean>(false);
-  const [instagramUsername, setInstagramUsername] = useState<string>("");
-  const [instagramPassword, setInstagramPassword] = useState<string>("");
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [instagramMedia, setInstagramMedia] = useState<InstagramMedia[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  const panelRef = useRef<HTMLDivElement | null>(null);
-  const loginPanelRef = useRef<HTMLDivElement | null>(null);
+  const [showAppPanel, setShowAppPanel] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showInstagramTriggers, setShowInstagramTriggers] = useState(false);
+  const [expandedSection, setExpandedSection] = useState("top");
+  const [selectedTrigger, setSelectedTrigger] = useState<string | null>(null);
+  const [showPostReelComments, setShowPostReelComments] = useState(false);
 
-  // Close the app panel when clicking outside
+  const appPanelRef = useRef<HTMLDivElement | null>(null);
+  const triggerPanelRef = useRef<HTMLDivElement | null>(null);
+
+  const [dmAutomationData, setDmAutomationData] = useState<{
+    postId?: string;
+    keywords?: string[];
+    reply?: string;
+  }>({});
+  
+
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent): void => {
-      if (
-        panelRef.current &&
-        !panelRef.current.contains(event.target as Node) &&
-        (!loginPanelRef.current || !loginPanelRef.current.contains(event.target as Node))
-      ) {
+    const handleClickOutside = (event: MouseEvent) => {
+      const panels = [appPanelRef.current, triggerPanelRef.current];
+      if (!panels.some((panel) => panel?.contains(event.target as Node))) {
         setShowAppPanel(false);
+        setShowInstagramTriggers(false);
       }
     };
 
-    if (showAppPanel) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showAppPanel]);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const filteredApps = allApps.filter((app) =>
     app.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Mock function to simulate Instagram authentication
-  const handleInstagramLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      if (instagramUsername && instagramPassword) {
-        setIsAuthenticated(true);
-        fetchInstagramMedia();
-      } else {
-        setError("Please enter both username and password");
-        setIsLoading(false);
-      }
-    }, 1000);
-  };
-
-  // Mock function to simulate fetching Instagram media
-  const fetchInstagramMedia = () => {
-    // This would be replaced with actual API calls using the Instagram API
-    // Similar to the provided code's getUserMedia function
-    
-    // Mock data that mimics the Instagram API response
-    const mockMediaData: InstagramMedia[] = [
-      {
-        id: "1",
-        caption: "Beautiful sunset #nature",
-        media_type: "IMAGE",
-        media_url: "/api/placeholder/400/400",
-        permalink: "https://instagram.com/p/123456",
-        timestamp: "2023-04-01T12:00:00Z",
-        username: instagramUsername,
-      },
-      {
-        id: "2",
-        caption: "My travel adventures",
-        media_type: "CAROUSEL_ALBUM",
-        media_url: "/api/placeholder/400/400",
-        permalink: "https://instagram.com/p/234567",
-        timestamp: "2023-03-25T15:30:00Z",
-        username: instagramUsername,
-      },
-      {
-        id: "3",
-        caption: "Check out my new video!",
-        media_type: "VIDEO",
-        media_url: "/api/placeholder/400/400",
-        thumbnail_url: "/api/placeholder/400/400",
-        permalink: "https://instagram.com/p/345678",
-        timestamp: "2023-03-20T09:15:00Z",
-        username: instagramUsername,
-      },
-    ];
-
-    setInstagramMedia(mockMediaData);
-    setIsLoading(false);
-    setShowInstagramLogin(false);
-  };
-
   const handleAppClick = (appName: string) => {
-    if (appName === "Instagram") {
-      setShowInstagramLogin(true);
-    }
-    // Handle other apps as needed
+    if (appName === "Instagram") setShowInstagramTriggers(true);
   };
 
-  // Get media type icon
-  const getMediaTypeIcon = (mediaType: string) => {
-    switch (mediaType) {
-      case "IMAGE":
-        return <Image className="w-4 h-4 text-gray-500" />;
-      case "CAROUSEL_ALBUM":
-        return <Grid className="w-4 h-4 text-gray-500" />;
-      case "VIDEO":
-        return <Video className="w-4 h-4 text-gray-500" />;
-      default:
-        return null;
-    }
+  const handleSectionToggle = (section: string) => {
+    setExpandedSection((prev) => (prev === section ? "" : section));
   };
 
   return (
     <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
-      {/* New scenario button */}
+      {/* Navigation buttons */}
       <div className="fixed top-8 left-8 z-10">
         <button
           onClick={onClose}
-          className="bg-gray-100 p-2 rounded-full shadow flex items-center justify-center text-gray-600 hover:bg-gray-200"
+          className="bg-gray-100 p-2 rounded-full shadow hover:bg-gray-200"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5 text-gray-600" />
         </button>
       </div>
 
-      {/* Close button */}
       <div className="fixed top-4 right-4 z-50">
-      <button
+        <button
           onClick={onClose}
-          className="bg-gray p-2 rounded-full shadow flex items-center justify-center text-gray-900 hover:bg-gray-50"
+          className="bg-gray p-2 rounded-full shadow hover:bg-gray-50"
         >
-          <X className="w-7 h-7" />
+          <X className="w-7 h-7 text-gray-900" />
         </button>
       </div>
 
       <div className="relative flex items-center">
-        {/* Main + Button */}
+        {/* Main plus button */}
         <button
           onClick={() => setShowAppPanel(true)}
-          className="bg-gray-700 hover:bg-gray-600 text-white w-32 h-32 rounded-full flex items-center justify-center text-5xl shadow-lg"
+          className="bg-gray-700 hover:bg-gray-600 text-white w-32 h-32 rounded-full shadow-lg"
         >
-          <Plus className="w-16 h-16" />
+          <Plus className="w-16 h-16 mx-auto" />
         </button>
 
-        {/* App List Panel */}
+        {/* App selection panel */}
         {showAppPanel && (
           <div
-            ref={panelRef}
+            ref={appPanelRef}
             className="absolute left-full ml-4 w-80 bg-white rounded-lg shadow-2xl border border-gray-100 z-10"
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
@@ -237,7 +155,6 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({ onClose }) => {
               </button>
             </div>
 
-            {/* Search */}
             <div className="px-4 pt-2 pb-4">
               <div className="relative">
                 <Search className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
@@ -251,184 +168,154 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({ onClose }) => {
               </div>
             </div>
 
-            {/* Apps */}
             <div className="px-4 pb-4">
-              {filteredApps.length > 0 ? (
-                filteredApps.map((app, idx) => (
+              {filteredApps.map((app, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center p-3 rounded-lg cursor-pointer hover:bg-gray-50 mb-2"
+                  onClick={() => handleAppClick(app.name)}
+                >
                   <div
-                    key={idx}
-                    className="flex items-center p-3 rounded-lg cursor-pointer hover:bg-gray-50 mb-2"
-                    onClick={() => handleAppClick(app.name)}
+                    className={`w-10 h-10 ${getIconBgColor(
+                      app.name
+                    )} rounded-lg flex items-center justify-center mr-3`}
                   >
-                    <div
-                      className={`w-10 h-10 ${getIconBgColor(
-                        app.name
-                      )} rounded-lg flex items-center justify-center mr-3`}
-                    >
-                      {app.icon}
-                    </div>
-                    <div className="flex-grow">
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-800">{app.name}</span>
-                        {app.category && (
-                          <span className="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded-md ml-2">
-                            {app.category}
-                          </span>
-                        )}
-                      </div>
+                    {app.icon}
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-800">{app.name}</span>
+                      {app.category && (
+                        <span className="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded-md ml-2">
+                          {app.category}
+                        </span>
+                      )}
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="text-sm text-gray-400 text-center py-6">
-                  No apps found.
                 </div>
-              )}
+              ))}
             </div>
           </div>
         )}
 
-        {/* Instagram Login Panel */}
-        {showInstagramLogin && (
+        {/* Instagram triggers panel */}
+        {showInstagramTriggers && (
           <div
-            ref={loginPanelRef}
-            className="absolute left-full ml-4 w-96 bg-white rounded-lg shadow-2xl border border-gray-100 z-20"
+            ref={triggerPanelRef}
+            className="absolute left-full ml-4 w-[450px] h-[600px] bg-white rounded-lg shadow-2xl border border-gray-100 z-50"
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <div className="flex items-center">
-                <div className="bg-purple-500 rounded-lg p-2 mr-3">
-                  <Globe className="w-5 h-5 text-white" />
-                </div>
-                <span className="font-medium text-gray-800">Instagram Login</span>
-              </div>
+              <span className="font-medium text-gray-800">
+                Start automation when...
+              </span>
               <button
-                onClick={() => setShowInstagramLogin(false)}
+                onClick={() => setShowInstagramTriggers(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {!isAuthenticated ? (
-              <div className="p-6">
-                {error && (
-                  <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
-                    {error}
-                  </div>
-                )}
-                <form onSubmit={handleInstagramLogin}>
-                  <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-medium mb-2" htmlFor="username">
-                      Username
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
-                      <input
-                        id="username"
-                        type="text"
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        placeholder="Your Instagram username"
-                        value={instagramUsername}
-                        onChange={(e) => setInstagramUsername(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="mb-6">
-                    <label className="block text-gray-700 text-sm font-medium mb-2" htmlFor="password">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
-                      <input
-                        id="password"
-                        type="password"
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        placeholder="Your Instagram password"
-                        value={instagramPassword}
-                        onChange={(e) => setInstagramPassword(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg flex items-center justify-center"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                        Logging in...
-                      </>
-                    ) : (
-                      <>
-                        <LogIn className="w-5 h-5 mr-2" />
-                        Login
-                      </>
-                    )}
-                  </button>
-                </form>
+            <div className="p-4">
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search in Instagram"
+                  className="w-full px-10 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
               </div>
-            ) : (
-              <div className="p-6">
-                <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md text-sm">
-                  Successfully connected to Instagram account: <strong>{instagramUsername}</strong>
-                </div>
-                
-                <div className="mb-4">
-                  <h3 className="font-medium text-gray-700 mb-3">Your Instagram Media</h3>
-                  
-                  {isLoading ? (
-                    <div className="flex justify-center p-6">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+
+              <div className="flex mb-4">
+                <div className="w-1/3 pr-2">
+                  <div className="bg-gray-100 rounded-lg p-3 mb-2">
+                    <div className="flex items-center">
+                      <div className="bg-pink-500 rounded-lg p-1 mr-2">
+                        <FaInstagram className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-sm font-medium">Instagram</span>
                     </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {instagramMedia.map((media) => (
-                        <div key={media.id} className="flex items-start p-3 border border-gray-200 rounded-lg">
-                          <div className="relative h-16 w-16 rounded overflow-hidden mr-3 bg-gray-100">
-                            <img 
-                              src={media.thumbnail_url || media.media_url} 
-                              alt={media.caption || "Instagram media"} 
-                              className="h-full w-full object-cover"
-                            />
-                            <div className="absolute top-1 right-1 bg-white bg-opacity-80 rounded p-1">
-                              {getMediaTypeIcon(media.media_type)}
-                            </div>
+                  </div>
+                </div>
+
+                <div className="w-2/3 pl-2">
+                  <div className="mb-2">
+                    <div className="flex items-center justify-between p-2 bg-gray-50 text-gray-500 rounded-t-lg">
+                      <span className="text-sm font-medium">Triggers</span>
+                      <button
+                        onClick={() => handleSectionToggle("triggers")}
+                        className="text-gray-400"
+                      >
+                        {expandedSection === "triggers" ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="p-2 text-sm text-gray-600 border-b border-gray-100">
+                      Specific Instagram event that starts your automation.
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 overflow-y-auto max-h-96">
+                    {instagramTriggers.map((trigger, index) => (
+                      <div
+                        key={index}
+                        className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 cursor-pointer"
+                        onClick={() => {
+                          if (trigger.title === "Post or Reel Comments") {
+                            setSelectedTrigger(trigger.title);
+                            setShowInstagramTriggers(false);
+                            setShowPostReelComments(true);
+                          }
+                        }}
+                      >
+                        <div className="flex items-center">
+                          <div className="bg-pink-500 rounded-full p-1 mr-3">
+                            <FaInstagram className="w-4 h-4 text-white" />
                           </div>
-                          <div className="flex-grow">
-                            <div className="text-sm text-gray-800 line-clamp-2">
-                              {media.caption || "No caption"}
+                          <div>
+                            <div className="flex items-center">
+                              <span className="text-sm font-medium">
+                                {trigger.title}
+                              </span>
+                              {trigger.isPro && (
+                                <span className="ml-2 bg-blue-500 text-white text-xs px-1 rounded">
+                                  PRO
+                                </span>
+                              )}
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              {new Date(media.timestamp).toLocaleDateString()}
-                            </div>
+                            <span className="text-xs text-gray-500">
+                              {trigger.description}
+                            </span>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                
-                <button
-                  onClick={() => {
-                    setIsAuthenticated(false);
-                    setInstagramUsername("");
-                    setInstagramPassword("");
-                    setInstagramMedia([]);
-                  }}
-                  className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50"
-                >
-                  Disconnect Account
-                </button>
               </div>
-            )}
+            </div>
           </div>
+        )}
+
+        {/* Post/Reel comments sidebar */}
+        {showPostReelComments && (
+          <PostReelComments
+            onClose={() => setShowPostReelComments(false)}
+            onComplete={(data) => {
+              setDmAutomationData(data);
+              setShowPostReelComments(false);
+              // Additional logic to save to Supabase or process data
+            }}
+          />
         )}
       </div>
 
-      {/* Bottom toolbar */}
-      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/4.5 bg-white rounded-full shadow-lg px-3 py-2 flex items-center space-x-3">
-        <button className="bg-purple-700 hover:bg-purple-800 text-white px-4 py-2 rounded-full flex items-center space-x-2">
+      {/* Bottom toolbar
+      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white rounded-full shadow-lg px-3 py-2 flex items-center space-x-3">
+        <button className="bg-purple-700 hover:bg-purple-800 text-white px-4 py-2 rounded-full">
           <span>Run once</span>
         </button>
 
@@ -463,7 +350,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({ onClose }) => {
             <Archive className="w-5 h-5 text-white" />
           </button>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
