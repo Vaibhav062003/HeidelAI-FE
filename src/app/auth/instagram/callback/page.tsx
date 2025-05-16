@@ -87,7 +87,7 @@ function InstagramCallbackContent() {
         
         // Redirect back to the settings page after a short delay
         setTimeout(() => {
-          router.push('/settings#integrations');
+          router.push('/dashboard#integrations');
         }, 2000);
         
       } catch (error) {
@@ -98,7 +98,7 @@ function InstagramCallbackContent() {
         
         // Redirect to the settings page after a longer delay
         setTimeout(() => {
-          router.push('/settings#integrations');
+          router.push('/dashboard#integrations');
         }, 3000);
       }
     };

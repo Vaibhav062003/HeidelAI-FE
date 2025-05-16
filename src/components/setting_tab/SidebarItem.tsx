@@ -561,7 +561,7 @@ const InstagramDialog = () => {
               View Instagram Profile
             </Button>
             
-            {accountInfo.businessInfo && Object.keys(accountInfo.businessInfo).length > 0 && (
+            {/* {accountInfo.businessInfo && Object.keys(accountInfo.businessInfo).length > 0 && (
               <div className="bg-gray-50 p-4 rounded-lg space-y-3">
                 <h4 className="text-sm font-medium">Account Details</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -586,7 +586,7 @@ const InstagramDialog = () => {
                 </div>
               </div>
             )}
-            
+             */}
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Permissions granted:</h4>
               <ul className="text-sm text-gray-600 space-y-1">
