@@ -143,11 +143,52 @@ const InstagramProfileView = ({ instagramId, onClose, isOpen }: InstagramProfile
               )}
 
               {/* Posts Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {posts.map((post) => (
+              <div className={`
+                ${posts.length === 0 ? 'hidden' : 
+                posts.length === 1 ? 'flex justify-center' : 
+                posts.length === 2 ? 'grid grid-cols-2 gap-4' : 
+                'grid grid-cols-2 md:grid-cols-3 gap-2'}
+              `}>
+                {posts.length === 0 && (
+                  <div className="text-center py-8 w-full">
+                    <p className="text-gray-500">No posts to display</p>
+                  </div>
+                )}
+                
+                {posts.length === 1 && (
+                  // For a single post, display it larger and centered
+                  <div 
+                    className="relative rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-all max-w-xl w-full"
+                    onClick={() => setSelectedPost(posts[0])}
+                  >
+                    <img 
+                      src={posts[0].media_type === 'VIDEO' ? posts[0].thumbnail_url || posts[0].media_url : posts[0].media_url} 
+                      alt={posts[0].caption || 'Instagram post'}
+                      className="w-full object-cover rounded-md"
+                      style={{ maxHeight: '60vh' }}
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="text-white font-medium">View Post</span>
+                    </div>
+                    
+                    {posts[0].media_type === 'VIDEO' && (
+                      <Badge className="absolute top-2 right-2 bg-black/70" variant="secondary">
+                        VIDEO
+                      </Badge>
+                    )}
+                    
+                    {posts[0].media_type === 'CAROUSEL_ALBUM' && (
+                      <Badge className="absolute top-2 right-2 bg-black/70" variant="secondary">
+                        ALBUM
+                      </Badge>
+                    )}
+                  </div>
+                )}
+                
+                {posts.length >= 2 && posts.map((post) => (
                   <div 
                     key={post.id} 
-                    className="relative aspect-square rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-all"
+                    className={`relative aspect-square rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-all ${posts.length === 2 ? 'max-w-md' : ''}`}
                     onClick={() => setSelectedPost(post)}
                   >
                     <img 
@@ -173,6 +214,13 @@ const InstagramProfileView = ({ instagramId, onClose, isOpen }: InstagramProfile
                   </div>
                 ))}
               </div>
+
+              {/*  if no posts available  */}
+              {!loading && !error && posts.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No posts available</p>
+                </div>
+              )}
             </div>
           </ScrollArea>
         )}
