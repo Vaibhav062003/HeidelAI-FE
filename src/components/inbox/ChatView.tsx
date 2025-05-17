@@ -1195,6 +1195,13 @@ const ChatView = ({
       if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
         setMessages(prev => [...prev, data.message]);
       }
+      else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
+        // Remove the deleted message from the messages array
+        setMessages(prev => 
+          prev.filter(msg => msg.id !== data.message_id)
+        );
+        console.log(`Message with ID ${data.message_id} was deleted`);
+      }
     };
     
     fetchConversation();
