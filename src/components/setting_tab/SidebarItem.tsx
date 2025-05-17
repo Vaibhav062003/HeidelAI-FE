@@ -661,6 +661,8 @@ const InstagramDialog = () => {
 export const FacebookCatalogIntegration = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  // Add state for dialog
+  const [showDialog, setShowDialog] = useState(false);
 
   // On mount: check if user is logged in and has a Facebook catalog connection
   useEffect(() => {
@@ -817,12 +819,62 @@ const handleDisconnect = async () => {
               Disconnect
             </Button>
           ) : (
-            <Button
-              className="bg-[#4267B2] hover:bg-[#365899] text-white"
-              onClick={handleFacebookCatalogLogin}
-            >
-              Connect
-            </Button>
+            <Dialog open={showDialog} onOpenChange={setShowDialog}>
+              <DialogTrigger asChild>
+                <Button className="bg-[#4267B2] hover:bg-[#365899] text-white">
+                  Connect
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] h-[55vh]">
+                <DialogHeader>
+                  <DialogTitle>Connect Facebook Catalog</DialogTitle>
+                </DialogHeader>
+                <div className="py-2 space-y-2">
+                    <p>
+  Connect your Facebook account to manage your product catalog directly from this dashboard.
+</p>
+                </div>
+                <div className="p-1 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm rounded">
+                        <p>
+    Your Facebook credentials are never stored on our servers. We use secure, industry-standard OAuth authentication directly with Facebook. You are always in control and can disconnect at any time.
+  </p>
+                </div>
+                <div className="py-2 space-y-2">
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">This will allow HeidelAI to:</h4>
+                    <ul className="text-sm text-gray-600 space-y-2">
+                      <li className="flex items-center gap-2">
+                        <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Access products in your Meta Catalog
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Update existing products in the catalog
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Add new products to the catalog
+                      </li>
+                    </ul>
+                  </div>
+                  <Button 
+                    className="w-full bg-[#4267B2] hover:bg-[#365899] text-white mt-4"
+                    onClick={() => {
+                      setShowDialog(false);
+                      handleFacebookCatalogLogin();
+                    }}
+                  >
+                    Continue with Facebook
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           )}
         </div>
       </div>
@@ -1018,11 +1070,13 @@ export const IntegrationsSettings = () => (
   <div className="space-y-4">
     <div className="flex items-start justify-between">
       <div className="flex items-center gap-3">
-        <div className="bg-[#96bf48] rounded-lg p-2">
-          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M15.337 23.979l7.216-1.561s-2.604-17.613-2.625-17.73c-.018-.116-.114-.192-.211-.192s-1.929-.136-1.929-.136-1.275-1.274-1.439-1.411c-.045-.037-.075-.057-.121-.074l-.914 21.104h.023zm-11.25-11.37l-.837 2.517s-1.346-.706-2.829-1.411c0 0 1.514-12.533 1.536-12.65.021-.116.097-.192.194-.192s2.201-.136 2.201-.136 .085-.079.15-.098l-.415 11.97zm1.787-12.124s1.929-.136 2.01-.136c.079 0 .132.039.158.097l.263 2.201-1.167.831s-1.138-1.083-1.203-1.167c-.063-.079-.08-.177-.044-.266.035-.089.247-1.329.247-1.329l-.264-.231zm1.293 4.324l1.495-1.079 1.371 4.152s-1.555 1.063-3.084 1.982l.218-5.055zm9.51 11.026c.069-.231-1.497-.673-1.497-.673l-.73-2.156-2.112 1.26s1.882.696 2.144.891c.231.15 2.126.909 2.195.678z"/>
-          </svg>
-        </div>
+    
+          <img
+          src='logos/shopify.svg'
+          alt="Shopify Logo"
+          className="w-10 h-10 text-white"
+          />
+      
         <div>
           <h3 className="text-lg font-semibold">Shopify</h3>
           <p className="text-sm text-gray-600">Connect to your Shopify store</p>
