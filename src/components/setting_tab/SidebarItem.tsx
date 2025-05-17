@@ -747,7 +747,8 @@ const handleFacebookCatalogLogin = () => {
     if (window.FB) {
       window.FB.login(
         function (response: FacebookLoginResponse) {
-          if (response.authResponse) {
+          if (response.authResponse && response.status === 'connected') {
+            // Only store connection data if login was successful
             const accessToken = response.authResponse.accessToken;
             localStorage.setItem(
               "facebook_catalog_connection",
@@ -759,7 +760,11 @@ const handleFacebookCatalogLogin = () => {
             );
             setIsConnected(true);
             toast.success("Facebook catalog connected successfully.");
+            window.location.hash = "#integrations";
           } else {
+            // If login was cancelled or failed, ensure we're disconnected
+            setIsConnected(false);
+            localStorage.removeItem("facebook_catalog_connection");
             toast.error("Facebook login was cancelled or failed.");
           }
           setIsLoading(false);
@@ -767,8 +772,6 @@ const handleFacebookCatalogLogin = () => {
         {
           config_id: FACEBOOK_CATALOG_CONFIG_ID,
           scope: "catalog_management",
-          response_type: 'code',
-          override_default_response_type: true
         }
       );
     } else {
