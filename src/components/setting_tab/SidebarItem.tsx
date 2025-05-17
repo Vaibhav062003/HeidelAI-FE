@@ -711,52 +711,64 @@ export const FacebookCatalogIntegration = () => {
     checkConnection();
   }, []);
 
-  const handleFacebookCatalogLogin = async () => {
-    setIsLoading(true);
-    const configId = "524055147308362";
+  // ...existing code...
 
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "facebook",
-        options: {
-          scopes: "catalog_management",
-          queryParams: {
-            config_id: configId,
-          },
-          redirectTo: window.location.origin, // redirect to homepage
-        },
-      });
+const FACEBOOK_CATALOG_CONFIG_ID = "524055147308362";
 
-      if (error) {
-        toast.error("Failed to initiate Facebook login.");
-        console.error("Login error:", error.message);
-        setIsLoading(false); // only reset loading if error happens before redirect
+const handleFacebookCatalogLogin = () => {
+  setIsLoading(true);
+
+  if (typeof window !== "undefined" && window.FB) {
+    window.FB.login(
+      function (response: FacebookLoginResponse) {
+        if (response.authResponse) {
+          // You may want to send the accessToken to your backend here if needed
+          const accessToken = response.authResponse.accessToken;
+
+          // Store connection in localStorage
+          localStorage.setItem(
+            "facebook_catalog_connection",
+            JSON.stringify({
+              accessToken,
+              connected: true,
+              time: Date.now(),
+            })
+          );
+          setIsConnected(true);
+          toast.success("Facebook catalog connected successfully.");
+        } else {
+          toast.error("Facebook login was cancelled or failed.");
+        }
+        setIsLoading(false);
+      },
+      {
+        config_id: FACEBOOK_CATALOG_CONFIG_ID,
+        scope: "catalog_management",
+        response_type: "token",
+        override_default_response_type: true,
       }
+    );
+  } else {
+    setIsLoading(false);
+    toast.error("Facebook SDK not loaded. Please try again later.");
+  }
+};
 
-      // ⚠️ No further code after here — user will be redirected!
-    } catch (err) {
-      toast.error("Unexpected error during login.");
-      console.error("Error during login:", err);
-      setIsLoading(false);
-    }
-  };
+const handleDisconnect = async () => {
+  setIsLoading(true);
+  try {
+    localStorage.removeItem("facebook_catalog_connection");
+    setIsConnected(false);
+    toast.success("Facebook catalog disconnected successfully.");
+  } catch (error) {
+    toast.error("Failed to disconnect Facebook catalog.");
+  } finally {
+    setIsLoading(false);
+    window.location.hash = "#integrations";
+  }
+};
 
-  const handleDisconnect = async () => {
-    setIsLoading(true);
-
-    try {
-      // await supabase.auth.signOut();
-      localStorage.removeItem("facebook_catalog_connection");
-      setIsConnected(false);
-      toast.success("Facebook catalog disconnected successfully.");
-    } catch (error) {
-      console.error("Error disconnecting Facebook catalog:", error);
-      toast.error("Failed to disconnect Facebook catalog.");
-    } finally {
-      setIsLoading(false);
-      window.location.hash = "#integrations";
-    }
-  };
+// ...existing code...
 
   return (
     <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
