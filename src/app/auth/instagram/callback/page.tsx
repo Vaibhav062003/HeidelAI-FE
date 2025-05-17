@@ -71,10 +71,8 @@ function InstagramCallbackContent() {
         // Store connection data in localStorage
         localStorage.setItem('instagram_connection', JSON.stringify({
           username: data.username,
-          profileImage: data.profile_picture || '/default-avatar.png',
-          token: data.access_token,
+          profileImage: data.profile_picture,
           userId: data.user_id,
-          businessInfo: data.business_info || {},
           connected: true
         }));
         
