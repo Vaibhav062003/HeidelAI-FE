@@ -537,55 +537,37 @@ const InstagramDialog = () => {
           </div>
         ) : connected && accountInfo ? (
           <div className="py-4 space-y-6">
-            <div className="flex items-center gap-4">
-              <img 
-                src={accountInfo.profileImage} 
-                alt={accountInfo.username}
-                className="h-16 w-16 rounded-full object-cover border-2 border-pink-200"
-              />
-              <div>
-                <p className="font-medium text-lg">{accountInfo.username}</p>
-                <div className="flex items-center gap-1 text-sm text-green-600">
-                  <span className="inline-block h-2 w-2 rounded-full bg-green-600"></span>
-                  <span>Connected</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <img 
+                  src={accountInfo.profileImage} 
+                  alt={accountInfo.username}
+                  className="h-16 w-16 rounded-full object-cover border-2 border-pink-200"
+                />
+                <div>
+                  <p className="font-medium text-lg">{accountInfo.username}</p>
+                  <div className="flex items-center gap-1 text-sm text-green-600">
+                    <span className="inline-block h-2 w-2 rounded-full bg-green-600"></span>
+                    <span>Connected</span>
+                  </div>
                 </div>
               </div>
+              
+              {/* View Profile button - Redesigned with gradient border */}
+              <Button 
+                variant="outline"
+                className="border-0 relative after:absolute after:inset-0 after:rounded-md after:border after:border-transparent after:bg-gradient-to-r after:from-purple-600 after:via-pink-500 after:to-orange-400 after:content-[''] after:-z-10 hover:text-purple-600 transition-colors"
+                onClick={() => setShowProfileView(true)}
+              >
+                <span className="flex items-center gap-1">
+                  View Profile
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              </Button>
             </div>
             
-            {/* View Profile button */}
-            <Button 
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white" 
-              onClick={() => setShowProfileView(true)}
-            >
-              View Instagram Profile
-            </Button>
-            
-            {/* {accountInfo.businessInfo && Object.keys(accountInfo.businessInfo).length > 0 && (
-              <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                <h4 className="text-sm font-medium">Account Details</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  {accountInfo.businessInfo.account_type && (
-                    <div className="space-y-1">
-                      <div className="text-gray-500">Account Type</div>
-                      <div className="font-medium">{accountInfo.businessInfo.account_type}</div>
-                    </div>
-                  )}
-                  {accountInfo.businessInfo.follower_count && (
-                    <div className="space-y-1">
-                      <div className="text-gray-500">Followers</div>
-                      <div className="font-medium">{accountInfo.businessInfo.follower_count.toLocaleString()}</div>
-                    </div>
-                  )}
-                  {accountInfo.businessInfo.media_count && (
-                    <div className="space-y-1">
-                      <div className="text-gray-500">Posts</div>
-                      <div className="font-medium">{accountInfo.businessInfo.media_count.toLocaleString()}</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-             */}
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Permissions granted:</h4>
                 <ul className="text-sm text-gray-600 space-y-1">
@@ -657,7 +639,7 @@ const InstagramDialog = () => {
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  <Instagram className="h-4 w-4" /> Connect Instagram
+                  <Instagram className="h-4 w-4" /> Login with Instagram
                 </span>
               )}
             </Button>
