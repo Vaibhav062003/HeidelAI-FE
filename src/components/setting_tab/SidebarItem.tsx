@@ -754,7 +754,7 @@ export const FacebookCatalogIntegration = () => {
 
 
 const FACEBOOK_CATALOG_CONFIG_ID = "524055147308362";
-const FACEBOOK_APP_ID = "509681741462833"; // Replace with your real App ID
+const FACEBOOK_APP_ID = "509681741462833"; 
 
 const handleFacebookCatalogLogin = () => {
   setIsLoading(true);
@@ -783,8 +783,6 @@ const handleFacebookCatalogLogin = () => {
         {
           config_id: FACEBOOK_CATALOG_CONFIG_ID,
           scope: "catalog_management",
-          response_type: "token",
-          override_default_response_type: true,
         }
       );
     } else {
