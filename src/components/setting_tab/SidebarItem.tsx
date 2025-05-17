@@ -711,7 +711,6 @@ export const FacebookCatalogIntegration = () => {
     checkConnection();
   }, []);
 
-  // ...existing code...
 
 const FACEBOOK_CATALOG_CONFIG_ID = "524055147308362";
 
@@ -767,8 +766,6 @@ const handleDisconnect = async () => {
     window.location.hash = "#integrations";
   }
 };
-
-// ...existing code...
 
   return (
     <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
