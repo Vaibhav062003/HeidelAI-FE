@@ -553,15 +553,15 @@ const InstagramDialog = () => {
                 </div>
               </div>
               
-              {/* View Profile button - Redesigned with gradient border */}
+              {/* View Profile button */}
               <Button 
                 variant="outline"
-                className="border-0 relative after:absolute after:inset-0 after:rounded-md after:border after:border-transparent after:bg-gradient-to-r after:from-purple-600 after:via-pink-500 after:to-orange-400 after:content-[''] after:-z-10 hover:text-purple-600 transition-colors"
+                className="border border-gray-300 hover:border-purple-500 hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition-all flex items-center gap-1 px-3 py-1.5 rounded-md shadow-sm"
                 onClick={() => setShowProfileView(true)}
               >
-                <span className="flex items-center gap-1">
-                  View Profile
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <span className="flex items-center gap-1.5">
+                  <span>View Profile</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </span>
