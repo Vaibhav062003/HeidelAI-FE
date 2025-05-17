@@ -478,8 +478,10 @@ const InstagramDialog = () => {
       setIsLoading(true);
       
       // Revoke the token
-      const user_id = localStorage.getItem('instagram_user_id');
-      if (user_id) {
+      const instagramConnection = localStorage.getItem('instagram_connection');
+      if (instagramConnection) {
+        const parsedData = JSON.parse(instagramConnection);
+        
         // Disconnect using the dedicated Instagram API
         await fetch('https://egenie-whatsapp.koyeb.app/instagram/disconnect', {
           method: 'POST',
@@ -487,7 +489,9 @@ const InstagramDialog = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ 
-            user_id: user_id,
+            token: parsedData.token,
+            user_id: parsedData.userId,
+            app_user_id: localStorage.getItem('user_id')
           }),
         });
         
@@ -499,9 +503,6 @@ const InstagramDialog = () => {
         setAccountInfo(null);
         
         toast.success('Instagram account disconnected successfully');
-      }
-      else {
-        toast.error('No Instagram account found to disconnect');
       }
     } catch (error) {
       console.error('Error disconnecting Instagram:', error);
@@ -537,59 +538,71 @@ const InstagramDialog = () => {
           </div>
         ) : connected && accountInfo ? (
           <div className="py-4 space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <img 
-                  src={accountInfo.profileImage} 
-                  alt={accountInfo.username}
-                  className="h-16 w-16 rounded-full object-cover border-2 border-pink-200"
-                />
-                <div>
-                  <p className="font-medium text-lg">{accountInfo.username}</p>
-                  <div className="flex items-center gap-1 text-sm text-green-600">
-                    <span className="inline-block h-2 w-2 rounded-full bg-green-600"></span>
-                    <span>Connected</span>
-                  </div>
+            <div className="flex items-center gap-4">
+              <img 
+                src={accountInfo.profileImage} 
+                alt={accountInfo.username}
+                className="h-16 w-16 rounded-full object-cover border-2 border-pink-200"
+              />
+              <div>
+                <p className="font-medium text-lg">{accountInfo.username}</p>
+                <div className="flex items-center gap-1 text-sm text-green-600">
+                  <span className="inline-block h-2 w-2 rounded-full bg-green-600"></span>
+                  <span>Connected</span>
                 </div>
               </div>
-              
-              {/* View Profile button - Redesigned with gradient border */}
-              <Button 
-                variant="outline"
-                className="border-0 relative after:absolute after:inset-0 after:rounded-md after:border after:border-transparent after:bg-gradient-to-r after:from-purple-600 after:via-pink-500 after:to-orange-400 after:content-[''] after:-z-10 hover:text-purple-600 transition-colors"
-                onClick={() => setShowProfileView(true)}
-              >
-                <span className="flex items-center gap-1">
-                  View Profile
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-              </Button>
             </div>
             
+            {/* View Profile button */}
+            <Button 
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white" 
+              onClick={() => setShowProfileView(true)}
+            >
+              View Instagram Profile
+            </Button>
+            
+            {/* {accountInfo.businessInfo && Object.keys(accountInfo.businessInfo).length > 0 && (
+              <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                <h4 className="text-sm font-medium">Account Details</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {accountInfo.businessInfo.account_type && (
+                    <div className="space-y-1">
+                      <div className="text-gray-500">Account Type</div>
+                      <div className="font-medium">{accountInfo.businessInfo.account_type}</div>
+                    </div>
+                  )}
+                  {accountInfo.businessInfo.follower_count && (
+                    <div className="space-y-1">
+                      <div className="text-gray-500">Followers</div>
+                      <div className="font-medium">{accountInfo.businessInfo.follower_count.toLocaleString()}</div>
+                    </div>
+                  )}
+                  {accountInfo.businessInfo.media_count && (
+                    <div className="space-y-1">
+                      <div className="text-gray-500">Posts</div>
+                      <div className="font-medium">{accountInfo.businessInfo.media_count.toLocaleString()}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+             */}
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Permissions granted:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li className="flex items-center gap-2">
+                  <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Access to your Instagram profile information.
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  </svg>
+                  Access to profile data
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Access to your Instagram media and content.
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Permission to manage your Instagram messages.
-                  </li>
-                </ul>
+                  </svg>
+                  Access to media
+                </li>
+              </ul>
             </div>
             
             <Button 
@@ -610,13 +623,13 @@ const InstagramDialog = () => {
         ) : (
           <div className="py-4 space-y-4">
             <p className="text-sm text-gray-600">
-              Connect your Instagram account to manage messages and access media directly from this dashboard.
+              Connect your Instagram account to manage content and access media directly from this dashboard.
             </p>
             
-            <div className="p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700 text-sm rounded">
-                <p>
-                Your Instagram credentials are never stored on our servers. We use secure, industry-standard OAuth authentication directly with Instagram. You are always in control and can disconnect at any time.
-                </p>
+            <div className="p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm rounded">
+              <p>
+                You can connect any Instagram account without needing a Facebook page.
+              </p>
             </div>
             
             <div className="space-y-2">
@@ -624,7 +637,7 @@ const InstagramDialog = () => {
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• Access your basic profile information</li>
                 <li>• View your media and content</li>
-                <li>• Access your Instagram inbox to read and manage messages</li>
+                <li>• Display your content in this dashboard</li>
               </ul>
             </div>
             
@@ -639,7 +652,7 @@ const InstagramDialog = () => {
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  <Instagram className="h-4 w-4" /> Login with Instagram
+                  <Instagram className="h-4 w-4" /> Connect Instagram
                 </span>
               )}
             </Button>
@@ -772,6 +785,8 @@ const handleFacebookCatalogLogin = () => {
         {
           config_id: FACEBOOK_CATALOG_CONFIG_ID,
           scope: "catalog_management",
+          response_type: "code",
+          override_default_response_type: true,
         }
       );
     } else {
