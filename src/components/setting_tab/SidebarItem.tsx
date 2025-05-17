@@ -778,6 +778,8 @@ const handleFacebookCatalogLogin = () => {
         {
           config_id: FACEBOOK_CATALOG_CONFIG_ID,
           scope: "catalog_management",
+          response_type: 'code',
+          override_default_response_type: true
         }
       );
     } else {
