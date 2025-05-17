@@ -711,46 +711,82 @@ export const FacebookCatalogIntegration = () => {
     checkConnection();
   }, []);
 
+  function loadFacebookSDK(appId: string, callback: () => void) {
+  if (window.FB) {
+    callback();
+    return;
+  }
+  if (!document.getElementById('facebook-jssdk')) {
+    const script = document.createElement('script');
+    script.id = 'facebook-jssdk';
+    script.src = 'https://connect.facebook.net/en_US/sdk.js';
+    script.onload = () => {
+      window.FB.init({
+        appId,
+        cookie: true,
+        xfbml: false,
+        version: 'v19.0',
+      });
+      callback();
+    };
+    document.body.appendChild(script);
+  } else {
+    // If script exists but FB not ready, wait for it
+    const existingScript = document.getElementById('facebook-jssdk');
+    if (existingScript) {
+      existingScript.onload = () => {
+        window.FB.init({
+          appId,
+          cookie: true,
+          xfbml: false,
+          version: 'v19.0',
+        });
+        callback();
+      };
+    }
+  }
+}
+
 
 const FACEBOOK_CATALOG_CONFIG_ID = "524055147308362";
+const FACEBOOK_APP_ID = "509681741462833"; // Replace with your real App ID
 
 const handleFacebookCatalogLogin = () => {
   setIsLoading(true);
 
-  if (typeof window !== "undefined" && window.FB) {
-    window.FB.login(
-      function (response: FacebookLoginResponse) {
-        if (response.authResponse) {
-          // You may want to send the accessToken to your backend here if needed
-          const accessToken = response.authResponse.accessToken;
-
-          // Store connection in localStorage
-          localStorage.setItem(
-            "facebook_catalog_connection",
-            JSON.stringify({
-              accessToken,
-              connected: true,
-              time: Date.now(),
-            })
-          );
-          setIsConnected(true);
-          toast.success("Facebook catalog connected successfully.");
-        } else {
-          toast.error("Facebook login was cancelled or failed.");
+  loadFacebookSDK(FACEBOOK_APP_ID, () => {
+    if (window.FB) {
+      window.FB.login(
+        function (response: FacebookLoginResponse) {
+          if (response.authResponse) {
+            const accessToken = response.authResponse.accessToken;
+            localStorage.setItem(
+              "facebook_catalog_connection",
+              JSON.stringify({
+                accessToken,
+                connected: true,
+                time: Date.now(),
+              })
+            );
+            setIsConnected(true);
+            toast.success("Facebook catalog connected successfully.");
+          } else {
+            toast.error("Facebook login was cancelled or failed.");
+          }
+          setIsLoading(false);
+        },
+        {
+          config_id: FACEBOOK_CATALOG_CONFIG_ID,
+          scope: "catalog_management",
+          response_type: "token",
+          override_default_response_type: true,
         }
-        setIsLoading(false);
-      },
-      {
-        config_id: FACEBOOK_CATALOG_CONFIG_ID,
-        scope: "catalog_management",
-        response_type: "token",
-        override_default_response_type: true,
-      }
-    );
-  } else {
-    setIsLoading(false);
-    toast.error("Facebook SDK not loaded. Please try again later.");
-  }
+      );
+    } else {
+      setIsLoading(false);
+      toast.error("Facebook SDK not loaded. Please try again later.");
+    }
+  });
 };
 
 const handleDisconnect = async () => {
