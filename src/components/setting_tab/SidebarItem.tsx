@@ -739,7 +739,7 @@ export const FacebookCatalogIntegration = () => {
           appId,
           cookie: true,
           xfbml: false,
-          version: 'v19.0',
+          version: 'v22.0',
         });
         callback();
       };
