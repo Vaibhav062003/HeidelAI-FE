@@ -693,20 +693,18 @@ export const FacebookCatalogIntegration = () => {
         // Check if previously marked as connected (persisted flag)
         const fbStored = localStorage.getItem("facebook_catalog_connection");
 
-        if (provider === "facebook" || fbStored) {
-          localStorage.setItem(
-            "facebook_catalog_connection",
-            JSON.stringify({ connected: true })
-          );
-          setIsConnected(true);
-          toast.success("Facebook catalog connected successfully.");
+        if (provider === "facebook" && fbStored) {
+          const parsed = JSON.parse(fbStored);
+          if (parsed.connected && parsed.accessToken) {
+            setIsConnected(true);
+          } else {
+            localStorage.removeItem("facebook_catalog_connection");
+            setIsConnected(false);
+          }
         } else {
           setIsConnected(false);
         }
-      } else {
-        setIsConnected(false);
       }
-
       setIsLoading(false);
     };
 
@@ -760,7 +758,7 @@ const handleFacebookCatalogLogin = () => {
     if (window.FB) {
       window.FB.login(
         function (response: FacebookLoginResponse) {
-          if (response.authResponse && response.status === 'connected') {
+          if (response.status === 'connected' && response.authResponse) {
             // Only store connection data if login was successful
             const accessToken = response.authResponse.accessToken;
             localStorage.setItem(
