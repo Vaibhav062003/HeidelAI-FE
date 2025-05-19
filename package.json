@@ -44,6 +44,7 @@
     "@react-spring/web": "^9.7.5",
     "@supabase/supabase-js": "^2.48.1",
     "@tabler/icons-react": "^3.26.0",
+    "@woocommerce/woocommerce-rest-api": "^1.0.1",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",

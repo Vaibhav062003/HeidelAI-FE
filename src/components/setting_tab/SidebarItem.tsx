@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import WooCommerceRestApi from "@woocommerce/woocommerce-rest-api";
 import {
   Dialog,
   DialogContent,
@@ -12,12 +13,8 @@ import { Switch } from '@/components/ui/switch';
 import AgentsSettings from './Agent_management';
 import TeamsConfiguration from './Team_configuration';
 import CannedResponses from './CannedResponsesContext';
-<<<<<<< HEAD
-import { Construction, Loader2 } from 'lucide-react';
 import AutomationPage from '../Automation/AutomationPage';
-=======
 import { Construction, Loader2, Instagram } from 'lucide-react';
->>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
 import { 
   Select, 
   SelectContent, 
@@ -69,6 +66,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
+// import { Shopify } from '@shopify/shopify-api';
 import { toast } from 'sonner';
 import { connectWebSocket } from '../../lib/websocket';
 
@@ -86,8 +84,6 @@ const loginWithFacebook = async () => {
   if (error) console.error("Login error:", error.message);
 };
 
-<<<<<<< HEAD
-=======
 
 const WooCommerceDialog = () => {
   const [credentials, setCredentials] = useState({
@@ -220,7 +216,6 @@ const WooCommerceDialog = () => {
 
 
 
->>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
 const ShopifyDialog = () => {
   const [credentials, setCredentials] = useState({
     shopName: '',
@@ -297,10 +292,7 @@ const InstagramDialog = () => {
       setIsLoading(true);
       
       try {
-<<<<<<< HEAD
-=======
         // Check localStorage for quick loading
->>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
         const instagramConnection = localStorage.getItem('instagram_connection');
         if (instagramConnection) {
           try {
@@ -318,12 +310,6 @@ const InstagramDialog = () => {
           }
         }
         
-<<<<<<< HEAD
-        try {
-          const storedInstagramId = localStorage.getItem('instagram_user_id');
-          const appUserId = localStorage.getItem('user_id');
-          
-=======
         // Check for callback in URL (after redirect from Instagram)
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
@@ -347,17 +333,13 @@ const InstagramDialog = () => {
           const appUserId = localStorage.getItem('user_id');
           
           // Construct URL based on available IDs
->>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
           let apiUrl = 'https://egenie-whatsapp.koyeb.app/instagram/status';
           if (storedInstagramId) {
             apiUrl += `?instagram_id=${storedInstagramId}`;
           } else if (appUserId) {
             apiUrl += `?app_user_id=${appUserId}`;
           } else {
-<<<<<<< HEAD
-=======
             // If no IDs available, we can't check for connections
->>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
             setIsLoading(false);
             return;
           }
@@ -368,10 +350,7 @@ const InstagramDialog = () => {
             const data = await response.json();
             
             if (data.instagram_connected) {
-<<<<<<< HEAD
-=======
               // Save in localStorage for future fast access
->>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
               localStorage.setItem('instagram_connection', JSON.stringify({
                 username: data.instagram_data.username,
                 profileImage: data.instagram_data.profile_picture || '/default-avatar.png',
@@ -381,10 +360,7 @@ const InstagramDialog = () => {
                 connected: true
               }));
               
-<<<<<<< HEAD
-=======
               // Store Instagram ID separately for future quick lookups
->>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
               localStorage.setItem('instagram_user_id', data.instagram_data.user_id);
               
               setConnected(true);
@@ -502,18 +478,12 @@ const InstagramDialog = () => {
     try {
       setIsLoading(true);
       
-<<<<<<< HEAD
-=======
       // Revoke the token
->>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
       const instagramConnection = localStorage.getItem('instagram_connection');
       if (instagramConnection) {
         const parsedData = JSON.parse(instagramConnection);
         
-<<<<<<< HEAD
-=======
         // Disconnect using the dedicated Instagram API
->>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
         await fetch('https://egenie-whatsapp.koyeb.app/instagram/disconnect', {
           method: 'POST',
           headers: {
@@ -526,6 +496,7 @@ const InstagramDialog = () => {
           }),
         });
         
+        // Clear the connection from local storage
         localStorage.removeItem('instagram_connection');
         localStorage.removeItem('instagram_user_id');
         localStorage.removeItem('instagram_auth_state');
@@ -914,14 +885,19 @@ const handleDisconnect = async () => {
 
 export default function DashboardPage() {
   const handleInsertResponse = (message: string) => {
+    // Handle the canned response insertion
     console.log('Inserting canned response:', message);
+    // Add your implementation here
   };
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+      
+      {/* Add component */}
       <AgentsSettings />
       <TeamsConfiguration />
       <CannedResponses onInsertResponse={handleInsertResponse} />
+      {/* You can add other dashboard components here */}
     </div>
   );
 }
@@ -997,6 +973,7 @@ export const LabelsSettings = () => {
   );
 };
 
+// Placeholder for the remaining components with similar structure
 export const CustomAttributesSettings = () => (
   <div className="space-y-6">
     <h2 className="text-2xl font-bold">Custom Attributes</h2>
@@ -1007,12 +984,13 @@ export const CustomAttributesSettings = () => (
 export const AutomationSettings = () => (
   <div className="space-y-6">
     <h2 className="text-2xl font-bold">Automation Rules</h2>
-    <div className="border rounded-lg p-4">
+    <p>Create and manage automated workflows</p>
+
+    <div className="mt-6">
       <AutomationPage />
     </div>
   </div>
 );
-
 
 export const MacrosSettings = () => (
   <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
@@ -1069,7 +1047,7 @@ export const IntegrationsSettings = () => (
       </div>
 
       
-      {/* WooCommerce Integration Card
+      {/* WooCommerce Integration Card */}
       <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
         <div className="space-y-4">
           <div className="flex items-start justify-between">
@@ -1087,7 +1065,7 @@ export const IntegrationsSettings = () => (
             <WooCommerceDialog />
           </div>
         </div>
-      </div> */}
+      </div>
 
 
       {/* Shopify Integration Card */}
