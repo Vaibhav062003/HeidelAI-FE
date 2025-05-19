@@ -12,8 +12,12 @@ import { Switch } from '@/components/ui/switch';
 import AgentsSettings from './Agent_management';
 import TeamsConfiguration from './Team_configuration';
 import CannedResponses from './CannedResponsesContext';
+<<<<<<< HEAD
 import { Construction, Loader2 } from 'lucide-react';
 import AutomationPage from '../Automation/AutomationPage';
+=======
+import { Construction, Loader2, Instagram } from 'lucide-react';
+>>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
 import { 
   Select, 
   SelectContent, 
@@ -23,9 +27,35 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { createClient } from '@supabase/supabase-js';
-
+import InstagramProfileView from './InstagramProfileView';
 import FacebookSDK, { FacebookLoginResponse } from '@/components/facebook/FacebookSDK';
 
+// Instagram OAuth configuration
+const INSTAGRAM_CLIENT_ID = '1197084761515978'; // Replace with your Instagram app ID
+const INSTAGRAM_REDIRECT_URI = `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/instagram/callback`;
+const INSTAGRAM_SCOPE = 'user_profile,user_media,instagram_business_basic, instagram_business_manage_messages'; // Basic permissions
+
+
+// Function to fetch catalog data from the backend
+interface CatalogProduct {
+  id: string;
+  name: string;
+  description?: string;
+  price?: string;
+  [key: string]: string | number | boolean | undefined; // For any additional fields
+}
+
+interface CatalogResponse {
+  data: CatalogProduct[];
+  paging?: {
+    cursors?: {
+      before?: string;
+      after?: string;
+    };
+    next?: string;
+    previous?: string;
+  };
+}
 
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -34,19 +64,21 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 import { 
   Table, 
   TableBody, 
-  TableCell, 
+  TableCell,  
   TableHead, 
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
 import { toast } from 'sonner';
+import { connectWebSocket } from '../../lib/websocket';
 
 const loginWithFacebook = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "facebook",
     options: {
+      scopes: "catalog_management",
       queryParams: {
-        config_id: '4039287289647486'
+        config_id: '4039287289647486',
       }
     }
   });
@@ -54,6 +86,141 @@ const loginWithFacebook = async () => {
   if (error) console.error("Login error:", error.message);
 };
 
+<<<<<<< HEAD
+=======
+
+const WooCommerceDialog = () => {
+  const [credentials, setCredentials] = useState({
+    siteUrl: '',
+    consumerKey: '',
+    consumerSecret: ''
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const handleConnect = async () => {
+    setIsLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    const resetForm = () => {
+      setCredentials({
+        siteUrl: '',
+        consumerKey: '',
+        consumerSecret: ''
+      });
+      setError(null);
+      setSuccess(false);
+    };
+
+    try {
+      const api = new WooCommerceRestApi({
+        url: credentials.siteUrl,
+        consumerKey: credentials.consumerKey,
+        consumerSecret: credentials.consumerSecret,
+        version: "wc/v3"
+      });
+      
+      // Test the connection by fetching products
+      const response = await api.get("products", { per_page: 3 });
+      console.log("Connection successful:", response.data);
+      setSuccess(true);
+      
+      // Store the credentials securely (you can implement your storage method here)
+      localStorage.setItem('woocommerce_credentials', JSON.stringify({
+        url: credentials.siteUrl,
+        key: credentials.consumerKey,
+      }));
+
+      setTimeout(() => {
+        resetForm();
+      }, 2000);
+      
+    } catch (error) {
+      console.error("WooCommerce connection error:", error);
+      setError(error instanceof Error ? error.message : 'Failed to connect to WooCommerce');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button className="bg-[#96588A] hover:bg-[#804674] text-white">
+          Connect
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Connect WooCommerce Store</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <label htmlFor="siteUrl">Site URL</label>
+            <Input
+              id="siteUrl"
+              placeholder="https://your-store.com"
+              value={credentials.siteUrl}
+              onChange={(e) => setCredentials(prev => ({
+                ...prev,
+                siteUrl: e.target.value
+              }))}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label htmlFor="consumerKey">Consumer Key</label>
+            <Input
+              id="consumerKey"
+              type="password"
+              placeholder="ck_xxxxxx"
+              value={credentials.consumerKey}
+              onChange={(e) => setCredentials(prev => ({
+                ...prev,
+                consumerKey: e.target.value
+              }))}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label htmlFor="consumerSecret">Consumer Secret</label>
+            <Input
+              id="consumerSecret"
+              type="password"
+              placeholder="cs_xxxxxx"
+              value={credentials.consumerSecret}
+              onChange={(e) => setCredentials(prev => ({
+                ...prev,
+                consumerSecret: e.target.value
+              }))}
+            />
+          </div>
+          {error && (
+            <div className="text-sm text-red-500 bg-red-50 p-2 rounded">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="text-sm text-green-500 bg-green-50 p-2 rounded">
+              Successfully connected to WooCommerce store!
+            </div>
+          )}
+          <Button 
+            onClick={handleConnect} 
+            className="bg-[#96588A] hover:bg-[#804674] text-white"
+            disabled={isLoading || !credentials.siteUrl || !credentials.consumerKey || !credentials.consumerSecret}
+          >
+            {isLoading ? "Connecting..." : "Authenticate"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+
+
+>>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
 const ShopifyDialog = () => {
   const [credentials, setCredentials] = useState({
     shopName: '',
@@ -122,6 +289,7 @@ const InstagramDialog = () => {
     };
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showProfileView, setShowProfileView] = useState(false);
   
   // Check if user has already connected Instagram
   useEffect(() => {
@@ -129,6 +297,10 @@ const InstagramDialog = () => {
       setIsLoading(true);
       
       try {
+<<<<<<< HEAD
+=======
+        // Check localStorage for quick loading
+>>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
         const instagramConnection = localStorage.getItem('instagram_connection');
         if (instagramConnection) {
           try {
@@ -146,16 +318,46 @@ const InstagramDialog = () => {
           }
         }
         
+<<<<<<< HEAD
         try {
           const storedInstagramId = localStorage.getItem('instagram_user_id');
           const appUserId = localStorage.getItem('user_id');
           
+=======
+        // Check for callback in URL (after redirect from Instagram)
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        
+        // If there's a code in the URL, exchange it for an access token
+        if (code && state === localStorage.getItem('instagram_auth_state')) {
+          await handleInstagramCallback(code);
+          // Clean up URL parameters after processing
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Otherwise, check with backend using dedicated Instagram collection API
+        try {
+          // Get ID from localStorage (if available from previous connection)
+          const storedInstagramId = localStorage.getItem('instagram_user_id');
+          
+          // Check for connections linked to this user
+          const appUserId = localStorage.getItem('user_id');
+          
+          // Construct URL based on available IDs
+>>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
           let apiUrl = 'https://egenie-whatsapp.koyeb.app/instagram/status';
           if (storedInstagramId) {
             apiUrl += `?instagram_id=${storedInstagramId}`;
           } else if (appUserId) {
             apiUrl += `?app_user_id=${appUserId}`;
           } else {
+<<<<<<< HEAD
+=======
+            // If no IDs available, we can't check for connections
+>>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
             setIsLoading(false);
             return;
           }
@@ -166,6 +368,10 @@ const InstagramDialog = () => {
             const data = await response.json();
             
             if (data.instagram_connected) {
+<<<<<<< HEAD
+=======
+              // Save in localStorage for future fast access
+>>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
               localStorage.setItem('instagram_connection', JSON.stringify({
                 username: data.instagram_data.username,
                 profileImage: data.instagram_data.profile_picture || '/default-avatar.png',
@@ -175,6 +381,10 @@ const InstagramDialog = () => {
                 connected: true
               }));
               
+<<<<<<< HEAD
+=======
+              // Store Instagram ID separately for future quick lookups
+>>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
               localStorage.setItem('instagram_user_id', data.instagram_data.user_id);
               
               setConnected(true);
@@ -196,68 +406,77 @@ const InstagramDialog = () => {
     checkConnection();
   }, []);
 
-// New login handler using Facebook SDK
-const handleInstagramLogin = () => {
-  setIsLoading(true);
-  
-  if (typeof window !== 'undefined' && window.FB) {
-    window.FB.login(function(response: FacebookLoginResponse) {
-      if (response.authResponse) {
-        console.log('Facebook login successful:', response);
-        const accessToken = response.authResponse.code;
-        
-        // Call your backend with the access token
-        handleTokenExchange(accessToken);
-      } else {
-        console.log('User cancelled login or did not fully authorize.');
-        setIsLoading(false);
-        toast.error('Instagram login was cancelled or failed');
-      }
-    }, {
-      config_id: '1617579675586830',        // your Business-Login config
-      response_type: 'code',               // get access token directly
-      override_default_response_type: true    });
-  } else {
-    console.error('Facebook SDK not loaded');
-    setIsLoading(false);
-    toast.error('Could not initialize Facebook login. Please try again later.');
-  }
-};
-  
-   // Function to handle token exchange with your backend
-   const handleTokenExchange = async (accessToken: string) => {
+  // Function to initiate Instagram OAuth login
+  const handleInstagramLogin = () => {
+    setIsLoading(true);
+    
     try {
+      // Generate a random state to prevent CSRF attacks
+      const state = Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('instagram_auth_state', state);
+      
+      // Build Instagram authorization URL
+      const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=https://www.heidelai.com/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages`;
+      
+      // Redirect to Instagram authorization page
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Error initiating Instagram login:', error);
+      setIsLoading(false);
+      toast.error('Could not initiate Instagram login. Please try again later.');
+    }
+  };
+  
+  // Handle Instagram OAuth callback (code exchange)
+  const handleInstagramCallback = async (code: string) => {
+    try {
+      // Exchange authorization code for access token via backend
       const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          access_token: accessToken,
-          redirect_uri: 'https://heidelai.com/auth/instagram/callback'
+          code: code,
+          redirect_uri: INSTAGRAM_REDIRECT_URI
         }),
       });
       
       if (!response.ok) {
         const errorText = await response.text();
         console.error('API error response:', errorText);
-        throw new Error(`Authentication failed: ${response.statusText}`);
+        
+        // Parse error as JSON to extract the detail message
+        let errorMessage = 'Failed to connect Instagram account';
+        try {
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.detail) {
+            errorMessage = errorJson.detail;
+          }
+        } catch {
+          // Otherwise, use the raw error text if it's not too long
+          if (errorText && errorText.length < 100) {
+            errorMessage = errorText;
+          }
+        }
+        
+        toast.error(`Instagram connection failed: ${errorMessage}`);
+        throw new Error(`Authentication failed: ${errorMessage}`);
       }
       
       const data = await response.json();
       console.log('API success response:', data);
       
-      // Store connection data in localStorage
+      // Store data in localStorage
       localStorage.setItem('instagram_connection', JSON.stringify({
         username: data.username,
         profileImage: data.profile_picture,
         token: data.access_token,
         userId: data.user_id,
-        businessInfo: data.business_info || {},
         connected: true
       }));
       
-      // Also store the Instagram ID separately for future quick lookups
+      // Store Instagram ID separately for future quick lookups
       localStorage.setItem('instagram_user_id', data.user_id);
       
       setConnected(true);
@@ -270,7 +489,10 @@ const handleInstagramLogin = () => {
       toast.success('Instagram connected successfully!');
     } catch (error) {
       console.error('Error exchanging token:', error);
-      toast.error('Failed to connect Instagram account');
+      
+      // Get error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Instagram connection failed: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
@@ -280,10 +502,18 @@ const handleInstagramLogin = () => {
     try {
       setIsLoading(true);
       
+<<<<<<< HEAD
+=======
+      // Revoke the token
+>>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
       const instagramConnection = localStorage.getItem('instagram_connection');
       if (instagramConnection) {
         const parsedData = JSON.parse(instagramConnection);
         
+<<<<<<< HEAD
+=======
+        // Disconnect using the dedicated Instagram API
+>>>>>>> 32cfc08004c71a8359d678dc760d0bddbbfcf393
         await fetch('https://egenie-whatsapp.koyeb.app/instagram/disconnect', {
           method: 'POST',
           headers: {
@@ -298,6 +528,7 @@ const handleInstagramLogin = () => {
         
         localStorage.removeItem('instagram_connection');
         localStorage.removeItem('instagram_user_id');
+        localStorage.removeItem('instagram_auth_state');
         setConnected(false);
         setAccountInfo(null);
         
@@ -313,15 +544,11 @@ const handleInstagramLogin = () => {
 
   return (
     <Dialog>
-
-      <FacebookSDK />
-
       <DialogTrigger asChild>
         <Button className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white">
           {isLoading ? (
             <span className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Checking...
+              <Loader2 className="h-4 w-4 animate-spin" /> Checking...
             </span>
           ) : connected ? (
             'Manage'
@@ -341,46 +568,36 @@ const handleInstagramLogin = () => {
           </div>
         ) : connected && accountInfo ? (
           <div className="py-4 space-y-6">
-            <div className="flex items-center gap-4">
-              <img 
-                src={accountInfo.profileImage} 
-                alt={accountInfo.username}
-                className="h-16 w-16 rounded-full object-cover border-2 border-pink-200"
-              />
-              <div>
-                <p className="font-medium text-lg">{accountInfo.username}</p>
-                <div className="flex items-center gap-1 text-sm text-green-600">
-                  <span className="inline-block h-2 w-2 rounded-full bg-green-600"></span>
-                  <span>Connected</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <img 
+                  src={accountInfo.profileImage} 
+                  alt={accountInfo.username}
+                  className="h-16 w-16 rounded-full object-cover border-2 border-pink-200"
+                />
+                <div>
+                  <p className="font-medium text-lg">{accountInfo.username}</p>
+                  <div className="flex items-center gap-1 text-sm text-green-600">
+                    <span className="inline-block h-2 w-2 rounded-full bg-green-600"></span>
+                    <span>Connected</span>
+                  </div>
                 </div>
               </div>
+              
+              {/* View Profile button */}
+              <Button 
+                variant="outline"
+                className="border border-gray-300 hover:border-purple-500 hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition-all flex items-center gap-1 px-3 py-1.5 rounded-md shadow-sm"
+                onClick={() => setShowProfileView(true)}
+              >
+                <span className="flex items-center gap-1.5">
+                  <span>View Profile</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              </Button>
             </div>
-            
-            {accountInfo.businessInfo && Object.keys(accountInfo.businessInfo).length > 0 && (
-              <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                <h4 className="text-sm font-medium">Business Account Details</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  {accountInfo.businessInfo.account_type && (
-                    <div className="space-y-1">
-                      <div className="text-gray-500">Account Type</div>
-                      <div className="font-medium">{accountInfo.businessInfo.account_type}</div>
-                    </div>
-                  )}
-                  {accountInfo.businessInfo.follower_count && (
-                    <div className="space-y-1">
-                      <div className="text-gray-500">Followers</div>
-                      <div className="font-medium">{accountInfo.businessInfo.follower_count.toLocaleString()}</div>
-                    </div>
-                  )}
-                  {accountInfo.businessInfo.media_count && (
-                    <div className="space-y-1">
-                      <div className="text-gray-500">Posts</div>
-                      <div className="font-medium">{accountInfo.businessInfo.media_count.toLocaleString()}</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
             
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Permissions granted:</h4>
@@ -389,25 +606,13 @@ const handleInstagramLogin = () => {
                   <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Access to messages
+                  Access to profile data
                 </li>
                 <li className="flex items-center gap-2">
                   <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Send messages
-                </li>
-                <li className="flex items-center gap-2">
-                  <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Access basic profile data
-                </li>
-                <li className="flex items-center gap-2">
-                  <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Business account management
+                  Access to media
                 </li>
               </ul>
             </div>
@@ -420,8 +625,7 @@ const handleInstagramLogin = () => {
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Processing...
+                  <Loader2 className="h-4 w-4 animate-spin" /> Processing...
                 </span>
               ) : (
                 'Disconnect Account'
@@ -431,44 +635,282 @@ const handleInstagramLogin = () => {
         ) : (
           <div className="py-4 space-y-4">
             <p className="text-sm text-gray-600">
-              Connect your Instagram business account to manage messages directly from this dashboard.
+              Connect your Instagram account to manage content and access media directly from this dashboard.
             </p>
+            
             <div className="p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm rounded">
               <p>
-              You need to have a Facebook page linked to your Instagram account to use this feature.
+                You can connect any Instagram account without needing a Facebook page.
               </p>
             </div>
             
             <div className="space-y-2">
               <h4 className="text-sm font-medium">This will allow HeidelAI to:</h4>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Access your messages</li>
-                <li>• Send messages on your behalf</li>
-                <li>• Access your business account information</li>
-                <li>• Manage your business messaging</li>
+                <li>• Access your basic profile information</li>
+                <li>• View your media and content</li>
+                <li>• Display your content in this dashboard</li>
               </ul>
             </div>
             
             <Button 
-              className="w-full mt-4 bg-[#1877F2] hover:bg-[#0c5bdb] text-white" 
+              className="w-full mt-4 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white" 
               onClick={handleInstagramLogin}
               disabled={isLoading}
             >
               {isLoading ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Processing...
-              </span>
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Processing...
+                </span>
               ) : (
-              'Login with Facebook'
+                <span className="flex items-center gap-2">
+                  <Instagram className="h-4 w-4" /> Connect Instagram
+                </span>
               )}
             </Button>
           </div>
         )}
       </DialogContent>
+      
+      {connected && localStorage.getItem('instagram_user_id') && (
+        <InstagramProfileView
+          instagramId={localStorage.getItem('instagram_user_id') || ''}
+          isOpen={showProfileView}
+          onClose={() => setShowProfileView(false)}
+        />
+      )}
     </Dialog>
   );
 };
+
+export const FacebookCatalogIntegration = () => {
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  // Add state for dialog
+  const [showDialog, setShowDialog] = useState(false);
+
+  // On mount: check if user is logged in and has a Facebook catalog connection
+  useEffect(() => {
+    const checkConnection = async () => {
+      setIsLoading(true);
+
+      // Check if user has an active Supabase session (OAuth token present)
+      const { data, error } = await supabase.auth.getSession();
+      const session = data?.session;
+
+      if (session) {
+        // Optional: Check if this session was from Facebook (provider_id = 'facebook')
+        const provider = session?.user?.app_metadata?.provider;
+
+        // Check if previously marked as connected (persisted flag)
+        const fbStored = localStorage.getItem("facebook_catalog_connection");
+
+        if (provider === "facebook" && fbStored) {
+          const parsed = JSON.parse(fbStored);
+          if (parsed.connected && parsed.accessToken) {
+            setIsConnected(true);
+          } else {
+            localStorage.removeItem("facebook_catalog_connection");
+            setIsConnected(false);
+          }
+        } else {
+          setIsConnected(false);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    checkConnection();
+  }, []);
+
+  function loadFacebookSDK(appId: string, callback: () => void) {
+  if (window.FB) {
+    callback();
+    return;
+  }
+  if (!document.getElementById('facebook-jssdk')) {
+    const script = document.createElement('script');
+    script.id = 'facebook-jssdk';
+    script.src = 'https://connect.facebook.net/en_US/sdk.js';
+    script.onload = () => {
+      window.FB.init({
+        appId,
+        cookie: true,
+        xfbml: false,
+        version: 'v22.0',
+      });
+      callback();
+    };
+    document.body.appendChild(script);
+  } else {
+    // If script exists but FB not ready, wait for it
+    const existingScript = document.getElementById('facebook-jssdk');
+    if (existingScript) {
+      existingScript.onload = () => {
+        window.FB.init({
+          appId,
+          cookie: true,
+          xfbml: false,
+          version: 'v22.0',
+        });
+        callback();
+      };
+    }
+  }
+}
+
+
+const FACEBOOK_CATALOG_CONFIG_ID = "524055147308362";
+const FACEBOOK_APP_ID = "509681741462833"; 
+
+const handleFacebookCatalogLogin = () => {
+  setIsLoading(true);
+
+  loadFacebookSDK(FACEBOOK_APP_ID, () => {
+    if (window.FB) {
+      window.FB.login(
+        function (response: FacebookLoginResponse) {
+          if (response.status === 'connected' && response.authResponse) {
+            // Only store connection data if login was successful
+            const accessToken = response.authResponse.accessToken;
+            localStorage.setItem(
+              "facebook_catalog_connection",
+              JSON.stringify({
+                accessToken,
+                connected: true,
+                time: Date.now(),
+              })
+            );
+            setIsConnected(true);
+            toast.success("Facebook catalog connected successfully.");
+            window.location.hash = "#integrations";
+          } else {
+            // If login was cancelled or failed, ensure we're disconnected
+            setIsConnected(false);
+            localStorage.removeItem("facebook_catalog_connection");
+            toast.error("Facebook login was cancelled or failed.");
+          }
+          setIsLoading(false);
+        },
+        {
+          config_id: FACEBOOK_CATALOG_CONFIG_ID,
+          scope: "catalog_management",
+          response_type: "code",
+          override_default_response_type: true,
+        }
+      );
+    } else {
+      setIsLoading(false);
+      toast.error("Facebook SDK not loaded. Please try again later.");
+    }
+  });
+};
+
+const handleDisconnect = async () => {
+  setIsLoading(true);
+  try {
+    localStorage.removeItem("facebook_catalog_connection");
+    setIsConnected(false);
+    toast.success("Facebook catalog disconnected successfully.");
+  } catch (error) {
+    toast.error("Failed to disconnect Facebook catalog.");
+  } finally {
+    setIsLoading(false);
+    window.location.hash = "#integrations";
+  }
+};
+
+  return (
+    <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+      <div className="space-y-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-[#4267B2] rounded-lg p-2">
+              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24h11.495v-9.294H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Facebook Catalog</h3>
+              <p className="text-sm text-gray-600">Connect your Facebook product catalog</p>
+            </div>
+          </div>
+          {isLoading ? (
+            <Button className="bg-gray-400 text-white" disabled>
+              Loading...
+            </Button>
+          ) : isConnected ? (
+            <Button
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={handleDisconnect}
+            >
+              Disconnect
+            </Button>
+          ) : (
+            <Dialog open={showDialog} onOpenChange={setShowDialog}>
+              <DialogTrigger asChild>
+                <Button className="bg-[#4267B2] hover:bg-[#365899] text-white">
+                  Connect
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] h-[55vh]">
+                <DialogHeader>
+                  <DialogTitle>Connect Facebook Catalog</DialogTitle>
+                </DialogHeader>
+                <div className="py-2 space-y-2">
+                    <p>
+  Connect your Facebook account to manage your product catalog directly from this dashboard.
+</p>
+                </div>
+                <div className="p-1 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm rounded">
+                        <p>
+    Your Facebook credentials are never stored on our servers. We use secure, industry-standard OAuth authentication directly with Facebook. You are always in control and can disconnect at any time.
+  </p>
+                </div>
+                <div className="py-2 space-y-2">
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">This will allow HeidelAI to:</h4>
+                    <ul className="text-sm text-gray-600 space-y-2">
+                      <li className="flex items-center gap-2">
+                        <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Access products in your Meta Catalog
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Update existing products in the catalog
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Add new products to the catalog
+                      </li>
+                    </ul>
+                  </div>
+                  <Button 
+                    className="w-full bg-[#4267B2] hover:bg-[#365899] text-white mt-4"
+                    onClick={() => {
+                      setShowDialog(false);
+                      handleFacebookCatalogLogin();
+                    }}
+                  >
+                    Continue with Facebook
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 
 export default function DashboardPage() {
   const handleInsertResponse = (message: string) => {
@@ -653,11 +1095,13 @@ export const IntegrationsSettings = () => (
   <div className="space-y-4">
     <div className="flex items-start justify-between">
       <div className="flex items-center gap-3">
-        <div className="bg-[#96bf48] rounded-lg p-2">
-          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M15.337 23.979l7.216-1.561s-2.604-17.613-2.625-17.73c-.018-.116-.114-.192-.211-.192s-1.929-.136-1.929-.136-1.275-1.274-1.439-1.411c-.045-.037-.075-.057-.121-.074l-.914 21.104h.023zm-11.25-11.37l-.837 2.517s-1.346-.706-2.829-1.411c0 0 1.514-12.533 1.536-12.65.021-.116.097-.192.194-.192s2.201-.136 2.201-.136 .085-.079.15-.098l-.415 11.97zm1.787-12.124s1.929-.136 2.01-.136c.079 0 .132.039.158.097l.263 2.201-1.167.831s-1.138-1.083-1.203-1.167c-.063-.079-.08-.177-.044-.266.035-.089.247-1.329.247-1.329l-.264-.231zm1.293 4.324l1.495-1.079 1.371 4.152s-1.555 1.063-3.084 1.982l.218-5.055zm9.51 11.026c.069-.231-1.497-.673-1.497-.673l-.73-2.156-2.112 1.26s1.882.696 2.144.891c.231.15 2.126.909 2.195.678z"/>
-          </svg>
-        </div>
+    
+          <img
+          src='logos/shopify.svg'
+          alt="Shopify Logo"
+          className="w-10 h-10 text-white"
+          />
+      
         <div>
           <h3 className="text-lg font-semibold">Shopify</h3>
           <p className="text-sm text-gray-600">Connect to your Shopify store</p>
@@ -687,6 +1131,63 @@ export const IntegrationsSettings = () => (
     </div>
   </div>
 </div>
+
+
+{/* Facebook Catalog Integration Card */}
+<FacebookCatalogIntegration />
+
+{/* WhatsAPP Integration Card */}
+  {/* WhatsApp Integration Card */}
+<div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+  <div className="space-y-4">
+    <div className="flex items-start justify-between">
+      <div className="flex items-center gap-3">
+        <div className="bg-[#25D366] rounded-lg p-2">
+          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20.52 3.48A11.94 11.94 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 6.01L0 24l6.15-1.58A11.94 11.94 0 0012 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.2-3.48-8.52zM12 22.05c-1.85 0-3.67-.5-5.26-1.45l-.38-.22-3.65.94.97-3.55-.25-.37A9.94 9.94 0 012.05 12c0-5.47 4.48-9.95 9.95-9.95 2.66 0 5.17 1.04 7.05 2.93a9.94 9.94 0 012.93 7.05c0 5.47-4.48 9.95-9.95 9.95zm5.6-7.88c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.2.31-.82 1.02-1.01 1.23-.18.2-.37.22-.68.07-.31-.16-1.3-.48-2.47-1.54-.91-.81-1.52-1.81-1.7-2.12-.18-.31-.02-.48.14-.63.14-.14.31-.37.47-.56.16-.18.2-.31.31-.52.1-.2.05-.38-.02-.54-.07-.16-.71-1.7-.97-2.33-.26-.63-.52-.54-.71-.55h-.6c-.2 0-.52.07-.79.38-.27.31-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.22 3.07.16.2 2.1 3.2 5.1 4.49.71.31 1.26.5 1.69.64.71.23 1.36.2 1.87.12.57-.08 1.85-.76 2.11-1.5.26-.74.26-1.38.18-1.5-.07-.12-.29-.2-.6-.36z" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold">Add WhatsApp Number</h3>
+          <p className="text-sm text-gray-600">Connect another WhatsApp number</p>
+        </div>
+      </div>
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button className="bg-[#25D366] hover:bg-[#1DA851] text-white">
+            Add Number
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add WhatsApp Number</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="phoneNumber">Phone Number</label>
+              <Input
+                id="phoneNumber"
+                placeholder="+1234567890"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="apiKey">API Key</label>
+              <Input
+                id="apiKey"
+                type="password"
+                placeholder="Enter your API key"
+              />
+            </div>
+            <Button className="bg-[#25D366] hover:bg-[#1DA851] text-white">
+              Connect
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  </div>
+</div>
+
 
       {/* More Integrations Coming Soon Card */}
         {/* <div className="border rounded-lg p-4 bg-gray-50">

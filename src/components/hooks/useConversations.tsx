@@ -4,71 +4,52 @@ import { conversationService } from '../services/api';
 import { syncContactFromConversation } from '../utils/contactSync'; // Add this import
 
 const WS_URL = 'wss://egenie-whatsapp.koyeb.app/ws2';
-const MAX_RETRIES = 5;
-const RETRY_DELAY = 3000;
+const IG_WS_URL = 'wss://egenie-whatsapp.koyeb.app/ws2/instagram';
 
 export function useConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [ws, setWs] = useState<WebSocket | null>(null);
-  const [retries, setRetries] = useState(0);
-  const [syncStatus, setSyncStatus] = useState<{[id: string]: 'pending' | 'synced' | 'failed'}>({});
+  const [whatsappWs, setWhatsappWs] = useState<WebSocket | null>(null);
+  const [instagramWs, setInstagramWs] = useState<WebSocket | null>(null);
+  const [retries, setRetries] = useState({ whatsapp: 0, instagram: 0 });
 
-  const handleNewConversation = async (conversation: Conversation) => {
-    try {
-      // Mark as pending sync
-      setSyncStatus(prev => ({...prev, [conversation.id]: 'pending'}));
-      
-      // Sync contact before updating state
-      await syncContactFromConversation(conversation);
-      
-      // Mark as synced
-      setSyncStatus(prev => ({...prev, [conversation.id]: 'synced'}));
-      
-      setConversations(prev => [conversation, ...prev]);
-    } catch (error) {
-      console.error('Contact sync failed:', error);
-      // Mark as failed
-      setSyncStatus(prev => ({...prev, [conversation.id]: 'failed'}));
-    }
-  };
-
-  const handleConversationUpdate = (updatedConv: Conversation) => {
-    setConversations(prev => 
-      prev.map(conv => 
-        conv.id === updatedConv.id ? updatedConv : conv
-      )
-    );
-  };
+  const maxRetries = 5; // Maximum number of retries before giving up
+  const retryDelay = 3000; // Delay in milliseconds between retries (3 seconds)
 
   useEffect(() => {
-    const fetchConversations = async () => {
+    const fetchAllConversations = async () => {
       try {
         setLoading(true);
-        const data = await conversationService.getAll();
         
-        // Initialize all conversations as pending sync
-        const initialSyncStatus: {[id: string]: 'pending' | 'synced' | 'failed'} = {};
-        data.forEach(conv => {
-          initialSyncStatus[conv.id] = 'pending';
-        });
-        setSyncStatus(initialSyncStatus);
+        // Get regular conversations (WhatsApp)
+        const regularData = await conversationService.getAll();
         
-        // Sync contacts for all existing conversations
-        await Promise.all(
-          data.map(async conv => {
-            try {
-              await syncContactFromConversation(conv);
-              setSyncStatus(prev => ({...prev, [conv.id]: 'synced'}));
-            } catch (error) {
-              console.error(`Sync failed for ${conv.id}:`, error);
-              setSyncStatus(prev => ({...prev, [conv.id]: 'failed'}));
-            }
-          })
+        // Get Instagram conversations if Instagram ID exists
+        const instagramId = localStorage.getItem('instagram_user_id');
+        console.log('Instagram ID:', instagramId);
+        let instagramData: Conversation[] = [];
+        
+        if (instagramId) {
+          try {
+            instagramData = await conversationService.getInstagramConversations(instagramId);
+            console.log(`Fetched ${instagramData.length} Instagram conversations`);
+          } catch (igError) {
+            console.error('Error fetching Instagram conversations:', igError);
+            // Continue with WhatsApp conversations even if Instagram fetch fails
+          }
+        }
+        
+        // Combine both types of conversations
+        // We can identify Instagram vs WhatsApp by the platform field
+        const allConversations = [...regularData, ...instagramData];
+        
+        // Remove duplicates based on conversation ID
+        const uniqueConversations = allConversations.filter((conversation, index, self) =>
+          index === self.findIndex((c) => c.id === conversation.id)
         );
         
-        setConversations(data);
+        setConversations(uniqueConversations);
       } catch (err) {
         setError(err as Error);
       } finally {
@@ -76,55 +57,122 @@ export function useConversations() {
       }
     };
 
-    const setupWebSocket = () => {
-      const wsConnection = new WebSocket(`${WS_URL}/client-${Date.now()}`);
+    // Function to handle WebSocket messages (for both WhatsApp and Instagram)
+    const handleWebSocketMessage = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
+      
+      if (data.type === 'new_conversation') {
+        setConversations(prev => {
+          // Check if this conversation already exists to avoid duplicates
+          const exists = prev.some(conv => conv.id === data.conversation.id);
+          if (exists) return prev;
+          return [...prev, data.conversation];
+        });
+      } else if (data.type === 'conversation_updated') {
+        setConversations(prev => 
+          prev.map(conv => 
+            conv.id === data.conversation.id ? data.conversation : conv
+          )
+        );
+      }
+    };
 
+    // Connect to WhatsApp WebSocket
+    const connectWhatsAppWebSocket = () => {
+      const clientId = `client-${Date.now()}`;
+      const wsConnection = new WebSocket(`${WS_URL}/${clientId}`);
+      
       wsConnection.onopen = () => {
+        console.log('WhatsApp WebSocket connected');
         setError(null);
-        setRetries(0);
+        setRetries(prev => ({ ...prev, whatsapp: 0 }));
       };
-
-      wsConnection.onmessage = async (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          switch (data.type) {
-            case 'new_conversation':
-              await handleNewConversation(data.conversation);
-              break;
-            case 'conversation_updated':
-              handleConversationUpdate(data.conversation);
-              break;
-          }
-        } catch (error) {
-          console.error('WebSocket message handling error:', error);
-        }
-      };
+      
+      wsConnection.onmessage = handleWebSocketMessage;
 
       wsConnection.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        if (retries < MAX_RETRIES) {
-          setTimeout(() => setRetries(prev => prev + 1), RETRY_DELAY);
+        console.error('WhatsApp WebSocket error:', error);
+        
+        // Retry mechanism
+        if (retries.whatsapp < maxRetries) {
+          setRetries(prev => ({ ...prev, whatsapp: prev.whatsapp + 1 }));
+          setTimeout(connectWhatsAppWebSocket, retryDelay);
         } else {
-          setError(new Error('WebSocket connection failed after retries'));
+          setError(new Error('WhatsApp WebSocket connection failed after multiple retries'));
         }
       };
 
       wsConnection.onclose = () => {
-        if (retries < MAX_RETRIES) {
-          setTimeout(() => setRetries(prev => prev + 1), RETRY_DELAY);
+        console.log('WhatsApp WebSocket closed');
+        if (retries.whatsapp < maxRetries) {
+          setRetries(prev => ({ ...prev, whatsapp: prev.whatsapp + 1 }));
+          setTimeout(connectWhatsAppWebSocket, retryDelay);
         }
       };
 
-      setWs(wsConnection);
+      setWhatsappWs(wsConnection);
     };
 
-    fetchConversations();
-    setupWebSocket();
+    // Connect to Instagram WebSocket if Instagram ID is available
+    const connectInstagramWebSocket = () => {
+      // Get Instagram ID from localStorage or context
+      const instagramId = localStorage.getItem('instagram_user_id');
+      
+      if (!instagramId) {
+        console.log('No Instagram ID found, skipping Instagram WebSocket connection');
+        return;
+      }
 
+      const clientId = `client-${Date.now()}-ig`;
+      const wsConnection = new WebSocket(`${IG_WS_URL}/${clientId}/${instagramId}`);
+      
+      wsConnection.onopen = () => {
+        console.log('Instagram WebSocket connected for ID:', instagramId);
+        setRetries(prev => ({ ...prev, instagram: 0 }));
+      };
+      
+      wsConnection.onmessage = handleWebSocketMessage;
+
+      wsConnection.onerror = (error) => {
+        console.error('Instagram WebSocket error:', error);
+        
+        // Retry mechanism
+        if (retries.instagram < maxRetries) {
+          setRetries(prev => ({ ...prev, instagram: prev.instagram + 1 }));
+          setTimeout(connectInstagramWebSocket, retryDelay);
+        } else {
+          console.error('Instagram WebSocket connection failed after multiple retries');
+        }
+      };
+
+      wsConnection.onclose = () => {
+        console.log('Instagram WebSocket closed');
+        if (retries.instagram < maxRetries) {
+          setRetries(prev => ({ ...prev, instagram: prev.instagram + 1 }));
+          setTimeout(connectInstagramWebSocket, retryDelay);
+        }
+      };
+
+      setInstagramWs(wsConnection);
+    };
+
+    // Connect to both WebSockets
+    fetchAllConversations();
+    connectWhatsAppWebSocket();
+    connectInstagramWebSocket();
+
+    // Cleanup function
     return () => {
-      ws?.close();
+      if (whatsappWs) {
+        console.log('Closing WhatsApp WebSocket');
+        whatsappWs.close();
+      }
+      if (instagramWs) {
+        console.log('Closing Instagram WebSocket');
+        instagramWs.close();
+      }
     };
-  }, [retries]);
+  }, [retries.whatsapp, retries.instagram]); // Retry effect depends on both retries
 
-  return { conversations, loading, error, syncStatus };
+  return { conversations, loading, error, /*syncStatus*/ };
 }

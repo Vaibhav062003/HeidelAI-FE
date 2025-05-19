@@ -824,6 +824,7 @@ const ChatView = ({
     if (!message.trim() || !selectedConversationId || isSending) return;
 
     let contentToSend = message.trim();
+    const isInstagram = selectedConversationId.startsWith('instagram_');
     const platform = selectedConversationId.split('_')[0]; 
     const sender_id = selectedConversationId.split('_')[1]; 
 
@@ -840,24 +841,52 @@ const ChatView = ({
 
     setIsSending(true);
     try {
-      const response = await fetch('https://egenie-whatsapp.koyeb.app/conversations/send_message', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          conversation_id: selectedConversationId,
-          content: contentToSend,
-          type: 'text',
-          sender_id: sender_id,
-          platform: platform,
-        }),
-      });
+      let response;
+      
+      if (isInstagram) {
+        // Use Instagram-specific endpoint
+        const instagramId = localStorage.getItem('instagram_user_id');
+        
+        if (!instagramId) {
+          console.error('No Instagram ID found for sending message');
+          throw new Error('No Instagram ID found');
+        }
+        
+        response = await fetch(`https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/send_message`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            conversation_id: selectedConversationId,
+            content: contentToSend,
+            type: 'text',
+            sender_id: sender_id
+          }),
+        });
+      } else {
+        // Use regular endpoint for non-Instagram conversations
+        response = await fetch('https://egenie-whatsapp.koyeb.app/conversations/send_message', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            conversation_id: selectedConversationId,
+            content: contentToSend,
+            type: 'text',
+            sender_id: sender_id,
+            platform: platform,
+          }),
+        });
+      }
 
       if (!response.ok) throw new Error('Failed to send message');
       setMessage('');
     } catch (error) {
+      console.error('Error sending message:', error);
       toast.error('Failed to send message');
     } finally {
       setIsSending(false);
@@ -878,20 +907,39 @@ const ChatView = ({
     
     setIsToggling(true);
     try {
-      const response = await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/toggle_ai`, {
+      // Check if this is an Instagram conversation
+      const isInstagram = selectedConversationId.startsWith('instagram_');
+      let url;
+      
+      if (isInstagram) {
+        const instagramId = localStorage.getItem('instagram_user_id');
+        
+        if (!instagramId) {
+          console.error('No Instagram ID found for toggling AI');
+          throw new Error('No Instagram ID found');
+        }
+        
+        // Use Instagram-specific endpoint
+        url = `https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}/toggle_ai`;
+      } else {
+        // Use regular endpoint for non-Instagram conversations
+        url = `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/toggle_ai`;
+      }
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ enabled: !isAIEnabled }),
       });
-  
+
       if (!response.ok) throw new Error('Failed to toggle AI');
       
       setIsAIEnabled(!isAIEnabled);
       toast.success(`AI ${!isAIEnabled ? 'enabled' : 'disabled'} for this conversation`);
     } catch (error) {
-      console.error('Failed to toggle AI status',error);
+      console.error('Failed to toggle AI status', error);
       toast.error('Failed to toggle AI status');
     } finally {
       setIsToggling(false);
@@ -938,9 +986,26 @@ const ChatView = ({
 
     const setUnreadCount = async () => {
       try {
-        await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/read`, {
+        // Check if this is an Instagram conversation
+        const isInstagram = selectedConversationId.startsWith('instagram_');
+        let url;
+        
+        if (isInstagram) {
+          const instagramId = localStorage.getItem('instagram_user_id');
+          
+          if (!instagramId) {
+            console.error('No Instagram ID found for setting unread count');
+            return;
+          }
+          
+          url = `https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}/read`;
+        } else {
+          url = `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/read`;
+        }
+        
+        await fetch(url, {
           method: "GET",
-          credentials: "include",  // Allows cookies/auth headers if needed
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
@@ -948,7 +1013,7 @@ const ChatView = ({
       } catch (error) {
         console.error("Error setting unread count:", error);
       }
-    }
+    };
     
 
     
@@ -956,20 +1021,48 @@ const ChatView = ({
     const fetchConversation = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}`, {
-          method: "GET",
-          credentials: "include",  // Allows cookies/auth headers if needed
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        
+        // Check if this is an Instagram conversation
+        const isInstagram = selectedConversationId.startsWith('instagram_');
+        let response;
+        
+        if (isInstagram) {
+          const instagramId = localStorage.getItem('instagram_user_id');
+          
+          if (!instagramId) {
+            console.error('No Instagram ID found for fetching conversation');
+            throw new Error('No Instagram ID found');
+          }
+          
+          response = await fetch(
+            `https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}`, 
+            {
+              method: "GET",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        } else {
+          response = await fetch(
+            `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}`, 
+            {
+              method: "GET",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        }
+        
         const data = await response.json();
         setConversation(data);
         console.log("conversation data", data);
       } catch (error) {
         console.error("Error fetching conversation:", error);
-      }
-      finally {
+      } finally {
         setLoading(false);
       }
     };
@@ -977,59 +1070,145 @@ const ChatView = ({
     const fetchAIStatus = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/ai`, {
-          method: "GET",
-          credentials: "include",  // Allows cookies/auth headers if needed
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        
+        // Check if this is an Instagram conversation
+        const isInstagram = selectedConversationId.startsWith('instagram_');
+        let response;
+        
+        if (isInstagram) {
+          const instagramId = localStorage.getItem('instagram_user_id');
+          
+          if (!instagramId) {
+            console.error('No Instagram ID found for fetching AI status');
+            throw new Error('No Instagram ID found');
+          }
+          
+          response = await fetch(
+            `https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}/ai`, 
+            {
+              method: "GET",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        } else {
+          response = await fetch(
+            `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/ai`, 
+            {
+              method: "GET",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        }
+        
         const data = await response.json();
         setIsAIEnabled(data);
         console.log("AI data", data);
       } catch (error) {
         console.error("Error fetching AI status:", error);
-      }
-      finally {
+      } finally {
         setLoading(false);
       }
-    }
+    };
     
 
+    // In your fetchMessages function, modify it to check for Instagram-specific IDs
     const fetchMessages = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/messages`, {
-          method: "GET",
-          credentials: "include",  // Allows cookies/auth headers if needed
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        
+        // Check if this is an Instagram conversation by examining the conversation ID
+        const isInstagram = selectedConversationId.startsWith('instagram_');
+        let response;
+        
+        if (isInstagram) {
+          // Extract the Instagram ID from the conversationId or use it from localStorage
+          const instagramId = localStorage.getItem('instagram_user_id');
+          
+          if (!instagramId) {
+            console.error('No Instagram ID found for fetching messages');
+            throw new Error('No Instagram ID found');
+          }
+          
+          // Use the Instagram-specific endpoint
+          response = await fetch(
+            `https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}/messages`, 
+            {
+              method: "GET",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        } else {
+          // Use the regular endpoint for non-Instagram conversations
+          response = await fetch(
+            `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/messages`, 
+            {
+              method: "GET",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        }
+        
         const data = await response.json();
         setMessages(data);
         console.log("messages data", data);
       } catch (error) {
         console.error('Error fetching messages:', error);
+        toast.error('Failed to load messages');
       } finally {
         setLoading(false);
       }
     };
 
-    const ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/client-${Date.now()}`);
+    // Check if this is an Instagram conversation
+    const isInstagram = selectedConversationId.startsWith('instagram_');
+    let ws;
+    
+    if (isInstagram) {
+      const instagramId = localStorage.getItem('instagram_user_id');
+      const clientId = `client-${Date.now()}-ig`;
+      
+      if (instagramId) {
+        ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/instagram/${clientId}/${instagramId}`);
+      } else {
+        // Fallback to regular WebSocket if no Instagram ID is available
+        ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/client-${Date.now()}`);
+      }
+    } else {
+      // Regular WebSocket for non-Instagram conversations
+      ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/client-${Date.now()}`);
+    }
     
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
         setMessages(prev => [...prev, data.message]);
       }
+      else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
+        // Remove the deleted message from the messages array
+        setMessages(prev => 
+          prev.filter(msg => msg.id !== data.message_id)
+        );
+        console.log(`Message with ID ${data.message_id} was deleted`);
+      }
     };
-
+    
     fetchConversation();
     setUnreadCount();
     fetchAIStatus();
     fetchMessages();
-
+    
     return () => ws.close();
   }, [selectedConversationId]);
 

@@ -81,6 +81,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({ onClose }) => {
     postId?: string;
     keywords?: string[];
     reply?: string;
+    automation_name?: string
   }>({});
   
 

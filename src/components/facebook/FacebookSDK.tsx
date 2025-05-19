@@ -2,8 +2,6 @@
 
 import { useEffect } from 'react';
 
-
-
 interface FacebookSDKInterface {
     init(options: {
       appId: string;
@@ -20,12 +18,14 @@ interface FacebookSDKInterface {
         config_id?: string;
         response_type?: string;
         override_default_response_type?: boolean;
+        scope?: string; // Add this line
       }
     ): void;
   }
 
 export interface FacebookLoginResponse {
   authResponse?: {
+    accessToken: string; // Add this line
     code: string;
     expiresIn: number;
     signedRequest?: string;
