@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, User } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -17,7 +17,7 @@ const CompanyInfo = () => {
   const [referralSource, setReferralSource] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   const router = useRouter();
 
@@ -177,7 +177,7 @@ const CompanyInfo = () => {
         referral_source: referralSource,
         completed_at: new Date().toISOString()
       });
-
+    
       // Navigate immediately after insertion
       if (!error) {
         router.replace("/dashboard");
@@ -185,12 +185,17 @@ const CompanyInfo = () => {
         console.error("Submission error:", error);
         setErrorMessage(error.message || "Failed to save data. Please try again.");
       }
-    } catch (error: any) {
-      console.error("Submission error:", error);
-      setErrorMessage(error.message || "Failed to save data. Please try again.");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Submission error:", error);
+        setErrorMessage(error.message || "Failed to save data. Please try again.");
+      } else {
+        console.error("Unknown error:", error);
+        setErrorMessage("An unknown error occurred. Please try again.");
+      }
     } finally {
       setSubmitting(false);
-    }
+    }    
   };
 
   const renderShopSystemContent = () => {

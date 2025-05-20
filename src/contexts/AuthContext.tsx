@@ -16,6 +16,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  inviteTeamMembers: (emails: string[]) => Promise<{ success: boolean; error?: string }>;
 };
 
 const supabase = createClient(
@@ -262,6 +263,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setCompanyDetails(null);
   }, []);
 
+  const inviteTeamMembers = useCallback(
+    async (emails: string[]): Promise<{ success: boolean; error?: string }> => {
+      try {
+        if (!userDetails?.company_id) {
+          throw new Error('Company not found');
+        }
+  
+        const invites = emails.map(email => ({
+          email,
+          company_id: userDetails.company_id,
+          token: crypto.randomUUID(),
+          expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24), // 24 hours from now
+        }));
+  
+        const { error } = await supabase.from('invites').insert(invites);
+        if (error) throw error;
+  
+        return { success: true };
+      } catch (error) {
+        console.error('Invite error:', error);
+        return {
+          success: false,
+          error: error instanceof AuthError ? error.message : 'Failed to send invites',
+        };
+      }
+    },
+    [userDetails]
+  );
+
   const value = {
     session,
     user,
@@ -273,6 +303,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signIn,
     signOut,
     refreshSession,
+    inviteTeamMembers,
   };
 
   return (

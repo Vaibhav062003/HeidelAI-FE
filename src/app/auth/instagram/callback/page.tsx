@@ -12,29 +12,19 @@ function InstagramCallbackContent() {
   const [message, setMessage] = useState("Processing Instagram authorization...");
 
   useEffect(() => {
-    // Process the Instagram callback as soon as the component mounts
+    if (!searchParams) return; // early return if searchParams is null
+  
     const code = searchParams.get('code');
-    
+  
     if (!code) {
       setStatus('error');
       setMessage("Missing required parameters from Instagram.");
       toast.error("Instagram connection failed: Missing parameters");
       return;
     }
-
-    // // Validate state parameter to prevent CSRF
-    // const storedState = localStorage.getItem('instagram_auth_state');
-    // if (state !== storedState) {
-    //   setStatus('error');
-    //   setMessage("Invalid state parameter. Authentication attempt may have been compromised.");
-    //   toast.error("Instagram connection failed: Security validation failed");
-    //   return;
-    // }
-
-    // Exchange the code for an access token
+  
     const exchangeCodeForToken = async () => {
       try {
-        // Call your backend endpoint to exchange the code
         const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
           method: 'POST',
           headers: {
@@ -45,12 +35,11 @@ function InstagramCallbackContent() {
             redirect_uri: `${window.location.origin}/auth/instagram/callback`,
           }),
         });
-
+  
         if (!response.ok) {
           const errorText = await response.text();
           console.error('API error response:', errorText);
-          
-          // Parse error message if possible
+  
           let errorMessage = 'Failed to connect Instagram account';
           try {
             const errorJson = JSON.parse(errorText);
@@ -62,51 +51,44 @@ function InstagramCallbackContent() {
               errorMessage = errorText;
             }
           }
-          
+  
           throw new Error(errorMessage);
         }
-
+  
         const data = await response.json();
-        
-        // Store connection data in localStorage
+  
         localStorage.setItem('instagram_connection', JSON.stringify({
           username: data.username,
           profileImage: data.profile_picture,
           userId: data.user_id,
-          connected: true
+          connected: true,
         }));
-        
-        // Store Instagram ID separately for future quick lookups
+  
         localStorage.setItem('instagram_user_id', data.user_id);
-        
+  
         setStatus('success');
         setMessage("Instagram connected successfully!");
         toast.success("Instagram account connected successfully");
-        
-        // Redirect back to the settings page after a short delay
+  
         setTimeout(() => {
           router.push('/dashboard#integrations');
         }, 2000);
-        
       } catch (error) {
         console.error('Error exchanging Instagram code:', error);
         setStatus('error');
         setMessage(error instanceof Error ? error.message : 'Unknown error occurred');
         toast.error(`Instagram connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        
-        // Redirect to the settings page after a longer delay
+  
         setTimeout(() => {
           router.push('/dashboard#integrations');
         }, 3000);
       }
     };
-
+  
     exchangeCodeForToken();
-    
-    // Clean up state parameter after use
     localStorage.removeItem('instagram_auth_state');
-    
   }, [searchParams, router]);
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

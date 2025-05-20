@@ -3,6 +3,12 @@ import FlowBuilder from "./FlowBuilder";
 import { useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
+type Automation = {
+  id: string;
+  automation_name: string | null;
+  created_at: string;
+};
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -13,7 +19,7 @@ const AutomationPage = () => {
   const [showFlowBuilder, setShowFlowBuilder] = useState(false);
   const handleNewAutomation = () => setShowFlowBuilder(true);
   const handleCloseFlowBuilder = () => setShowFlowBuilder(false);
-  const [automations, setAutomations] = useState<any[]>([]);
+  const [automations, setAutomations] = useState<Automation[]>([]);
 
   useEffect(() => {
     const fetchAutomations = async () => {

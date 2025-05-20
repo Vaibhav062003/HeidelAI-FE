@@ -168,7 +168,7 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
 
         <p className="text-gray-600 mb-6 text-sm px-6">
           Canned Responses are pre-written reply templates that help you quickly
-          respond to conversations. Use the '/' character followed by the
+          respond to conversations. Use the &#39;/&#39; character followed by the
           shortcode to insert a response.
         </p>
 

@@ -164,7 +164,7 @@ export default function LoginPage() {
           <div className="bg-gradient-to-r from-transparent via-neutral-700 to-transparent my-8 h-[1px] w-full" />
 
           <div className="text-center text-sm text-neutral-400">
-            <p>Don't have an account? Contact your administrator</p>
+          <p>Don&apos;t have an account? Contact your administrator</p>
           </div>
         </div>
       </motion.section>

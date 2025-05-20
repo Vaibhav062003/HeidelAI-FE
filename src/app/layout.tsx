@@ -1,18 +1,13 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { AuthProvider } from '@/contexts/AuthContext';
-import React from 'react';
-import { Inter } from 'next/font/google';
+import { Inter } from 'next/font/google'
+import ClientLayout from './ClientLayout'
 
 const inter = Inter({ 
   subsets: ['latin'],
-  variable: '--font-inter' 
+  variable: '--font-inter',
+  display: 'swap' // Add for better font loading
 })
-
-import dotenv from 'dotenv';
-dotenv.config();
-
-
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://heidelai.com'),
@@ -24,12 +19,12 @@ export const metadata: Metadata = {
   keywords: [
     'AI customer engagement tools', 
     'real-time business analytics', 
-    'AI chatbots for businesses', 
-    'ads optimization platform', 
-    'influencer marketing analytics', 
-    'WhatsApp chatbots', 
-    'Telegram chatbots', 
-    'conversation analytics tools', 
+    'AI chatbots for businesses',
+    'ads optimization platform',
+    'influencer marketing analytics',
+    'WhatsApp chatbots',
+    'Telegram chatbots',
+    'conversation analytics tools',
     'business growth with AI insights'
   ],
   authors: [{ name: 'HeidelAI' }],
@@ -47,6 +42,12 @@ export const metadata: Metadata = {
     title: 'HeidelAI - AI-Powered Customer Engagement & Analytics Platform',
     description: 'Transform your business with HeidelAI\'s AI-powered tools for customer engagement, real-time analytics, and smart chatbots.',
     images: ['/heidelai_mockup.png']
+  },
+  // Add viewport for better mobile responsiveness
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
   }
 }
 
@@ -56,11 +57,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className={`bg-black text-white font-sans ${inter.className}`}>
-        <AuthProvider>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <body className={`bg-black text-white ${inter.className}`}>
+        <ClientLayout>
           {children}
-        </AuthProvider>
+        </ClientLayout>
       </body>
     </html>
   )

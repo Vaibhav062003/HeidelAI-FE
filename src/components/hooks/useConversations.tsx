@@ -13,7 +13,7 @@ export function useConversations() {
   const [whatsappWs, setWhatsappWs] = useState<WebSocket | null>(null);
   const [instagramWs, setInstagramWs] = useState<WebSocket | null>(null);
   const [retries, setRetries] = useState({ whatsapp: 0, instagram: 0 });
-
+  const [syncStatus, setSyncStatus] = useState<Record<string, 'pending' | 'synced' | 'failed' | undefined>>({});
   const maxRetries = 5; // Maximum number of retries before giving up
   const retryDelay = 3000; // Delay in milliseconds between retries (3 seconds)
 
@@ -174,5 +174,5 @@ export function useConversations() {
     };
   }, [retries.whatsapp, retries.instagram]); // Retry effect depends on both retries
 
-  return { conversations, loading, error, /*syncStatus*/ };
+  return { conversations, loading, error, syncStatus };
 }

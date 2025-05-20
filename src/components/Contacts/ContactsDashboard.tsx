@@ -318,7 +318,7 @@ const ContactsDashboard = () => {
           <ContactListHeader
             searchValue={searchQuery}
             onSearch={setSearchQuery}
-            onAddContact={() => setSelectedContact({} as any)}
+            onAddContact={() => setSelectedContact({} as Contact)}
             onImportCSV={handleFileUpload}
             onMessageSend={() => {}} // Add your message sending logic here
           />
