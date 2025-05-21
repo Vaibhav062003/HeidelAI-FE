@@ -4,22 +4,20 @@ import React, { useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
-import { Toaster, toast } from 'sonner';
-import {
-  IconBrandFacebook,
-} from "@tabler/icons-react";
-import { Loader2 } from 'lucide-react';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
+import { Toaster, toast } from "sonner";
+import { IconBrandFacebook } from "@tabler/icons-react";
+import { Loader2 } from "lucide-react";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false); // Toggle between login and signup
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -32,8 +30,6 @@ export default function LoginPage() {
     fetchUser();
   }, []);
 
-
-
   // Handle email/password login or signup
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,25 +40,31 @@ export default function LoginPage() {
         if (error) {
           toast.error(error.message);
         } else if (data.user) {
-          toast.success('Sign-up successful! Please check your email to confirm your account.');
+          toast.success(
+            "Sign-up successful! Please check your email to confirm your account."
+          );
           setIsSignUp(false); // Switch back to login after successful signup
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
         if (error) {
-          toast.error('Invalid email or password');
+          toast.error("Invalid email or password");
         } else {
-          toast.success('Login successful! Redirecting...');
+          toast.success("Login successful! Redirecting...");
           // console.log("user_detail",user);
-          const { data: { user } } = await supabase.auth.getUser()
-          console.log("user data",user);
-          router.push('/dashboard'); // Redirect to dashboard
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          console.log("user data", user);
+          router.push("/dashboard"); // Redirect to dashboard
         }
-        
       }
     } catch (error) {
-      toast.error('An unexpected error occurred');
-      console.error('Error during authentication:', error);
+      toast.error("An unexpected error occurred");
+      console.error("Error during authentication:", error);
     }
   };
 
@@ -104,12 +106,15 @@ export default function LoginPage() {
           >
             {isSignUp ? "Sign Up" : "Log in"} &rarr;
             <BottomGradient />
-            </button>
-            <div className="flex items-center my-8">
+          </button>
+          <div className="flex items-center my-8">
             <div className="flex-grow bg-neutral-800  h-[1px]" />
-            <span className="text-neutral-300 text-sm text-center mx-4">or</span>
+            <span className="text-neutral-300 text-sm text-center mx-4"></span>
+            <p className="whitespace-nowrap -ml-8">
+            Don't have an account? Contact your administrator
+            </p>
             <div className="flex-grow bg-neutral-800 h-[1px]" />
-            </div>
+          </div>
         </form>
 
         {/* <div className="bg-gradient-to-r from-transparent via-neutral-700 to-transparent my-8 h-[1px] w-full" />
