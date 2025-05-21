@@ -546,7 +546,7 @@ const InstagramDialog = () => {
                   className="h-16 w-16 rounded-full object-cover border-2 border-pink-200"
                 />
                 <div>
-                  <p className="font-medium text-lg">{accountInfo.username}</p>
+                  <p className="font-medium text-black text-lg">{accountInfo.username}</p>
                   <div className="flex items-center gap-1 text-sm text-green-600">
                     <span className="inline-block h-2 w-2 rounded-full bg-green-600"></span>
                     <span>Connected</span>
