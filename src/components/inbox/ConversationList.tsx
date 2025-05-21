@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,7 +7,6 @@ import ConversationPreview from "./ConversationPreview";
 import { useConversations } from '../hooks/useConversations';
 import { Conversation } from '@/components/types/conversation';
 import { FilterMenu, FilterOptions } from './FilterMenu';
-import { syncContactFromConversation } from '../utils/contactSync';
 
 interface ConversationListProps {
   selectedConversationId?: string;
@@ -42,7 +41,7 @@ const ConversationList = ({
   selectedConversationId,
   onConversationSelect
 }: ConversationListProps) => {
-  const { conversations, loading, error, syncStatus } = useConversations();
+  const { conversations, loading, error } = useConversations();
   const [activeTab, setActiveTab] = useState<TabValue>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({
@@ -52,26 +51,6 @@ const ConversationList = ({
     unreadOnly: false,
     hasQuery: false,
   });
-
-  useEffect(() => {
-    const syncContacts = async () => {
-      try {
-        await Promise.all(
-          conversations.map(conv => 
-            syncContactFromConversation(conv).catch(error => 
-              console.error(`Contact sync failed for ${conv.id}:`, error)
-            )
-          )
-        );
-      } catch (error) {
-        console.error('Global contact sync error:', error);
-      }
-    };
-
-    if (conversations.length > 0) {
-      syncContacts();
-    }
-  }, [conversations]);
 
 
   const searchResults: SearchResult[] = conversations
@@ -124,19 +103,7 @@ const ConversationList = ({
           return true;
       }
     });
-  const handleConversationSelect = (id: string) => {
-      if (onConversationSelect) {
-        onConversationSelect(id);
-        // Sync contact when conversation is selected
-        const selectedConv = conversations.find(c => c.id === id);
-        if (selectedConv) {
-          syncContactFromConversation(selectedConv).catch(error => 
-            console.error('Contact sync failed:', error)
-          );
-        }
-      }
-    };
-  
+
   if (loading) {
     return (
       <>
@@ -173,7 +140,7 @@ const ConversationList = ({
       <div className="p-4 border-b border-gray-200">
         <div className="relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-          <Input placeholder="Search " className="pl-9 pr-4" />
+          <Input placeholder="Search conversations" className="pl-9 pr-4" />
         </div>
         <Tabs defaultValue="all" className="mt-4">
           <TabsList className="grid w-full grid-cols-3">
@@ -262,10 +229,10 @@ const ConversationList = ({
     <div className="w-[290px] max-h-screen bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
           <div className="relative">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400 " />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             <Input 
               placeholder="Search conversations" 
-              className="pl-9 pr-4 text-black"
+              className="pl-9 pr-4"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -321,7 +288,7 @@ const ConversationList = ({
             new Date(b.conversation.timestamp).getTime() - 
             new Date(a.conversation.timestamp).getTime()
           )
-          .map(({ conversation }) => (
+          .map(({ conversation, matchedOn, matchedText }) => (
             <div key={conversation.id} className="flex w-full flex-col">
               <ConversationPreview
                 id={conversation.id}
@@ -334,16 +301,9 @@ const ConversationList = ({
                 isAiEnabled={conversation.is_ai_enabled}
                 assignedAgentId={conversation.assigned_agent_id}
                 isSelected={selectedConversationId === conversation.id}
-                // onClick={() => onConversationSelect?.(conversation.id)}
+                onClick={() => onConversationSelect?.(conversation.id)}
                 priority={conversation.priority}
                 sentiment={conversation.sentiment}
-                onClick={() => handleConversationSelect(conversation.id)}
-                contactSynced={!!(
-                  conversation.platform === 'whatsapp' ? 
-                  conversation.customer_id.slice(2) :
-                  conversation.platform === 'instagram'
-                )}
-                syncStatus={syncStatus[conversation.id] || 'pending'}
               />
               
             </div>
