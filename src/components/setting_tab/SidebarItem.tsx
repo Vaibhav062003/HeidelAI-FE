@@ -479,10 +479,8 @@ const InstagramDialog = () => {
       setIsLoading(true);
       
       // Revoke the token
-      const instagramConnection = localStorage.getItem('instagram_connection');
-      if (instagramConnection) {
-        const parsedData = JSON.parse(instagramConnection);
-        
+      const user_id = localStorage.getItem('instagram_user_id');
+      if (user_id) {
         // Disconnect using the dedicated Instagram API
         await fetch('https://egenie-whatsapp.koyeb.app/instagram/disconnect', {
           method: 'POST',
@@ -490,9 +488,7 @@ const InstagramDialog = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ 
-            token: parsedData.token,
-            user_id: parsedData.userId,
-            app_user_id: localStorage.getItem('user_id')
+            user_id: user_id,
           }),
         });
         
@@ -504,6 +500,9 @@ const InstagramDialog = () => {
         setAccountInfo(null);
         
         toast.success('Instagram account disconnected successfully');
+      }
+      else {
+        toast.error('No Instagram account found to disconnect');
       }
     } catch (error) {
       console.error('Error disconnecting Instagram:', error);
@@ -572,20 +571,26 @@ const InstagramDialog = () => {
             
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Permissions granted:</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li className="flex items-center gap-2">
-                  <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li className="flex items-center gap-2">
+                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Access to profile data
-                </li>
-                <li className="flex items-center gap-2">
-                  <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    </svg>
+                    Access to your Instagram profile information.
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Access to media
-                </li>
-              </ul>
+                    </svg>
+                    Access to your Instagram media and content.
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Permission to manage your Instagram messages.
+                  </li>
+                </ul>
             </div>
             
             <Button 
@@ -606,13 +611,13 @@ const InstagramDialog = () => {
         ) : (
           <div className="py-4 space-y-4">
             <p className="text-sm text-gray-600">
-              Connect your Instagram account to manage content and access media directly from this dashboard.
+              Connect your Instagram account to manage messages and access media directly from this dashboard.
             </p>
             
-            <div className="p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm rounded">
-              <p>
-                You can connect any Instagram account without needing a Facebook page.
-              </p>
+            <div className="p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700 text-sm rounded">
+                <p>
+                Your Instagram credentials are never stored on our servers. We use secure, industry-standard OAuth authentication directly with Instagram. You are always in control and can disconnect at any time.
+                </p>
             </div>
             
             <div className="space-y-2">
@@ -620,7 +625,7 @@ const InstagramDialog = () => {
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• Access your basic profile information</li>
                 <li>• View your media and content</li>
-                <li>• Display your content in this dashboard</li>
+                <li>• Access your Instagram inbox to read and manage messages</li>
               </ul>
             </div>
             
@@ -635,7 +640,7 @@ const InstagramDialog = () => {
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  <Instagram className="h-4 w-4" /> Connect Instagram
+                  <Instagram className="h-4 w-4" /> Login with Instagram
                 </span>
               )}
             </Button>
@@ -676,18 +681,20 @@ export const FacebookCatalogIntegration = () => {
         // Check if previously marked as connected (persisted flag)
         const fbStored = localStorage.getItem("facebook_catalog_connection");
 
-        if (provider === "facebook" && fbStored) {
-          const parsed = JSON.parse(fbStored);
-          if (parsed.connected && parsed.accessToken) {
-            setIsConnected(true);
-          } else {
-            localStorage.removeItem("facebook_catalog_connection");
-            setIsConnected(false);
-          }
+        if (provider === "facebook" || fbStored) {
+          localStorage.setItem(
+            "facebook_catalog_connection",
+            JSON.stringify({ connected: true })
+          );
+          setIsConnected(true);
+          toast.success("Facebook catalog connected successfully.");
         } else {
           setIsConnected(false);
         }
+      } else {
+        setIsConnected(false);
       }
+
       setIsLoading(false);
     };
 
@@ -708,7 +715,7 @@ export const FacebookCatalogIntegration = () => {
         appId,
         cookie: true,
         xfbml: false,
-        version: 'v22.0',
+        version: 'v19.0',
       });
       callback();
     };
@@ -722,7 +729,7 @@ export const FacebookCatalogIntegration = () => {
           appId,
           cookie: true,
           xfbml: false,
-          version: 'v22.0',
+          version: 'v19.0',
         });
         callback();
       };
@@ -741,7 +748,7 @@ const handleFacebookCatalogLogin = () => {
     if (window.FB) {
       window.FB.login(
         function (response: FacebookLoginResponse) {
-          if (response.status === 'connected' && response.authResponse) {
+          if (response.authResponse && response.status === 'connected') {
             // Only store connection data if login was successful
             const accessToken = response.authResponse.accessToken;
             localStorage.setItem(
@@ -766,8 +773,6 @@ const handleFacebookCatalogLogin = () => {
         {
           config_id: FACEBOOK_CATALOG_CONFIG_ID,
           scope: "catalog_management",
-          response_type: "code",
-          override_default_response_type: true,
         }
       );
     } else {
