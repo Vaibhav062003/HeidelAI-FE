@@ -111,7 +111,7 @@ export default function LoginPage() {
             <div className="flex-grow bg-neutral-800  h-[1px]" />
             <span className="text-neutral-300 text-sm text-center mx-4"></span>
             <p className="whitespace-nowrap -ml-8">
-            Don't have an account? Contact your administrator
+            Don&#39;t have an account? Contact your administrator
             </p>
             <div className="flex-grow bg-neutral-800 h-[1px]" />
           </div>
