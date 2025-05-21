@@ -595,16 +595,16 @@ const InstagramDialog = () => {
             
             <Button 
               variant="destructive" 
-              className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white" 
+              className="w-full mt-4" 
               onClick={disconnectInstagram}
               disabled={isLoading}
             >
               {isLoading ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" /> Processing...
-              </span>
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Processing...
+                </span>
               ) : (
-              'Disconnect Account'
+                'Disconnect Account'
               )}
             </Button>
           </div>
