@@ -69,6 +69,7 @@ import {
 // import { Shopify } from '@shopify/shopify-api';
 import { toast } from 'sonner';
 import { connectWebSocket } from '../../lib/websocket';
+import WhatsAppLoginDialog from './WhatsappLoginDialog';
 
 const loginWithFacebook = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -529,7 +530,7 @@ const InstagramDialog = () => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{connected ? 'Manage Instagram Connection' : 'Connect Instagram Account'}</DialogTitle>
+          <DialogTitle className='text-black'>{connected ? 'Manage Instagram Connection' : 'Connect Instagram Account'}</DialogTitle>
         </DialogHeader>
         
         {isLoading ? (
@@ -570,7 +571,7 @@ const InstagramDialog = () => {
             </div>
             
             <div className="space-y-2">
-              <h4 className="text-sm font-medium">Permissions granted:</h4>
+              <h4 className="text-sm text-black font-medium">Permissions granted:</h4>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li className="flex items-center gap-2">
                     <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -658,6 +659,8 @@ const InstagramDialog = () => {
     </Dialog>
   );
 };
+
+
 
 export const FacebookCatalogIntegration = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -1131,42 +1134,11 @@ export const IntegrationsSettings = () => (
           </svg>
         </div>
         <div>
-          <h3 className="text-lg font-semibold">Add WhatsApp Number</h3>
-          <p className="text-sm text-gray-600">Connect another WhatsApp number</p>
+          <h3 className="text-lg font-semibold">WhatsApp</h3>
+          <p className="text-sm text-gray-600">Connect WhatsApp account</p>
         </div>
       </div>
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button className="bg-[#25D366] hover:bg-[#1DA851] text-white">
-            Add Number
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add WhatsApp Number</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="phoneNumber">Phone Number</label>
-              <Input
-                id="phoneNumber"
-                placeholder="+1234567890"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="apiKey">API Key</label>
-              <Input
-                id="apiKey"
-                type="password"
-                placeholder="Enter your API key"
-              />
-            </div>
-            <Button className="bg-[#25D366] hover:bg-[#1DA851] text-white">
-              Connect
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <WhatsAppLoginDialog />
     </div>
   </div>
 </div>
