@@ -109,8 +109,8 @@ const InstagramProfileView = ({ instagramId, onClose, isOpen }: InstagramProfile
                   </Avatar>
                   
                   <div className="space-y-2">
-                    <h2 className="text-2xl font-bold">{profile.username}</h2>
-                    <p>{profile.name}</p>
+                    <h2 className="text-2xl text-black font-bold">{profile.username}</h2>
+                    <p className='text-black'>{profile.name}</p>
                     <p className="text-sm text-gray-600">{profile.biography}</p>
                     
                     {profile.website && (
