@@ -2,69 +2,75 @@ trigger:
   branches:
     include:
       - main
-      - development
+      - development   # ✅ Added support for dev branch
 
 pool:
   vmImage: ubuntu-latest
 
 variables:
-  - group: github-secrets  # Contains GITHUB_PAT
+  - group: github-secrets
 
 steps:
 - checkout: self
   persistCredentials: true
-  clean: false
-  fetchDepth: 0
+  clean: false        # Preserve git history references
+  fetchDepth: 0       # Fetch full history to avoid shallow clone issues
 
 - script: |
-    set -ex
+    set -ex  # Enable verbose output and exit on error
 
+    # Configure Git identity
     git config --global user.email "egeniestore@gmail.com"
     git config --global user.name "Azure DevOps CI/CD"
 
     BRANCH_NAME="$(Build.SourceBranchName)"
-    
+
     if [ "$BRANCH_NAME" = "main" ]; then
-      REPO_NAME="heidelAIWebsite"
-      REMOTE_NAME="github-main"
+      GITHUB_REPO="heidelAIWebsite"
+      REMOTE_ALIAS="github"
     elif [ "$BRANCH_NAME" = "development" ]; then
-      REPO_NAME="heidelai-dev"
-      REMOTE_NAME="github-dev"
+      GITHUB_REPO="heidelai-dev"
+      REMOTE_ALIAS="github-dev"
     else
-      echo "Branch '$BRANCH_NAME' is not configured for GitHub sync. Skipping."
+      echo "Branch $BRANCH_NAME is not configured for sync. Exiting."
       exit 0
     fi
 
-    REMOTE_URL="https://oauth2:$(GITHUB_PAT)@github.com/egenie4u/${REPO_NAME}.git"
+    # Add GitHub remote using token
+    git remote add $REMOTE_ALIAS https://oauth2:$(GITHUB_PAT)@github.com/egenie4u/${GITHUB_REPO}.git
 
-    git remote add $REMOTE_NAME $REMOTE_URL
-
+    # Verify remote configuration
     echo "=== Remote Configuration ==="
     git remote -v
 
+    # (Optional) In case the checkout was shallow, force an unshallow fetch.
     echo "=== Ensuring Full Repository History ==="
     git fetch --unshallow || echo "Repository already complete"
 
+    # Update all references
     echo "=== Fetching Latest References ==="
     git fetch --all --prune
 
+    # Compare local and remote commits
     echo "=== Commit Diff Analysis ==="
     LOCAL_COMMIT=$(git rev-parse HEAD)
-    REMOTE_COMMIT=$(git ls-remote $REMOTE_NAME $BRANCH_NAME | awk '{print $1}')
+    REMOTE_COMMIT=$(git ls-remote $REMOTE_ALIAS $BRANCH_NAME | awk '{print $1}')
 
     if [ "$LOCAL_COMMIT" != "$REMOTE_COMMIT" ]; then
         echo "Detected divergence: Local(${LOCAL_COMMIT:0:7}) vs Remote(${REMOTE_COMMIT:0:7})"
         
-        echo "=== Pushing Changes to GitHub Repo: $REPO_NAME ==="
-        git push --no-thin $REMOTE_NAME HEAD:$BRANCH_NAME --force-with-lease --follow-tags
-
+        # Push changes using --no-thin to send full pack objects along with force-with-lease and tag following
+        echo "=== Pushing Changes ==="
+        git push --no-thin $REMOTE_ALIAS HEAD:$BRANCH_NAME --force-with-lease --follow-tags
+        
         echo "=== Push Verification ==="
-        git ls-remote $REMOTE_NAME $BRANCH_NAME
+        git ls-remote $REMOTE_ALIAS $BRANCH_NAME
     else
         echo "No divergence detected - repositories are in sync"
     fi
 
-    git remote remove $REMOTE_NAME
-  displayName: 'Conditional GitHub Sync'
+    # Cleanup credentials
+    git remote remove $REMOTE_ALIAS
+  displayName: 'GitHub Sync'
   env:
     GIT_REDACT_URLS: false
