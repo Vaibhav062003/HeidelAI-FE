@@ -2,7 +2,6 @@ trigger:
   branches:
     include:
       - main
-      - development   # ✅ Added support for dev branch
 
 pool:
   vmImage: ubuntu-latest
@@ -23,21 +22,8 @@ steps:
     git config --global user.email "egeniestore@gmail.com"
     git config --global user.name "Azure DevOps CI/CD"
 
-    BRANCH_NAME="$(Build.SourceBranchName)"
-
-    if [ "$BRANCH_NAME" = "main" ]; then
-      GITHUB_REPO="heidelAIWebsite"
-      REMOTE_ALIAS="github"
-    elif [ "$BRANCH_NAME" = "development" ]; then
-      GITHUB_REPO="heidelai-dev"
-      REMOTE_ALIAS="github-dev"
-    else
-      echo "Branch $BRANCH_NAME is not configured for sync. Exiting."
-      exit 0
-    fi
-
     # Add GitHub remote using token
-    git remote add $REMOTE_ALIAS https://oauth2:$(GITHUB_PAT)@github.com/egenie4u/${GITHUB_REPO}.git
+    git remote add github https://oauth2:$(GITHUB_PAT)@github.com/egenie4u/heidelAIWebsite.git
 
     # Verify remote configuration
     echo "=== Remote Configuration ==="
@@ -54,23 +40,23 @@ steps:
     # Compare local and remote commits
     echo "=== Commit Diff Analysis ==="
     LOCAL_COMMIT=$(git rev-parse HEAD)
-    REMOTE_COMMIT=$(git ls-remote $REMOTE_ALIAS $BRANCH_NAME | awk '{print $1}')
+    REMOTE_COMMIT=$(git ls-remote github main | awk '{print $1}')
 
     if [ "$LOCAL_COMMIT" != "$REMOTE_COMMIT" ]; then
         echo "Detected divergence: Local(${LOCAL_COMMIT:0:7}) vs Remote(${REMOTE_COMMIT:0:7})"
         
         # Push changes using --no-thin to send full pack objects along with force-with-lease and tag following
         echo "=== Pushing Changes ==="
-        git push --no-thin $REMOTE_ALIAS HEAD:$BRANCH_NAME --force-with-lease --follow-tags
+        git push --no-thin github HEAD:main --force-with-lease --follow-tags
         
         echo "=== Push Verification ==="
-        git ls-remote $REMOTE_ALIAS $BRANCH_NAME
+        git ls-remote github main
     else
         echo "No divergence detected - repositories are in sync"
     fi
 
     # Cleanup credentials
-    git remote remove $REMOTE_ALIAS
+    git remote remove github
   displayName: 'GitHub Sync'
   env:
     GIT_REDACT_URLS: false
