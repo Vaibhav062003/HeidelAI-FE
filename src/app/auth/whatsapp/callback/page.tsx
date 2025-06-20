@@ -25,7 +25,6 @@ export default function WhatsAppCallback() {
       // Error case - redirect to main app
       window.location.href = '/';
     } 
-    // test
   }, [router.query]);
   
   return (
