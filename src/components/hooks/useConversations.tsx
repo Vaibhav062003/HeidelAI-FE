@@ -20,7 +20,7 @@ export function useConversations() {
     const fetchAllConversations = async () => {
       try {
         setLoading(true);
-        
+        // test
         // Get regular conversations (WhatsApp)
         const regularData = await conversationService.getAll();
         
