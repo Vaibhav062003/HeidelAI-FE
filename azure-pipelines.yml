@@ -28,8 +28,8 @@ steps:
       REPO_NAME="heidelAIWebsite"
       REMOTE_NAME="github-main"
     elif [ "$BRANCH_NAME" = "development" ]; then
-      REPO_NAME="heidelai-dev"
-      REMOTE_NAME="github-dev"
+      REPO_NAME="heidelAIWebsite"
+      REMOTE_NAME="github-development"
     else
       echo "Branch '$BRANCH_NAME' is not configured for GitHub sync. Skipping."
       exit 0
