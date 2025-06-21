@@ -1010,7 +1010,7 @@ const ChatView = ({
   };
 
 useEffect(() => {
-  if (!selectedConversationId) return;
+  if (!selectedConversationId) return () => {};
 
   const setUnreadCount = async () => {
     try {
@@ -1097,20 +1097,21 @@ useEffect(() => {
             },
           }
         );
-      } else {
-        response = await fetch(
-          `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}`, 
-          {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-      }
+      } 
+      // else {
+      //   response = await fetch(
+      //     `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}`, 
+      //     {
+      //       method: "GET",
+      //       credentials: "include",
+      //       headers: {
+      //         "Content-Type": "application/json",
+      //       },
+      //     }
+      //   );
+      // }
       
-      const data = await response.json();
+      const data = await response?.json();
       setConversation(data);
       console.log("conversation data", data);
     } catch (error) {
@@ -1164,20 +1165,21 @@ useEffect(() => {
             },
           }
         );
-      } else {
-        response = await fetch(
-          `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/ai`, 
-          {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-      }
+      } 
+      // else {
+      //   response = await fetch(
+      //     `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/ai`, 
+      //     {
+      //       method: "GET",
+      //       credentials: "include",
+      //       headers: {
+      //         "Content-Type": "application/json",
+      //       },
+      //     }
+      //   );
+      // }
       
-      const data = await response.json();
+      const data = await response?.json();
       setIsAIEnabled(data);
       console.log("AI data", data);
     } catch (error) {
@@ -1231,20 +1233,21 @@ useEffect(() => {
             },
           }
         );
-      } else {
-        response = await fetch(
-          `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/messages`, 
-          {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-      }
+      } 
+      // else {
+      //   response = await fetch(
+      //     `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/messages`, 
+      //     {
+      //       method: "GET",
+      //       credentials: "include",
+      //       headers: {
+      //         "Content-Type": "application/json",
+      //       },
+      //     }
+      //   );
+      // }
       
-      const data = await response.json();
+      const data = await response?.json();
       setMessages(data);
       console.log("messages data", data);
     } catch (error) {
@@ -1257,7 +1260,7 @@ useEffect(() => {
 
   // Set up WebSocket connection based on platform
   const platform = selectedConversationId.split('_')[0];
-  let ws;
+  let ws: WebSocket | null = null;
   
   if (platform === 'instagram') {
     const instagramId = localStorage.getItem('instagram_user_id');
@@ -1266,9 +1269,7 @@ useEffect(() => {
     if (instagramId) {
       ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/instagram/${clientId}/${instagramId}`);
       console.log("Connected to Instagram WebSocket");
-    } else {
-      ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/client-${Date.now()}`);
-    }
+    } 
   } else if (platform === 'whatsapp') {
     const whatsappId = localStorage.getItem('whatsapp_user_id');
     const clientId = `client-${Date.now()}-wa`;
@@ -1276,34 +1277,34 @@ useEffect(() => {
     if (whatsappId) {
       ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/whatsapp/${clientId}/${whatsappId}`);
       console.log("Connected to WhatsApp WebSocket");
-    } else {
-      ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/client-${Date.now()}`);
-    }
-  } else {
-    // Regular WebSocket for other conversations
-    ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/client-${Date.now()}`);
-  }
+    } 
+  } 
+  // else {
+  //   // Regular WebSocket for other conversations
+  //   ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/client-${Date.now()}`);
+  // }
   
-  ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
-      setMessages(prev => [...prev, data.message]);
-    }
-    else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
-      // Remove the deleted message from the messages array
-      setMessages(prev => 
-        prev.filter(msg => msg.id !== data.message_id)
-      );
-      console.log(`Message with ID ${data.message_id} was deleted`);
-    }
-  };
+  if (ws) {
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
+        setMessages(prev => [...prev, data.message]);
+      }
+      else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
+        setMessages(prev => 
+          prev.filter(msg => msg.id !== data.message_id)
+        );
+        console.log(`Message with ID ${data.message_id} was deleted`);
+      }
+    };
+  }
   
   fetchConversation();
   setUnreadCount();
   fetchAIStatus();
   fetchMessages();
   
-  return () => ws.close();
+  return () => {if (ws) ws.close();}
 }, [selectedConversationId]);
 
   // Decide on avatar source

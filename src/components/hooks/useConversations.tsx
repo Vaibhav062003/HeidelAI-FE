@@ -70,9 +70,9 @@ export const useConversations = () => {
     fetchConversations();
 
     // Optional: Set up a polling interval to refresh conversations
-    const intervalId = setInterval(fetchConversations, 30000); // every 30 seconds
+    // const intervalId = setInterval(fetchConversations, 30000); // every 30 seconds
     
-    return () => clearInterval(intervalId);
+    // return () => clearInterval(intervalId);
   }, []);
 
   return { conversations, loading, error, refetch: () => {} };
