@@ -80,6 +80,7 @@ interface UserProfile {
 // }: HomeProps) => {
   
 // import { Phone, Video, MessageSquare, Globe, Smile, Paperclip, Send } from 'lucide-react'
+import AnalyticsBotFrontend from './../../components/AnalyticsBot/AnalyticsBotFrontend';
 
 
 export default function DashboardPage() {
@@ -363,7 +364,7 @@ export default function DashboardPage() {
               value="analyticsbot"
               className="m-0 flex-1 fixed top-0 w-[96vw] h-full overflow-hidden"
             >
-              <AnalyticsBot />
+              <AnalyticsBot/>
             </TabsContent>
 
             <TabsContent
