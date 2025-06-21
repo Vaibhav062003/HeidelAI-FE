@@ -2,6 +2,15 @@ import axios from 'axios';
 import { Conversation } from '../types/conversation';
 import { syncContactFromConversation } from '../utils/contactSync';
 
+interface WhatsAppMessage {
+  conversation_id: string;
+  content: string;
+  sender_id: string;
+  type?: string;
+  media_id?: string;
+  media_type?: string;
+}
+
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL
 });
@@ -91,7 +100,7 @@ export const conversationService = {
     }
   },
   
-  sendWhatsAppMessage: async (whatsappId: string, message: any) => {
+  sendWhatsAppMessage: async (whatsappId: string, message: WhatsAppMessage) => {
     if (!whatsappId) {
       console.log("No WhatsApp ID provided for sending message");
       return { status: "error", message: "Missing WhatsApp ID" };
