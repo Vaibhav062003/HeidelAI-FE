@@ -63,20 +63,14 @@ steps:
     else
         echo "No divergence detected - repositories are in sync"
     fi
-
+    
     git remote remove $REMOTE_NAME
-        ...
-    else
-        echo "No divergence detected - repositories are in sync"
-    fi
-
-    git remote remove $REMOTE_NAME
-
-    # Trigger Vercel Deploy Hook if GitHub sync was successful
+    
     if [ "$LOCAL_COMMIT" != "$REMOTE_COMMIT" ]; then
       echo "=== Triggering Vercel Deploy Hook ==="
-      curl -X GET "https://api.vercel.com/v1/integrations/deploy/prj_PFVGW3PBQP8acN6T0YsoaZQtC5hG/xx10jIuqdN" 
+      curl -X GET "https://api.vercel.com/v1/integrations/deploy/prj_PFVGW3PBQP8acN6T0YsoaZQtC5hG/xx10jIuqdN"
     fi
+
 
   displayName: 'Conditional GitHub Sync'
   env:
