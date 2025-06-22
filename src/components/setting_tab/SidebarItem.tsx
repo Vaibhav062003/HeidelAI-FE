@@ -69,6 +69,7 @@ import {
 // import { Shopify } from '@shopify/shopify-api';
 import { toast } from 'sonner';
 import { connectWebSocket } from '../../lib/websocket';
+import WhatsAppLoginDialog from './WhatsappLoginDialog';
 
 const loginWithFacebook = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -392,7 +393,7 @@ const InstagramDialog = () => {
       localStorage.setItem('instagram_auth_state', state);
       
       // Build Instagram authorization URL
-      const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=https://www.heidelai.com/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages`;
+      const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=https://development.heidelai.com/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages`;
       
       // Redirect to Instagram authorization page
       window.location.href = authUrl;
@@ -1132,42 +1133,11 @@ export const IntegrationsSettings = () => (
           </svg>
         </div>
         <div>
-          <h3 className="text-lg font-semibold">Add WhatsApp Number</h3>
-          <p className="text-sm text-gray-600">Connect another WhatsApp number</p>
+          <h3 className="text-lg font-semibold">WhatsApp</h3>
+          <p className="text-sm text-gray-600">Connect WhatsApp account</p>
         </div>
       </div>
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button className="bg-[#25D366] hover:bg-[#1DA851] text-white">
-            Add Number
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add WhatsApp Number</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="phoneNumber">Phone Number</label>
-              <Input
-                id="phoneNumber"
-                placeholder="+1234567890"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="apiKey">API Key</label>
-              <Input
-                id="apiKey"
-                type="password"
-                placeholder="Enter your API key"
-              />
-            </div>
-            <Button className="bg-[#25D366] hover:bg-[#1DA851] text-white">
-              Connect
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <WhatsAppLoginDialog />
     </div>
   </div>
 </div>

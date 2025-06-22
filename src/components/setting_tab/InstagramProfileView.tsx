@@ -85,7 +85,7 @@ const InstagramProfileView = ({ instagramId, onClose, isOpen }: InstagramProfile
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Instagram Profile</DialogTitle>
+          <DialogTitle className='text-black'>Instagram Profile</DialogTitle>
         </DialogHeader>
         
         {loading ? (
@@ -126,14 +126,14 @@ const InstagramProfileView = ({ instagramId, onClose, isOpen }: InstagramProfile
                     
                     <div className="flex gap-6 mt-2">
                       <div className="text-center">
-                        <p className="font-bold">{profile.media_count}</p>
+                        <p className="font-bold text-black">{profile.media_count}</p>
                         <p className="text-xs text-gray-600">Posts</p>
                       </div>
-                      <div className="text-center">
+                      <div className="text-center text-black">
                         <p className="font-bold">{profile.followers_count}</p>
                         <p className="text-xs text-gray-600">Followers</p>
                       </div>
-                      <div className="text-center">
+                      <div className="text-center text-black">
                         <p className="font-bold">{profile.follows_count}</p>
                         <p className="text-xs text-gray-600">Following</p>
                       </div>
