@@ -16,15 +16,6 @@ export const api = axios.create({
 });
 
 export const conversationService = {
-  getAll: async (): Promise<Conversation[]> => {
-    const response = await api.get<Conversation[]>('/conversations');
-    return response.data;
-  },
-  
-  get: async (id: string): Promise<Conversation> => {
-    const response = await api.get<Conversation>(`/conversations/${id}`);
-    return response.data;
-  },
 
   getInstagramConversations: async (instagramId: string) => {
     const response = await api.get(`https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations`);
