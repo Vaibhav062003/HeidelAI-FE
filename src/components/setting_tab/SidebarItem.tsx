@@ -483,6 +483,8 @@ const InstagramDialog = () => {
       // Revoke the token
       const user_id = localStorage.getItem('instagram_user_id');
       if (user_id) {
+      const user_id = localStorage.getItem('instagram_user_id');
+      if (user_id) {
         // Disconnect using the dedicated Instagram API
         await fetch('https://egenie-whatsapp.koyeb.app/instagram/disconnect', {
           method: 'POST',
@@ -490,6 +492,7 @@ const InstagramDialog = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ 
+            user_id: user_id,
             user_id: user_id,
           }),
         });
@@ -502,6 +505,9 @@ const InstagramDialog = () => {
         setAccountInfo(null);
         
         toast.success('Instagram account disconnected successfully');
+      }
+      else {
+        toast.error('No Instagram account found to disconnect');
       }
       else {
         toast.error('No Instagram account found to disconnect');
@@ -532,6 +538,7 @@ const InstagramDialog = () => {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className='text-black'>{connected ? 'Manage Instagram Connection' : 'Connect Instagram Account'}</DialogTitle>
+          <DialogTitle className='text-black'>{connected ? 'Manage Instagram Connection' : 'Connect Instagram Account'}</DialogTitle>
         </DialogHeader>
         
         {isLoading ? (
@@ -548,6 +555,7 @@ const InstagramDialog = () => {
                   className="h-16 w-16 rounded-full object-cover border-2 border-pink-200"
                 />
                 <div>
+                  <p className="font-medium text-black text-lg">{accountInfo.username}</p>
                   <p className="font-medium text-black text-lg">{accountInfo.username}</p>
                   <div className="flex items-center gap-1 text-sm text-green-600">
                     <span className="inline-block h-2 w-2 rounded-full bg-green-600"></span>
@@ -576,13 +584,32 @@ const InstagramDialog = () => {
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li className="flex items-center gap-2">
                     <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <h4 className="text-sm text-black font-medium">Permissions granted:</h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li className="flex items-center gap-2">
+                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Access to your Instagram profile information.
                   </li>
                   <li className="flex items-center gap-2">
                     <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    </svg>
+                    Access to your Instagram profile information.
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Access to your Instagram media and content.
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Permission to manage your Instagram messages.
+                  </li>
+                </ul>
                     </svg>
                     Access to your Instagram media and content.
                   </li>
@@ -614,8 +641,13 @@ const InstagramDialog = () => {
           <div className="py-4 space-y-4">
             <p className="text-sm text-gray-600">
               Connect your Instagram account to manage messages and access media directly from this dashboard.
+              Connect your Instagram account to manage messages and access media directly from this dashboard.
             </p>
             
+            <div className="p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700 text-sm rounded">
+                <p>
+                Your Instagram credentials are never stored on our servers. We use secure, industry-standard OAuth authentication directly with Instagram. You are always in control and can disconnect at any time.
+                </p>
             <div className="p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700 text-sm rounded">
                 <p>
                 Your Instagram credentials are never stored on our servers. We use secure, industry-standard OAuth authentication directly with Instagram. You are always in control and can disconnect at any time.
@@ -627,6 +659,7 @@ const InstagramDialog = () => {
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• Access your basic profile information</li>
                 <li>• View your media and content</li>
+                <li>• Access your Instagram inbox to read and manage messages</li>
                 <li>• Access your Instagram inbox to read and manage messages</li>
               </ul>
             </div>
@@ -642,6 +675,7 @@ const InstagramDialog = () => {
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
+                  <Instagram className="h-4 w-4" /> Login with Instagram
                   <Instagram className="h-4 w-4" /> Login with Instagram
                 </span>
               )}
@@ -660,6 +694,8 @@ const InstagramDialog = () => {
     </Dialog>
   );
 };
+
+
 
 export const FacebookCatalogIntegration = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -697,6 +733,20 @@ export const FacebookCatalogIntegration = () => {
         setIsConnected(false);
       }
 
+        if (provider === "facebook" || fbStored) {
+          localStorage.setItem(
+            "facebook_catalog_connection",
+            JSON.stringify({ connected: true })
+          );
+          setIsConnected(true);
+          toast.success("Facebook catalog connected successfully.");
+        } else {
+          setIsConnected(false);
+        }
+      } else {
+        setIsConnected(false);
+      }
+
       setIsLoading(false);
     };
 
@@ -718,6 +768,7 @@ export const FacebookCatalogIntegration = () => {
         cookie: true,
         xfbml: false,
         version: 'v19.0',
+        version: 'v19.0',
       });
       callback();
     };
@@ -731,6 +782,7 @@ export const FacebookCatalogIntegration = () => {
           appId,
           cookie: true,
           xfbml: false,
+          version: 'v19.0',
           version: 'v19.0',
         });
         callback();
@@ -750,6 +802,7 @@ const handleFacebookCatalogLogin = () => {
     if (window.FB) {
       window.FB.login(
         function (response: FacebookLoginResponse) {
+          if (response.authResponse && response.status === 'connected') {
           if (response.authResponse && response.status === 'connected') {
             // Only store connection data if login was successful
             const accessToken = response.authResponse.accessToken;
