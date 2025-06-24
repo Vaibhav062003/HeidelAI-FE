@@ -3,6 +3,7 @@ import { Conversation } from '../types/conversation';
 import { conversationService } from '../services/api';
 
 export const useConversations = () => {
+export const useConversations = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -10,11 +11,14 @@ export const useConversations = () => {
   useEffect(() => {
     const fetchConversations = async () => {
       setLoading(true);
+    const fetchConversations = async () => {
+      setLoading(true);
       try {
         // Get regular conversations
-        const regularConversations = await conversationService.getAll();
-        let allConversations = [...regularConversations];
+        // const regularConversations = await conversationService.getAll();
+        // let allConversations = [...regularConversations];
         
+        // Check for Instagram connection
         // Check for Instagram connection
         const instagramId = localStorage.getItem('instagram_user_id');
         if (instagramId) {
@@ -31,6 +35,8 @@ export const useConversations = () => {
               allConversations = [...allConversations, ...formattedIGConversations];
             }
           } catch (igError) {
+            console.error("Error fetching Instagram conversations:", igError);
+            // Continue with just regular conversations
             console.error("Error fetching Instagram conversations:", igError);
             // Continue with just regular conversations
           }
@@ -62,11 +68,23 @@ export const useConversations = () => {
       } catch (err) {
         console.error("Error in useConversations:", err);
         setError(err instanceof Error ? err : new Error('An unknown error occurred'));
+        console.error("Error in useConversations:", err);
+        setError(err instanceof Error ? err : new Error('An unknown error occurred'));
       } finally {
         setLoading(false);
       }
     };
 
+    fetchConversations();
+
+    // Optional: Set up a polling interval to refresh conversations
+    // const intervalId = setInterval(fetchConversations, 30000); // every 30 seconds
+    
+    // return () => clearInterval(intervalId);
+  }, []);
+
+  return { conversations, loading, error, refetch: () => {} };
+};
     fetchConversations();
 
     // Optional: Set up a polling interval to refresh conversations

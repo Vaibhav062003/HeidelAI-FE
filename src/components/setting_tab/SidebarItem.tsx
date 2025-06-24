@@ -70,6 +70,7 @@ import {
 import { toast } from 'sonner';
 import { connectWebSocket } from '../../lib/websocket';
 import WhatsAppLoginDialog from './WhatsappLoginDialog';
+import WhatsAppLoginDialog from './WhatsappLoginDialog';
 
 const loginWithFacebook = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -659,8 +660,6 @@ const InstagramDialog = () => {
     </Dialog>
   );
 };
-
-
 
 export const FacebookCatalogIntegration = () => {
   const [isConnected, setIsConnected] = useState(false);
