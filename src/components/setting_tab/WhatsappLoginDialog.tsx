@@ -75,6 +75,8 @@ const WhatsAppLoginDialog = () => {
         
         // Check for callback in URL (for popup return cases handled via event listener)
         const urlParams = new URLSearchParams(window.location.search);
+        console.log('URL Parameters:', Object.fromEntries(urlParams.entries()));
+        console.log('Url Parameters: ', urlParams.toString());
         const code = urlParams.get('code');
         const state = urlParams.get('state');
         
