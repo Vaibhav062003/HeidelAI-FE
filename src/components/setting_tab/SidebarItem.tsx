@@ -70,7 +70,6 @@ import {
 import { toast } from 'sonner';
 import { connectWebSocket } from '../../lib/websocket';
 import WhatsAppLoginDialog from './WhatsappLoginDialog';
-import WhatsAppLoginDialog from './WhatsappLoginDialog';
 
 const loginWithFacebook = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -483,8 +482,6 @@ const InstagramDialog = () => {
       // Revoke the token
       const user_id = localStorage.getItem('instagram_user_id');
       if (user_id) {
-      const user_id = localStorage.getItem('instagram_user_id');
-      if (user_id) {
         // Disconnect using the dedicated Instagram API
         await fetch('https://egenie-whatsapp.koyeb.app/instagram/disconnect', {
           method: 'POST',
@@ -492,7 +489,6 @@ const InstagramDialog = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ 
-            user_id: user_id,
             user_id: user_id,
           }),
         });
@@ -505,11 +501,7 @@ const InstagramDialog = () => {
         setAccountInfo(null);
         
         toast.success('Instagram account disconnected successfully');
-      }
-      else {
-        toast.error('No Instagram account found to disconnect');
-      }
-      else {
+      } else {
         toast.error('No Instagram account found to disconnect');
       }
     } catch (error) {
@@ -538,7 +530,6 @@ const InstagramDialog = () => {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className='text-black'>{connected ? 'Manage Instagram Connection' : 'Connect Instagram Account'}</DialogTitle>
-          <DialogTitle className='text-black'>{connected ? 'Manage Instagram Connection' : 'Connect Instagram Account'}</DialogTitle>
         </DialogHeader>
         
         {isLoading ? (
@@ -555,7 +546,6 @@ const InstagramDialog = () => {
                   className="h-16 w-16 rounded-full object-cover border-2 border-pink-200"
                 />
                 <div>
-                  <p className="font-medium text-black text-lg">{accountInfo.username}</p>
                   <p className="font-medium text-black text-lg">{accountInfo.username}</p>
                   <div className="flex items-center gap-1 text-sm text-green-600">
                     <span className="inline-block h-2 w-2 rounded-full bg-green-600"></span>
@@ -584,32 +574,13 @@ const InstagramDialog = () => {
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li className="flex items-center gap-2">
                     <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <h4 className="text-sm text-black font-medium">Permissions granted:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Access to your Instagram profile information.
                   </li>
                   <li className="flex items-center gap-2">
                     <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    </svg>
-                    Access to your Instagram profile information.
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Access to your Instagram media and content.
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Permission to manage your Instagram messages.
-                  </li>
-                </ul>
                     </svg>
                     Access to your Instagram media and content.
                   </li>
@@ -641,13 +612,8 @@ const InstagramDialog = () => {
           <div className="py-4 space-y-4">
             <p className="text-sm text-gray-600">
               Connect your Instagram account to manage messages and access media directly from this dashboard.
-              Connect your Instagram account to manage messages and access media directly from this dashboard.
             </p>
             
-            <div className="p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700 text-sm rounded">
-                <p>
-                Your Instagram credentials are never stored on our servers. We use secure, industry-standard OAuth authentication directly with Instagram. You are always in control and can disconnect at any time.
-                </p>
             <div className="p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700 text-sm rounded">
                 <p>
                 Your Instagram credentials are never stored on our servers. We use secure, industry-standard OAuth authentication directly with Instagram. You are always in control and can disconnect at any time.
@@ -659,7 +625,6 @@ const InstagramDialog = () => {
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• Access your basic profile information</li>
                 <li>• View your media and content</li>
-                <li>• Access your Instagram inbox to read and manage messages</li>
                 <li>• Access your Instagram inbox to read and manage messages</li>
               </ul>
             </div>
@@ -675,7 +640,6 @@ const InstagramDialog = () => {
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  <Instagram className="h-4 w-4" /> Login with Instagram
                   <Instagram className="h-4 w-4" /> Login with Instagram
                 </span>
               )}
@@ -733,20 +697,6 @@ export const FacebookCatalogIntegration = () => {
         setIsConnected(false);
       }
 
-        if (provider === "facebook" || fbStored) {
-          localStorage.setItem(
-            "facebook_catalog_connection",
-            JSON.stringify({ connected: true })
-          );
-          setIsConnected(true);
-          toast.success("Facebook catalog connected successfully.");
-        } else {
-          setIsConnected(false);
-        }
-      } else {
-        setIsConnected(false);
-      }
-
       setIsLoading(false);
     };
 
@@ -768,7 +718,6 @@ export const FacebookCatalogIntegration = () => {
         cookie: true,
         xfbml: false,
         version: 'v19.0',
-        version: 'v19.0',
       });
       callback();
     };
@@ -782,7 +731,6 @@ export const FacebookCatalogIntegration = () => {
           appId,
           cookie: true,
           xfbml: false,
-          version: 'v19.0',
           version: 'v19.0',
         });
         callback();
@@ -802,7 +750,6 @@ const handleFacebookCatalogLogin = () => {
     if (window.FB) {
       window.FB.login(
         function (response: FacebookLoginResponse) {
-          if (response.authResponse && response.status === 'connected') {
           if (response.authResponse && response.status === 'connected') {
             // Only store connection data if login was successful
             const accessToken = response.authResponse.accessToken;
@@ -858,7 +805,7 @@ const handleDisconnect = async () => {
           <div className="flex items-center gap-3">
             <div className="bg-[#4267B2] rounded-lg p-2">
               <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24h11.495v-9.294H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
               </svg>
             </div>
             <div>
@@ -1088,7 +1035,7 @@ export const IntegrationsSettings = () => (
             <div className="flex items-center gap-3">
               <div className="bg-[#1877F2] rounded-lg p-2">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
                 </svg>
               </div>
               <div>
