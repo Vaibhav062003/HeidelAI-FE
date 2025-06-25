@@ -311,7 +311,7 @@ button:hover, button:hover::before {
   }
 }
 
-body {
+/* body {
   perspective: 1000px;
   transform-style: preserve-3d;
-}
+} */

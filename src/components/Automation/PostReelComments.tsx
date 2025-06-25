@@ -1,7 +1,8 @@
-// PostReelComments.tsx
 import React, { useState, useEffect } from "react";
-import { Search, X, ArrowRight, ArrowLeft, Check } from "lucide-react";
+import { Search, X, ArrowRight, ArrowLeft, Check, PlayIcon } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
+import InstagramProfileView from "../setting_tab/InstagramProfileView";
+import { Loader2 } from "lucide-react";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,6 +19,7 @@ interface MediaItem {
   media_type: string;
   permalink: string;
   timestamp: string;
+  thumbnail_url?: string;
 }
 
 interface PostReelCommentsProps {
@@ -28,6 +30,7 @@ interface PostReelCommentsProps {
     reply: string;
     automation_name: string;
   }) => void;
+  instagramId: string;
 }
 
 interface FormData {
@@ -40,6 +43,7 @@ interface FormData {
 const PostReelComments: React.FC<PostReelCommentsProps> = ({
   onClose,
   onComplete,
+  instagramId,
 }) => {
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
@@ -47,7 +51,7 @@ const PostReelComments: React.FC<PostReelCommentsProps> = ({
   const [formData, setFormData] = useState<FormData>({
     keywords: [],
     reply: "",
-    automation_name: "Untitled", // Default value
+    automation_name: "Untitled", 
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -56,26 +60,59 @@ const PostReelComments: React.FC<PostReelCommentsProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  useEffect(() => {
-    const fetchMedia = async () => {
-      try {
-        const response = await fetch("https://egenie-whatsapp.koyeb.app/api/instagram/{instagram_id}/posts");
-        if (!response.ok) throw new Error("Failed to fetch media");
-        const responseData = await response.json();
-
-        if (!responseData.data || !Array.isArray(responseData.data)) {
-          throw new Error("Invalid media data format");
-        }
-
-        setMedia(responseData.data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch media");
-      } finally {
-        setLoading(false);
+const fetchMedia = async () => {
+  try {
+    setLoading(true);
+    setError("");
+    
+    if (!instagramId) {
+      throw new Error("Instagram account not connected");
+    }
+    
+    const response = await fetch(
+      `https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/posts?limit=24`
+    );
+    
+    if (!response.ok) {
+      // Handle HTTP errors
+      if (response.status === 404) {
+        throw new Error("Instagram user not found");
       }
-    };
-    fetchMedia();
-  }, []);
+      if (response.status === 401) {
+        throw new Error("Please reconnect your Instagram account");
+      }
+      
+      // Try to parse error message
+      try {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || "Failed to fetch media");
+      } catch {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    }
+    
+    const result = await response.json();
+    const mediaData = result.data || [];
+    
+    if (!Array.isArray(mediaData)) {
+      throw new Error("Invalid media data format");
+    }
+    
+    setMedia(mediaData);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : "Failed to fetch media";
+    setError(errorMessage);
+    
+    // Show toast notification
+    // toast({
+    //   variant: "destructive",
+    //   title: "Error loading posts",
+    //   description: errorMessage,
+    // });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handlePostSelect = (post: MediaItem) => {
     setSelectedPost(post);
@@ -95,9 +132,19 @@ const PostReelComments: React.FC<PostReelCommentsProps> = ({
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
-      if (!selectedPost || !formData.reply || formData.keywords.length === 0) {
-        throw new Error("Please complete all steps");
+      setError("");
+      
+      // Validate all fields
+      if (!selectedPost) {
+        throw new Error("Please select a post");
       }
+      if (formData.keywords.length === 0) {
+        throw new Error("Please add at least one keyword");
+      }
+      if (!formData.reply.trim()) {
+        throw new Error("Please enter a reply message");
+      }
+
       const automationName = formData.automation_name.trim() || "Untitled";
 
       const { error } = await supabase.from("insta_dm_table").insert([
@@ -105,7 +152,7 @@ const PostReelComments: React.FC<PostReelCommentsProps> = ({
           post_id: selectedPost.id,
           keyword: formData.keywords.join(","),
           reply: formData.reply,
-          automation_name: automationName, // Add to insert
+          automation_name: automationName,
         },
       ]);
 
@@ -127,6 +174,20 @@ const PostReelComments: React.FC<PostReelCommentsProps> = ({
     }
   };
 
+  const handleNextStep = () => {
+    if (currentStep === 1 && !selectedPost) {
+      setError("Please select a post");
+      return;
+    }
+    if (currentStep === 2 && formData.keywords.length === 0) {
+      setError("Please add at least one keyword");
+      return;
+    }
+    
+    setError("");
+    setCurrentStep(prev => prev + 1);
+  };
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -143,15 +204,12 @@ const PostReelComments: React.FC<PostReelCommentsProps> = ({
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    automation_name: e.target.value.trim(),
+                    automation_name: e.target.value,
                   }))
                 }
                 placeholder="Enter automation name"
                 className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
-              {/* <p className="text-xs text-gray-500 mt-1">
-                Default name: "Untitled"
-              </p> */}
             </div>
 
             {/* Search and Post List */}
@@ -166,44 +224,60 @@ const PostReelComments: React.FC<PostReelCommentsProps> = ({
               />
             </div>
 
-            <div className="space-y-4 overflow-y-auto h-[400px]">
-              {media
-                .filter((post) =>
-                  post.caption
-                    ?.toLowerCase()
-                    .includes(searchQuery.toLowerCase())
-                )
-                .map((post) => (
+            {loading ? (
+              <div className="flex justify-center items-center h-64">
+                <Loader2 className="animate-spin text-purple-500 h-12 w-12" />
+              </div>
+            ) : error ? (
+              <div className="text-red-500 p-4 text-center">{error}</div>
+            ) : media.length === 0 ? (
+              <div className="text-gray-500 p-4 text-center">No posts found</div>
+            ) : (
+              <div className="grid grid-cols-3 gap-4">
+                {media.map(post => (
                   <div
                     key={post.id}
-                    onClick={() => handlePostSelect(post)}
-                    className={`cursor-pointer border p-3 rounded-lg shadow-sm hover:bg-gray-50 transition ${
+                    className={`relative group cursor-pointer rounded-lg overflow-hidden transition-all duration-200 ${
                       selectedPost?.id === post.id
-                        ? "border-purple-500 bg-purple-50"
-                        : "border-gray-200"
-                    }`}
+                        ? 'ring-4 ring-purple-500 scale-[1.02]'
+                        : 'ring-1 ring-gray-200'
+                    } hover:scale-[1.03]`}
+                    onClick={() => handlePostSelect(post)}
                   >
-                    <div className="flex items-center gap-3">
+                    {post.media_type === 'VIDEO' ? (
+                      <div className="aspect-square bg-gray-200">
+                        {post.thumbnail_url ? (
+                          <img
+                            src={post.thumbnail_url}
+                            alt={post.caption || 'Instagram video'}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                            <span className="text-gray-400">Video</span>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <PlayIcon className="h-10 w-10 text-white bg-black/50 rounded-full p-2" />
+                        </div>
+                      </div>
+                    ) : (
                       <img
                         src={post.media_url}
-                        alt="media"
-                        className="w-16 h-16 object-cover rounded-md"
+                        alt={post.caption || 'Instagram post'}
+                        className="aspect-square object-cover w-full"
                       />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">
-                          {post.username}
-                        </span>
-                        <span className="text-xs text-gray-600 truncate w-56">
-                          {post.caption}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {new Date(post.timestamp).toLocaleString()}
-                        </span>
-                      </div>
+                    )}
+                    
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-3">
+                      <p className="text-white text-sm text-center">
+                        {post.caption || 'Instagram post'}
+                      </p>
                     </div>
                   </div>
                 ))}
-            </div>
+              </div>
+            )}
           </div>
         );
 

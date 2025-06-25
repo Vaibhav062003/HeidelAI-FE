@@ -26,6 +26,7 @@ interface App {
 
 interface FlowBuilderProps {
   onClose: () => void;
+  
 }
 
 interface InstagramTrigger {
@@ -304,6 +305,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({ onClose }) => {
         {/* Post/Reel comments sidebar */}
         {showPostReelComments && (
           <PostReelComments
+            instagramId={localStorage.getItem('instagram_user_id') || ''}
             onClose={() => setShowPostReelComments(false)}
             onComplete={(data) => {
               setDmAutomationData(data);
