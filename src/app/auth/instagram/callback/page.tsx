@@ -32,7 +32,8 @@ function InstagramCallbackContent() {
           },
           body: JSON.stringify({
             code,
-            redirect_uri: `${window.location.origin}/auth/instagram/callback`,
+            // redirect_uri: `${window.location.origin}/auth/instagram/callback`,
+            redirect_uri: `https://development.heidelai.com/auth/instagram/callback`,
           }),
         });
   
