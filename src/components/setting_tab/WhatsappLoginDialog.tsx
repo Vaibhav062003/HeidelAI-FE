@@ -3,6 +3,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from 
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner"; 
+import { WhatsAppLogo } from '@/components/icons/WhatsappLogo';
 
 // WhatsApp app configuration
 const WHATSAPP_CLIENT_ID = '509681741462833';
@@ -162,7 +163,7 @@ const WhatsAppLoginDialog = () => {
       
       // Store data in localStorage
       localStorage.setItem('whatsapp_connection', JSON.stringify({
-        username: data.name,
+        name: data.name,
         phone: data.phone,
         userId: data.user_id,
         businessInfo: data.business_info || {},
@@ -353,10 +354,8 @@ const WhatsAppLoginDialog = () => {
           <div className="py-4 space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="bg-[#25D366] rounded-lg p-2">
-                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20.52 3.48A11.94 11.94 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 6.01L0 24l6.15-1.58A11.94 11.94 0 0012 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.2-3.48-8.52zM12 22.05c-1.85 0-3.67-.5-5.26-1.45l-.38-.22-3.65.94.97-3.55-.25-.37A9.94 9.94 0 012.05 12c0-5.47 4.48-9.95 9.95-9.95 2.66 0 5.17 1.04 7.05 2.93a9.94 9.94 0 012.93 7.05c0 5.47-4.48 9.95-9.95 9.95zm5.6-7.88c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.2.31-.82 1.02-1.01 1.23-.18.2-.37.22-.68.07-.31-.16-1.3-.48-2.47-1.54-.91-.81-1.52-1.81-1.7-2.12-.18-.31-.02-.48.14-.63.14-.14.31-.37.47-.56.16-.18.2-.31.31-.52.1-.2.05-.38-.02-.54-.07-.16-.71-1.7-.97-2.33-.26-.63-.52-.54-.71-.55h-.6c-.2 0-.52.07-.79.38-.27.31-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.22 3.07.16.2 2.1 3.2 5.1 4.49.71.31 1.26.5 1.69.64.71.23 1.36.2 1.87.12.57-.08 1.85-.76 2.11-1.5.26-.74.26-1.38.18-1.5-.07-.12-.29-.2-.6-.36z" />
-                  </svg>
+                <div className="h-10 w-10 rounded-full bg-[#25D366] flex items-center justify-center">
+                  <WhatsAppLogo className="h-6 w-6" />
                 </div>
                 <div>
                   <p className="font-medium text-black text-lg">{accountInfo.name}</p>
