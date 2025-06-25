@@ -2,12 +2,40 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner"; 
 
 // WhatsApp app configuration
 const WHATSAPP_CLIENT_ID = '509681741462833';
 const WHATSAPP_CONFIG_ID = '1209365947547146';
 const WHATSAPP_REDIRECT_URI = `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/whatsapp/callback`;
+
+// Add this utility function near the top of your file
+const formatPhoneNumber = (phone: string) => {
+  if (!phone) return "";
+  
+  // Remove any non-digit characters
+  const digitsOnly = phone.replace(/\D/g, '');
+  
+  // US format: +1 (XXX) XXX-XXXX
+  if (digitsOnly.startsWith('1') && digitsOnly.length === 11) {
+    return `+1 (${digitsOnly.substring(1, 4)}) ${digitsOnly.substring(4, 7)}-${digitsOnly.substring(7)}`;
+  }
+  
+  // India format: +91 XXXXX XXXXX
+  if (digitsOnly.startsWith('91') && digitsOnly.length === 12) {
+    return `+91 ${digitsOnly.substring(2, 7)} ${digitsOnly.substring(7)}`;
+  }
+  
+  // Default international format with country code
+  if (digitsOnly.length > 7) {
+    // Try to extract country code (1-3 digits)
+    const countryCodeLength = digitsOnly.length > 10 ? (digitsOnly.length - 10) : 2;
+    return `+${digitsOnly.substring(0, countryCodeLength)} ${digitsOnly.substring(countryCodeLength)}`;
+  }
+  
+  // If all else fails, just return with + prefix
+  return `+${digitsOnly}`;
+};
 
 const WhatsAppLoginDialog = () => {
   const [connected, setConnected] = useState(false);
@@ -151,16 +179,14 @@ const WhatsAppLoginDialog = () => {
         businessInfo: data.business_info || {}
       });
       
-      toast({
-        title: "Success",
-        description: "WhatsApp connected successfully!",
+      // Replace the ui/toast with sonner toast
+      toast.success("WhatsApp connected successfully!", {
+        description: "You can now receive and manage WhatsApp messages in HeidelAI"
       });
     } catch (error) {
       console.error('Error processing WhatsApp auth callback:', error);
-      toast({
-        variant: "destructive",
-        title: "Connection Failed",
-        description: "Could not connect WhatsApp account. Please try again.",
+      toast.error("Connection Failed", {
+        description: "Could not connect WhatsApp account. Please try again."
       });
     } finally {
       setIsLoading(false);
@@ -210,9 +236,9 @@ const WhatsAppLoginDialog = () => {
           
           // If popup was closed without successful auth
           if (!localStorage.getItem('whatsapp_user_id')) {
-            toast({
-              title: "Authentication Canceled",
-              description: "WhatsApp connection was canceled.",
+            // In the popup checker:
+            toast.info("Authentication Canceled", {
+              description: "WhatsApp connection was canceled."
             });
           }
         } else {
@@ -246,10 +272,8 @@ const WhatsAppLoginDialog = () => {
     } catch (error) {
       console.error('Error initiating WhatsApp login:', error);
       setIsLoading(false);
-      toast({
-        variant: "destructive",
-        title: "Connection Failed",
-        description: "Could not initiate WhatsApp login. Please try again later.",
+      toast.error("Connection Failed", {
+        description: "Could not initiate WhatsApp login. Please try again later."
       });
     }
   };
@@ -280,24 +304,21 @@ const WhatsAppLoginDialog = () => {
         setConnected(false);
         setAccountInfo(null);
         
-        toast({
-          title: "Success",
-          description: "WhatsApp account disconnected successfully",
+        // Success case:
+        toast.success("Account Disconnected", {
+          description: "WhatsApp account disconnected successfully"
         });
       }
       else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "No WhatsApp account found to disconnect",
+        // Error cases:
+        toast.error("Disconnect Failed", {
+          description: "No WhatsApp account found to disconnect"
         });
       }
     } catch (error) {
       console.error('Error disconnecting WhatsApp:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to disconnect WhatsApp account",
+      toast.error("Disconnect Failed", {
+        description: "Failed to disconnect WhatsApp account"
       });
     } finally {
       setIsLoading(false);
@@ -331,10 +352,17 @@ const WhatsAppLoginDialog = () => {
         ) : connected && accountInfo ? (
           <div className="py-4 space-y-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-black text-lg">{accountInfo.name}</p>
-                <p className="text-sm text-gray-600">{accountInfo.phone}</p>
-                <p className="text-xs text-green-600 mt-1">Connected</p>
+              <div className="flex items-center gap-3">
+                <div className="bg-[#25D366] rounded-lg p-2">
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.52 3.48A11.94 11.94 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 6.01L0 24l6.15-1.58A11.94 11.94 0 0012 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.2-3.48-8.52zM12 22.05c-1.85 0-3.67-.5-5.26-1.45l-.38-.22-3.65.94.97-3.55-.25-.37A9.94 9.94 0 012.05 12c0-5.47 4.48-9.95 9.95-9.95 2.66 0 5.17 1.04 7.05 2.93a9.94 9.94 0 012.93 7.05c0 5.47-4.48 9.95-9.95 9.95zm5.6-7.88c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.2.31-.82 1.02-1.01 1.23-.18.2-.37.22-.68.07-.31-.16-1.3-.48-2.47-1.54-.91-.81-1.52-1.81-1.7-2.12-.18-.31-.02-.48.14-.63.14-.14.31-.37.47-.56.16-.18.2-.31.31-.52.1-.2.05-.38-.02-.54-.07-.16-.71-1.7-.97-2.33-.26-.63-.52-.54-.71-.55h-.6c-.2 0-.52.07-.79.38-.27.31-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.22 3.07.16.2 2.1 3.2 5.1 4.49.71.31 1.26.5 1.69.64.71.23 1.36.2 1.87.12.57-.08 1.85-.76 2.11-1.5.26-.74.26-1.38.18-1.5-.07-.12-.29-.2-.6-.36z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-medium text-black text-lg">{accountInfo.name}</p>
+                  <p className="text-sm text-gray-600">{formatPhoneNumber(accountInfo.phone)}</p>
+                  <p className="text-xs text-green-600 mt-1">Connected</p>
+                </div>
               </div>
               <Button 
                 variant="outline" 
@@ -348,15 +376,63 @@ const WhatsAppLoginDialog = () => {
               <h4 className="text-sm text-black font-medium">Permissions granted:</h4>
               <ul className="text-sm text-gray-600 space-y-1">
                 <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-gray-600"></span>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-green-600 flex-shrink-0"
+                  >
+                    <circle cx="8" cy="8" r="7.5" stroke="#10B981" strokeOpacity="0.2"/>
+                    <path
+                      d="M5 8L7 10L11 6"
+                      stroke="#10B981"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                   Access to business profile information
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-gray-600"></span>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-green-600 flex-shrink-0"
+                  >
+                    <circle cx="8" cy="8" r="7.5" stroke="#10B981" strokeOpacity="0.2"/>
+                    <path
+                      d="M5 8L7 10L11 6"
+                      stroke="#10B981"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                   Send and receive messages
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-gray-600"></span>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-green-600 flex-shrink-0"
+                  >
+                    <circle cx="8" cy="8" r="7.5" stroke="#10B981" strokeOpacity="0.2"/>
+                    <path
+                      d="M5 8L7 10L11 6"
+                      stroke="#10B981"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                   Manage WhatsApp Business settings
                 </li>
               </ul>
