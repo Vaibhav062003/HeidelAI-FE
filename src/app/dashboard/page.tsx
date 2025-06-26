@@ -3,7 +3,7 @@
 // import {toast, Toaster} from 'sonner';
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { auth, app } from '@/components/firebase';
+import { auth } from "@/components/firebase";
 import React, { useState } from "react";
 import TopNavigation from "@/components/inbox/TopNavigation";
 import ConversationList from "@/components/inbox/ConversationList";
@@ -46,8 +46,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { User2 } from "lucide-react"; // Profile icon
+
+type DashboardPageProps = {
+  orgSlug: string;
+};
 
 interface Product {
   id: string;
@@ -66,52 +68,7 @@ interface Product {
   stock_quantity: number;
 }
 
-function AccountMenu() {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <button
-          className="w-10 h-10 rounded-full overflow-hidden border border-gray-300 flex items-center justify-center bg-white hover:bg-gray-100 transition"
-          aria-label="Account menu"
-        >
-          <User2 className="w-6 h-6 text-gray-700" />
-        </button>
-      </DialogTrigger>
-      <DialogContent className="p-0 bg-white rounded-xl shadow-xl max-w-xs w-full">
-<div className="flex flex-col items-center gap-4 py-6 px-4">
-  {/* User Info Section */}
-  <p className="text-xs text-gray-5">User Profile</p>
-  <div className="flex flex-col items-center w-full border-b pb-4">
-    <UserButton
-      appearance={{
-        elements: {
-          userButtonAvatarBox: "w-12 h-12",
-          userButtonAvatar: "rounded-full",
-          userButtonProfileIcon: "hidden", // Hide the default profile icon
-        },
-      }}
-    />
-
-  </div>
-
-  {/* Organization Switcher Section */}
-  <div className="w-full flex flex-col items-center gap-2">
-    <span className="text-xs text-gray mb-2">Organization</span>
-          <OrganizationSwitcher
-            appearance={{
-              elements: {
-                organizationPreviewAvatarBox: "w-10 h-10",
-              },
-            }}
-          />
-        </div>
-      </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-export default function DashboardPage() {
+export default function DashboardPage({ orgSlug }: DashboardPageProps) {
   const router = useRouter();
   const [activeView, setActiveView] = useState<
   "inbox" | "analytics" | "billing" | "settings" | "talktodata" | "analyticsbot"
@@ -130,10 +87,19 @@ export default function DashboardPage() {
     }
   }, [isLoaded, isSignedIn, router]);
 
+  useEffect(() => {
+    if (orgSlug) {
+      // Fetch org-specific data here
+      // Example: fetch(`/api/org/${orgSlug}/data`)
+      // Or set state, etc.
+      console.log("Current orgSlug:", orgSlug);
+    }
+  }, [orgSlug]);
+
   const handleConversationSelect = (id: string) => {
     setSelectedConversationId(id);
   };
-
+  
 
   return (
     <>
@@ -233,10 +199,38 @@ export default function DashboardPage() {
                 </span>
               </TabsTrigger>
 
-              {isSignedIn && (
-                <div className="w-full flex justify-center items-center mt-6">
-                  <AccountMenu />
+              {isSignedIn &&(
+                <>
+                  <div className="w-full flex justify-center items-center mt-6">
+                    <div>
+                      <UserButton 
+                        appearance={{
+                          elements: {
+                            userButtonAvatarBox: "w-10 h-10",
+                            userButtonAvatar: "rounded-full",
+                            userButtonAction: "hidden",
+                          },
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="w-full flex justify-center items-center mt-2">
+                  <div>
+                    <OrganizationSwitcher
+                      afterCreateOrganizationUrl="/dashboard"
+                      afterSelectOrganizationUrl="/org/:slug"
+                      afterSelectPersonalUrl="/dashboard"
+                      appearance={{
+                        elements: {
+                          organizationSwitcherButton: "w-10 h-10 rounded-full bg-transparent p-0 flex items-center justify-center",
+                          organizationPreviewAvatarBox: "w-10 h-10",
+                          organizationPreviewAvatar: "hidden"
+                        },
+                      }}
+                    />  
+                  </div>
                 </div>
+                </>   
               )}
             </TabsList>{" "}
           </div>
@@ -256,17 +250,17 @@ export default function DashboardPage() {
 
               {/* Chat View - Flexible width */}
               <div className="flex-1 flex flex-col h-full min-w-[400px]">
-              <ChatView
-                selectedConversationId={selectedConversationId}
+              <ChatView 
+                selectedConversationId={selectedConversationId} 
                 sharedProduct={sharedProduct}
                 onClearSharedProduct={() => setSharedProduct(null)}
-              />
+              />              
               </div>
 
               {/* Right Sidebar - Fixed width */}
               <div className="w-[360px] min-w-[280px] border-l border-gray-200">
                 {selectedConversationId ? (
-                  <Sidebar
+                  <Sidebar 
                   selectedConversationId={selectedConversationId}
                   onConversationSelect={setSelectedConversationId}
                   onShareProduct={(product) => setSharedProduct(product)}
@@ -312,7 +306,7 @@ export default function DashboardPage() {
             >
               <InfluencerBot />
             </TabsContent>
-
+            
             <TabsContent
               value="billing"
               className="m-0 fixed top-0 w-[96vw] flex-1 p-6 overflow-auto"
