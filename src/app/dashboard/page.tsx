@@ -3,7 +3,7 @@
 // import {toast, Toaster} from 'sonner';
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { auth } from "@/components/firebase";
+import { auth, app } from '@/components/firebase';
 import React, { useState } from "react";
 import TopNavigation from "@/components/inbox/TopNavigation";
 import ConversationList from "@/components/inbox/ConversationList";
@@ -36,19 +36,18 @@ import { EmojiProvider } from '@/components/EmojiProvider';
 import TalkToDataTab from "@/components/TalkToData/TalkToDataTab";
 import Image from "next/image";
 import Link from "next/link";
-import { createClient } from '@supabase/supabase-js';
-import { toast } from 'sonner';
-// Add this with other imports at the top
-import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
-import RemainderSideBar from "@/components/inbox/ReminderSideBar";
 import { InstagramLogoIcon } from "@radix-ui/react-icons";
+import RemainderSideBar from "@/components/inbox/ReminderSideBar";
+import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
 import InfluencerBot from "@/components/influencerBot/influencerbot";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-
+import { UserButton, UserProfile, useUser, SignedIn, OrganizationSwitcher } from '@clerk/nextjs';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { User2 } from "lucide-react"; // Profile icon
 
 interface Product {
   id: string;
@@ -67,21 +66,50 @@ interface Product {
   stock_quantity: number;
 }
 
-interface UserProfile {
-  email?: string;
-  avatar_url?: string;
-  full_name?: string;
+function AccountMenu() {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button
+          className="w-10 h-10 rounded-full overflow-hidden border border-gray-300 flex items-center justify-center bg-white hover:bg-gray-100 transition"
+          aria-label="Account menu"
+        >
+          <User2 className="w-6 h-6 text-gray-700" />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="p-0 bg-white rounded-xl shadow-xl max-w-xs w-full">
+<div className="flex flex-col items-center gap-4 py-6 px-4">
+  {/* User Info Section */}
+  <p className="text-xs text-gray-5">User Profile</p>
+  <div className="flex flex-col items-center w-full border-b pb-4">
+    <UserButton
+      appearance={{
+        elements: {
+          userButtonAvatarBox: "w-12 h-12",
+          userButtonAvatar: "rounded-full",
+          userButtonProfileIcon: "hidden", // Hide the default profile icon
+        },
+      }}
+    />
+
+  </div>
+
+  {/* Organization Switcher Section */}
+  <div className="w-full flex flex-col items-center gap-2">
+    <span className="text-xs text-gray mb-2">Organization</span>
+          <OrganizationSwitcher
+            appearance={{
+              elements: {
+                organizationPreviewAvatarBox: "w-10 h-10",
+              },
+            }}
+          />
+        </div>
+      </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
-
-// const Home = ({
-//   selectedChannels = ["all"],
-//   selectedConversationId = "",
-//   isTranslationEnabled = false,
-// }: HomeProps) => {
-  
-// import { Phone, Video, MessageSquare, Globe, Smile, Paperclip, Send } from 'lucide-react'
-import AnalyticsBotFrontend from './../../components/AnalyticsBot/AnalyticsBotFrontend';
-
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -94,49 +122,18 @@ export default function DashboardPage() {
   const [isAIEnabled, setIsAIEnabled] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const [sharedProduct, setSharedProduct] = useState<Product | null>(null);
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-
-
-  const handleLogout = async () => {
-    try {
-      setIsLoggingOut(true);
-      await supabase.auth.signOut();
-      toast.success('Successfully logged out');
-      router.push('/login');
-    } catch (error) {
-      console.error('Error logging out:', error);
-      toast.error('Failed to log out. Please try again.');
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
+  const { isSignedIn, isLoaded } = useUser();
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error || !user) {
-        router.push('/login');
-        return;
-      }
-      setUser(user);
-    };
-
-    checkUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
-        router.push('/login');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [router]);
+    if (isLoaded && !isSignedIn) {
+      router.push("/login");
+    }
+  }, [isLoaded, isSignedIn, router]);
 
   const handleConversationSelect = (id: string) => {
     setSelectedConversationId(id);
   };
+
 
   return (
     <>
@@ -169,17 +166,6 @@ export default function DashboardPage() {
                   <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
               </TabsTrigger>
-
-              {/* <TabsTrigger
-                value="analytics"
-                className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
-              >
-                <BarChart2 className="h-5 w-5" />
-                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  Analytics
-                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
-                </span>
-              </TabsTrigger> */}
 
               <TabsTrigger
                 value="Contacts"
@@ -246,52 +232,12 @@ export default function DashboardPage() {
                   <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
               </TabsTrigger>
-<div className="mt-auto mb-6 w-full">
-  {user && (
-    <div className="relative ">
-      {/* Always visible logout button */}
-      <button
-  onClick={handleLogout}
-  disabled={isLoggingOut}
-  className={`w-full mb-2 p-2 py-3 
-    flex items-center justify-center gap-2
-    text-red-600 hover:bg-red-50
-    rounded-lg transition-colors duration-200
-    ${isLoggingOut ? 'opacity-50 cursor-not-allowed' : ''}`}
->
-  {isLoggingOut ? (
-    <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
-  ) : (
-    <LogOut className="h-5 w-5" />
-  )}
-</button>
 
-
-
-      {/* Profile Section */}
-      <div className="cursor-pointer hover:bg-gray-100 rounded-lg p-2 relative group">
-        {user.avatar_url ? (
-          <img
-            src={user.avatar_url}
-            alt="Profile"
-            className="w-8 h-8 rounded-full"
-          />
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-            <span className="text-gray-600 text-sm">
-              {user.email?.[0].toUpperCase()}
-            </span>
-          </div>
-        )}
-        {/* Email tooltip on hover */}
-        <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-          {user.email}
-          <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
-        </span>
-      </div>
-    </div>
-  )}
-</div>
+              {isSignedIn && (
+                <div className="w-full flex justify-center items-center mt-6">
+                  <AccountMenu />
+                </div>
+              )}
             </TabsList>{" "}
           </div>
 
@@ -310,17 +256,17 @@ export default function DashboardPage() {
 
               {/* Chat View - Flexible width */}
               <div className="flex-1 flex flex-col h-full min-w-[400px]">
-              <ChatView 
-                selectedConversationId={selectedConversationId} 
+              <ChatView
+                selectedConversationId={selectedConversationId}
                 sharedProduct={sharedProduct}
                 onClearSharedProduct={() => setSharedProduct(null)}
-              />              
+              />
               </div>
 
               {/* Right Sidebar - Fixed width */}
               <div className="w-[360px] min-w-[280px] border-l border-gray-200">
                 {selectedConversationId ? (
-                  <Sidebar 
+                  <Sidebar
                   selectedConversationId={selectedConversationId}
                   onConversationSelect={setSelectedConversationId}
                   onShareProduct={(product) => setSharedProduct(product)}
@@ -345,13 +291,6 @@ export default function DashboardPage() {
               <ContactsDashboard />
             </TabsContent>
 
-            {/* <TabsContent
-              value="analytics"
-              className="m-0 flex-1 p-6 overflow-auto"
-            >
-              <AnalyticsDashboard />
-            </TabsContent> */}
-
             <TabsContent
               value="talktodata"
               className="m-0 flex-1 fixed top-0 w-[96vw] h-full overflow-hidden"
@@ -373,7 +312,7 @@ export default function DashboardPage() {
             >
               <InfluencerBot />
             </TabsContent>
-            
+
             <TabsContent
               value="billing"
               className="m-0 fixed top-0 w-[96vw] flex-1 p-6 overflow-auto"
@@ -393,5 +332,5 @@ export default function DashboardPage() {
         </Tabs>
       </div>
     </>
-  );
+);
 }

@@ -1,3 +1,4 @@
+"use client";
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import './main.css'
@@ -9,6 +10,7 @@ export default function MainLayout({
 }) {
   return (
     <>
+  
     <head>
         <title>HeidelAI - AI-Powered Customer Engagement & Analytics Platform</title>
         <meta name="description" content="Transform your business with HeidelAI's AI-powered tools for customer engagement, real-time analytics, and smart chatbots." />
@@ -44,6 +46,7 @@ export default function MainLayout({
         ></video>
       </div>
       
+      
       <Navbar />
       {/* <div style={{ height: "100vh", width: "100vw", position: "absolute", top: 0, zIndex: 10000000 }}>
             <iframe
@@ -60,8 +63,8 @@ export default function MainLayout({
          
       {children}
       <Footer />
-      
       </body>
+    
     </>
   )
 }

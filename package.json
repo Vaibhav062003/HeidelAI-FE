@@ -11,6 +11,7 @@
   "dependencies": {
     "@auth/core": "^0.34.2",
     "@chakra-ui/react": "^3.18.0",
+    "@clerk/nextjs": "^6.23.0",
     "@emoji-mart/data": "^1.2.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
