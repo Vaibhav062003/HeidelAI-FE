@@ -62,7 +62,7 @@ export default function RootLayout({
       <body className={`bg-white text-black ${inter.className}`}>
         <ClerkProvider
         publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!} 
-        afterSignOutUrl="/login"
+        afterSignOutUrl="/"
 >
           {children}
         </ClerkProvider>
