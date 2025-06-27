@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next'
 import "../../../globals.css"
 import { Inter } from 'next/font/google'
@@ -56,14 +57,16 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className={`bg-white text-black ${inter.className}`}>
         <ClerkProvider
-        publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!} 
-        afterSignOutUrl="/"
->
-          {children}
+          publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}
+          afterSignOutUrl="/" 
+        >
+          { children}
+          
         </ClerkProvider>
       </body>
     </html>

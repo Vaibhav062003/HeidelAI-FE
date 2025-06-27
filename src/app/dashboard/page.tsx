@@ -79,6 +79,7 @@ export default function DashboardPage({ orgSlug }: DashboardPageProps) {
   const [isAIEnabled, setIsAIEnabled] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const [sharedProduct, setSharedProduct] = useState<Product | null>(null);
+  const [showOrgSwitcher, setShowOrgSwitcher] = useState(false);
   const { isSignedIn, isLoaded } = useUser();
 
   useEffect(() => {
@@ -215,21 +216,33 @@ export default function DashboardPage({ orgSlug }: DashboardPageProps) {
                     </div>
                   </div>
                   <div className="w-full flex justify-center items-center mt-2">
-                  <div>
-                    <OrganizationSwitcher
-                      afterCreateOrganizationUrl="/org/:slug"
-                      afterSelectOrganizationUrl="/org/:slug"
-                      afterSelectPersonalUrl="/dashboard"
-                      appearance={{
-                        elements: {
-                          organizationSwitcherButton: "w-10 h-10 rounded-full bg-transparent p-0 flex items-center justify-center",
-                          organizationPreviewAvatarBox: "w-10 h-10",
-                          organizationPreviewAvatar: "hidden"
-                        },
-                      }}
-                    />  
+                    <div className="relative flex items-center">
+                      <button
+                        onClick={() => setShowOrgSwitcher((v) => !v)}
+                        className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition"
+                        title="Switch Organization"
+                      >
+                        <span className="text-gray-700 font-bold">Org</span>
+                      </button>
+                      {showOrgSwitcher && (
+                        <div className="absolute left-full top-0 z-30 ml-2">
+                          <OrganizationSwitcher
+                            afterCreateOrganizationUrl="/org/:slug"
+                            afterSelectOrganizationUrl="/org/:slug"
+                            afterSelectPersonalUrl="/dashboard"
+                            appearance={{
+                              elements: {
+                                organizationSwitcherButton:
+                                  "w-10 h-10 rounded-full bg-transparent p-0 flex items-center justify-center",
+                                organizationPreviewAvatarBox: "w-10 h-10",
+                                organizationPreviewAvatar: "hidden",
+                              },
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
                 </>   
               )}
             </TabsList>{" "}
