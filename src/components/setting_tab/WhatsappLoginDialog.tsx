@@ -126,7 +126,7 @@ const WhatsAppLoginDialog = () => {
     const handleMessage = (event: MessageEvent) => {
       // Validate origin for security
       if (event.origin !== window.location.origin) return;
-      
+      console.log('Received message from popup:', event.data);
       // Handle auth data from popup
       if (event.data && event.data.type === 'WHATSAPP_AUTH_CALLBACK') {
         const { code, state } = event.data;
