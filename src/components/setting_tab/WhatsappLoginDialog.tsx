@@ -75,8 +75,6 @@ const WhatsAppLoginDialog = () => {
         
         // Check for callback in URL (for popup return cases handled via event listener)
         const urlParams = new URLSearchParams(window.location.search);
-        console.log('URL Parameters:', Object.fromEntries(urlParams.entries()));
-        console.log('Url Parameters: ', urlParams.toString());
         const code = urlParams.get('code');
         const state = urlParams.get('state');
         
@@ -126,7 +124,6 @@ const WhatsAppLoginDialog = () => {
     const handleMessage = (event: MessageEvent) => {
       // Validate origin for security
       if (event.origin !== window.location.origin) return;
-      console.log('Received message from popup:', event.data);
       // Handle auth data from popup
       if (event.data && event.data.type === 'WHATSAPP_AUTH_CALLBACK') {
         const { code, state } = event.data;
