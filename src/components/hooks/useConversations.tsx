@@ -165,7 +165,7 @@ export const useConversations = () => {
   } catch (error) {
     console.error('Error handling WebSocket message:', error);
   }
-}, [fetchConversations]);
+}, []);
 
   // Setup WebSockets
   useEffect(() => {
@@ -294,12 +294,9 @@ export const useConversations = () => {
         instagramWs.close();
       }
     };
-}, [handleWebSocketMessage, fetchConversations, retries.whatsapp, retries.instagram]);
+}, [handleWebSocketMessage, retries.whatsapp, retries.instagram]);
 
-  // Provide a refetch function for manual refreshes
-  const refetch = useCallback(() => {
-    fetchConversations();
-  }, [fetchConversations]);
 
-  return { conversations, loading, error, refetch };
+
+  return { conversations, loading, error };
 };
