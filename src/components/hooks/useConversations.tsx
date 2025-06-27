@@ -1,6 +1,22 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from 'react';
 import { Conversation } from '../types/conversation';
 import { conversationService } from '../services/api';
+
+interface WebSocketMessage {
+  type: string;
+  platform?: string;
+  conversation?: any;
+  message?: {
+    id: string;
+    conversation_id: string;
+    content: string;
+    sender_id: string;
+    sender_name: string;
+    timestamp: string;
+    [key: string]: any;
+  };
+}
 
 // WebSocket base URLs
 const WS_BASE_URL = 'wss://egenie-whatsapp.koyeb.app';
@@ -76,60 +92,80 @@ export const useConversations = () => {
 
   // Handle WebSocket messages
   const handleWebSocketMessage = useCallback((event: MessageEvent) => {
-    try {
-      const data = JSON.parse(event.data);
-      console.log("WebSocket message received:", data);
-      
-      // Add console logging to help debug
-      console.log("Message type:", data.type);
-      
-      if (data.type === 'new_conversation') {
-        console.log("Adding new conversation:", data.conversation);
-        setConversations(prev => {
-          const exists = prev.some(c => c.id === data.conversation.id);
-          if (exists) return prev;
-          return [...prev, data.conversation];
-        });
-      } 
-      else if (data.type === 'conversation_updated') {
-        console.log("Updating conversation:", data.conversation);
-        setConversations(prev => 
-          prev.map(conv => {
-            if (conv.id === data.conversation.id) {
-              console.log("Found conversation to update:", conv);
-              console.log("Update with:", data.conversation);
-              return data.conversation;
-            }
-            return conv;
-          })
-        );
-      }
-      else if (data.type === 'new_message' || data.type === 'message') {
-        console.log("New message received:", data.message);
-        console.log("For conversation:", data.message.conversation_id);
-        
-        // Find the conversation to update based on the conversation_id in the message
-        const conversationId = data.message.conversation_id;
-        
-        setConversations(prev => 
-          prev.map(conv => {
-            if (conv.id === conversationId) {
-              console.log("Updating conversation with new message:", conv.id);
-              return {
-                ...conv,
-                last_message: data.message.content,
-                timestamp: data.message.timestamp,
-                unread_count: (conv.unread_count || 0) + 1
-              };
-            }
-            return conv;
-          })
-        );
-      }
-    } catch (error) {
-      console.error('Error handling WebSocket message:', error);
+  try {
+    const data = JSON.parse(event.data);
+    console.log("WebSocket message received:", data);
+    
+    // Helper function to ensure conversation objects match your required type
+    const ensureValidConversation = (conv: any): Conversation => {
+      // Only keep the necessary normalization to fix type issues
+      return {
+        id: conv.id || conv.conversation_id || '',
+        platform: conv.platform || 'whatsapp',
+        customer_id: conv.customer_id || '',
+        customer_name: conv.customer_name || 'Unknown',
+        last_message: conv.last_message || '',
+        timestamp: conv.timestamp || conv.last_message_timestamp || new Date().toISOString(),
+        unread_count: conv.unread_count || 0,
+        is_ai_enabled: conv.is_ai_enabled ?? true,
+        assigned_agent_id: conv.assigned_agent_id || null,
+        priority: (conv.priority === 'high' || conv.priority === 'low') ? conv.priority : 'medium',
+        sentiment: (conv.sentiment === 'positive' || conv.sentiment === 'negative') ? conv.sentiment : 'neutral',
+        email: conv.email || '',
+        billingAddress: conv.billingAddress || '',
+        shippingAddress: conv.shippingAddress || '',
+        gstin: conv.gstin || '',
+        avatar_url: conv.avatar_url || ''
+      };
+    };
+    
+    if (data.type === 'new_conversation' && data.conversation) {
+      setConversations(prev => {
+        const exists = prev.some(conv => conv.id === data.conversation.id);
+        if (exists) return prev;
+        return [...prev, ensureValidConversation(data.conversation)];
+      });
+    } 
+    else if (data.type === 'conversation_updated' && data.conversation) {
+      setConversations(prev => 
+        prev.map(conv => 
+          conv.id === data.conversation.id ? ensureValidConversation(data.conversation) : conv
+        )
+      );
     }
-  }, []);
+    else if (['new_message', 'new_whatsapp_message'].includes(data.type) && data.message) {
+      const conversationId = data.message.conversation_id;
+      const messageContent = data.message.content || '';
+      const messageTimestamp = data.message.timestamp || new Date().toISOString();
+      
+      setConversations(prev => {
+        // Check if we have this conversation already
+        const conversationExists = prev.some(conv => conv.id === conversationId);
+        
+        if (!conversationExists) {
+          // Schedule a refetch if we don't have this conversation
+          setTimeout(fetchConversations, 500);
+          return prev;
+        }
+        
+        // Update the existing conversation with the new message
+        return prev.map(conv => {
+          if (conv.id === conversationId) {
+            return {
+              ...conv,
+              last_message: messageContent,
+              timestamp: messageTimestamp,
+              unread_count: (conv.unread_count || 0) + 1
+            };
+          }
+          return conv;
+        });
+      });
+    }
+  } catch (error) {
+    console.error('Error handling WebSocket message:', error);
+  }
+}, [fetchConversations]);
 
   // Setup WebSockets
   useEffect(() => {
