@@ -217,7 +217,7 @@ export default function DashboardPage({ orgSlug }: DashboardPageProps) {
                   <div className="w-full flex justify-center items-center mt-2">
                   <div>
                     <OrganizationSwitcher
-                      afterCreateOrganizationUrl="/dashboard"
+                      afterCreateOrganizationUrl="/org/:slug"
                       afterSelectOrganizationUrl="/org/:slug"
                       afterSelectPersonalUrl="/dashboard"
                       appearance={{
