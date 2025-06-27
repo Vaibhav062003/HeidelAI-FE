@@ -80,31 +80,50 @@ export const useConversations = () => {
       const data = JSON.parse(event.data);
       console.log("WebSocket message received:", data);
       
+      // Add console logging to help debug
+      console.log("Message type:", data.type);
+      
       if (data.type === 'new_conversation') {
+        console.log("Adding new conversation:", data.conversation);
         setConversations(prev => {
-          // Check if conversation already exists
           const exists = prev.some(c => c.id === data.conversation.id);
           if (exists) return prev;
           return [...prev, data.conversation];
         });
-      } else if (data.type === 'message') {
+      } 
+      else if (data.type === 'conversation_updated') {
+        console.log("Updating conversation:", data.conversation);
         setConversations(prev => 
           prev.map(conv => {
-            if (conv.id === data.conversation_id) {
-              return {
-                ...conv,
-                last_message: data.message,
-                updated_at: new Date().toISOString()
-              };
+            if (conv.id === data.conversation.id) {
+              console.log("Found conversation to update:", conv);
+              console.log("Update with:", data.conversation);
+              return data.conversation;
             }
             return conv;
           })
         );
-      } else if (data.type === 'conversation_updated') {
+      }
+      else if (data.type === 'new_message' || data.type === 'message') {
+        console.log("New message received:", data.message);
+        console.log("For conversation:", data.message.conversation_id);
+        
+        // Find the conversation to update based on the conversation_id in the message
+        const conversationId = data.message.conversation_id;
+        
         setConversations(prev => 
-          prev.map(conv => 
-            conv.id === data.conversation.id ? data.conversation : conv
-          )
+          prev.map(conv => {
+            if (conv.id === conversationId) {
+              console.log("Updating conversation with new message:", conv.id);
+              return {
+                ...conv,
+                last_message: data.message.content,
+                timestamp: data.message.timestamp,
+                unread_count: (conv.unread_count || 0) + 1
+              };
+            }
+            return conv;
+          })
         );
       }
     } catch (error) {
@@ -239,7 +258,7 @@ export const useConversations = () => {
         instagramWs.close();
       }
     };
-  }, [handleWebSocketMessage, retries.whatsapp, retries.instagram]);
+}, [handleWebSocketMessage, fetchConversations, retries.whatsapp, retries.instagram]);
 
   // Provide a refetch function for manual refreshes
   const refetch = useCallback(() => {
