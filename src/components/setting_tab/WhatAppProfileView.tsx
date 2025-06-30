@@ -171,7 +171,6 @@ return (
     <DialogContent className="sm:max-w-[95vw] lg:max-w-[90vw] p-0">
       <DialogHeader className="px-6 pt-6 pb-2">
         <DialogTitle className="flex items-center gap-2">
-          <Phone className="h-5 w-5 text-[#25D366]" />
           WhatsApp Account Details
         </DialogTitle>
       </DialogHeader>
