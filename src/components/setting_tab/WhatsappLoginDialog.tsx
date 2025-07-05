@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner"; 
 import { WhatsAppLogo } from '@/components/icons/WhatsappLogo';
+import WhatsAppProfileView from '@/components/setting_tab/WhatAppProfileView'; // Add this import
+
 
 // WhatsApp app configuration
 const WHATSAPP_CLIENT_ID = '509681741462833';
@@ -11,7 +13,7 @@ const WHATSAPP_CONFIG_ID = '1209365947547146';
 const WHATSAPP_REDIRECT_URI = `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/whatsapp/callback`;
 
 // Add this utility function near the top of your file
-const formatPhoneNumber = (phone: string) => {
+export const formatPhoneNumber = (phone: string) => {
   if (!phone) return "";
   
   // Remove any non-digit characters
@@ -499,13 +501,13 @@ const WhatsAppLoginDialog = () => {
       </DialogContent>
       
       {/* WhatsAppProfileView component would go here similar to Instagram */}
-      {/* {connected && localStorage.getItem('whatsapp_user_id') && (
+      {connected && localStorage.getItem('whatsapp_user_id') && (
         <WhatsAppProfileView
           whatsappId={localStorage.getItem('whatsapp_user_id') || ''}
           isOpen={showProfileView}
           onClose={() => setShowProfileView(false)}
         />
-      )} */}
+      )}
     </Dialog>
   );
 };

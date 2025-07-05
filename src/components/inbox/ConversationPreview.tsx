@@ -85,9 +85,9 @@ const ConversationPreview = ({
                 High
               </Badge>
             )}
-            {unreadCount > 0 && (
+            {/* {unreadCount > 0 && (
               <Badge className="rounded-full" variant="destructive">{unreadCount}</Badge>
-            )}
+            )} */}
           </div>
         </div>
       </div>

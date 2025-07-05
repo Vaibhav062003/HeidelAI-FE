@@ -133,35 +133,35 @@ export const useConversations = () => {
         )
       );
     }
-    // else if (['new_message', 'new_whatsapp_message'].includes(data.type) && data.message) {
-    //   const conversationId = data.message.conversation_id;
-    //   const messageContent = data.message.content || '';
-    //   const messageTimestamp = data.message.timestamp || new Date().toISOString();
+    else if (['new_message', 'new_whatsapp_message'].includes(data.type) && data.message) {
+      const conversationId = data.message.conversation_id;
+      const messageContent = data.message.content || '';
+      const messageTimestamp = data.message.timestamp || new Date().toISOString();
       
-    //   setConversations(prev => {
-    //     // Check if we have this conversation already
-    //     const conversationExists = prev.some(conv => conv.id === conversationId);
+      setConversations(prev => {
+        // Check if we have this conversation already
+        const conversationExists = prev.some(conv => conv.id === conversationId);
         
-    //     if (!conversationExists) {
-    //       // Schedule a refetch if we don't have this conversation
-    //       setTimeout(fetchConversations, 500);
-    //       return prev;
-    //     }
+        if (!conversationExists) {
+          // Schedule a refetch if we don't have this conversation
+          setTimeout(fetchConversations, 500);
+          return prev;
+        }
         
-    //     // Update the existing conversation with the new message
-    //     return prev.map(conv => {
-    //       if (conv.id === conversationId) {
-    //         return {
-    //           ...conv,
-    //           last_message: messageContent,
-    //           timestamp: messageTimestamp,
-    //           unread_count: (conv.unread_count || 0) + 1
-    //         };
-    //       }
-    //       return conv;
-    //     });
-    //   });
-    // }
+        // Update the existing conversation with the new message
+        return prev.map(conv => {
+          if (conv.id === conversationId) {
+            return {
+              ...conv,
+              last_message: messageContent,
+              timestamp: messageTimestamp,
+              unread_count: (conv.unread_count || 0) + 1
+            };
+          }
+          return conv;
+        });
+      });
+    }
   } catch (error) {
     console.error('Error handling WebSocket message:', error);
   }
