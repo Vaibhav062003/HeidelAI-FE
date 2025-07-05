@@ -3,7 +3,7 @@ import React, { useState,useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Toaster, toast } from "sonner";
 import { useSignIn, useUser, useClerk } from "@clerk/nextjs";
 
@@ -14,6 +14,7 @@ export default function LoginPage() {
   const { isSignedIn, user } = useUser();
   const { signIn, isLoaded } = useSignIn();
   const { signOut } = useClerk();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
@@ -22,7 +23,16 @@ export default function LoginPage() {
         router.push("/dashboard");
       }, 1200); // Give user time to see the toast
     }
-  }, [isLoaded, isSignedIn, router]);
+
+    // Show toast if redirected with error
+    const error = searchParams.get("error");
+    if (error === "not_member") {
+      toast.error("You are not a member of this organization.");
+    }
+    if (error === "not_authenticated") {
+      toast.error("Please sign in to continue.");
+    }
+  }, [isLoaded, isSignedIn, router, searchParams]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();

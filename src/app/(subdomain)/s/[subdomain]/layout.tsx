@@ -2,7 +2,8 @@
 import type { Metadata } from 'next'
 import "../../../globals.css"
 import { Inter } from 'next/font/google'
-import { ClerkProvider } from '@clerk/nextjs'
+import { ClerkProvider, SignedIn, SignedOut, SignInButton } from '@clerk/nextjs'
+import LoginPage from '@/app/login/page'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -65,8 +66,7 @@ export default function RootLayout({
           publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}
           afterSignOutUrl="/" 
         >
-          { children}
-          
+            { children}       
         </ClerkProvider>
       </body>
     </html>
