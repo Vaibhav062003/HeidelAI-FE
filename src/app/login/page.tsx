@@ -23,15 +23,6 @@ export default function LoginPage() {
         router.push("/dashboard");
       }, 1200); // Give user time to see the toast
     }
-
-    // Show toast if redirected with error
-    const error = searchParams.get("error");
-    if (error === "not_member") {
-      toast.error("You are not a member of this organization.");
-    }
-    if (error === "not_authenticated") {
-      toast.error("Please sign in to continue.");
-    }
   }, [isLoaded, isSignedIn, router, searchParams]);
 
   const handleSignIn = async (e: React.FormEvent) => {

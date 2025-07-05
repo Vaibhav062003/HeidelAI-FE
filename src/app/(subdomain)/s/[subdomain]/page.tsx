@@ -1,37 +1,19 @@
 import DashboardPage from '@/app/dashboard/page';
-import { clerkClient, auth } from '@clerk/nextjs/server';
-import { redirect } from 'next/navigation';
-
+import {clerkClient} from '@clerk/nextjs/server';
 interface Params {
   subdomain: string;
 }
-
-export default async function Subdomain({ params }: { params: Params }) {
-  const { subdomain } = params;
-  const { userId } = await auth();
-
-  if (!userId) {
-    // Not logged in, redirect to login with error
-    redirect(`/login?error=not_authenticated`);
-  }
+export default async function Subdomain({params}: {params: Promise<Params>}) {
+  const {subdomain} = await params;
 
   const client = await clerkClient();
-  const org = await client.organizations.getOrganization({ slug: subdomain });
-  if (!org) {
-    redirect('/404');
-  }
-  // Check if the user is a member of the organization
-  const membershipsResponse = await client.organizations.getOrganizationMembershipList({ organizationId: org.id });
-  const isMember = membershipsResponse.data.some(
-    (m) => m.publicUserData?.userId === userId
-  );
+  const org = await client.organizations.getOrganization({slug: subdomain});
 
-  if (!isMember) {
-    // Not a member, redirect to login with error
-    redirect(`/login?error=not_member`);
-  }
+  const orgID =org.id
+  console.log(orgID)
 
   return (
-    <DashboardPage orgSlug={org.id} />
+    <DashboardPage orgSlug={orgID}/>
+   
   );
 }
