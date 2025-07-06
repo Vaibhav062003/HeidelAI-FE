@@ -80,22 +80,22 @@ export default function DashboardPage({ orgSlug }: DashboardPageProps) {
   const [showContact, setShowContact] = useState(false);
   const [sharedProduct, setSharedProduct] = useState<Product | null>(null);
   const [showOrgSwitcher, setShowOrgSwitcher] = useState(false);
-  const { isSignedIn, isLoaded } = useUser();
+  const { isSignedIn, isLoaded, user } = useUser();
 
   useEffect(() => {
+    console.log(user)
     if (isLoaded && !isSignedIn) {
       router.push("/");
     }
-  }, [isLoaded, isSignedIn, router]);
+  }, [isLoaded, isSignedIn, router, user]);
 
+
+    
   useEffect(() => {
     if (orgSlug) {
-      // Fetch org-specific data here
-      // Example: fetch(`/api/org/${orgSlug}/data`)
-      // Or set state, etc.
       console.log("Current orgSlug:", orgSlug);
     }
-  }, [orgSlug]);
+  }, [orgSlug]) ;
 
   const handleConversationSelect = (id: string) => {
     setSelectedConversationId(id);
@@ -199,6 +199,10 @@ export default function DashboardPage({ orgSlug }: DashboardPageProps) {
                   <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
               </TabsTrigger>
+
+              {/* <button onClick={()=> fetchOrgData()} className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative">
+                fetch org data
+              </button> */}
 
               {isSignedIn &&(
                 <>

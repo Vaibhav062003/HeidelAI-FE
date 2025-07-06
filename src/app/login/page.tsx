@@ -17,13 +17,15 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
+    console.log("isLoaded:", isLoaded, "isSignedIn:", isSignedIn, "user:", user);
+    if (isLoaded && isSignedIn && user) {
+      console.log("User object:", user);
       toast.success("Already signed in! Redirecting to dashboard...");
       setTimeout(() => {
         router.push("/dashboard");
-      }, 1200); // Give user time to see the toast
+      }, 1200);
     }
-  }, [isLoaded, isSignedIn, router, searchParams]);
+  }, [isLoaded, isSignedIn, router, searchParams, user]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,8 +36,34 @@ export default function LoginPage() {
         password,
       });
       if (result.status === "complete") {
-        toast.success("Login successful! Redirecting...");
-        window.location.href = "/dashboard"; // <-- Force full reload
+        toast.success("Login successful! Checking organization...");
+
+        // Fetch organization memberships from your API
+        const res = await fetch("/api/getorgdata");
+        const memberships = await res.json();
+
+        // Find the membership for the logged-in email
+        const membership = memberships.data.find(
+          (item: { public_user_data?: { identifier?: string } }) => item.public_user_data?.identifier === email
+        );
+
+        if (membership && membership.organization?.slug) {
+          // Build the subdomain URL for local development
+          const orgSlug = membership.organization.slug;
+          const baseDomain = window.location.hostname.replace(/^[^.]+\./, ''); // strips any existing subdomain
+          const port = window.location.port ? `:${window.location.port}` : '';
+          const protocol = window.location.protocol;
+
+          // Compose the full subdomain URL (e.g., http://heidelai.localhost:3000/)
+          const subdomainUrl = `${protocol}//${orgSlug}.${baseDomain}${port}/`;
+
+          window.location.href = subdomainUrl;
+        } else {
+          toast.info("No organization found for this email. Redirecting to dashboard...");
+          setTimeout(() => {
+            window.location.href = "/dashboard";
+          }, 1200);
+        }
       }
     } catch (err: unknown) {
       if (
@@ -53,6 +81,8 @@ export default function LoginPage() {
       }
     }
   };
+;
+
   return (
     <section className="h-[100vh] px-6 flex items-center justify-center">
       <Toaster position="top-center" richColors />

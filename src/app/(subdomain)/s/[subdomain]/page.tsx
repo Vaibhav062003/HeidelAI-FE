@@ -1,19 +1,22 @@
+import { clerkClient } from '@clerk/nextjs/server';
 import DashboardPage from '@/app/dashboard/page';
-import {clerkClient} from '@clerk/nextjs/server';
+
 interface Params {
   subdomain: string;
 }
-export default async function Subdomain({params}: {params: Promise<Params>}) {
-  const {subdomain} = await params;
 
-  const client = await clerkClient();
-  const org = await client.organizations.getOrganization({slug: subdomain});
+interface SubdomainProps {
+  params: Params;
+}
 
-  const orgID =org.id
-  console.log(orgID)
+export default async function Subdomain({ params }: SubdomainProps) {
+  const { subdomain } = params;
 
-  return (
-    <DashboardPage orgSlug={orgID}/>
-   
-  );
+  // Fetch the org using Clerk
+  const clerk = await clerkClient();
+  const org = await clerk.organizations.getOrganization({ slug: subdomain });
+  const slug = org.slug
+  
+
+  return <DashboardPage orgSlug={slug} />;
 }
