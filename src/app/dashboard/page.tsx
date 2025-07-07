@@ -89,7 +89,6 @@ export default function DashboardPage({ orgSlug }: DashboardPageProps) {
     }
   }, [isLoaded, isSignedIn, router, user]);
 
-
     
   useEffect(() => {
     if (orgSlug) {
