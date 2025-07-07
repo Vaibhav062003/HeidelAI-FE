@@ -29,7 +29,7 @@ export default function Navbar() {
       transition={{ duration: 0.6,delay:1.5, type: "ease" }}
       className='fixed top-0 w-full z-50'
     >
-      <nav className={`fixed top-0 -mt-9 w-full   z-50 
+      <nav className={`fixed top-0 w-full   z-50 
         ${hasScrolled ? 'backdrop-blur-sm bg-black/30 border-b border-neutral-900/50' : 'bg-transparent'}`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
@@ -66,7 +66,7 @@ export default function Navbar() {
                   <a href="#pricing" className="text-gray-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium">
                     Pricing
                   </a>
-              <button className="text-gray-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium" onClick={() => router.push('/admin-signup')}>Get Started</button>
+              <button className="text-gray-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium" onClick={() => router.push('/auth/admin-signup')}>Get Started</button>
               <button className="text-gray-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium" onClick={() => router.push('/login')}>Login</button>
                 </div>
               </div>

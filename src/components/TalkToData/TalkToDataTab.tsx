@@ -185,7 +185,7 @@ const TalkToDataTab = () => {
   return (
     <Card className="h-screen m-4">
       <style>{typingIndicatorStyles}</style>
-      <CardContent className="p-6 flex h-full">
+      <CardContent className="p-20 flex h-full">
         <div className="flex flex-col h-full w-full bg-white">
           <div className="border-b p-4">
             <h2 className="text-xl font-semibold">Talk to Data</h2>

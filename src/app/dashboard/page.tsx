@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-// import {toast, Toaster} from 'sonner';
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/components/firebase";
@@ -19,6 +18,8 @@ import AutomationRules from "@/components/inbox/AutomationRules";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ContactsDashboard from "@/components/Contacts/ContactsDashboard";
 import SettingsSidebar from "@/components/setting_tab/SettingsSidebar";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Inbox } from "lucide-react";
 import {
   MessageSquare,
   BarChart2,
@@ -28,17 +29,14 @@ import {
   Contact2Icon,
   ContactRoundIcon,
   BotMessageSquare,
-  LogOut
-  // Wand2,
-  // Users,
+  LogOut,
 } from "lucide-react";
-import { EmojiProvider } from '@/components/EmojiProvider';
+import { EmojiProvider } from "@/components/EmojiProvider";
 import TalkToDataTab from "@/components/TalkToData/TalkToDataTab";
 import Image from "next/image";
 import Link from "next/link";
-import { createClient } from '@supabase/supabase-js';
-import { toast } from 'sonner';
-// Add this with other imports at the top
+import { createClient } from "@supabase/supabase-js";
+import { toast } from "sonner";
 import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
 import RemainderSideBar from "@/components/inbox/ReminderSideBar";
 import { InstagramLogoIcon } from "@radix-ui/react-icons";
@@ -48,21 +46,19 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-
-
 interface Product {
   id: string;
   category: string;
   description: string;
   images: string;
   name: string;
-  on_sale: string; // Use boolean if the data contains `true/false` instead of `"True"/"False"`
+  on_sale: string;
   permalink: string;
   price: number;
   product_id: number;
-  purchasable: string; // Use boolean if the data contains `true/false`
-  regular_price: string; // Use `number` if parsed as numeric values
-  sale_price: string; // Use `number` if parsed as numeric values
+  purchasable: string;
+  regular_price: string;
+  sale_price: string;
   slug: string;
   stock_quantity: number;
 }
@@ -73,20 +69,16 @@ interface UserProfile {
   full_name?: string;
 }
 
-// const Home = ({
-//   selectedChannels = ["all"],
-//   selectedConversationId = "",
-//   isTranslationEnabled = false,
-// }: HomeProps) => {
-  
-// import { Phone, Video, MessageSquare, Globe, Smile, Paperclip, Send } from 'lucide-react'
-
-
 export default function DashboardPage() {
   const router = useRouter();
   const [activeView, setActiveView] = useState<
-  "inbox" | "analytics" | "billing" | "settings" | "talktodata" | "analyticsbot"
->("inbox");
+    | "inbox"
+    | "analytics"
+    | "billing"
+    | "settings"
+    | "talktodata"
+    | "analyticsbot"
+  >("inbox");
   const [showTeamPanel, setShowTeamPanel] = useState(false);
   const [selectedConversationId, setSelectedConversationId] =
     useState<string>("");
@@ -95,18 +87,19 @@ export default function DashboardPage() {
   const [sharedProduct, setSharedProduct] = useState<Product | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-
+  const [isConversationListVisible, setIsConversationListVisible] =
+    useState(true);
+  const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
 
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
       await supabase.auth.signOut();
-      toast.success('Successfully logged out');
-      router.push('/login');
+      toast.success("Successfully logged out");
+      router.push("/login");
     } catch (error) {
-      console.error('Error logging out:', error);
-      toast.error('Failed to log out. Please try again.');
+      console.error("Error logging out:", error);
+      toast.error("Failed to log out. Please try again.");
     } finally {
       setIsLoggingOut(false);
     }
@@ -114,9 +107,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
       if (error || !user) {
-        router.push('/login');
+        router.push("/login");
         return;
       }
       setUser(user);
@@ -124,9 +120,11 @@ export default function DashboardPage() {
 
     checkUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
-        router.push('/login');
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        router.push("/login");
       }
     });
 
@@ -149,192 +147,272 @@ export default function DashboardPage() {
           className="flex-1 flex overflow-hidden"
         >
           {/* Left Sidebar */}
-          <div className="max-w-10 fixed left-0 h-full z-20">
-          <TabsList className="h-full flex-col items-start justify-start gap-4 pt-6 bg-white/90 backdrop-blur-sm border-r">
-          <div className="w-full flex justify-center items-center mb-6">
-                <Link href="/" >
-                  <Image src='/logo.png' alt="logo" width={30} height={30}/>
-              </Link>
+          <div className="w-36 fixed left-0 h-full z-20">
+            <TabsList className="h-full flex flex-col items-start justify-between pt-6 bg-white/90 backdrop-blur-sm border-r">
+              {/* Top section: Logo and Profile */}
+              <div className="w-full">
+                <div className="w-full flex justify-center items-center mb-6">
+                  <Link href="/">
+                    <Image src="/logo.png" alt="logo" width={30} height={30} />
+                  </Link>
+                </div>
+
+                {/* Navigation Tabs */}
+                <div className="w-full space-y-1">
+                  <TabsTrigger
+                    onClick={() => {
+                      setSelectedConversationId("");
+                    }}
+                    value="inbox"
+                    className="group w-full flex items-center px-4 py-3 hover:bg-gray-100 rounded-r-lg"
+                  >
+                    <div className="flex items-center w-full max-w-[140px] mx-auto">
+                      <div className="w-6 flex justify-center">
+                        <MessageSquare className="h-5 w-5" />
+                      </div>
+                      <span className="ml-2">Inbox</span>
+                    </div>
+                  </TabsTrigger>
+
+                  <TabsTrigger
+                    value="Contacts"
+                    className="group w-full flex items-center px-4 py-3 hover:bg-gray-100 rounded-r-lg"
+                  >
+                    <div className="flex items-center w-full max-w-[140px] mx-auto">
+                      <div className="w-6 flex justify-center">
+                        <ContactRoundIcon className="h-5 w-5" />
+                      </div>
+                      <span className="ml-2">Contacts</span>
+                    </div>
+                  </TabsTrigger>
+
+                  <TabsTrigger
+                    value="talktodata"
+                    className="group w-full flex items-center px-4 py-3 hover:bg-gray-100 rounded-r-lg"
+                  >
+                    <div className="flex items-center w-full max-w-[140px] mx-auto">
+                      <div className="w-6 flex justify-center">
+                        <BotMessageSquare className="h-5 w-5" />
+                      </div>
+                      <span className="ml-2">Talk to Data</span>
+                    </div>
+                  </TabsTrigger>
+
+                  <TabsTrigger
+                    value="analyticsbot"
+                    className="group w-full flex items-center px-4 py-3 hover:bg-gray-100 rounded-r-lg"
+                  >
+                    <div className="flex items-center w-full max-w-[140px] mx-auto">
+                      <div className="w-6 flex justify-center">
+                        <BarChart2 className="h-5 w-5" />
+                      </div>
+                      <span className="ml-2">Analytics</span>
+                    </div>
+                  </TabsTrigger>
+
+                  <TabsTrigger
+                    value="influencerbot"
+                    className="group w-full flex items-center px-4 py-3 hover:bg-gray-100 rounded-r-lg"
+                  >
+                    <div className="flex items-center w-full max-w-[140px] mx-auto">
+                      <div className="w-6 flex justify-center">
+                        <InstagramLogoIcon className="h-5 w-5" />
+                      </div>
+                      <span className="ml-2">InfluIndex</span>
+                    </div>
+                  </TabsTrigger>
+
+                  <TabsTrigger
+                    value="billing"
+                    className="group w-full flex items-center px-4 py-3 hover:bg-gray-100 rounded-r-lg"
+                  >
+                    <div className="flex items-center w-full max-w-[140px] mx-auto">
+                      <div className="w-6 flex justify-center">
+                        <CreditCard className="h-5 w-5" />
+                      </div>
+                      <span className="ml-2">Billing</span>
+                    </div>
+                  </TabsTrigger>
+
+                  <TabsTrigger
+                    value="settings"
+                    className="group w-full flex items-center px-4 py-3 hover:bg-gray-100 rounded-r-lg"
+                  >
+                    <div className="flex items-center w-full max-w-[140px] mx-auto">
+                      <div className="w-6 flex justify-center">
+                        <Settings className="h-5 w-5" />
+                      </div>
+                      <span className="ml-2">Settings</span>
+                    </div>
+                  </TabsTrigger>
+                </div>
               </div>
 
-              <TabsTrigger
-                onClick={() => { setSelectedConversationId(""); }}
-                value="inbox"
-                className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
-              >
-                <MessageSquare className="h-5 w-5" />
-                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  Inbox
-                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
-                </span>
-              </TabsTrigger>
+              {/* Bottom section: Logout button and Profile */}
+              <div className="w-full px-4 pb-13 flex flex-col items-center">
+                {/* Logout button above avatar */}
+                <div className="w-full mb-4">
+                  {user && (
+                    <button
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className={`w-full p-1 py-15
+          flex items-center justify-center gap-2
+          text-red-600 hover:bg-red-50
+          rounded-lg transition-colors duration-200
+          ${isLoggingOut ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      {isLoggingOut ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
+                      ) : (
+                        <>
+                          <LogOut className="h-5 w-5" />
+                          {/* <span>Logout</span> */}
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
 
-              {/* <TabsTrigger
-                value="analytics"
-                className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
-              >
-                <BarChart2 className="h-5 w-5" />
-                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  Analytics
-                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
-                </span>
-              </TabsTrigger> */}
+                {/* Profile Section below logout button */}
+                {user && (
+                  <div className="flex flex-col items-center w-full">
+                    <div className="cursor-pointer rounded-lg p-2 flex flex-col items-center w-full">
+                      {user.avatar_url ? (
+                        <img
+                          src={user.avatar_url}
+                          alt="Profile"
+                          className="w-8 h-8 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                          <span className="text-gray-600 text-sm">
+                            {user.email?.[0].toUpperCase()}
+                          </span>
+                        </div>
+                      )}
 
-              <TabsTrigger
-                value="Contacts"
-                className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
-              >
-                <ContactRoundIcon className="h-5 w-5" />
-                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  Contacts
-                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
-                </span>
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="talktodata"
-                className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
-              >
-                <BotMessageSquare className="h-5 w-5" />
-                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  Talk to Data
-                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
-                </span>
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="analyticsbot"
-                className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
-              >
-                <BarChart2 className="h-5 w-5" />
-                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  Analytics Bot
-                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
-                </span>
-              </TabsTrigger>
-
-              <TabsTrigger
-          value="influencerbot"
-          className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
-                >
-                <InstagramLogoIcon className="h-5 w-5" />
-                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  Influencer Analysis
-                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
-                </span>
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="billing"
-                className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
-              >
-                <CreditCard className="h-5 w-5" />
-                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  Billing
-                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
-                </span>
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="settings"
-                className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
-              >
-                <Settings className="h-5 w-5" />
-                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  Settings
-                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
-                </span>
-              </TabsTrigger>
-<div className="mt-auto mb-6 w-full">
-  {user && (
-    <div className="relative ">
-      {/* Always visible logout button */}
-      <button
-  onClick={handleLogout}
-  disabled={isLoggingOut}
-  className={`w-full mb-2 p-2 py-3 
-    flex items-center justify-center gap-2
-    text-red-600 hover:bg-red-50
-    rounded-lg transition-colors duration-200
-    ${isLoggingOut ? 'opacity-50 cursor-not-allowed' : ''}`}
->
-  {isLoggingOut ? (
-    <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
-  ) : (
-    <LogOut className="h-5 w-5" />
-  )}
-</button>
-
-
-
-      {/* Profile Section */}
-      <div className="cursor-pointer hover:bg-gray-100 rounded-lg p-2 relative group">
-        {user.avatar_url ? (
-          <img
-            src={user.avatar_url}
-            alt="Profile"
-            className="w-8 h-8 rounded-full"
-          />
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-            <span className="text-gray-600 text-sm">
-              {user.email?.[0].toUpperCase()}
-            </span>
-          </div>
-        )}
-        {/* Email tooltip on hover */}
-        <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-          {user.email}
-          <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
-        </span>
-      </div>
-    </div>
-  )}
-</div>
-            </TabsList>{" "}
-          </div>
-
-          {/* Main Content Area */}
-          <div className="flex-1 flex flex-col ml-16 overflow-hidden">
-          <TabsContent value="inbox" className="flex-1 flex overflow-hidden h-full m-0">
-            <TabsContent value="inbox" className="flex-1 flex overflow-hidden h-full m-0">
-            <div className="flex w-full">
-              {/* Conversation List - Fixed width */}
-              <div className="w-[290px] min-w-[280px] border-r border-gray-200">
-                <ConversationList
-                  selectedConversationId={selectedConversationId}
-                  onConversationSelect={setSelectedConversationId}
-                />
-              </div>
-
-              {/* Chat View - Flexible width */}
-              <div className="flex-1 flex flex-col h-full min-w-[400px]">
-              <ChatView 
-                selectedConversationId={selectedConversationId} 
-                sharedProduct={sharedProduct}
-                onClearSharedProduct={() => setSharedProduct(null)}
-              />              
-              </div>
-
-              {/* Right Sidebar - Fixed width */}
-              <div className="w-[360px] min-w-[280px] border-l border-gray-200">
-                {selectedConversationId ? (
-                  <Sidebar 
-                  selectedConversationId={selectedConversationId}
-                  onConversationSelect={setSelectedConversationId}
-                  onShareProduct={(product) => setSharedProduct(product)}
-                />
-                ):(
-                  <RemainderSideBar/>
-                )}
-                {showTeamPanel && (
-                  <div className="mt-4">
-                    <TeamCollaboration />
+                      {/* Email displayed below avatar - fully visible */}
+                      <div className="mt-1 text-xs text-gray-600 break-words text-center w-full max-w-[130px]">
+                        {user.email}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
-          </TabsContent>
+            </TabsList>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col ml-36 overflow-hidden">
+            <TabsContent
+              value="inbox"
+              className="flex-1 h-full w-full overflow-hidden m-0"
+            >
+              <TabsContent
+                value="inbox"
+                className="flex-1 h-full w-full overflow-hidden m-0"
+              >
+                <div className="flex w-full">
+                  {/* Conversation List - Fixed width */}
+                  <div
+                    className={`transition-all duration-300 ease-in-out ${
+                      isConversationListVisible ? "w-[290px]" : "w-0 min-w-0"
+                    } border-r border-gray-200 relative`}
+                  >
+                    <div
+                      className={`${
+                        isConversationListVisible ? "block" : "hidden"
+                      }`}
+                    >
+                      <ConversationList
+                        selectedConversationId={selectedConversationId}
+                        onConversationSelect={setSelectedConversationId}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Collapse Button - Positioned to always be visible */}
+                  <div
+                    className={`absolute top-1 ${
+                      isConversationListVisible ? "left-[440px]" : "left-18"
+                    } z-20 transition-all duration-300 ease-in-out`}
+                  >
+                    <button
+                      onClick={() =>
+                        setIsConversationListVisible(!isConversationListVisible)
+                      }
+                      className="p-1.5 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors shadow-md"
+                    >
+                      {isConversationListVisible ? (
+                        <ChevronLeft className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Chat View - Flexible width */}
+                  <div className="flex-1 flex flex-col h-full min-w-[400px]">
+                    <ChatView
+                      selectedConversationId={selectedConversationId}
+                      sharedProduct={sharedProduct}
+                      onClearSharedProduct={() => setSharedProduct(null)}
+                    />
+                  </div>
+
+                  {/* Right Sidebar - Collapsible */}
+                  <div
+                    className={`relative transition-all duration-300 ease-in-out ${
+                      isRightSidebarVisible ? "w-[360px]" : "w-0 min-w-0"
+                    }`}
+                  >
+                    {/* Collapse Button */}
+                    <div
+                      className={`absolute top-1 ${
+                        isRightSidebarVisible ? "left-[-28]" : "left-[-35px]"
+                      } z-20 transition-all duration-300 ease-in-out`}
+                    >
+                      <button
+                        onClick={() =>
+                          setIsRightSidebarVisible(!isRightSidebarVisible)
+                        }
+                        className="p-1.5 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors shadow-md"
+                      >
+                        {isRightSidebarVisible ? (
+                          <ChevronRight className="h-4 w-4" />
+                        ) : (
+                          <ChevronLeft className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Sidebar Content */}
+                    <div
+                      className={`border-l border-gray-200 h-full ${
+                        isRightSidebarVisible ? "block" : "hidden"
+                      }`}
+                    >
+                      {selectedConversationId ? (
+                        <Sidebar
+                          selectedConversationId={selectedConversationId}
+                          onConversationSelect={setSelectedConversationId}
+                          onShareProduct={(product) =>
+                            setSharedProduct(product)
+                          }
+                        />
+                      ) : (
+                        <RemainderSideBar />
+                      )}
+                      {showTeamPanel && (
+                        <div className="mt-4">
+                          <TeamCollaboration />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
             </TabsContent>
 
             <TabsContent
@@ -344,20 +422,12 @@ export default function DashboardPage() {
               <ContactsDashboard />
             </TabsContent>
 
-            {/* <TabsContent
-              value="analytics"
-              className="m-0 flex-1 p-6 overflow-auto"
-            >
-              <AnalyticsDashboard />
-            </TabsContent> */}
-
             <TabsContent
               value="talktodata"
               className="m-0 flex-1 fixed top-0 w-[96vw] h-full overflow-hidden"
             >
               <TalkToDataTab />
             </TabsContent>
-
 
             <TabsContent
               value="analyticsbot"
@@ -372,7 +442,7 @@ export default function DashboardPage() {
             >
               <InfluencerBot />
             </TabsContent>
-            
+
             <TabsContent
               value="billing"
               className="m-0 fixed top-0 w-[96vw] flex-1 p-6 overflow-auto"
@@ -386,8 +456,6 @@ export default function DashboardPage() {
             >
               <SettingsSidebar />
             </TabsContent>
-
-            {/* <StatusBar /> */}
           </div>
         </Tabs>
       </div>
