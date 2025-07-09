@@ -366,7 +366,7 @@ const AnalyticsBot = () => {
 
   return (
     
-    <Card className="h-screen m-4">
+      <Card className="h-[100vh] w-[1350px] translate-x-[-40px] mx-auto my-4 shadow-lg rounded-xl">
         <style>{typingIndicatorStyles}</style>
         <style>{processingOverlayStyles}</style>
       <CardContent className="p-6 flex h-full">

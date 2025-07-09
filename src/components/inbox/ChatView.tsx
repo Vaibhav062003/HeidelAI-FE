@@ -886,25 +886,9 @@ const ChatView = ({
             sender_id: sender_id
           }),
         });
-      } else {
-        // Use regular endpoint for other conversations
-        response = await fetch('https://egenie-whatsapp.koyeb.app/conversations/send_message', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            conversation_id: selectedConversationId,
-            content: contentToSend,
-            type: 'text',
-            sender_id: sender_id,
-            platform: platform,
-          }),
-        });
-      }
+      } 
 
-      if (!response.ok) throw new Error('Failed to send message');
+      if (response && !response.ok) throw new Error('Failed to send message');
       setMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
@@ -1383,7 +1367,7 @@ useEffect(() => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[900px] sm:max-h-[600px]">
   <DialogHeader>
-    <DialogTitle className="text-2xl">{conversation?.customer_name} Information</DialogTitle>
+    <DialogTitle className="text-2xl">Customer Information</DialogTitle>
   </DialogHeader>
   {conversation && (
     <CustomerInfo
@@ -2476,5 +2460,4 @@ export const FileMessage = ({ fileUrl, fileName, fileType }: {
 };
 
 export default ChatView;
-
 

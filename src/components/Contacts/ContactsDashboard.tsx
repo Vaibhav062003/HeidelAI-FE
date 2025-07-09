@@ -52,7 +52,8 @@ const ContactsDashboard = () => {
       let query = supabase
         .from('contacts')
         .select('*');
-  
+      
+      console.log("contacts :" ,query);
       if (selectedTag) {
         query = query.contains('tags', [selectedTag]);
       }
@@ -68,8 +69,9 @@ const ContactsDashboard = () => {
       })) || []);
       // console.log("contact",contacts);
 
-    } catch (err) {
-      setError((err as Error).message);
+  } catch (err) {
+    console.error("Failed to fetch contacts:", err); // Add detailed logging
+    setError("Failed to load contacts. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -81,7 +83,7 @@ const ContactsDashboard = () => {
       await fetchTags();
     };
     fetchInitialData();
-  }, []);
+  }, [selectedTag]);
 
   useEffect(() => {
     fetchContacts();
@@ -299,7 +301,7 @@ const ContactsDashboard = () => {
   );
 
   return (
-    <div className="h-screen w-full flex flex-row bg-background">
+      <div className="h-screen w-[1400px] flex flex-row bg-background">
       <TagSidebar
         tags={tags}
         tagsLoading={tagsLoading}
@@ -324,27 +326,29 @@ const ContactsDashboard = () => {
           />
         </div>
 
-        <div className="flex-1 overflow-hidden p-4">
-          {loading ? (
-            <div className="h-full flex items-center justify-center">
-              <Spinner />
+       <div className="flex-1 overflow-hidden p-4">
+        {loading ? (
+          <div className="h-full flex items-center justify-center">
+            <Spinner />
+          </div>
+        ) : filteredContacts.length === 0 ? ( 
+          <div className="h-full flex items-center justify-center">
+            <p className="text-gray-500 text-lg">
+              {searchQuery ? "No matching contacts found 🔍" : "No contacts found 🔍"}
+            </p>
+          </div>
+        ) : (
+          <div className="h-full flex flex-col">
+            <div className="flex-1 overflow-y-auto bg-white rounded-lg shadow-sm border">
+              {paginatedContacts.map((contact) => ( 
+                <ContactItem
+                  key={contact.id}
+                  contact={contact}
+                  onEdit={() => handleEdit(contact)}
+                  onDelete={() => handleDelete(contact.id)}
+                />
+              ))}
             </div>
-          ) : contacts.length === 0 ? (
-            <div className="h-full flex items-center justify-center">
-              <p className="text-gray-500 text-lg">No contacts found 🔍</p>
-            </div>
-          ) : (
-            <div className="h-full flex flex-col">
-              <div className="flex-1 overflow-y-auto bg-white rounded-lg shadow-sm border">
-      {filteredContacts.map((contact) => (
-        <ContactItem
-          key={contact.id}
-          contact={contact}
-          onEdit={() => handleEdit(contact)}
-          onDelete={() => handleDelete(contact.id)}
-        />
-      ))}
-              </div>
 
               {filteredContacts.length > itemsPerPage && (
                 <div className="flex-none pt-4">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Search, X, ArrowRight, ArrowLeft, Check, PlayIcon } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
-import InstagramProfileView from "../setting_tab/InstagramProfileView";
+// import InstagramProfileView from "../setting_tab/InstagramProfileView";
 import { Loader2 } from "lucide-react";
 
 const supabase = createClient(

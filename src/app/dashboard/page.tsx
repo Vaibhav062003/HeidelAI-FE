@@ -334,15 +334,20 @@ export default function DashboardPage() {
 
                   {/* Collapse Button - Positioned to always be visible */}
                   <div
-                    className={`absolute top-1 ${
-                      isConversationListVisible ? "left-[440px]" : "left-18"
-                    } z-20 transition-all duration-300 ease-in-out`}
+                    className={`relative transition-all duration-300 ease-in-out ${
+                      isConversationListVisible ? "w-[2px]" : "w-0 min-w-0"
+                    }`}
                   >
+                    <div
+                      className={`fixed top-0 h-screen ${
+                        isConversationListVisible ? "left-[400px]" : "left-[2px]"
+                      } z-20 transition-all duration-300 ease-in-out`}
+                    ></div>
                     <button
                       onClick={() =>
                         setIsConversationListVisible(!isConversationListVisible)
                       }
-                      className="p-1.5 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors shadow-md"
+                        className="h-full w-4 flex items-center justify-center bg-gray-200 hover:bg-gray-300 transition-colors"
                     >
                       {isConversationListVisible ? (
                         <ChevronLeft className="h-4 w-4" />
@@ -354,11 +359,13 @@ export default function DashboardPage() {
 
                   {/* Chat View - Flexible width */}
                   <div className="flex-1 flex flex-col h-full min-w-[400px]">
-                    <ChatView
-                      selectedConversationId={selectedConversationId}
-                      sharedProduct={sharedProduct}
-                      onClearSharedProduct={() => setSharedProduct(null)}
-                    />
+                    <div className="h-[800px]">
+                      <ChatView
+                        selectedConversationId={selectedConversationId}
+                        sharedProduct={sharedProduct}
+                        onClearSharedProduct={() => setSharedProduct(null)}
+                      />
+                    </div>
                   </div>
 
                   {/* Right Sidebar - Collapsible */}
@@ -369,15 +376,15 @@ export default function DashboardPage() {
                   >
                     {/* Collapse Button */}
                     <div
-                      className={`absolute top-1 ${
-                        isRightSidebarVisible ? "left-[-28]" : "left-[-35px]"
+                      className={`fixed top-0 h-screen ${
+                        isRightSidebarVisible ? "right-[360px]" : "right-[2px]"
                       } z-20 transition-all duration-300 ease-in-out`}
                     >
                       <button
                         onClick={() =>
                           setIsRightSidebarVisible(!isRightSidebarVisible)
                         }
-                        className="p-1.5 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors shadow-md"
+                        className="h-full w-4 flex items-center justify-center bg-gray-200 hover:bg-gray-300 transition-colors"
                       >
                         {isRightSidebarVisible ? (
                           <ChevronRight className="h-4 w-4" />
