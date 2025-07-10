@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const token = "sk_test_PrnwhPUhc6DKbpHbwnwf8aRt58wv2g3p34lKAyvRG9"
+const token = process.env.CLERK_TOKEN_KEY;
 
 export async function GET() {
   try{
@@ -20,7 +20,7 @@ export async function GET() {
     return NextResponse.json(data, {
       status: 200,
       headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=3600',
+        'Cache-Control': 'public, s-maxage=60',
       },
     });
   }

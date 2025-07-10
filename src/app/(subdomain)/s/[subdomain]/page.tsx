@@ -10,7 +10,7 @@ interface SubdomainProps {
 }
 
 export default async function Subdomain({ params }: SubdomainProps) {
-  const { subdomain } = params;
+  const { subdomain } = await params;
 
   // Fetch the org using Clerk
   const clerk = await clerkClient();
