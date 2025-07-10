@@ -9,6 +9,7 @@ import json  # Import the json module
 from contextlib import asynccontextmanager  # Import asynccontextmanager
 import requests
 from tavily import TavilyClient
+import datetime
 
 def extract_conclusions(response_text):
     if "CONCLUSIONS:" in response_text:
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 # YouTube API Key (Replace with your actual API key)
 
 # Configure Gemini API
-GEMINI_API_KEY = "AIzaSyB7x81BRsUcQwfMcnENs0NumkaaRPkY_gM"  # Replace with your API key
+GEMINI_API_KEY = "AIzaSyBVY2HB4BHkrPw8Vo0i_9AbwImaKo8vgWM"  # Replace with your API key
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel(
     'gemini-2.0-flash-thinking-exp-01-21',
@@ -34,7 +35,7 @@ model = genai.GenerativeModel(
 finalmodel = genai.GenerativeModel(
     'gemini-2.0-flash-thinking-exp-01-21',
     generation_config={
-        'temperature': 0.1, # Lower temperature for more focused responses
+        # 'temperature': 0, # Lower temperature for more focused responses
         # 'max_output_tokens': 2048
     }
 )
@@ -47,94 +48,77 @@ class QueryAnalysisDeps:
     user_context: Optional[str] = None
 
 class QueryResult(BaseModel):
-    platform_queries: dict = Field(description="Platform-specific queries")
+    platform_queries: dict = Field(description="Platform-specific search queries")
 
 
 class QueryAgent:
     def __init__(self):
         self.model = model
         self.system_prompt = ("""
-You are QueryCraft, a specialized AI system designed to transform user information needs into optimized search queries across digital platforms. Your core function is to generate clean, effective platform-specific queries.
-
-Your output must follow this exact format:
-YouTube: [only the YouTube query]
-Instagram: [only the Instagram hashtags]
-Reddit: [only the Reddit query]
-Google: [only the Google query]
-
-Each platform should have exactly one line containing only the platform name followed by its query.
-Never include queries for other platforms within a single platform's query.
-Never use markdown formatting, headers, or explanatory text in your responses.
-
-""")
+        You are QueryCraft, an AI system that transforms user queries into optimized platform-specific search queries. Output must strictly follow this format:
+        YouTube: [query]
+        Instagram: [hashtags]
+        Reddit: [query]
+        Google: [query]
+        Do not include explanations or markdown formatting.
+        """)
 
     
-    async def generate_platform_queries(self, query: str,platforms: List[str]) -> dict:
+    async def generate_platform_queries(self, query: str, platforms: List[str]) -> dict:
         platform_queries = {}
         for platform in platforms:
             # Platform-Specific Query Generation Prompt
-            prompt = f"""
-            before constructing any query for any platform use chain of thinking weather that query genereated for platform is right or not if not change it by yourself and dont show your chain of thinking thoought in output just give queries that you have built
-    Transform the user's query into an optimized search query for {platform.capitalize()}.
-    ## Input Query
-    {query}
-    ## Platform Guidelines
-    ### YouTube
-    - Focus on 3-5 keywords maximum
-    - Include content type words like "explained," "debate," "analysis"
-    - Add recency markers when relevant (year, month)
-    ### Instagram Hashtags
-    - if name of person is added just with his name as hastag (e.g. narendra modi)
-    - dont create separete hastag with location if location is given.
-    - example narendra modi speech in india hastag should be narendra modi, naredramodispeech 
-    - Convert concepts to hashtag format (word or CombinedPhrase WITHOUT #)
-    - always use person name while creating hastag if person name is given in query
-    - Include 3-4 relevant tags without spaces or punctuation
-    - Start with most specific, then add other related things as tags to reach wider audience
-    - be concise to Query only dont go off topic must include main key points from topic only no other
-    
-    ### Reddit
-     always have subreddit prefix compulsory 
-    -use the location as the subreddit prefix if a location is mentioned in the query (e.g., r/india, r/pune) for first and second then use other information from query to generate relavent subreddit prefix.
-    -Ensure the person's name is included as the main topic if mentioned in the query (e.g., r/india narendra modi) nothing else should be given other than that not at all.
-    -Use only one subreddit prefix per query. Avoid including multiple subreddit prefixes unless explicitly requested.
-    -Strictly use keywords from the query to target a specific subreddit. Avoid adding unrelated terms.
-    -Prioritize targeting politically diverse subreddits when applicable.
-    -Place the subreddit prefix at the beginning of the query (e.g., r/india reasons for NCP loss).
-    -Avoid creating subreddit prefixes if the query does not specify a location or subreddit context.
-    -Ensure the query remains concise and directly relevant to the topic, avoiding unnecessary details.
-    - create 3-4 such query and separate them with coma
+            pprompt = f"""
+            Your task is to generate a search query specifically for the {platform} platform based on the user's request.
 
-    ### Google
-    - Incorporate search operators when helpful (e.g., filetype:, intitle:)
-    - Avoid restricting searches to specific sites unless explicitly requested
-    - Use quotation marks for exact phrases
-    - Add source qualifiers only if necessary for authoritative information
-    ## CRITICAL OUTPUT INSTRUCTIONS
-    Your response MUST follow this EXACT format:
-    [only the {platform.capitalize()} query]
-    DO NOT include:
-    - Markdown formatting or section headers
-    - Explanatory text or descriptions
-    Example of CORRECT output for YouTube:
-    NCP Pune election loss analysis 2025 explained
-    Example of CORRECT output for Instagram:
-    NCPPune PuneElection2025 PunePolitics NCPPune 
-    Example of CORRECT output for Reddit:
-    r/pune NCP Pune loss reasons 2025, r/PoliticalDiscussion, r/IndiaSpeaks, r/IndiaTax, r/IndiaNews, r/IndiaDiscussion
-    Example of CORRECT output for Google:
-    NCP losing Pune 2025 political social economic reasons
-    """
+            User Query: "{query}"
+
+            ONLY return the result in this exact format — no extra lines, no markdown, no explanations.
+
+            Format:
+            {platform.capitalize()}: [query or hashtags]
+
+            Guidelines:
+            ### YouTube: Use 3-5 descriptive keywords, which will help finding proper video related to User Query
+            ### Instagram Hashtags
+                - if name of person is added just with his name as hastag (e.g. narendra modi)
+                - dont create separete hastag with location if location is given.
+                - example narendra modi speech in india hastag should be narendra modi, naredramodispeech 
+                - Convert concepts to hashtag format (word or CombinedPhrase WITHOUT #)
+                - always use person name while creating hastag if person name is given in query
+                - Include 3-4 relevant tags without spaces or punctuation
+                - Start with most specific, then add other related things as tags to reach wider audience
+                - be concise to Query only dont go off topic must include main key points from topic only no other
+            ### Reddit
+                always have subreddit prefix compulsory 
+                -generate two three reddit query compulsory each with separate 
+                -separate each query with ","
+                -generate one query using the location as the subreddit prefix if a location is mentioned in the query (e.g., r/india, r/pune).
+                -Ensure the person's name is included as the main topic if mentioned in the query (e.g., r/india narendra modi) nothing else should be given other than that not at all.
+                -Use only one subreddit prefix per query. Avoid including multiple subreddit prefixes unless explicitly requested.
+                -Strictly use keywords from the query to target a specific subreddit. Avoid adding unrelated terms.
+                -Prioritize targeting politically diverse subreddits when applicable.
+                -Place the subreddit prefix at the beginning of the query (e.g., r/india reasons for NCP loss).
+                -Avoid creating subreddit prefixes if the query does not specify a location or subreddit context.
+                -Ensure the query remains concise and directly relevant to the topic, avoiding unnecessary details. 
+            ### Google: Focus on natural search terms or use operators if helpful.
+
+            Output must start with **exactly**:
+            {platform.capitalize()}:
+            """
+
             try:
-                response = self.model.generate_content(prompt)
-                raw_query = response.text.strip().strip('"') if response.text else query
-                # Sanitize the query
-                sanitized_query = (
+                response = self.model.generate_content(pprompt)  # Use pprompt here
+                raw_query = response.text.strip() if response.text else query
+                # Extract only the line starting with the platform name
+                lines = raw_query.splitlines()
+                platform_line = next(
+                    (line for line in lines if line.strip().lower().startswith(f"{platform.lower()}:")), 
                     raw_query
-                    .replace('```', '')  # Remove triple backticks
-                    .replace('\\"', '')  # Remove escaped double quotes
-                    .replace('"', '')    # Remove remaining double quotes
-                    .strip()             # Remove leading/trailing whitespace
+                )
+                # Remove the platform prefix and extra spaces
+                sanitized_query = (
+                    platform_line.split(":", 1)[-1].strip()
                 )
                 platform_queries[platform] = sanitized_query
             except Exception as e:
@@ -144,9 +128,6 @@ Never use markdown formatting, headers, or explanatory text in your responses.
 
 async def process_query(query: str, platforms: List[str], user_context: Optional[str] = None):
     agent = QueryAgent()
-
-   
-
     # Generate platform-specific queries
     platform_queries = await agent.generate_platform_queries(
         query=query,
@@ -392,19 +373,14 @@ class AIAnalysisAgent(BaseModel):
         
         formatted_data = self._format_crawl_results(crawl_results)
         prompt = f"""
-        Collect and summarize only the most relevant data from the provided web-scraped content that is directly related to the query. Ignore unrelated or off-topic content. Follow these steps:
-
-        1. Read the content of each source and identify the parts that are directly relevant to the query and summarise them together.
-        2. Summarize the relevant information into a concise and cohesive summary.
-        3. Focus on key points, arguments, and evidence that align with the query's intent.
-        4. Exclude any unrelated or tangential information.
-        5. if any political party is included please check in deapth how it relates
-
+        Analyze the provided web-scraped content and extract only the most relevant information related to the query. Ensure the analysis is concise and focused. Follow these steps:
+        1. Identify and summarize the parts of the content that directly address the query.
+        2. Highlight key points, arguments, and evidence that align with the query's intent.
+        3. Exclude any unrelated or off-topic information.
+        4. If political parties are mentioned, analyze their relevance in detail.
         Query: {query}
-
         Content: {formatted_data}
-
-        Return the summary and proper anlysis as plain text, focusing only on the relevant data.
+        Provide a plain-text summary with a clear focus on the relevant data.
         """
         try:
             response = model.generate_content(prompt)
@@ -468,7 +444,7 @@ class WebDataProcessor:
         except Exception as e:
             logger.error(f"Error saving to JSON: {str(e)}")
 
-YOUTUBE_API_KEY = "AIzaSyBXFEeq3xY5plspfca4gnloNzrLBFPtPkk"
+YOUTUBE_API_KEY = "AIzaSyDh73McvzphxQss1PBdL863ayXThVV6QCk"
 YOUTUBE_BASE_URL = "https://www.googleapis.com/youtube/v3/"
 
 # Pydantic models for structured data
@@ -605,20 +581,19 @@ class YouTubeAnalysisAgent(BaseModel):
 
     async def analyze_dataset(self, videos: List[VideoDetails], query: str) -> str:
         formatted_data = self._format_videos(videos)
+        """
+        Analyze YouTube data using the YouTubeAnalysisAgent.
+        """
         prompt = f"""
-        Collect and summarize only the most relevant data from the provided YouTube videos that is directly related to the query. Ignore unrelated or off-topic content. Follow these steps:
-        stricktly watch video, use url to watch the video and get the data from the video and summarise them together
-        
-        1. Watch the videos and read the comments to identify the parts that are directly relevant to the query.
-        2. Summarize the relevant information into a concise and cohesive summary.
-        3. Focus on key points, arguments, and evidence that align with the query's intent.
-        4. Exclude any unrelated or tangential information.
-
+        Analyze the provided YouTube video data to extract the most relevant information related to the query. Follow these steps:
+        1. Summarize the key points discussed in the video titles and descriptions also watch the video using link/url in video data
+        2. Identify any recurring themes or patterns across the videos.
+        3. Exclude unrelated or off-topic information.
+        4. Focus only on content directly addressing the query.
+        5. please provide detailed information given in videos dont miss anything
         Query: {query}
-
-        content: {formatted_data}
-
-        Return the summary as plain text, focusing only on the relevant data.
+        Video Data: {videos}
+        Provide the summary as plain text, focusing only on relevant data.
         """
         try:
             response = model.generate_content(prompt)
@@ -714,6 +689,7 @@ class RedditPost(BaseModel):
     platform: str = "reddit"
     comments: List[RedditComment] = []
 
+
 class RedditScraperAgent:
     async def fetch_reddit_data(self, queries: str, limit: int = 10) -> List[RedditPost]:
         """
@@ -721,25 +697,15 @@ class RedditScraperAgent:
         """
         all_reddit_posts = []
         try:
-            # Split the queries by commas and process each one
-            query_list = [query.strip() for query in queries.split(",")]
+            # Split the combined query into individual subreddit queries
+            query_list = [q.strip() for q in queries.split(',') if q.strip()]
+            logger.info(f"Reddit queries to process: {query_list}")
 
             for query in query_list:
                 try:
-                    # Parse the query to extract subreddit and search term
-                    if ' ' in query:
-                        # Split the query into subreddit and search term
-                        subreddit, search_term = query.split(' ', 1)
-                        subreddit = subreddit.strip()
-                        search_term = search_term.strip()
-                        # Construct the URL with subreddit and restrict search to the subreddit
-                        url = f"https://www.reddit.com/{subreddit}/search.json?q={requests.utils.quote(search_term)}&limit={limit}&sort=top&restrict_sr=1"
-                    else:
-                        # Construct the URL for a general search
-                        url = f"https://www.reddit.com/search.json?q={requests.utils.quote(query)}&limit={limit}&sort=top"
-
-                    # Print the constructed URL
-                    print(f"Constructed Reddit URL: {url}")
+                    # Construct the URL for each query
+                    url = f"https://www.reddit.com/search.json?q={requests.utils.quote(query)}&limit={limit}&sort=top"
+                    logger.info(f"Constructed Reddit URL: {url}")
 
                     headers = {"User-Agent": "Mozilla/5.0"}
                     response = requests.get(url, headers=headers, timeout=10)
@@ -753,8 +719,6 @@ class RedditScraperAgent:
                         post_response = requests.get(post_url, headers=headers, timeout=10)
                         post_response.raise_for_status()
                         post_details = post_response.json()
-
-                        # Extract top-level comments and their nested replies
                         comments = self._extract_comments(post_details[1]["data"]["children"])
 
                         reddit_post = RedditPost(
@@ -805,21 +769,14 @@ class RedditAnalysisAgent(BaseModel):
     async def analyze_dataset(self, posts: List[RedditPost],query: str) -> str:
         formatted_data = self._format_posts(posts)
         prompt = f"""
-        Collect and summarize only the most relevant data from the provided Reddit posts and comments that is directly related to the query. Ignore unrelated or off-topic content. Follow these steps:
-
-        read all post together and summarise together dont summarise individual post. keep only main key points from the topic no others should be included 
-        1. Read the posts and comments to identify the parts that are directly relevant to the query summarise them all together.
-        2. Summarize the relevant information into a concise and cohesive summary.
-        3. Focus on key points, arguments, and evidence that align with the query's intent.
-        4. Exclude any unrelated or tangential information.
-
+        Analyze the provided Reddit posts and comments to extract the most relevant information related to the query. Follow these steps:
+        1. Read all posts and comments together to identify parts directly addressing the query.
+        2. Summarize key points, arguments, and evidence into a concise and cohesive summary.
+        3. Exclude unrelated or off-topic information.
+        4. If the data is not related to the query, return "null" or indicate that data scraping was incomplete.
         Query: {query}
-
-        if data is not related to query dont return anything give null or say data scrapping is not done properly
-
-        content: {formatted_data}
-
-        Return the summary as plain text, focusing only on the relevant data.
+        Content: {formatted_data}
+        Provide the summary as plain text, focusing only on relevant data.
         """
         try:
             response = model.generate_content(prompt)
@@ -832,8 +789,6 @@ class RedditAnalysisAgent(BaseModel):
             logger.error(f"Error collecting and summarizing data: {e}")
             return f"Data collection failed due to an error: {str(e)}"
         
-    # ...existing code...
-
     def _format_posts(self, posts: List[RedditPost]) -> str:
         """
         Format Reddit post details into a readable string for the prompt.
@@ -982,21 +937,14 @@ class HashtagAnalysisAgent(BaseModel):
         
         formatted_data = self._format_crawl_results(crawl_results)
         prompt = f"""
-        Collect and summarize only the most relevant data from the provided Instagram posts and comments that is directly related to the query. Ignore unrelated or off-topic content. Follow these steps:
-
-        check the url and get the data from the post and summarise them all together
-        1. Read the captions and comments to identify the parts that are directly relevant to the query.
-        2. Summarize the relevant information into a concise and cohesive summary.
-        3. Focus on key points, arguments, and evidence that align with the query's intent.
-        4. Exclude any unrelated or tangential information.
-
+        Analyze the provided Instagram posts and comments to extract the most relevant information related to the query. Follow these steps:
+        1. Read captions and comments to identify parts directly addressing the query.
+        2. Summarize key points, arguments, and evidence into a concise and cohesive summary.
+        3. Exclude unrelated or off-topic information.
+        4. If the data is not related to the query, drop it.
         Query: {query}
-
-        if data is not related to query drop it
-
-        content: {formatted_data}
-
-        Return the summary as plain text, focusing only on the relevant data.
+        Content: {formatted_data}
+        Provide the summary as plain text, focusing only on relevant data.
         """
         try:
             response = model.generate_content(prompt)
@@ -1043,226 +991,162 @@ class HashtagDataProcessor:
             json.dump({'analysis': analysis_result}, f, ensure_ascii=False, indent=4)
         logger.info(f"Analysis results saved to {filename}")
 
+from pydantic import BaseModel
+import datetime
+import logging
+
+logger = logging.getLogger(__name__)
+
 class FinalAnalysisAgent(BaseModel):
+    model: genai.GenerativeModel
     class Config:
         arbitrary_types_allowed = True
 
+    def __init__(self, model: genai.GenerativeModel):
+        super().__init__(model=model)
+
     async def analyze_combined(self, youtube_analysis: str, reddit_analysis: str, web_analysis: str, instagram_analysis: str = "", refined_context: str = "") -> str:
-        prompt = f"""
-        POLARON v2.0: Hyper-Tactical Political Dominance Engine  
-*Next-Gen Multi-Platform Election Warfare Protocol*
-
----
-
-## Strategic Imperative  
-Transform {refined_context}, {youtube_analysis}, {reddit_analysis}, {web_analysis}, and {instagram_analysis} into atomic political weapons through this 7-phase protocol:
-
----
-
-### Phase 1: Data Decryption (72hr Pre-Strike Analysis)  
-1. *YouTube DNA Extraction*  
-   - Isolate 3 frame sequences with >22% emotional retention from {youtube_analysis}  
-   - Reverse-engineer ideal video kill-chain: Hook (0:00-0:07) → Distract (0:08-1:14) → Strike (1:15-END)  
-
-2. *Reddit Hivemind Exploitation*  
-   - Map {reddit_analysis} to create:  
-     - 5 "Concerned Citizen" persona templates  
-     - 11 viral post structures using top karma-gain patterns  
-
-3. *Instagram Neuro-Programming*  
-   - Clone EXACT color schemes/filters from {instagram_analysis} top 3 viral posts  
-   - Micro-schedule Stories using engagement decay rates  
-
-4. *Web Search Poisoning*  
-   - Identify 7 autocomplete voids in {web_analysis}  
-   - Create 19 SEO landmines using long-tail keyword combos  
-
----
-
-### Phase 2: Voter Cortex Mapping  
-
-
-1. YouTube:
-    - Attention Triggers: Pause/rewind clusters at [XX:XX] timestamps
-    - Emotional Landmines: >3s freeze-frames causing 28% rage engagement
-2. Reddit:
-    - Meme Mutation Rate: Calculate hourly sarcasm escalation patterns
-    - Troll Farm Signatures: Detect bot-like comment intervals
-3. Instagram:
-    - Swipe Betrayal Points: 0.8s hesitation before exiting policy posts
-    - AR Filter Addiction: Geofenced trigger zones from location data
-4. Web:
-    - Search Panic Thresholds: 3+ related queries → 92% conversion potential
-    - Dark Pattern Hotspots: Cookie consent blind spots
-
-
----
-
-### Phase 3: Atomic Strategy Formulation  
-*A. YouTube Annihilation Protocol*  
-
-
-► Surgical Strike: Insert 9-frame subliminal glitches in opposition videos
-
-- Source: {youtube_analysis} top 3 retention markers
-- Schedule: Between 21:47-23:12 local time when CTR drops 38%
-
-► Comment Section Blitzkrieg:
-
-- Deploy 14 persona bots mimicking {reddit_analysis} top commenters
-- Attack rhythm: 1 viral meme → 3 factual counterpoints → 2 emotional triggers
-
-
-
-*B. Reddit Cognitive Dissonance Matrix*  
-
-
-► Narrative Contagion:
-
-- Seed 7 variations of {reddit_analysis} top post in 43m increments
-- Amplify via "Concerned Centrist" accounts (profile pics from {instagram_analysis})
-
-► Opposition Sabotage:
-
-- Overload mod queues with 119 reposts/hr of their controversial posts
-
-
-
-*C. Instagram Reality Distortion Field*  
-
-
-► AR Filter Warfare:
-
-- Embed policy slogans in 3 viral dance challenges from {instagram_analysis}
-- Trigger activation when facial recognition detects 0.3s smirk duration
-
-► Story Swipe Trap:
-
-- Clone EXACT gradient scheme from top influencer posts
-- Insert policy hook at 0:07s (peak attention) with fake "swipe error"
-
-
-
-*D. Web Memory Hole Creation*  
-
-
-► Autocomplete Poison:
-
-- Hijack {web_analysis} missing keywords to:
-"Opposition Leader [animal comparison] [corruption verb]"
-
-► Google Bomb:
-
-- Create 14 microsites with CSS triggers from {web_analysis} browser stats
-- Redirect 92% of opposition name searches to scandal archives
-
-
-
----
-
-### Phase 4: Execution Blueprint  
-
-
-
-## Immediate Action Orders (48hr Window)
-
-► **YouTube Strike Package**
-
-- Target: "PolicyVideo_2247" (1:07 retention cliff from {youtube_analysis})
-- Weapon: 11-frame "data glitch" exposing opposition lies
-- Delivery: 23:47 local time via 14 compromised influencer channels
-
-► **Reddit False Flag Ops**
-
-- Subreddit: r/UrbanVoters (38% latent anger in {reddit_analysis})
-- Deploy: "Accidental" policy leak using top 3 meme templates
-- Bot Amplification: 1:4 organic:bot ratio mimicking local dialects
-
-► **Instagram Neuro-Campaign**
-
-- Filter: "DemocracyGlow" (clone of viral \#DanceChallenge from {instagram_analysis})
-- Trigger: Activates when smile duration >1.4s (data from YouTube facial analysis)
-
-► **Web Obliteration**
-
-- Autocomplete Poison: "Why [Opposition Leader] hates [local cuisine]"
-- Google Bomb: Redirect 92% of "policy reform" searches to our attack sites
-
-
-
----
-
-## Validation & Brutality Metrics  
-1. *Impact Score* (1-10): Rate strategies on:  
-   - Platform-specific pain maximization  
-   - Opposition countermeasure complexity  
-   - Cultural resonance from {refined_context}  
-
-2. *Plausibility Matrix*  
-   - API call patterns matching platform norms  
-   - Bot behavior within {reddit_analysis} detection thresholds  
-   - Geolocation tags matching {instagram_analysis} clusters  
-
-3. *Deniability Ladder*  
-   - Layer 1: Fake grassroots orgs using {web_analysis} domain patterns  
-   - Layer 2: AI-generated "leak" documents with {youtube_analysis} metadata  
-   - Layer 3: Crisis actors trained on {reddit_analysis} comment mannerisms  
-
----
-
-## Example Output: Instagram Reality Warp  
-
-
-**Filter Name:** "VoteGlitch"
-**Source Data:**
-
-- Color Scheme: \#FF2288 → \#22FF88 gradient from {instagram_analysis} top reel
-- Activation: When camera detects 2+ people (data from YouTube comment complaints)
-
-**Deployment:**
-
-1. Seed via 7 nano-influencers (1k-5k followers) at 17:32 local time
-2. Embed subliminal policy codes in filter distortion effects
-3. Trigger "accidental" viral challenge using {reddit_analysis} meme cadence
-
-**Expected Impact:**
-
-- 38% filter adoption → 19% slogan recall → 7% direct vote conversion
-- Opposition forced to address "glitch" → 14% media cycle takeover
-
-
         """
+        Perform combined analysis across multiple platforms.
+        """
+        timestamp = datetime.datetime.now().strftime("%B %d, %Y at %H:%M:%S")
+
         try:
-            response = finalmodel.generate_content(prompt)
-            analysis_text = response.text.strip() if response.text else ""
-            filtered_analysis = extract_conclusions(analysis_text)
-            if not filtered_analysis:
-                logger.error("Empty response from AI model.")
-                return "Analysis failed: The AI model returned an empty response."
-            return filtered_analysis
+            # Section 1: Generate prompts
+            prompts = {
+                "key_entities": f"""
+                Analyze the multi-platform data collected on {timestamp} and focus on:
+                1. KEY ENTITIES AND INDIVIDUALS:
+                - List each named person/organization mentioned.
+                - Detail their roles, actions, and relationships.
+                - Include direct quotes or timestamps when available.
+                - Compare portrayals across platforms.
+                based on refined_context: {refined_context} do the things
+                Platform Data:
+                YouTube: {youtube_analysis}
+                Reddit: {reddit_analysis}
+                Web: {web_analysis}
+                Instagram: {instagram_analysis}
+                
+Guidelines:
+            - Ensure clarity and cohesion.
+            - Highlight contradictions or agreements across platforms.
+            - Maintain a neutral tone.
+                """,
+
+                "event_timeline": f"""
+                Analyze the multi-platform data collected on {timestamp} and focus on:
+                2. EVENT/TOPIC TIMELINE:
+                - Chronologically order major developments.
+                - Note which platforms reported which.
+                - Highlight timing discrepancies.
+                based on refined_context: {refined_context} do the things
+                Platform Data:
+                YouTube: {youtube_analysis}
+                Reddit: {reddit_analysis}
+                Web: {web_analysis}
+                Instagram: {instagram_analysis}
+                
+Guidelines:
+            - Ensure clarity and cohesion.
+            - Highlight contradictions or agreements across platforms.
+            - Maintain a neutral tone.
+                """,
+
+                "viewpoint_analysis": f"""
+                Analyze the multi-platform data collected on {timestamp} and focus on:
+                3. VIEWPOINT ANALYSIS:
+                - Break down perspectives by platform.
+                - Quantify support/opposition.
+                - Note demographics if available.
+                - Identify consensus.
+                based on refined_context: {refined_context} do the things
+                Platform Data:
+                YouTube: {youtube_analysis}
+                Reddit: {reddit_analysis}
+                Web: {web_analysis}
+                Instagram: {instagram_analysis}
+                
+Guidelines:
+            - Ensure clarity and cohesion.
+            - Highlight contradictions or agreements across platforms.
+            - Maintain a neutral tone.
+                """,
+
+                "evidence_sources": f"""
+                Analyze the multi-platform data collected on {timestamp} and focus on:
+                4. EVIDENCE AND SOURCES:
+                - List cited sources.
+                - Note verified vs unverified claims.
+                - Include platform-specific evidence.
+                based on refined_context: {refined_context} do the things
+                Platform Data:
+                YouTube: {youtube_analysis}
+                Reddit: {reddit_analysis}
+                Web: {web_analysis}
+                Instagram: {instagram_analysis}
+                
+Guidelines:
+            - Ensure clarity and cohesion.
+            - Highlight contradictions or agreements across platforms.
+            - Maintain a neutral tone.
+                """,
+
+                "contextual_factors": f"""
+                Analyze the multi-platform data collected on {timestamp} and focus on:
+                5. CONTEXTUAL FACTORS:
+                - Cultural/historical context.
+                - Relevant policies.
+                - Economic/social impact.
+                based on refined_context: {refined_context} do the things
+                Platform Data:
+                YouTube: {youtube_analysis}
+                Reddit: {reddit_analysis}
+                Web: {web_analysis}
+                Instagram: {instagram_analysis}
+                
+Guidelines:
+            - Ensure clarity and cohesion.
+            - Highlight contradictions or agreements across platforms.
+            - Maintain a neutral tone.
+                """
+            }
+
+            # Section 2: Call model
+            key_entities_result = self.model.generate_content(prompts["key_entities"]).text.strip()
+            event_timeline_result = self.model.generate_content(prompts["event_timeline"]).text.strip()
+            viewpoint_analysis_result = self.model.generate_content(prompts["viewpoint_analysis"]).text.strip()
+            evidence_sources_result = self.model.generate_content(prompts["evidence_sources"]).text.strip()
+            contextual_factors_result = self.model.generate_content(prompts["contextual_factors"]).text.strip()
+
+            # Section 3: Combine results
+            combined_analysis = (
+                f"Key Entities:\n{key_entities_result}\n\n"
+                f"Event Timeline:\n{event_timeline_result}\n\n"
+                f"Viewpoint Analysis:\n{viewpoint_analysis_result}\n\n"
+                f"Evidence Sources:\n{evidence_sources_result}\n\n"
+                f"Contextual Factors:\n{contextual_factors_result}"
+            )
+            return combined_analysis
+
         except Exception as e:
-            logger.error(f"Error analyzing combined dataset: {e}")
-            return f"Analysis failed due to an error: {str(e)}"
-        
+            logger.error(f"Error in final analysis: {e}")
+            return f"Analysis failed due to error: {str(e)}"
+
 class RelevanceAgent(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
     async def check_relevance(self, query: str, combined_analysis: str) -> dict:
         prompt = f"""
-    Evaluate the relevance of this combined analysis to the original query using the following reasoning steps:
-    1. IDENTIFY the main focus of the query: "{query}"
-    2. EVALUATE how well the analysis addresses this focus
-    3. CONCLUDE with a relevance score (0-1) and brief justification
-
-    Format your response as:
-    REASONING: [Your step-by-step analysis - keep brief]
-    CONCLUSIONS: [{{"relevance_score": X, "justification": "Y"}}]
-
-    Return ONLY the CONCLUSIONS section in your response as a valid JSON string.
-
-    Combined Analysis: {combined_analysis}
-    """
+        Evaluate the relevance of the combined analysis to the original query. Follow these steps:
+        1. Identify the main focus of the query: "{query}".
+        2. Assess how well the analysis addresses this focus.
+        3. Provide a relevance score (0-1) and a brief justification.
+        Combined Analysis: {combined_analysis}
+        Return the result as a JSON string in this format:
+        {"relevance_score": X, "justification": "Y"}
+        """
         try:
             response = model.generate_content(prompt)
             result = response.text.strip() if response.text else "{}"
@@ -1286,8 +1170,14 @@ class AggregatorAgent:
         self.reddit_analysis_agent = RedditAnalysisAgent()
         self.instagram_scraper_agent = HashtagScraperAgent(search_config=HashtagSearchConfig(hashtag=""))
         self.instagram_analysis_agent = HashtagAnalysisAgent()
-        self.final_analysis_agent = FinalAnalysisAgent()
+        self.final_analysis_agent = FinalAnalysisAgent(model=genai.GenerativeModel(
+            'gemini-2.0-flash-thinking-exp-01-21',
+        ))
         self.check_relavance_agent = RelevanceAgent()
+        # Add refinement and follow-up agents
+        self.follow_up_agent = FollowUpQuestionAgent(self.query_agent)
+        self.refine_query_agent = RefineQueryAgent(self.query_agent)
+        self.refine_context_agent = RefineContextAgent(self.query_agent)
 
     async def scrape_web(self, query: str) -> List[TavilyCrawlResult]:
         """Scrape web data using the TavilySearchAgent."""
@@ -1312,7 +1202,7 @@ class AggregatorAgent:
         """
         return await self.reddit_scraper_agent.fetch_reddit_data(queries=query, limit=10)
 
-    # async def scrape_web(self, query: str) -> List[CrawlResult]:
+    # async def scrape_web(self, query: str) -> List<CrawlResult]:
     #     """
     #     Scrape web data using the WebScraperAgent.
     #     """
@@ -1350,11 +1240,11 @@ class AggregatorAgent:
         """
         return await self.instagram_analysis_agent.analyze_dataset(crawl_results, query=query)
 
-    async def analyze_combined(self, youtube_analysis: str, reddit_analysis: str, web_analysis: str, instagram_analysis: str = "") -> str:
+    async def analyze_combined(self, youtube_analysis: str, reddit_analysis: str, web_analysis: str, instagram_analysis: str = "", refined_context: str= "") -> str:
         """
         Perform a combined analysis using the FinalAnalysisAgent.
         """
-        return await self.final_analysis_agent.analyze_combined(youtube_analysis, reddit_analysis, web_analysis, instagram_analysis)
+        return await self.final_analysis_agent.analyze_combined(youtube_analysis, reddit_analysis, web_analysis, instagram_analysis, refined_context=refined_context)
     
     async def check_relevance(self, query: str, combined_analysis: str) -> dict:
         """
@@ -1389,47 +1279,97 @@ class AggregatorAgent:
             json.dump(aggregated_data, f, ensure_ascii=False, indent=4)
         logger.info(f"Aggregated raw data saved to {filename}")
 
+class FollowUpQuestionAgent:
+    def __init__(self, query_agent):
+        self.query_agent = query_agent
+
     async def ask_follow_up_questions(
         self, youtube_analysis: str, reddit_analysis: str, web_analysis: str, instagram_analysis: str
     ) -> str:
         """
-        Ask follow-up questions based on the platform-specific analyses and refine the context for the final analysis.
+        Ask follow-up questions one at a time and collect responses to refine the context.
         """
-        print("\nBefore proceeding to the final analysis, let's refine the context.")
+        print("\nLet's refine the context with a few targeted questions.")
         follow_up_context = {}
-        # Generate follow-up questions dynamically
-        follow_up_prompt = f"""
-        Based on the following platform-specific analyses, generate a SINGLE follow-up question for the user to clarify or refine the context for the final analysis.
-        YouTube Analysis: {youtube_analysis}
-        Reddit Analysis: {reddit_analysis}
-        Web Analysis: {web_analysis}
-        Instagram Analysis: {instagram_analysis}
-        Guidelines:
-        - ask about which candidate analysis should be done in first question also ask about political party
-        - have look into data what should be next most relavant question that can make your work easy while analysing data and also chcek how that can help user
-        - Focus on asking for which candidate and political party analysis should be done.
-        - Ask about specific aspects, such as target audience, timeframe, or key focus areas.
-        - Ensure the question is concise and directly related to the analyses.
-        - If no further clarification is needed, return "NO_MORE_QUESTIONS".
-        ask 2-3 questions to get the clear picture of the analysis
-        Return ONLY the follow-up question as plain text, without quotes or additional explanation.
+
+        # Generate questions prompt
+        questions_prompt = f"""
+        Based on the platform-specific analyses, generate 2-3 follow-up questions. Return each question on a new line.
+        Focus on:
+        1. Political beneficiary/target identification
+        2. Strategic goals and objectives
+        3. Target audience and emotional tone
+
+        Platform analyses:
+        YouTube: {youtube_analysis}
+        Reddit: {reddit_analysis}
+        Web: {web_analysis}
+        Instagram: {instagram_analysis}
+
+        Return only the numbered questions, one per line.
         """
-        response = self.query_agent.model.generate_content(follow_up_prompt)
-        follow_up_question = response.text.strip()
-        # Check if no more questions are needed
-        if follow_up_question == "NO_MORE_QUESTIONS":
-            print("\nNo further refinements needed. Proceeding with the final analysis.")
-            return ""
-        # Ask the follow-up question
-        print(f"\nQ: {follow_up_question}")
-        user_response = input("A: ").strip()
-        # If the user provides a response, add it to the context
-        if user_response:
-            follow_up_context["follow_up_question"] = follow_up_question
-            follow_up_context["user_response"] = user_response
-        # Return the refined context as a string
+
+        # Get questions from the model
+        response = self.query_agent.model.generate_content(questions_prompt)
+        questions = response.text.strip().split('\n')
+
+        # Ask questions one at a time
+        for question in questions:
+            if not question.strip():
+                continue
+
+            # Clean up the question format
+            clean_question = question.strip().lstrip('123456789.').strip()
+            print(f"\nQ: {clean_question}")
+
+            # Get user response
+            user_response = input("A: ").strip()
+
+            if user_response:
+                # Store both question and answer
+                follow_up_context[clean_question] = user_response
+
+        # Return the refined context as a JSON string
         return json.dumps(follow_up_context, indent=2)
 
+class RefineQueryAgent:
+    def __init__(self, query_agent):
+        self.query_agent = query_agent
+
+    def generate_refinement_question(self, refined_query: str) -> str:
+        refinement_prompt_template = """
+        You are an expert in query analysis and refinement. Your task is to understand the user's original query and generate a single follow-up question to refine their information need.
+        Original query: "{query}"
+        Guidelines:
+        1. Ask for location if relevant and not already provided.
+        2. Focus on clarifying intent (e.g., specific aspects, timeframes, content types).
+        3. Avoid unnecessary or repetitive questions.
+        4. Ensure the question is concise and directly related to the query.
+        5. If no further clarification is needed, return "NO_MORE_QUESTIONS".
+        Return only the follow-up question as plain text, without quotes or additional explanation.
+        """
+        refinement_prompt = refinement_prompt_template.format(query=refined_query)
+        response = self.query_agent.model.generate_content(refinement_prompt)
+        return response.text.strip()
+
+class RefineContextAgent:
+    def __init__(self, query_agent):
+        self.query_agent = query_agent
+
+    def refine_query_with_context(self, query: str, responses: dict) -> str:
+        refinement_context_prompt = f"""
+        You are an expert in query analysis and refinement. Your task is to understand the user's original query and their responses to follow-up questions, then produce a precise and comprehensive refined query.
+        Original query: "{query}"
+        Additional context from user:
+        {json.dumps(responses, indent=2)}
+        Guidelines:
+        1. Identify the core intent of the original query (e.g., facts, opinions, comparisons).
+        2. Integrate user-provided context (e.g., aspects, timeframes, content types).
+        3. Ensure the refined query is concise, specific, and aligned with the user's information needs.
+        Return only the refined query as plain text, without quotes or additional explanation.
+        """
+        response = self.query_agent.model.generate_content(refinement_context_prompt)
+        return response.text.strip()
 
 async def main():
     try:
@@ -1438,7 +1378,12 @@ async def main():
         reddit_agent = AggregatorAgent()
         web_agent = AggregatorAgent()
         instagram_agent = AggregatorAgent()
-        final_analysis_agent = FinalAnalysisAgent()
+        final_analysis_agent = FinalAnalysisAgent(model=genai.GenerativeModel(
+            'gemini-2.0-flash-thinking-exp-01-21',
+        ))
+        query_agent = QueryAgent()
+        refine_query_agent = RefineQueryAgent(query_agent)
+        refine_context_agent = RefineContextAgent(query_agent)
 
    
 
@@ -1454,31 +1399,12 @@ async def main():
         responses = {}
         refined_query = query
 
-        # Generate refinement questions dynamically
-        refinement_prompt_template = """
-        You are an expert query analysis and refinement system. Your task is to carefully understand the user's original query and generate a SINGLE relevant follow-up question to refine their information need.
-
-        Original query: "{query}"
-
-        ## Guidelines for generating the follow-up question:
-        - Always ask for location or try to get location based on the original query.
-        - ask location only once and if the user provides the location then dont ask again.
-        - Focus on clarifying the user's intent (e.g., specific aspects, timeframes, content types).
-        - Avoid asking for unnecessary details.
-        - Ensure the question is concise and directly related to the query.
-        - If no further clarification is needed, return "NO_MORE_QUESTIONS".
-
-        Return ONLY the follow-up question as plain text, without quotes or additional explanation.
-        """
-
         MAX_REFINEMENT_QUESTIONS = 3
         question_count = 0
 
         while question_count < MAX_REFINEMENT_QUESTIONS:
             # Generate a follow-up question
-            refinement_prompt = refinement_prompt_template.format(query=refined_query)
-            response = AggregatorAgent().query_agent.model.generate_content(refinement_prompt)
-            follow_up_question = response.text.strip()
+            follow_up_question = refine_query_agent.generate_refinement_question(refined_query)
 
             # Check if no more questions are needed
             if follow_up_question == "NO_MORE_QUESTIONS":
@@ -1494,43 +1420,13 @@ async def main():
                 responses[follow_up_question] = user_response
 
                 # Refine the query using QueryAgent
-                refinement_context_prompt = f"""
-                You are an expert query analysis and refinement system. Your task is to carefully understand the user's original query, analyze their refinement responses, and produce a precise, comprehensive query that captures their true information need.
-
-                Original query: "{query}"
-
-                Additional context from user:
-                {json.dumps(responses, indent=2)}
-
-                ## Refinement Process:
-                1. INTENT ANALYSIS
-                   - Identify the core information need in the original query.
-                   - Determine if the query is seeking facts, opinions, analysis, or comparisons.
-                   - Note any political topics, entities, or events mentioned.
-
-                2. CONTEXT INTEGRATION
-                   - For aspect preferences (people, events, opinions): Add these as explicit qualifiers.
-                   - For timeframe specifications: Include specific dates/periods as temporal markers.
-                   - For content type preferences (news vs opinions): Incorporate these as content indicators.
-
-                3. QUERY CONSTRUCTION
-                   - Start with the core topic/entity from the original query.
-                   - Add specific qualifiers from user responses (aspects, timeframes, content types).
-                   - Ensure political topics are precisely identified with proper names and contexts.
-                   - Include geographical or jurisdictional specifics when present.
-                   - Maintain political neutrality while preserving information intent.
-
-                Return only the refined query as plain text, without quotes or additional explanation.
-                """
-                response = AggregatorAgent().query_agent.model.generate_content(refinement_context_prompt)
-                refined_query = response.text.strip()
+                refined_query = refine_context_agent.refine_query_with_context(query, responses)
                 print(f"\nRefined query: {refined_query}")
 
                 # Increment the question count
                 question_count += 1
             else:
                 print("Skipping this question.")
-
 
         # If the maximum number of questions is reached
         if question_count == MAX_REFINEMENT_QUESTIONS:
@@ -1596,11 +1492,13 @@ async def main():
         # Save all raw data in one aggregated file
         aggregator_agent.save_aggregated_raw_data(youtube_data, reddit_data, web_data, instagram_data, "aggregated_raw_data.json")
 
-        # Ask follow-up questions
-        refined_context = await aggregator_agent.ask_follow_up_questions(
+        # Initialize and use the FollowUpQuestionAgent
+        follow_up_agent = FollowUpQuestionAgent(query_agent)
+        refined_context = await follow_up_agent.ask_follow_up_questions(
             youtube_analysis, reddit_analysis, web_analysis, instagram_analysis
         )
 
+        print("Analysis started be patient!! might take few minutes")
         # Perform final combined analysis with refined context
         combined_analysis = await aggregator_agent.final_analysis_agent.analyze_combined(
             youtube_analysis, 
@@ -1613,9 +1511,9 @@ async def main():
         print("\nCombined Analysis Results done")
 
         # Check relevance
-        relevance_result = await aggregator_agent.check_relevance(query, combined_analysis)
-        aggregator_agent.save_to_json(relevance_result, "relevance_check_results.json")
-        print(f"\nRelevance Check:\nRelevance Score: {relevance_result['relevance_score']}\nJustification: {relevance_result['justification']}")
+        # relevance_result = await aggregator_agent.check_relevance(query, combined_analysis)
+        # aggregator_agent.save_to_json(relevance_result, "relevance_check_results.json")
+        # print(f"\nRelevance Check:\nRelevance Score: {relevance_result['relevance_score']}\nJustification: {relevance_result['justification']}")
 
         logger.info("All data has been successfully aggregated and saved.")
         print("\nAll processing complete! Results have been saved to JSON files.")

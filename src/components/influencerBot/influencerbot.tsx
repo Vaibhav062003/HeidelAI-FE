@@ -117,7 +117,7 @@ const InfluencerBot = () => {
   }, []);
 
   useEffect(() => {
-    const wsUrl = 'wss://backend-chatbot.koyeb.app/ws/influencer';
+    const wsUrl = 'wss://localhost:8001/ws/influencer-bot'; // Update with your FastAPI WebSocket URL
     
     const connectWebSocket = () => {
       ws.current = new WebSocket(wsUrl);

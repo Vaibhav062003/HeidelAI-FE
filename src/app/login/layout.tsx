@@ -1,5 +1,6 @@
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import {ClerkProvider} from '@clerk/nextjs';
 
 export default function LoginLayout({
   children,
@@ -8,6 +9,8 @@ export default function LoginLayout({
 }) {
   return (
     <>
+    <ClerkProvider
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}>
     <head>
         <title>HeidelAI - AI-Powered Customer Engagement & Analytics Platform</title>
         <meta name="description" content="Transform your business with HeidelAI's AI-powered tools for customer engagement, real-time analytics, and smart chatbots." />
@@ -29,6 +32,7 @@ export default function LoginLayout({
       <Footer />
       
       </body>
+      </ClerkProvider>
     </>
   )
 }

@@ -36,19 +36,20 @@ import { EmojiProvider } from '@/components/EmojiProvider';
 import TalkToDataTab from "@/components/TalkToData/TalkToDataTab";
 import Image from "next/image";
 import Link from "next/link";
-import { createClient } from '@supabase/supabase-js';
-import { toast } from 'sonner';
-// Add this with other imports at the top
-import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
-import RemainderSideBar from "@/components/inbox/ReminderSideBar";
 import { InstagramLogoIcon } from "@radix-ui/react-icons";
+import RemainderSideBar from "@/components/inbox/ReminderSideBar";
+import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
 import InfluencerBot from "@/components/influencerBot/influencerbot";
+import { UserButton, UserProfile, useUser, SignedIn, OrganizationSwitcher } from '@clerk/nextjs';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-
+type DashboardPageProps = {
+  orgSlug: string;
+};
 
 interface Product {
   id: string;
@@ -67,22 +68,7 @@ interface Product {
   stock_quantity: number;
 }
 
-interface UserProfile {
-  email?: string;
-  avatar_url?: string;
-  full_name?: string;
-}
-
-// const Home = ({
-//   selectedChannels = ["all"],
-//   selectedConversationId = "",
-//   isTranslationEnabled = false,
-// }: HomeProps) => {
-  
-// import { Phone, Video, MessageSquare, Globe, Smile, Paperclip, Send } from 'lucide-react'
-
-
-export default function DashboardPage() {
+export default function DashboardPage({ orgSlug }: DashboardPageProps) {
   const router = useRouter();
   const [activeView, setActiveView] = useState<
   "inbox" | "analytics" | "billing" | "settings" | "talktodata" | "analyticsbot"
@@ -93,49 +79,27 @@ export default function DashboardPage() {
   const [isAIEnabled, setIsAIEnabled] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const [sharedProduct, setSharedProduct] = useState<Product | null>(null);
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-
-
-  const handleLogout = async () => {
-    try {
-      setIsLoggingOut(true);
-      await supabase.auth.signOut();
-      toast.success('Successfully logged out');
-      router.push('/login');
-    } catch (error) {
-      console.error('Error logging out:', error);
-      toast.error('Failed to log out. Please try again.');
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
+  const [showOrgSwitcher, setShowOrgSwitcher] = useState(false);
+  const { isSignedIn, isLoaded, user } = useUser();
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error || !user) {
-        router.push('/login');
-        return;
-      }
-      setUser(user);
-    };
+    console.log(user)
+    if (isLoaded && !isSignedIn) {
+      router.push("/");
+    }
+  }, [isLoaded, isSignedIn, router, user]);
 
-    checkUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
-        router.push('/login');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [router]);
+    
+  useEffect(() => {
+    if (orgSlug) {
+      console.log("Current orgSlug:", orgSlug);
+    }
+  }, [orgSlug]) ;
 
   const handleConversationSelect = (id: string) => {
     setSelectedConversationId(id);
   };
+  
 
   return (
     <>
@@ -168,17 +132,6 @@ export default function DashboardPage() {
                   <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
               </TabsTrigger>
-
-              {/* <TabsTrigger
-                value="analytics"
-                className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative"
-              >
-                <BarChart2 className="h-5 w-5" />
-                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  Analytics
-                  <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
-                </span>
-              </TabsTrigger> */}
 
               <TabsTrigger
                 value="Contacts"
@@ -245,52 +198,56 @@ export default function DashboardPage() {
                   <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
                 </span>
               </TabsTrigger>
-<div className="mt-auto mb-6 w-full">
-  {user && (
-    <div className="relative ">
-      {/* Always visible logout button */}
-      <button
-  onClick={handleLogout}
-  disabled={isLoggingOut}
-  className={`w-full mb-2 p-2 py-3 
-    flex items-center justify-center gap-2
-    text-red-600 hover:bg-red-50
-    rounded-lg transition-colors duration-200
-    ${isLoggingOut ? 'opacity-50 cursor-not-allowed' : ''}`}
->
-  {isLoggingOut ? (
-    <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
-  ) : (
-    <LogOut className="h-5 w-5" />
-  )}
-</button>
 
+              {/* <button onClick={()=> fetchOrgData()} className="group w-full justify-center px-4 py-3 hover:bg-gray-100 rounded-r-lg relative">
+                fetch org data
+              </button> */}
 
-
-      {/* Profile Section */}
-      <div className="cursor-pointer hover:bg-gray-100 rounded-lg p-2 relative group">
-        {user.avatar_url ? (
-          <img
-            src={user.avatar_url}
-            alt="Profile"
-            className="w-8 h-8 rounded-full"
-          />
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-            <span className="text-gray-600 text-sm">
-              {user.email?.[0].toUpperCase()}
-            </span>
-          </div>
-        )}
-        {/* Email tooltip on hover */}
-        <span className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-gray-800 text-white px-2 py-1 rounded-md text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-          {user.email}
-          <div className="absolute right-full top-1/2 w-1.5 h-1.5 -mt-0.5 -mr-0.5 bg-gray-800 rotate-45" />
-        </span>
-      </div>
-    </div>
-  )}
-</div>
+              {isSignedIn &&(
+                <>
+                  <div className="w-full flex justify-center items-center mt-6">
+                    <div>
+                      <UserButton 
+                        appearance={{
+                          elements: {
+                            userButtonAvatarBox: "w-10 h-10",
+                            userButtonAvatar: "rounded-full",
+                            userButtonAction: "hidden",
+                          },
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="w-full flex justify-center items-center mt-2">
+                    <div className="relative flex items-center">
+                      <button
+                        onClick={() => setShowOrgSwitcher((v) => !v)}
+                        className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition"
+                        title="Switch Organization"
+                      >
+                        <span className="text-gray-700 font-bold">Org</span>
+                      </button>
+                      {showOrgSwitcher && (
+                        <div className="absolute left-full top-0 z-30 ml-2">
+                          <OrganizationSwitcher
+                            afterCreateOrganizationUrl="/org/:slug"
+                            afterSelectOrganizationUrl="/org/:slug"
+                            afterSelectPersonalUrl="/dashboard"
+                            appearance={{
+                              elements: {
+                                organizationSwitcherButton:
+                                  "w-10 h-10 rounded-full bg-transparent p-0 flex items-center justify-center",
+                                organizationPreviewAvatarBox: "w-10 h-10",
+                                organizationPreviewAvatar: "hidden",
+                              },
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>   
+              )}
             </TabsList>{" "}
           </div>
 
@@ -344,13 +301,6 @@ export default function DashboardPage() {
               <ContactsDashboard />
             </TabsContent>
 
-            {/* <TabsContent
-              value="analytics"
-              className="m-0 flex-1 p-6 overflow-auto"
-            >
-              <AnalyticsDashboard />
-            </TabsContent> */}
-
             <TabsContent
               value="talktodata"
               className="m-0 flex-1 fixed top-0 w-[96vw] h-full overflow-hidden"
@@ -363,7 +313,7 @@ export default function DashboardPage() {
               value="analyticsbot"
               className="m-0 flex-1 fixed top-0 w-[96vw] h-full overflow-hidden"
             >
-              <AnalyticsBot />
+              <AnalyticsBot/>
             </TabsContent>
 
             <TabsContent
@@ -392,5 +342,5 @@ export default function DashboardPage() {
         </Tabs>
       </div>
     </>
-  );
+);
 }

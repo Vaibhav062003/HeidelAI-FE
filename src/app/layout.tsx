@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
-import './globals.css'
+import "./globals.css"
 import { Inter } from 'next/font/google'
-import { AuthProvider } from '@/contexts/AuthContext'
+
+import { ClerkProvider } from '@clerk/nextjs'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -59,9 +60,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className={`bg-white text-black ${inter.className}`}>
-        <AuthProvider>
+        <ClerkProvider
+        publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!} 
+        afterSignOutUrl="/"
+>
           {children}
-        </AuthProvider>
+        </ClerkProvider>
       </body>
     </html>
   )

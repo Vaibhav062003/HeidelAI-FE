@@ -1,85 +1,97 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useEffect } from "react";
+import React, { useState,useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Toaster, toast } from "sonner";
-import { IconBrandFacebook } from "@tabler/icons-react";
-import { Loader2 } from "lucide-react";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { useSignIn, useUser, useClerk } from "@clerk/nextjs";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false); // Toggle between login and signup
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const { isSignedIn, user } = useUser();
+  const { signIn, isLoaded } = useSignIn();
+  const { signOut } = useClerk();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (data?.user) setUser(data.user);
-    };
-    fetchUser();
-  }, []);
+    console.log("isLoaded:", isLoaded, "isSignedIn:", isSignedIn, "user:", user);
+    if (isLoaded && isSignedIn && user) {
+      console.log("User object:", user);
+      toast.success("Already signed in! Redirecting to dashboard...");
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1200);
+    }
+  }, [isLoaded, isSignedIn, router, searchParams, user]);
 
-  // Handle email/password login or signup
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLoaded) return;
     try {
-      if (isSignUp) {
-        // Sign up logic
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) {
-          toast.error(error.message);
-        } else if (data.user) {
-          toast.success(
-            "Sign-up successful! Please check your email to confirm your account."
-          );
-          setIsSignUp(false); // Switch back to login after successful signup
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) {
-          toast.error("Invalid email or password");
+      const result = await signIn.create({
+        identifier: email,
+        password,
+      });
+      if (result.status === "complete") {
+        toast.success("Login successful! Checking organization...");
+
+        // Fetch organization memberships from your API
+        const res = await fetch("/api/getorgdata");
+        const memberships = await res.json();
+
+        // Find the membership for the logged-in email
+        const membership = memberships.data.find(
+          (item: { public_user_data?: { identifier?: string } }) => item.public_user_data?.identifier === email
+        );
+
+        if (membership && membership.organization?.slug) {
+          // Build the subdomain URL for local development
+          const orgSlug = membership.organization.slug;
+          const baseDomain = window.location.hostname.replace(/^[^.]+\./, ''); // strips any existing subdomain
+          const port = window.location.port ? `:${window.location.port}` : '';
+          const protocol = window.location.protocol;
+
+          // Compose the full subdomain URL (e.g., http://heidelai.localhost:3000/)
+          const subdomainUrl = `${protocol}//${orgSlug}.${baseDomain}${port}/`;
+
+          window.location.href = subdomainUrl;
         } else {
-          toast.success("Login successful! Redirecting...");
-          // console.log("user_detail",user);
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
-          console.log("user data", user);
-          router.push("/dashboard"); // Redirect to dashboard
+          toast.info("No organization found for this email. Redirecting to dashboard...");
+          setTimeout(() => {
+            window.location.href = "/dashboard";
+          }, 1200);
         }
       }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
-      console.error("Error during authentication:", error);
+    } catch (err: unknown) {
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        "errors" in err &&
+        Array.isArray((err as { errors?: { message?: string }[] }).errors)
+      ) {
+        toast.error(
+          ((err as { errors?: { message?: string }[] }).errors?.[0]?.message) ||
+            "Invalid email or password"
+        );
+      } else {
+        toast.error("Invalid email or password");
+      }
     }
   };
+;
 
   return (
     <section className="h-[100vh] px-6 flex items-center justify-center">
       <Toaster position="top-center" richColors />
-
       <div className="max-w-md w-full mx-auto rounded-none md:rounded-2xl p-4 md:p-8 shadow-input bg-black">
         <h2 className="font-semibold pb-6 text-xl text-center text-neutral-200">
-          {isSignUp ? "Create an Account" : "Sign in to your account"}
+          Sign in to your account
         </h2>
-        <p className=" text-sm max-w-sm mt-2 text-neutral-300"></p>
-
-        <form className="my-8" onSubmit={handleAuth}>
-          <LabelInputContainer className=" mb-4">
+        <form className="my-8" onSubmit={handleSignIn}>
+          <LabelInputContainer className="mb-4">
             <Label htmlFor="email">Email Address</Label>
             <Input
               value={email}
@@ -87,6 +99,7 @@ export default function LoginPage() {
               className="border border-white/[0.1] rounded-[0.5rem] h-[45px] bg-zinc-800 placeholder:text-zinc-400 text-white"
               placeholder="projectmayhem@fc.com"
               type="email"
+              autoComplete="username"
             />
           </LabelInputContainer>
           <LabelInputContainer className="mb-4">
@@ -97,50 +110,35 @@ export default function LoginPage() {
               className="border border-white/[0.2] rounded-[0.5rem] h-[45px] bg-zinc-800 placeholder:text-zinc-400 text-white"
               placeholder="••••••••"
               type="password"
+              autoComplete="current-password"
             />
           </LabelInputContainer>
-
           <button
-            className="bg-gradient-to-br relative group/btn rounded-[0.5rem] from-zinc-900 to-zinc-900  block bg-zinc-800 w-full text-white  h-10 font-medium  shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
+            className="bg-gradient-to-br relative group/btn rounded-[0.5rem] from-zinc-900 to-zinc-900 block bg-zinc-800 w-full text-white h-10 font-medium shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
             type="submit"
           >
-            {isSignUp ? "Sign Up" : "Log in"} &rarr;
+            Log in &rarr;
             <BottomGradient />
           </button>
           <div className="flex items-center my-8">
-            <div className="flex-grow bg-neutral-800  h-[1px]" />
-            <span className="text-neutral-300 text-sm text-center mx-4"></span>
+            <div className="flex-grow bg-neutral-800 h-[1px]" />
             <p className="whitespace-nowrap -ml-8">
-            Don&apos;t have an account? Contact your administrator
+              Don&apos;t have an account? Contact your administrator
             </p>
             <div className="flex-grow bg-neutral-800 h-[1px]" />
           </div>
         </form>
-
-        {/* <div className="bg-gradient-to-r from-transparent via-neutral-700 to-transparent my-8 h-[1px] w-full" />
-
-        <div className="flex flex-col space-y-4">
-          <button
-            className="bg-gradient-to-br relative group/btn rounded-[0.5rem] from-zinc-900 to-zinc-900  block bg-zinc-800 w-full text-white  h-10 font-medium  shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
-            onClick={() => setIsSignUp(!isSignUp)}
-          >
-            {isSignUp ? "Already have an account? Log in" : "Don't have an account? Sign up"}
-            <BottomGradient />
-          </button>
-        </div> */}
       </div>
     </section>
   );
 }
 
-const BottomGradient = () => {
-  return (
-    <>
-      <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
-      <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
-    </>
-  );
-};
+const BottomGradient = () => (
+  <>
+    <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
+    <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
+  </>
+);
 
 const LabelInputContainer = ({
   children,
@@ -148,10 +146,8 @@ const LabelInputContainer = ({
 }: {
   children: React.ReactNode;
   className?: string;
-}) => {
-  return (
-    <div className={cn("flex flex-col space-y-2 w-full", className)}>
-      {children}
-    </div>
-  );
-};
+}) => (
+  <div className={cn("flex flex-col space-y-2 w-full", className)}>
+    {children}
+  </div>
+);
