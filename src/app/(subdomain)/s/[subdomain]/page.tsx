@@ -6,7 +6,7 @@ interface Params {
 }
 
 interface SubdomainProps {
-  params: Params;
+  params: Promise<Params>;
 }
 
 export default async function Subdomain({ params }: SubdomainProps) {
@@ -18,5 +18,5 @@ export default async function Subdomain({ params }: SubdomainProps) {
   const slug = org.slug
   
 
-  return <DashboardPage orgSlug={slug} />;
+  return <DashboardPage/>;
 }

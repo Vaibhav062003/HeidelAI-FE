@@ -47,9 +47,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-type DashboardPageProps = {
-  orgSlug: string;
-};
+
 
 interface Product {
   id: string;
@@ -68,7 +66,7 @@ interface Product {
   stock_quantity: number;
 }
 
-export default function DashboardPage({ orgSlug }: DashboardPageProps) {
+export default function DashboardPage() {
   const router = useRouter();
   const [activeView, setActiveView] = useState<
   "inbox" | "analytics" | "billing" | "settings" | "talktodata" | "analyticsbot"
@@ -89,12 +87,7 @@ export default function DashboardPage({ orgSlug }: DashboardPageProps) {
     }
   }, [isLoaded, isSignedIn, router, user]);
 
-    
-  useEffect(() => {
-    if (orgSlug) {
-      console.log("Current orgSlug:", orgSlug);
-    }
-  }, [orgSlug]) ;
+
 
   const handleConversationSelect = (id: string) => {
     setSelectedConversationId(id);

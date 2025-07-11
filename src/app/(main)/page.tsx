@@ -94,22 +94,21 @@ export default function Home() {
             </div>
             <div className='lg:text-xl text-base font-medium  lg:font-normal text-neutral-400 lg:mb-10 mb-5'>
             <motion.div
-      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-      exit={{ opacity: 0, filter: "blur(20px)", y: 20 }}
-      initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
-      transition={{ duration: 0.6,delay:1.5, type: "ease" }}
-    >
-              Empower your brand to
-              
-              <FlipWords words={words} /> <br />
-              with AI-driven insights.
-              </motion.div>
+  animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+  exit={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+  initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
+  transition={{ duration: 0.6, delay: 1.5, type: "tween", ease: "easeInOut" }}
+>
+  Empower your brand to
+  <FlipWords words={words} /> <br />
+  with AI-driven insights.
+</motion.div>
             </div>
             <motion.div
       animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
       exit={{ opacity: 0, filter: "blur(20px)", y: 20 }}
       initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
-      transition={{ duration: 0.6,delay:2, type: "ease" }}
+      transition={{ duration: 0.6, delay: 2, type: "tween", ease: "easeInOut" }}
     >
           <HoverBorderGradientDemo />
           </motion.div>
