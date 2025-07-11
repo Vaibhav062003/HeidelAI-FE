@@ -3,7 +3,7 @@ import React, { useState,useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner";
 import { useSignIn, useUser, useClerk } from "@clerk/nextjs";
 
@@ -14,7 +14,7 @@ export default function LoginPage() {
   const { isSignedIn, user } = useUser();
   const { signIn, isLoaded } = useSignIn();
   const { signOut } = useClerk();
-  const searchParams = useSearchParams();
+  
 
   useEffect(() => {
     console.log("isLoaded:", isLoaded, "isSignedIn:", isSignedIn, "user:", user);
@@ -25,7 +25,7 @@ export default function LoginPage() {
         router.push("/dashboard");
       }, 1200);
     }
-  }, [isLoaded, isSignedIn, router, searchParams, user]);
+  }, [isLoaded, isSignedIn, router,  user]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
