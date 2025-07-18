@@ -92,15 +92,16 @@ const BillingPlans = ({
   onPlanSelect = () => {},
 }: BillingPlansProps) => {
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold">Choose Your Plan</h2>
-        <p className="text-gray-500">
-          Select the plan that best fits your needs
-        </p>
-      </div>
+  <div className="space-y-6">
+    <div className="text-center">
+      <h2 className="text-2xl font-bold">Choose Your Plan</h2>
+      <p className="text-gray-500">
+        Select the plan that best fits your needs
+      </p>
+    </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="max-w-[1000px] mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {plans.map((plan) => (
           <Card
             key={plan.id}
@@ -148,13 +149,13 @@ const BillingPlans = ({
           </Card>
         ))}
       </div>
-
-      <div className="text-center text-sm text-gray-500">
-        <p>All plans include 24/7 support and a 14-day money-back guarantee</p>
-        <p>Need a custom plan? Contact our sales team</p>
-      </div>
     </div>
-  );
-};
+
+    <div className="text-center text-sm text-gray-500">
+      <p>All plans include 24/7 support and a 14-day money-back guarantee</p>
+      <p>Need a custom plan? Contact our sales team</p>
+    </div>
+  </div>
+);}
 
 export default BillingPlans;

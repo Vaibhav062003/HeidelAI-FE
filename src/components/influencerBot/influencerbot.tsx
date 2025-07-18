@@ -286,9 +286,9 @@ const InfluencerBot = () => {
   }, []);
 
   return (
-    <Card className="h-screen m-4">
+      <Card className="h-[98vh] w-[1350px] translate-x-[-40px] mx-auto my-2 shadow-lg rounded-xl">
       <style>{processingOverlayStyles}</style>
-      <CardContent className="p-6 flex h-full">
+      <CardContent className="p-9 flex h-full">
         <div className="flex flex-col h-full w-full">
           <div className="border-b pb-4 mb-4">
             <div className="flex items-center justify-between">
