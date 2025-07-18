@@ -386,16 +386,16 @@ const InstagramDialog = () => {
   // Function to initiate Instagram OAuth login
   const handleInstagramLogin = () => {
     setIsLoading(true);
-    
+
     try {
       // Generate a random state to prevent CSRF attacks
       const state = Math.random().toString(36).substring(2, 15);
       localStorage.setItem('instagram_auth_state', state);
-      
-      // Build Instagram authorization URL
-      // const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=${INSTAGRAM_CLIENT_ID}&redirect_uri=${INSTAGRAM_REDIRECT_URI}&response_type=code&scope=${INSTAGRAM_SCOPE.replace(/ /g, '%20')}`;
-      const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=https://development.heidelai.com/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages`;
-      
+
+      // Build Instagram authorization URL dynamically for the current subdomain
+      const redirectUri = `${window.location.origin}/auth/instagram/callback`;
+      const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=${INSTAGRAM_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages&state=${state}`;
+
       // Redirect to Instagram authorization page
       window.location.href = authUrl;
     } catch (error) {
@@ -408,7 +408,8 @@ const InstagramDialog = () => {
   // Handle Instagram OAuth callback (code exchange)
   const handleInstagramCallback = async (code: string) => {
     try {
-      // Exchange authorization code for access token via backend
+      // Use the same dynamic redirect_uri as above
+      const redirectUri = `${window.location.origin}/auth/instagram/callback`;
       const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
         method: 'POST',
         headers: {
@@ -416,7 +417,7 @@ const InstagramDialog = () => {
         },
         body: JSON.stringify({ 
           code: code,
-          redirect_uri: INSTAGRAM_REDIRECT_URI
+          redirect_uri: redirectUri
         }),
       });
       
