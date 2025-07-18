@@ -100,7 +100,7 @@ export const ContactItem = ({ contact, onEdit, onDelete }: ContactItemProps) => 
     : contact.phone;
   
   return (
-    <div className="group bg-white rounded-xl shadow-sm p-4 mb-3 transition-all border border-gray-100 hover:shadow-lg hover:border-indigo-50">
+    <div className="group bg-white rounded-xl shadow-sm p-3 mb-3 transition-all border border-gray-100 hover:shadow-lg hover:border-indigo-50">
       <div className="flex items-start gap-4">
         <ProfileAvatar firstName={contact.firstName} lastName={contact.lastName} />
         

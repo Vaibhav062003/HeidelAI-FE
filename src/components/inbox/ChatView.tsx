@@ -2461,4 +2461,3 @@ export const FileMessage = ({ fileUrl, fileName, fileType }: {
 
 export default ChatView;
 
-

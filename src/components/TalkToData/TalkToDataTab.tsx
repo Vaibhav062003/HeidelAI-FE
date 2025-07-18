@@ -183,16 +183,16 @@ const TalkToDataTab = () => {
   };
 
   return (
-    <Card className="h-screen m-4">
+      <Card className="h-[100vh] w-[1350px] translate-x-[-40px] mx-auto my-4 shadow-lg rounded-xl">
       <style>{typingIndicatorStyles}</style>
-      <CardContent className="p-6 flex h-full">
+      <CardContent className="p-6 flex flex-col h-full">
         <div className="flex flex-col h-full w-full bg-white">
-          <div className="border-b p-4">
-            <h2 className="text-xl font-semibold">Talk to Data</h2>
+           <div className="border-b p-4">
+           <h2 className="text-xl font-semibold">Talk to Data</h2>
           </div>
 
-          <ScrollArea 
-            className="flex-1 p-4 h-[calc(100vh-12rem)]" 
+          <ScrollArea
+            className="flex-1 p-4 h-[calc(100vh-12rem)]"
             ref={scrollContainerRef}
           >
             <div className="space-y-4">
@@ -200,17 +200,21 @@ const TalkToDataTab = () => {
                 <div
                   key={index}
                   className={`flex ${
-                    message.type === 'outgoing' ? 'justify-end' : 'justify-start'
+                    message.type === "outgoing"
+                      ? "justify-end"
+                      : "justify-start"
                   }`}
                 >
                   <div
                     className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                      message.type === 'outgoing'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100'
+                      message.type === "outgoing"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100"
                     }`}
                   >
-                    <div dangerouslySetInnerHTML={{ __html: message.content }} />
+                    <div
+                      dangerouslySetInnerHTML={{ __html: message.content }}
+                    />
                   </div>
                 </div>
               ))}
@@ -224,33 +228,31 @@ const TalkToDataTab = () => {
                 </div>
               )}
               <div ref={lastMessageRef} />
-
             </div>
           </ScrollArea>
 
-
-      <div className="border-t p-4">
-        <div className="flex gap-2">
-          <textarea
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-            placeholder="Ask about your data..."
-            className="flex-1 resize-none rounded-lg border p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={1}
-          />
-          <Button onClick={handleSendMessage}>
-            <Send className="h-4 w-4" />
-          </Button>
+          <div className="border-t p-4">
+            <div className="flex gap-2">
+              <textarea
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                placeholder="Ask about your data..."
+                className="flex-1 resize-none rounded-lg border p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={1}
+              />
+              <Button onClick={handleSendMessage}>
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-    </CardContent>
+      </CardContent>
     </Card>
   );
 };
