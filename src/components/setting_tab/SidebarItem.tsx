@@ -393,11 +393,10 @@ const InstagramDialog = () => {
       localStorage.setItem('instagram_auth_state', state);
 
       // Build Instagram authorization URL dynamically for the current subdomain
-      const redirectUri = `${window.location.origin}/auth/instagram/callback`;
-      const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=${INSTAGRAM_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages&state=${state}`;
-
+      const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=${window.location.origin}/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages`;
+      console.log('Redirecting to Instagram login:', authUrl);
       // Redirect to Instagram authorization page
-      window.location.href = authUrl;
+      // window.location.href = authUrl;
     } catch (error) {
       console.error('Error initiating Instagram login:', error);
       setIsLoading(false);

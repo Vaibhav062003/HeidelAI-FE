@@ -236,7 +236,7 @@ export default function DashboardPage() {
                         >
                           <span className="text-gray-700 font-bold">Org</span>
                         </button>
-                        {showOrgSwitcher && (
+                        {/* {showOrgSwitcher && (
                           <div className="absolute left-full top-0 z-30 ml-2">
                             <OrganizationSwitcher
                               afterCreateOrganizationUrl="/org/:slug"
@@ -252,7 +252,7 @@ export default function DashboardPage() {
                               }}
                             />
                           </div>
-                        )}
+                        )} */}
                       </div>
                     </div>
                   </>   

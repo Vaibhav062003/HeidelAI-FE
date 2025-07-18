@@ -15,17 +15,53 @@ export default function LoginPage() {
   const { signIn, isLoaded } = useSignIn();
   const { signOut } = useClerk();
   
-
-  useEffect(() => {
+// ...existing code...
+useEffect(() => {
     console.log("isLoaded:", isLoaded, "isSignedIn:", isSignedIn, "user:", user);
-    if (isLoaded && isSignedIn && user) {
-      console.log("User object:", user);
-      toast.success("Already signed in! Redirecting to dashboard...");
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1200);
-    }
-  }, [isLoaded, isSignedIn, router,  user]);
+    const checkOrgAndRedirect = async () => {
+      if (isLoaded && isSignedIn && user) {
+        toast.success("Already signed in! Checking organization...");
+        try {
+          // Fetch organization memberships from your API
+          const res = await fetch("/api/getorgdata");
+          const memberships = await res.json();
+
+          // Find the membership for the logged-in email
+          const membership = memberships.data.find(
+            (item: { public_user_data?: { identifier?: string } }) =>
+              item.public_user_data?.identifier === user.primaryEmailAddress?.emailAddress
+          );
+
+          if (membership && membership.organization?.slug) {
+            // Build the subdomain URL for local development
+            const orgSlug = membership.organization.slug;
+            const baseDomain = window.location.hostname.replace(/^[^.]+\./, ''); // strips any existing subdomain
+            const port = window.location.port ? `:${window.location.port}` : '';
+            const protocol = window.location.protocol;
+
+            // Compose the full subdomain URL (e.g., http://heidelai.localhost:3000/)
+            const subdomainUrl = `${protocol}//${orgSlug}.${baseDomain}${port}/`;
+
+            setTimeout(() => {
+              window.location.href = subdomainUrl;
+            }, 1200);
+          } else {
+            toast.info("No organization found for this email. Redirecting to dashboard...");
+            setTimeout(() => {
+              router.push("/dashboard");
+            }, 1200);
+          }
+        } catch (err) {
+          toast.error("Error checking organization. Redirecting to dashboard...");
+          setTimeout(() => {
+            router.push("/login");
+          }, 1200);
+        }
+      }
+    };
+    checkOrgAndRedirect();
+  }, [isLoaded, isSignedIn, router, user]);
+// ...existing code...
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
