@@ -30,7 +30,7 @@ useEffect(() => {
 
         if (membership && membership.organization?.slug) {
           // Save org_id in localStorage
-          localStorage.setItem("org_id", membership.organization.slug);
+          localStorage.setItem("org_id", membership.organization.id);
           setTimeout(() => {
             router.push("/dashboard");
           }, 1200);
@@ -64,7 +64,7 @@ useEffect(() => {
         );
 
         if (membership && membership.organization?.slug) {
-          localStorage.setItem("org_id", membership.organization.slug);
+          localStorage.setItem("org_id", membership.organization.id);
           setTimeout(() => {
             router.push("/dashboard");
           }, 1200);
