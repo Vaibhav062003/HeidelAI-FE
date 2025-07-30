@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner";
-import { useSignIn, useUser, useClerk } from "@clerk/nextjs";
+import { useSignIn, useUser, useAuth } from "@clerk/nextjs";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -13,11 +13,27 @@ export default function LoginPage() {
   const router = useRouter();
   const { isSignedIn, user } = useUser();
   const { signIn, isLoaded } = useSignIn();
-  const { signOut } = useClerk();
-  
-useEffect(() => {
-  const checkOrgAndRedirect = async () => {
-    if (isLoaded && isSignedIn && user) {
+  const {getToken} = useAuth();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (isSignedIn) {
+        toast.success("Already signed in! Redirecting to dashboard...");
+        const token = await getToken();
+        if (token) {
+          localStorage.setItem("auth_token", token);
+        }
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 1200);
+      }
+    };
+    checkAuth();
+  }, [isSignedIn, router, getToken]);
+
+  useEffect(() => {
+    const checkOrgAndRedirect = async () => {
+      if (isLoaded && isSignedIn && user) {
       toast.success("Already signed in! Checking organization...");
       try {
         const res = await fetch("/api/getorgdata");
