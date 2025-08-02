@@ -1,87 +1,74 @@
 "use client";
-import React, { useState,useEffect } from "react";
+
+import React, { useState } from "react";
+import { useSignIn, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner";
-import { useSignIn, useUser, useClerk } from "@clerk/nextjs";
+import { cn } from "@/lib/utils";
+interface OrgDataItem {
+  public_user_data?: {
+    identifier?: string;
+  };
+  organization?: {
+    id?: string;
+  };
+}
 
 export default function LoginPage() {
+  const { isLoaded, signIn, setActive } = useSignIn();
+  const { isSignedIn, user } = useUser();
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const router = useRouter();
-  const { isSignedIn, user } = useUser();
-  const { signIn, isLoaded } = useSignIn();
-  const { signOut } = useClerk();
-  
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  useEffect(() => {
-    console.log("isLoaded:", isLoaded, "isSignedIn:", isSignedIn, "user:", user);
-    if (isLoaded && isSignedIn && user) {
-      console.log("User object:", user);
-      toast.success("Already signed in! Redirecting to dashboard...");
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1200);
-    }
-  }, [isLoaded, isSignedIn, router,  user]);
-
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLoaded) return;
+
+    setIsLoggingIn(true);
+
     try {
-      const result = await signIn.create({
+      const signInAttempt = await signIn.create({
         identifier: email,
         password,
       });
-      if (result.status === "complete") {
-        toast.success("Login successful! Checking organization...");
 
-        // Fetch organization memberships from your API
+      if (signInAttempt.status === "complete") {
+        await setActive({ session: signInAttempt.createdSessionId });
+
+        // Fetch organization data after session is active
         const res = await fetch("/api/getorgdata");
-        const memberships = await res.json();
+        const data = await res.json();
 
-        // Find the membership for the logged-in email
-        const membership = memberships.data.find(
-          (item: { public_user_data?: { identifier?: string } }) => item.public_user_data?.identifier === email
+        const membership = data?.data?.find(
+          (item: OrgDataItem) =>
+            item.public_user_data?.identifier === email
         );
 
-        if (membership && membership.organization?.slug) {
-          // Build the subdomain URL for local development
-          const orgSlug = membership.organization.slug;
-          const baseDomain = window.location.hostname.replace(/^[^.]+\./, ''); // strips any existing subdomain
-          const port = window.location.port ? `:${window.location.port}` : '';
-          const protocol = window.location.protocol;
-
-          // Compose the full subdomain URL (e.g., http://heidelai.localhost:3000/)
-          const subdomainUrl = `${protocol}//${orgSlug}.${baseDomain}${port}/`;
-
-          window.location.href = subdomainUrl;
+        if (membership?.organization?.id && isLoaded) {
+          localStorage.setItem("org_id", membership.organization.id);
+          toast.success("Signed in! Redirecting...");
+          router.push("/dashboard");
         } else {
-          toast.info("No organization found for this email. Redirecting to dashboard...");
-          setTimeout(() => {
-            window.location.href = "/dashboard";
-          }, 1200);
+          toast.info("No organization found for this account.");
         }
-      }
-    } catch (err: unknown) {
-      if (
-        typeof err === "object" &&
-        err !== null &&
-        "errors" in err &&
-        Array.isArray((err as { errors?: { message?: string }[] }).errors)
-      ) {
-        toast.error(
-          ((err as { errors?: { message?: string }[] }).errors?.[0]?.message) ||
-            "Invalid email or password"
-        );
       } else {
-        toast.error("Invalid email or password");
+        toast.error("Sign in not complete. Further steps required.");
       }
+    } catch (err) {
+      let message = "Invalid email or password.";
+      if (err && typeof err === "object" && "errors" in err && Array.isArray(err.errors)) {
+        message = err.errors[0]?.message || message;
+      }
+      toast.error(message);
+    } finally {
+      setIsLoggingIn(false);
     }
   };
-;
 
   return (
     <section className="h-[100vh] px-6 flex items-center justify-center">
@@ -90,7 +77,7 @@ export default function LoginPage() {
         <h2 className="font-semibold pb-6 text-xl text-center text-neutral-200">
           Sign in to your account
         </h2>
-        <form className="my-8" onSubmit={handleSignIn}>
+        <form className="my-8" onSubmit={handleSubmit}>
           <LabelInputContainer className="mb-4">
             <Label htmlFor="email">Email Address</Label>
             <Input
@@ -100,6 +87,7 @@ export default function LoginPage() {
               placeholder="projectmayhem@fc.com"
               type="email"
               autoComplete="username"
+              required
             />
           </LabelInputContainer>
           <LabelInputContainer className="mb-4">
@@ -111,19 +99,24 @@ export default function LoginPage() {
               placeholder="••••••••"
               type="password"
               autoComplete="current-password"
+              required
             />
           </LabelInputContainer>
           <button
-            className="bg-gradient-to-br relative group/btn rounded-[0.5rem] from-zinc-900 to-zinc-900 block bg-zinc-800 w-full text-white h-10 font-medium shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
+            className={cn(
+              "bg-gradient-to-br relative group/btn rounded-[0.5rem] from-zinc-900 to-zinc-900 block bg-zinc-800 w-full text-white h-10 font-medium shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]",
+              { "opacity-50 cursor-not-allowed": isLoggingIn }
+            )}
             type="submit"
+            disabled={isLoggingIn}
           >
-            Log in &rarr;
+            {isLoggingIn ? "Logging in..." : "Log in →"}
             <BottomGradient />
           </button>
-          <div className="flex items-center my-8">
+          <div className="flex items-center my-8 text-neutral-400 text-sm">
             <div className="flex-grow bg-neutral-800 h-[1px]" />
-            <p className="whitespace-nowrap -ml-8">
-              Don&apos;t have an account? Contact your administrator
+            <p className="px-4 text-center whitespace-nowrap">
+              Don&apos;t have an account? Contact your admin
             </p>
             <div className="flex-grow bg-neutral-800 h-[1px]" />
           </div>

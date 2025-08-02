@@ -2,7 +2,7 @@
 export async function POST(request: Request) {
   try{
     const body = await request.json();
-    console.log('Received body:', body);
+    // console.log('Received body:', body);
     const response = await fetch(`https://api.clerk.com/v1/organizations`,{
       method: 'POST',
       headers:{
