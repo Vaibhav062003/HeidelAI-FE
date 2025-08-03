@@ -71,9 +71,9 @@ export default function LoginPage() {
   };
 
   return (
-    <section className="h-[100vh] px-6 flex items-center justify-center">
+    <section className="h-screen  bg-black text-white px-6 flex items-center justify-center">
       <Toaster position="top-center" richColors />
-      <div className="max-w-md w-full mx-auto rounded-none md:rounded-2xl p-4 md:p-8 shadow-input bg-black">
+      <div className="max-w-md shadow-none w-full border-2 border-white/10 mx-auto rounded-2xl p-4 md:p-8 shadow-input bg-black">
         <h2 className="font-semibold pb-6 text-xl text-center text-neutral-200">
           Sign in to your account
         </h2>

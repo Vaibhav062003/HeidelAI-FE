@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'HeidelAI' }],
   icons: {
-    icon: '/HeidelAi Favicon.ico.ico',
+    icon: '/heidelai.png',
   },
   openGraph: {
     title: 'HeidelAI - AI-Powered Customer Engagement & Analytics Platform',
@@ -59,8 +59,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
-      <body className={`bg-white text-black ${inter.className}`}>
+    <html lang="en" >
+      <body className={`bg-white text-black`}>
         <AuthProvider> 
         <ClerkProvider
         publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!} 

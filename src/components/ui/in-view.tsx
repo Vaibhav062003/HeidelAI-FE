@@ -34,7 +34,8 @@ export function InView({
   const ref = useRef(null);
   const isInView = useInView(ref, viewOptions);
 
-  const MotionComponent = motion[as as keyof typeof motion] as typeof as;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const MotionComponent = motion[as as keyof typeof motion] as any;
 
   return (
     <MotionComponent

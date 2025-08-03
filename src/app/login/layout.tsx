@@ -1,5 +1,6 @@
-import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
+'use client';
+import Header from '@/components/LandingPage/Header';
+import Footer from '@/components/LandingPage/Footer';
 import {ClerkProvider} from '@clerk/nextjs';
 
 export default function LoginLayout({
@@ -16,7 +17,7 @@ export default function LoginLayout({
         <meta name="description" content="Transform your business with HeidelAI's AI-powered tools for customer engagement, real-time analytics, and smart chatbots." />
         <meta name="keywords" content="AI customer engagement tools, real-time business analytics, AI chatbots for businesses, ads optimization platform, influencer marketing analytics, WhatsApp chatbots, Telegram chatbots, conversation analytics tools, business growth with AI insights" />
         <meta name="author" content="HeidelAI" />
-        <link rel="icon" href="/HeidelAi Favicon.ico.ico" />
+        <link rel="icon" href="/heidelai.png" />
         <meta property="og:title" content="HeidelAI - AI-Powered Customer Engagement & Analytics Platform" />
         <meta property="og:description" content="Transform your business with HeidelAI's AI-powered tools for customer engagement, real-time analytics, and smart chatbots." />
         <meta property="og:image" content="/heidelai_mockup.png" />
@@ -26,8 +27,8 @@ export default function LoginLayout({
         <meta name="twitter:description" content="Transform your business with HeidelAI's AI-powered tools for customer engagement, real-time analytics, and smart chatbots." />
         <meta name="twitter:image" content="/heidelai_mockup.png" />
       </head>
-    <body className={` bg-black text-white`}>
-      <Navbar />
+    <body className='h-screen bg-black text-white'>
+      <Header />
       {children}
       <Footer />
       
