@@ -49,7 +49,7 @@ export const ContactListHeader = ({
   };
 
   return (
-    <div className="border-b border-gray-200 p-4 flex items-center justify-between bg-white">
+      <div className="w-[1130px] border-b border-gray-200 p-4 flex items-center justify-between bg-white">
       <h1 className="text-xl font-semibold text-gray-900">Contacts</h1>
       <div className="flex gap-4 items-center">
         <MessageComposer onMessageSend={onMessageSend} />

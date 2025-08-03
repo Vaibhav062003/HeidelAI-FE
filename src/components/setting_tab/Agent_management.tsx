@@ -1,6 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -20,230 +19,235 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing Supabase environment variables');
+interface AgentMember {
+  id: string | number;
+  identifier: string;
+  role_name: string;
+  user_id: string; // <-- add this
+  public_user_data?: {
+    identifier?: string;
+    user_id?: string; // Clerk puts user_id here
+  };
 }
-
-interface Agent {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  created_at?: string;
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const AgentsSettings = () => {
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [formData, setFormData] = useState<Omit<Agent, 'created_at'>>({
-    id: '',
-    name: '',
-    email: '',
-    role: ''
-  });
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [inviting, setInviting] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [members, setMembers] = useState<AgentMember[]>([]);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false); // For global loading
+
+  const fetchMembers = async () => {
+    setInitialLoading(true);
+    const orgId = localStorage.getItem('org_id');
+    try {
+      const res = await fetch(`/api/Agents?org_id=${orgId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const mappedMembers = (data.data || []).map((member: AgentMember) => ({
+          ...member,
+          user_id: member.public_user_data?.user_id || '',
+        }));
+        setMembers(mappedMembers);
+      } else {
+        toast.error(data?.error || 'Failed to fetch members.');
+      }
+    } catch (err) {
+      toast.error('Network error. Please try again.');
+    } finally {
+      setInitialLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchAgents();
+    fetchMembers();
   }, []);
 
-  const fetchAgents = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('agent_management')
-        .select('*')
-        .order('created_at', { ascending: false });
-  
-      if (error) throw error;
-      setAgents(data as Agent[]);
-    } catch (error) {
-      console.error('Error fetching agents:', error instanceof Error ? error.message : 'Unknown error');
+  const handleInviteAgent = async () => {
+    if (!email || !role) {
+      toast.error('Please enter both email and role.');
+      return;
     }
-  };
-
-  const handleSaveAgent = async () => {
+    setInviting(true);
+    setActionLoading(true);
+    const OrgId = localStorage.getItem('org_id');
+    const payload = { email_address: email, role };
     try {
-      setLoading(true);
-      if (formData.id) {
-        // Update existing agent
-        const { data, error } = await supabase
-          .from('agent_management')
-          .update({
-            name: formData.name,
-            email: formData.email,
-            role: formData.role
-          })
-          .eq('id', formData.id)
-          .select();
-  
-        if (error) throw error;
-        
-        const updatedAgents = agents.map(agent => 
-          agent.id === formData.id ? data[0] : agent
-        );
-        setAgents(updatedAgents);
+      const res = await fetch(`/api/Agents?org_id=${OrgId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.error || 'Failed to invite agent.');
       } else {
-        // Add new agent - remove ID from insert data
-        const { data, error } = await supabase
-          .from('agent_management')
-          .insert([{
-            name: formData.name,
-            email: formData.email,
-            role: formData.role
-          }])
-          .select();
-  
-        if (error) throw error;
-        setAgents([...agents, data[0]]);
+        toast.success('Invitation sent successfully!');
+        setIsOpen(false);
+        setEmail('');
+        setRole('');
+        await fetchMembers(); // Refetch members for latest data
       }
-  
-      setIsOpen(false);
-      setFormData({ id: '', name: '', email: '', role: '' });
-    } catch (error) {
-      console.error('Error saving agent:', error instanceof Error ? error.message : 'Unknown error');
+    } catch (err) {
+      toast.error('Network error. Please try again.');
     } finally {
-      setLoading(false);
+      setInviting(false);
+      setActionLoading(false);
     }
   };
 
-  const handleDeleteAgent = async () => {
-    if (!formData.id) return;
-    
+  const handleDeleteMember = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this member?')) return;
+    setDeletingUserId(userId);
+    setActionLoading(true);
+    const orgId = localStorage.getItem('org_id');
     try {
-      setDeleting(true);
-      const { error } = await supabase
-        .from('agent_management')
-        .delete()
-        .eq('id', formData.id);
-
-      if (error) throw error;
-
-      setAgents(agents.filter(agent => agent.id !== formData.id));
-      setIsOpen(false);
-      setFormData({ id: '', name: '', email: '', role: '' });
-    } catch (error) {
-      console.error('Error deleting agent:', error instanceof Error ? error.message : 'Unknown error');
+      const res = await fetch(`/api/Agents?org_id=${orgId}&user_id=${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.error || 'Failed to delete member.');
+      } else {
+        toast.success('Member deleted successfully!');
+        await fetchMembers(); // Refetch members for latest data
+      }
+    } catch (err) {
+      toast.error('Network error. Please try again.');
     } finally {
-      setDeleting(false);
+      setDeletingUserId(null);
+      setActionLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Agents Management</h2>
-      <div className="border rounded-lg p-4">
+    <div className="space-y-2">
+      <h2 className="text-2xl font-bold mb-2">Agents Management</h2>
+      <div className="border rounded-lg p-6 bg-white shadow">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {agents.map((agent) => (
-              <TableRow key={agent.id}>
-                <TableCell>{agent.name}</TableCell>
-                <TableCell>{agent.email}</TableCell>
-                <TableCell>{agent.role}</TableCell>
-                <TableCell>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => {
-                      setFormData({
-                        id: agent.id,
-                        name: agent.name,
-                        email: agent.email,
-                        role: agent.role
-                      });
-                      setIsOpen(true);
-                    }}
-                  >
-                    Edit
-                  </Button>
+            {initialLoading ? (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center text-gray-400 py-8">
+                  <span className="animate-spin mr-2">⏳</span>Loading members...
                 </TableCell>
               </TableRow>
-            ))}
+            ) : members.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center text-gray-400 py-8">
+                  No members to display.
+                </TableCell>
+              </TableRow>
+            ) : (
+              members.map((member: AgentMember) => (
+                <TableRow key={member.id}>
+                  <TableCell>
+                    {member.public_user_data?.identifier || member.identifier || 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    {member.role_name || 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={deletingUserId === member.user_id || actionLoading}
+                      onClick={() => handleDeleteMember(member.user_id)}
+                    >
+                      {deletingUserId === member.user_id ? (
+                        <span className="animate-spin mr-2">⏳</span>
+                      ) : null}
+                      {deletingUserId === member.user_id ? 'Deleting...' : 'Delete'}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
 
         <Dialog open={isOpen} onOpenChange={(open) => {
           setIsOpen(open);
-          if (!open) setFormData({ id: '', name: '', email: '', role: '' });
+          if (!open) {
+            setEmail('');
+            setRole('');
+          }
         }}>
           <DialogTrigger asChild>
-            <Button className="mt-4">Add New Agent</Button>
+            <Button className="mt-6 w-full" variant="default">
+              Invite Agent
+            </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>
-                {formData.id ? 'Edit Agent' : 'Add New Agent'}
-              </DialogTitle>
+              <DialogTitle>Invite Agent</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
+            <form
+              className="space-y-4"
+              onSubmit={e => {
+                e.preventDefault();
+                handleInviteAgent();
+              }}
+            >
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={inviting}
+                  placeholder="Enter agent's email"
+                  required
                 />
               </div>
               <div>
                 <Label htmlFor="role">Role</Label>
                 <Select
-                  value={formData.role}
-                  onValueChange={(value) => setFormData({ ...formData, role: value })}
+                  value={role}
+                  onValueChange={(value) => setRole(value)}
+                  disabled={inviting}
+                  required
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Support">Billing</SelectItem>
-                    <SelectItem value="Senior Support">Sales</SelectItem>
-                    <SelectItem value="Team Lead">Support</SelectItem>
+                    <SelectItem value="org:member">Member</SelectItem>
+                    <SelectItem value="org:admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex gap-2">
-                <Button 
-                  className="w-full" 
-                  onClick={handleSaveAgent}
-                  disabled={loading || deleting}
-                >
-                  {loading ? 
-                    (formData.id ? 'Updating...' : 'Adding...') : 
-                    (formData.id ? 'Update Agent' : 'Add Agent')}
-                </Button>
-                {formData.id && (
-                  <Button
-                    variant="destructive"
-                    onClick={handleDeleteAgent}
-                    disabled={deleting}
-                  >
-                    {deleting ? 'Deleting...' : 'Delete Agent'}
-                  </Button>
-                )}
-              </div>
-            </div>
+              <Button
+                className="w-full"
+                type="submit"
+                disabled={!email || !role || inviting}
+              >
+                {inviting ? 'Inviting...' : 'Send Invitation'}
+              </Button>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
