@@ -40,7 +40,7 @@ const Features = () => {
 
         <div className="flex justify-center items-center">
           <span className='hidden sm:block'>
-            <Image 
+            <img 
               src="/features-optimized.webp" 
               className="h-full max-w-full select-none pointer-events-none" 
               alt="Features overview" 
@@ -61,7 +61,7 @@ const Features = () => {
             />
           </span>
           <span className='block sm:hidden'>
-            <Image 
+            <img 
               src="/features-mobile-optimized.webp" 
               className="h-full max-w-full select-none pointer-events-none" 
               alt="Features overview" 
@@ -80,7 +80,7 @@ const Features = () => {
                 KhtmlUserSelect: 'none'
               }}
             />
-            <Image 
+            <img 
               src="/features-mobile-optimized2.webp" 
               className="h-full max-w-full select-none pointer-events-none" 
               alt="Features overview" 

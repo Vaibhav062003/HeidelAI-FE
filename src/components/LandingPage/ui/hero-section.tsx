@@ -1,7 +1,7 @@
+'use client';
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Shape, ExtrudeGeometry } from 'three';
-import * as THREE from 'three';
 
 interface BoxProps {
   position: [number, number, number];
@@ -69,7 +69,8 @@ const Box = ({ position, rotation }: BoxProps) => {
 };
 
 const AnimatedBoxes = () => {
-    const groupRef = useRef<THREE.Group>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const groupRef = useRef<any | null>(null);
 
     useFrame((state, delta) => {
         if (groupRef.current) {
@@ -84,16 +85,17 @@ const AnimatedBoxes = () => {
             Math.PI / 2,
             0
         ] as [number, number, number],
-        // Add other properties as needed
+        id: index
     }));
 
     return (
         <group ref={groupRef}>
-            {boxes.map((box, index) => (
-                // Your box rendering logic here
-                <mesh key={index} position={box.position} rotation={box.rotation}>
-                    {/* mesh content */}
-                </mesh>
+            {boxes.map((box) => (
+                <Box
+                    key={box.id}
+                    position={box.position}
+                    rotation={box.rotation}
+                />
             ))}
         </group>
     );
