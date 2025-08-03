@@ -8,19 +8,6 @@ const Features = () => {
     return false;
   };
 
-  // Prevent drag and drop
-  const handleDragStart = (e: React.DragEvent) => {
-    e.preventDefault();
-    return false;
-  };
-
-  // Prevent touch and hold on mobile
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length > 1) {
-      e.preventDefault();
-    }
-  };
-
   return (
     <section id="features" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -40,14 +27,14 @@ const Features = () => {
 
         <div className="flex justify-center items-center">
           <span className='hidden sm:block'>
-            <img 
+            <Image 
               src="/features-optimized.webp" 
-              className="h-full max-w-full select-none pointer-events-none" 
+              className="h-auto w-full max-w-full select-none pointer-events-none" 
               alt="Features overview" 
-              loading="lazy"
+              width={1200}
+              height={800}
+              priority
               onContextMenu={handleContextMenu}
-              onDragStart={handleDragStart}
-              onTouchStart={handleTouchStart}
               draggable={false}
               style={{
                 userSelect: 'none',
@@ -55,50 +42,48 @@ const Features = () => {
                 MozUserSelect: 'none',
                 msUserSelect: 'none',
                 WebkitTouchCallout: 'none',
-                // WebkitUserDrag: 'none',
                 KhtmlUserSelect: 'none'
               }}
             />
           </span>
           <span className='block sm:hidden'>
-            <img 
-              src="/features-mobile-optimized.webp" 
-              className="h-full max-w-full select-none pointer-events-none" 
-              alt="Features overview" 
-              loading="lazy"
-              onContextMenu={handleContextMenu}
-              onDragStart={handleDragStart}
-              onTouchStart={handleTouchStart}
-              draggable={false}
-              style={{
-                userSelect: 'none',
-                WebkitUserSelect: 'none',
-                MozUserSelect: 'none',
-                msUserSelect: 'none',
-                WebkitTouchCallout: 'none',
-                // WebkitUserDrag: 'none',
-                KhtmlUserSelect: 'none'
-              }}
-            />
-            <img 
-              src="/features-mobile-optimized2.webp" 
-              className="h-full max-w-full select-none pointer-events-none" 
-              alt="Features overview" 
-              loading="lazy"
-              onContextMenu={handleContextMenu}
-              onDragStart={handleDragStart}
-              onTouchStart={handleTouchStart}
-              draggable={false}
-              style={{
-                userSelect: 'none',
-                WebkitUserSelect: 'none',
-                MozUserSelect: 'none',
-                msUserSelect: 'none',
-                WebkitTouchCallout: 'none',
-                // WebkitUserDrag: 'none',
-                KhtmlUserSelect: 'none'
-              }}
-            />
+            <div className="flex flex-col gap-4">
+              <Image 
+                src="/features-mobile-optimized.webp" 
+                className="h-auto w-full max-w-full select-none pointer-events-none" 
+                alt="Features overview" 
+                width={400}
+                height={600}
+                priority
+                onContextMenu={handleContextMenu}
+                draggable={false}
+                style={{
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  MozUserSelect: 'none',
+                  msUserSelect: 'none',
+                  WebkitTouchCallout: 'none',
+                  KhtmlUserSelect: 'none'
+                }}
+              />
+              <Image 
+                src="/features-mobile-optimized2.webp" 
+                className="h-auto w-full max-w-full select-none pointer-events-none" 
+                alt="Features overview" 
+                width={400}
+                height={600}
+                onContextMenu={handleContextMenu}
+                draggable={false}
+                style={{
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  MozUserSelect: 'none',
+                  msUserSelect: 'none',
+                  WebkitTouchCallout: 'none',
+                  KhtmlUserSelect: 'none'
+                }}
+              />
+            </div>
           </span>
         </div>
       </div>
