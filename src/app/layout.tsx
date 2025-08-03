@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
-import './globals.css'
+import "./globals.css"
 import { Inter } from 'next/font/google'
+
+import { ClerkProvider } from '@clerk/nextjs'
 import { AuthProvider } from '@/contexts/AuthContext'
 
 const inter = Inter({ 
@@ -29,7 +31,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'HeidelAI' }],
   icons: {
-    icon: '/HeidelAi Favicon.ico.ico',
+    icon: '/heidelai.png',
   },
   openGraph: {
     title: 'HeidelAI - AI-Powered Customer Engagement & Analytics Platform',
@@ -57,10 +59,15 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
-      <body className={`bg-black text-white ${inter.className}`}>
-        <AuthProvider>
+    <html lang="en" >
+      <body className={`bg-white text-black`}>
+        <AuthProvider> 
+        <ClerkProvider
+        publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!} 
+        afterSignOutUrl="/"
+>
           {children}
+        </ClerkProvider>
         </AuthProvider>
       </body>
     </html>

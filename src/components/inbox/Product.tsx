@@ -20,11 +20,9 @@ import { ExternalLink, Send, Plus, Search, Eye, Share2, AlertTriangle } from "lu
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 
-
 type PlatformType = "pinecone" | "shopify" | "other" | undefined;
 
 const WS_URL = 'wss://egenie-whatsapp.koyeb.app/cs';
-
 
 interface Product {
   id: string;
@@ -32,23 +30,21 @@ interface Product {
   description: string;
   images: string;
   name: string;
-  on_sale: string; // Use boolean if the data contains `true/false` instead of `"True"/"False"`
+  on_sale: string;
   permalink: string;
   price: number;
   product_id: number;
-  purchasable: string; // Use boolean if the data contains `true/false`
-  regular_price: string; // Use `number` if parsed as numeric values
-  sale_price: string; // Use `number` if parsed as numeric values
+  purchasable: string;
+  regular_price: string;
+  sale_price: string;
   slug: string;
   stock_quantity: number;
 }
 
-
-
 interface ProductsTabProps {
   selectedConversationId?: string;
   onProductSelect: (product: Product) => void;
-  onShareProduct: (product: Product) => void; // Add this line
+  onShareProduct: (product: Product) => void;
 }
 
 const LoadingState = () => (
@@ -61,14 +57,10 @@ const LoadingState = () => (
         />
         <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
       </div>
-      {/* Updated Add Product button with dropdown */}
       <div className="relative">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              size="icon"
-              variant="outline"
-            >
+            <Button size="icon" variant="outline">
               <Plus className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -102,7 +94,7 @@ const ProductsTab = ({
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Initialize as true
   const [error, setError] = useState<string | null>(null);
   const [showOptions, setShowOptions] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -111,7 +103,6 @@ const ProductsTab = ({
   const [retries, setRetries] = useState(0);
   const [ws, setWs] = useState<WebSocket | null>(null);
   
-
   const maxRetries = 5;
   const retryDelay = 3000;
 
@@ -120,6 +111,7 @@ const ProductsTab = ({
     
     setLoading(true);
     try {
+      // console.log("id:",conversationId);
       const response = await fetch(`https://egenie-whatsapp.koyeb.app/product_recommendations/${conversationId}`, {
         credentials: 'include'
       });
@@ -128,16 +120,21 @@ const ProductsTab = ({
       
       const data = await response.json();
 
-      if (data['status'] == "error") {
-        setError('Failed to fech products');
+      if (data.status === "error") {
+        setError('Failed to fetch products');
+        setProducts([]);
+        setFilteredProducts([]);
         return;
       }
-      setError("")
-      console.log(data)
-      setProducts(data['data']);
-      setFilteredProducts(data['data']);
+      
+      setError(null);
+      const productsData = Array.isArray(data.data) ? data.data : [];
+      setProducts(productsData);
+      setFilteredProducts(productsData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
+      setProducts([]);
+      setFilteredProducts([]);
       console.error('Error fetching products:', err);
     } finally {
       setLoading(false);
@@ -145,49 +142,61 @@ const ProductsTab = ({
   };
 
   useEffect(() => {
-    if (!selectedConversationId) return;
+    if (!selectedConversationId) {
+      setLoading(false);
+      return;
+    }
 
     // Initial fetch
     fetchProducts(selectedConversationId);
 
     // WebSocket connection
     const connectWebSocket = () => {
-      const wsConnection = new WebSocket(`${WS_URL}/client-${Date.now()}`);
-      
-      wsConnection.onopen = () => {
-        // setError(null);
-        setRetries(0);
-      };
-      
-      wsConnection.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (
-          data.type === 'products_updated' && 
-          data.conversation_id === selectedConversationId
-        ) {
-          fetchProducts(selectedConversationId);
-        }
-      };
+      try {
+        const wsConnection = new WebSocket(`${WS_URL}/client-${Date.now()}`);
+        
+        wsConnection.onopen = () => {
+          setRetries(0);
+        };
+        
+        wsConnection.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'products_updated' && data.conversation_id === selectedConversationId) {
+              fetchProducts(selectedConversationId);
+            }
+          } catch (e) {
+            console.error('Error parsing WebSocket message:', e);
+          }
+        };
 
-      wsConnection.onerror = () => {
+        wsConnection.onerror = (e) => {
+          console.error('WebSocket error:', e);
+          setError('WebSocket connection failed');
+          if (retries < maxRetries) {
+            setRetries(prev => prev + 1);
+            setTimeout(connectWebSocket, retryDelay);
+          }
+        };
+
+        wsConnection.onclose = () => {
+          if (retries < maxRetries) {
+            setRetries(prev => prev + 1);
+            setTimeout(connectWebSocket, retryDelay);
+          }
+        };
+
+        setWs(wsConnection);
+      } catch (e) {
+        console.error('WebSocket connection error:', e);
         setError('WebSocket connection failed');
-        if (retries < maxRetries) {
-          setRetries(prev => prev + 1);
-          setTimeout(connectWebSocket, retryDelay);
-        }
-      };
-
-      wsConnection.onclose = () => {
-        if (retries < maxRetries) {
-          setRetries(prev => prev + 1);
-          setTimeout(connectWebSocket, retryDelay);
-        }
-      };
-
-      setWs(wsConnection);
+      }
     };
 
-    connectWebSocket();
+    // Only connect WebSocket in browser environment
+    if (typeof window !== 'undefined') {
+      connectWebSocket();
+    }
 
     return () => {
       if (ws) {
@@ -198,7 +207,7 @@ const ProductsTab = ({
 
   // Filter products when search or category changes
   useEffect(() => {
-    const filtered = products?.filter((product) => {
+    const filtered = products.filter((product) => {
       const matchesSearch = product.name
         .toLowerCase()
         .includes(searchProduct.toLowerCase());
@@ -221,43 +230,38 @@ const ProductsTab = ({
 
   if (error) {
     return (
-      <div className="p-3 h-screen mb-2 bg-white shadow-sm">
-
-      <div className="flex flex-col sm:flex-row gap-2 mb-4">
-      <div className="flex-1 relative">
-        <Input
-          placeholder="Search products..."
-          className="pl-8 pr-3 py-1.5 text-sm border-gray-300 focus:ring-1 focus:ring-blue-500"
-        />
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-      </div>
-      {/* Updated Add Product button with dropdown */}
-      <div className="relative">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="icon"
-              variant="outline"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Add new product</TooltipContent>
-        </Tooltip>
-      </div>
-    </div>
-      <div className="p-4 my-4 text-red-500 bg-white rounded-lg border border-red-200">
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5" />
-          <p className="text-sm">Failed fetch products</p>
+      <div className="p-3 mb-2 bg-white shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-2 mb-4">
+          <div className="flex-1 relative">
+            <Input
+              placeholder="Search products..."
+              className="pl-8 pr-3 py-1.5 text-sm border-gray-300 focus:ring-1 focus:ring-blue-500"
+            />
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+          </div>
+          <div className="relative">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="outline">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Add new product</TooltipContent>
+            </Tooltip>
+          </div>
         </div>
-      </div>
+        <div className="p-4 my-4 text-red-500 bg-white rounded-lg border border-red-200">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5" />
+            <p className="text-sm">{error}</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-3 mb-2 max-h-screen bg-white  shadow-sm">
+    <div className="p-3 mb-2 bg-white shadow-sm">
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <div className="flex-1 relative">
           <Input
@@ -268,7 +272,6 @@ const ProductsTab = ({
           />
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
         </div>
-        {/* Updated Add Product button with dropdown */}
         <div className="relative" ref={dropdownRef}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -317,19 +320,19 @@ const ProductsTab = ({
       </div>
 
       <ScrollArea className="h-[calc(100vh-145px)] pr-2">
-        <div className="space-y-2 ">
+        <div className="space-y-2">
           {filteredProducts.map((product) => (
             <div
               key={product.id}
               className="group flex items-center gap-4 p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-200 transition-all shadow-sm hover:shadow-md cursor-pointer"
-              onClick={() => onProductSelect(product)} // Add this line
+              onClick={() => onProductSelect(product)}
             >
-              <div className="w-20  bg-gray-50 rounded-md overflow-hidden">
+              <div className="w-20 bg-gray-50 rounded-md overflow-hidden">
                 <img 
-  src={product.images} 
-  alt={product.name}
-  className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
-/>
+                  src={product.images} 
+                  alt={product.name}
+                  className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
+                />
               </div>
 
               <div className="flex-1 min-w-0">
@@ -340,13 +343,9 @@ const ProductsTab = ({
                   <p className="text-sm font-semibold text-gray-900">
                     ₹{product.price}
                   </p>
-                  {/* <Badge variant="outline" className="text-xs text-gray-500">
-                    {product.category}
-                  </Badge> */}
                 </div>
               </div>
 
-              {/* Update buttons to stop propagation */}
               <div className="flex flex-col gap-2 ml-auto">
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -355,7 +354,7 @@ const ProductsTab = ({
                       size="sm"
                       className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
                       onClick={(e) => {
-                        e.stopPropagation(); // Prevent parent div's click
+                        e.stopPropagation();
                         onProductSelect(product);
                       }}
                     >

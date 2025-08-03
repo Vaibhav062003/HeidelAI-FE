@@ -5,15 +5,15 @@
 // // Pages
 // import Home from '@/app/(main)/page';
 // import LoginPage from '@/app/login/page';
-// import AdminSignup from '@/pages/AdminSignup';
-// import CompanyInfo from './app/company-info/CompanyInfo';
-// import IndustrySelection from '@/pages/IndustrySelection';
+// import AdminSignup from '@/app/auth/admin-signup/page'
+// import CompanyInfo from '@/app/company-info/page';
+// import IndustrySelection from '@/app/industry-selection/page';
 // // import DomainConnection from './pages/DomainConnection';
 // // import GoogleIntegration from './pages/GoogleIntegration';
 // // import ProductURL from './pages/ProductURL';
 // // import Dashboard from './pages/Dashboard';
 // // import InviteTeam from './pages/InviteTeam';
-// import AgentSignup from '@/pages/AgentSignup';
+// import AgentSignup from '@/app/auth/agent-signup/page';
 
 // interface ProtectedRouteProps {
 //   requireAdmin?: boolean;

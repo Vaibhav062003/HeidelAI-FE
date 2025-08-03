@@ -1,238 +1,257 @@
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
-from typing import List, Optional
-import uvicorn
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from pydantic import BaseModel
+from typing import List, Dict, Optional
+import asyncio
 import json
-import google.generativeai as genai
+import logging
+from Main_Agent import AggregatorAgent, RefineQueryAgent, RefineContextAgent, FollowUpQuestionAgent, QueryAgent
 
-# Import existing classes and functions from Main_Agent.py
-from Main_Agent import (
-    AggregatorAgent, 
-    QueryResult,
-    TavilySearchConfig,
-    HashtagSearchConfig
-)
+app = FastAPI()
 
-GEMINI_API_KEY = "AIzaSyB7x81BRsUcQwfMcnENs0NumkaaRPkY_gM"  # Replace with your API key
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel(
-    'gemini-2.0-flash-thinking-exp-01-21',
-    generation_config={
-        'temperature': 0.1 # Lower temperature for more focused responses
-        # 'max_output_tokens': 2048
+logger = logging.getLogger("uvicorn")
+
+# === Request Models ===
+class QueryRequest(BaseModel):
+    query: str
+    platforms: List[str]
+
+class FollowUpResponse(BaseModel):
+    answers: Dict[str, str]
+
+class ContextResponse(BaseModel):
+    refined_query: str
+    context: Dict[str, str]
+
+# === Instantiate Agents ===
+query_agent = QueryAgent()
+refine_query_agent = RefineQueryAgent(query_agent)
+refine_context_agent = RefineContextAgent(query_agent)
+
+@app.post("/start")
+async def start_query(req: QueryRequest):
+    refined_query = req.query
+    responses = {}
+    MAX_REFINEMENT_QUESTIONS = 3
+
+    for _ in range(MAX_REFINEMENT_QUESTIONS):
+        follow_up_question = refine_query_agent.generate_refinement_question(refined_query)
+        if follow_up_question == "NO_MORE_QUESTIONS":
+            break
+        return {
+            "question": follow_up_question,
+            "refined_query": refined_query,
+            "step": "refinement",
+        }
+
+    return {
+        "refined_query": refined_query,
+        "step": "refinement-complete"
     }
-)
 
-app = FastAPI(
-    title="Political Analysis API",
-    description="API for analyzing political data across multiple platforms",
-    version="1.0.0"
-)
+@app.post("/refine")
+async def refine(req: FollowUpResponse):
+    last_query = list(req.answers.values())[-1]
+    original_question = list(req.answers.keys())[0]
+    refined_query = refine_context_agent.refine_query_with_context(original_question, req.answers)
+    return {
+        "refined_query": refined_query,
+        "step": "refinement",
+    }
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with your frontend URL
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+@app.post("/analyze/prepare")
+async def analyze_prepare(req: QueryRequest):
+    agent = AggregatorAgent()
+    platform_queries = await agent.generate_queries(query=req.query, platforms=req.platforms)
 
-# Request/Response Models
-class SearchRequest(BaseModel):
-    query: str = Field(..., description="Search query to analyze")
-    platforms: List[str] = Field(
-        default=["youtube", "reddit", "google", "instagram"],
-        description="List of platforms to analyze"
+    analysis_results = {}
+    raw_data = {}
+
+    for platform, pquery in platform_queries.platform_queries.items():
+        if platform == "youtube":
+            data = await agent.scrape_youtube(pquery)
+            analysis = await agent.analyze_youtube(data, req.query)
+        elif platform == "reddit":
+            data = await agent.scrape_reddit(pquery)
+            analysis = await agent.analyze_reddit(data, req.query)
+        elif platform == "google":
+            data = await agent.scrape_web(pquery)
+            analysis = await agent.analyze_web(data, req.query)
+        elif platform == "instagram":
+            data = await agent.scrape_instagram(pquery)
+            analysis = await agent.analyze_instagram(data, req.query)
+        else:
+            continue
+
+        raw_data[platform] = [d.model_dump() for d in data]
+        analysis_results[platform] = analysis
+
+    follow_up_agent = FollowUpQuestionAgent(query_agent)
+    follow_up_questions = await follow_up_agent.ask_follow_up_questions(
+        youtube_analysis=analysis_results.get("youtube", ""),
+        reddit_analysis=analysis_results.get("reddit", ""),
+        web_analysis=analysis_results.get("google", ""),
+        instagram_analysis=analysis_results.get("instagram", "")
     )
 
-class AnalysisResponse(BaseModel):
-    platform_queries: dict
-    youtube_analysis: Optional[str]
-    reddit_analysis: Optional[str]
-    web_analysis: Optional[str]
-    instagram_analysis: Optional[str]
-    combined_analysis: Optional[str]
-    relevance_score: Optional[float]
-    relevance_justification: Optional[str]
+    return {
+        "platform_queries": platform_queries.platform_queries,
+        "individual_analysis": analysis_results,
+        "follow_up_questions": follow_up_questions,
+        "raw_data": raw_data,
+        "step": "awaiting-followup-context"
+    }
 
-@app.post("/analyze", response_model=AnalysisResponse)
-async def analyze_query(request: SearchRequest):
-    try:
-        # Initialize AggregatorAgent
-        aggregator = AggregatorAgent()
+@app.post("/analyze/finalize")
+async def analyze_finalize(req: ContextResponse):
+    agent = AggregatorAgent()
+    combined = await agent.analyze_combined(
+        youtube_analysis=req.context.get("youtube", ""),
+        reddit_analysis=req.context.get("reddit", ""),
+        web_analysis=req.context.get("google", ""),
+        instagram_analysis=req.context.get("instagram", ""),
+        refined_context=json.dumps(req.context)
+    )
+    return {
+        "combined_analysis": combined,
+        "step": "final-analysis-complete"
+    }
 
-        # Generate platform-specific queries
-        query_result = await aggregator.generate_queries(
-            query=request.query, 
-            platforms=request.platforms
-        )
-
-        # Initialize variables for analyses
-        youtube_analysis = ""
-        reddit_analysis = ""
-        web_analysis = ""
-        instagram_analysis = ""
-
-        # Process each platform
-        for platform, platform_query in query_result.platform_queries.items():
-            if platform == "youtube":
-                youtube_data = await aggregator.scrape_youtube(platform_query)
-                youtube_analysis = await aggregator.analyze_youtube(youtube_data, request.query)
-            elif platform == "reddit":
-                reddit_data = await aggregator.scrape_reddit(platform_query)
-                reddit_analysis = await aggregator.analyze_reddit(reddit_data, request.query)
-            elif platform == "google":
-                web_data = await aggregator.scrape_web(platform_query)
-                web_analysis = await aggregator.analyze_web(web_data, request.query)
-            elif platform == "instagram":
-                instagram_data = await aggregator.scrape_instagram(platform_query)
-                instagram_analysis = await aggregator.analyze_instagram(instagram_data, request.query)
-
-        # Get combined analysis
-        combined_analysis = await aggregator.analyze_combined(
-            youtube_analysis,
-            reddit_analysis,
-            web_analysis,
-            instagram_analysis
-        )
-
-        # Check relevance
-        relevance_result = await aggregator.check_relevance(request.query, combined_analysis)
-
-        return AnalysisResponse(
-            platform_queries=query_result.platform_queries,
-            youtube_analysis=youtube_analysis,
-            reddit_analysis=reddit_analysis,
-            web_analysis=web_analysis,
-            instagram_analysis=instagram_analysis,
-            combined_analysis=combined_analysis,
-            relevance_score=relevance_result["relevance_score"],
-            relevance_justification=relevance_result["justification"]
-        )
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+@app.websocket("/ws/analyze")
+async def websocket_analyze(websocket: WebSocket):
     await websocket.accept()
-    aggregator = AggregatorAgent()
-    
     try:
-        while True:
-            # Receive initial query
-            initial_query = await websocket.receive_text()
-            
-            # Start refinement process
-            refinement_prompt_template = """
-            You are an expert query analysis and refinement system. Your task is to carefully understand the user's original query and generate a SINGLE relevant follow-up question to refine their information need.
+        data = await websocket.receive_json()
+        query = data.get("query")
+        platforms = data.get("platforms", [])
 
-            Original query: "{query}"
+        agent = AggregatorAgent()
+        total_steps = 2 + len(platforms)  # 1: queries, N: per-platform, 1: follow-up, 1: final
+        current_step = 0
 
-            ## Guidelines for generating the follow-up question:
-            - Always ask for location or try to get location based on the original query.
-            - ask location only once and if the user provides the location then dont ask again.
-            - Focus on clarifying the user's intent (e.g., specific aspects, timeframes, content types).
-            - Avoid asking for unnecessary details.
-            - Ensure the question is concise and directly related to the query.
-            - If no further clarification is needed, return "NO_MORE_QUESTIONS".
+        # Step 1: Generating queries
+        await websocket.send_json({
+            "type": "status",
+            "content": "📝 Generating platform-specific queries..."
+        })
+        await websocket.send_json({
+            "type": "progress",
+            "percent": int((current_step / total_steps) * 100)
+        })
+        platform_queries = await agent.generate_queries(query=query, platforms=platforms)
+        current_step += 1
+        await websocket.send_json({
+            "type": "progress",
+            "percent": int((current_step / total_steps) * 100)
+        })
 
-            Return ONLY the follow-up question as plain text, without quotes or additional explanation.
-            """
+        analysis_results = {}
+        raw_data = {}
 
-            MAX_REFINEMENT_QUESTIONS = 3
-            refined_query = initial_query
-            responses = {}
-
-            # Send initial acknowledgment
-            await websocket.send_text(json.dumps({
+        # Step 2: Per-platform scraping and analysis
+        for idx, (platform, pquery) in enumerate(platform_queries.platform_queries.items()):
+            await websocket.send_json({
                 "type": "status",
-                "content": "Starting query refinement process..."
-            }))
+                "content": f"🔍 Scraping and analyzing data from {platform} ({idx+1}/{len(platform_queries.platform_queries)})..."
+            })
+            await websocket.send_json({
+                "type": "progress",
+                "percent": int((current_step / total_steps) * 100)
+            })
 
-            # Query refinement loop
-            for i in range(MAX_REFINEMENT_QUESTIONS):
-                prompt = refinement_prompt_template.format(query=refined_query)
-                response = model.generate_content(prompt)
-                question = response.text.strip()
+            if platform == "youtube":
+                data = await agent.scrape_youtube(pquery)
+                analysis = await agent.analyze_youtube(data, query)
+            elif platform == "reddit":
+                data = await agent.scrape_reddit(pquery)
+                analysis = await agent.analyze_reddit(data, query)
+            elif platform == "google":
+                data = await agent.scrape_web(pquery)
+                analysis = await agent.analyze_web(data, query)
+            elif platform == "instagram":
+                data = await agent.scrape_instagram(pquery)
+                analysis = await agent.analyze_instagram(data, query)
+            else:
+                continue
 
-                if question == "NO_MORE_QUESTIONS":
-                    break
+            raw_data[platform] = [d.model_dump() for d in data]
+            analysis_results[platform] = analysis
 
-                # Send refinement question to frontend
-                await websocket.send_text(json.dumps({
-                    "type": "question",
-                    "content": question
-                }))
+            current_step += 1
+            await websocket.send_json({
+                "type": "progress",
+                "percent": int((current_step / total_steps) * 100)
+            })
 
-                # Wait for user's answer
-                user_response = await websocket.receive_text()
-                responses[f"refinement_{i+1}"] = user_response
-                refined_query = f"{initial_query} {user_response}"
+        # Step 3: Follow-up questions
+        await websocket.send_json({
+            "type": "status",
+            "content": "💡 Generating follow-up questions based on all data..."
+        })
+        await websocket.send_json({
+            "type": "progress",
+            "percent": int((current_step / total_steps) * 100)
+        })
+        follow_up_agent = FollowUpQuestionAgent(query_agent)
+        follow_up_questions = await follow_up_agent.ask_follow_up_questions(
+            youtube_analysis=analysis_results.get("youtube", ""),
+            reddit_analysis=analysis_results.get("reddit", ""),
+            web_analysis=analysis_results.get("google", ""),
+            instagram_analysis=analysis_results.get("instagram", "")
+        )
+        current_step += 1
+        await websocket.send_json({
+            "type": "progress",
+            "percent": int((current_step / total_steps) * 100)
+        })
 
-            # Start analysis process
-            await websocket.send_text(json.dumps({
-                "type": "status",
-                "content": "Starting data collection and analysis..."
-            }))
+        await websocket.send_json({
+            "type": "follow_up_questions",
+            "questions": follow_up_questions,
+            "step": "awaiting-followup-context"
+        })
 
-            # Generate platform-specific queries
-            query_result = await aggregator.generate_queries(
-                query=refined_query,
-                platforms=["youtube", "reddit", "google", "instagram"]
-            )
+        user_context = await websocket.receive_json()
+        refined_context = user_context.get("context", {})
 
-            # Process each platform
-            platform_analyses = {}
-            for platform, platform_query in query_result.platform_queries.items():
-                await websocket.send_text(json.dumps({
-                    "type": "status",
-                    "content": f"Analyzing {platform} data..."
-                }))
+        # Step 4: Final combined analysis
+        await websocket.send_json({
+            "type": "status",
+            "content": "🧠 Performing final combined analysis..."
+        })
+        await websocket.send_json({
+            "type": "progress",
+            "percent": int((current_step / total_steps) * 100)
+        })
+        combined = await agent.analyze_combined(
+            youtube_analysis=analysis_results.get("youtube", ""),
+            reddit_analysis=analysis_results.get("reddit", ""),
+            web_analysis=analysis_results.get("google", ""),
+            instagram_analysis=analysis_results.get("instagram", ""),
+            refined_context=json.dumps(refined_context)
+        )
+        current_step += 1
+        await websocket.send_json({
+            "type": "progress",
+            "percent": 100
+        })
 
-                analysis = None
-                if platform == "youtube":
-                    data = await aggregator.scrape_youtube(platform_query)
-                    analysis = await aggregator.analyze_youtube(data, refined_query)
-                elif platform == "reddit":
-                    data = await aggregator.scrape_reddit(platform_query)
-                    analysis = await aggregator.analyze_reddit(data, refined_query)
-                elif platform == "google":
-                    data = await aggregator.scrape_web(platform_query)
-                    analysis = await aggregator.analyze_web(data, refined_query)
-                elif platform == "instagram":
-                    data = await aggregator.scrape_instagram(platform_query)
-                    analysis = await aggregator.analyze_instagram(data, refined_query)
-                
-                if analysis is not None:
-                    platform_analyses[platform] = analysis
-
-            # Perform combined analysis
-            combined_analysis = await aggregator.analyze_combined(
-                platform_analyses.get("youtube", ""),
-                platform_analyses.get("reddit", ""),
-                platform_analyses.get("web", ""),
-                platform_analyses.get("instagram", "")
-            )
-
-            # Send final analysis
-            await websocket.send_text(json.dumps({
-                "type": "result",
-                "content": combined_analysis
-            }))
+        await websocket.send_json({
+            "type": "final_result",
+            "combined_analysis": combined,
+            "platform_queries": platform_queries.platform_queries,
+            "individual_analysis": analysis_results,
+            "raw_data": raw_data,
+            "step": "final-analysis-complete"
+        })
 
     except WebSocketDisconnect:
-        print("Client disconnected")
+        logger.info("WebSocket disconnected.")
     except Exception as e:
-        print(f"Error: {str(e)}")
-        await websocket.send_text(json.dumps({
+        await websocket.send_json({
             "type": "error",
-            "content": str(e)
-        }))
-    finally:
-        await websocket.close()
+            "content": f"Error occurred: {str(e)}"
+        })
 
 if __name__ == "__main__":
-    uvicorn.run("main_fastapi:app", host="0.0.0.0", port=8000, reload=True)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

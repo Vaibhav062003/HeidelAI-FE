@@ -55,23 +55,60 @@ const PostReelComments: React.FC<PostReelCommentsProps> = ({ onClose, onComplete
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   // Fetch media data
-  useEffect(() => {
-    const fetchMedia = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/media");
-        if (!response.ok) throw new Error("Failed to fetch media");
-        const { data } = await response.json();
-        
-        if (!Array.isArray(data)) throw new Error("Invalid media format");
-        setMedia(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Media load failed");
-      } finally {
-        setLoading(false);
+useEffect(() => {
+  const fetchMedia = async () => {
+    try {
+      // Retrieve Instagram connection data from localStorage
+      const instagramConnection = localStorage.getItem('instagram_connection');
+      
+      if (!instagramConnection) {
+        throw new Error("Instagram account not connected");
       }
-    };
+      
+      const connectionData = JSON.parse(instagramConnection);
+      const accessToken = connectionData.token;
+      const instagramUserId = connectionData.userId;
+
+      // Prepare request to backend
+      const response = await fetch("http://localhost:5000/api/media", {
+        method: 'GET',
+        headers: {
+          'Instagram-Account-ID': instagramUserId,
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || "Failed to fetch media");
+      }
+      
+      const result = await response.json();
+      
+      // The media data is in result.data according to your getUserMedia function
+      const mediaData = result.data;
+      
+      if (!Array.isArray(mediaData)) {
+        throw new Error("Invalid media data format");
+      }
+      
+      setMedia(mediaData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Media load failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Only fetch if we have a valid connection
+  const isConnected = localStorage.getItem('instagram_connection') !== null;
+  if (isConnected) {
     fetchMedia();
-  }, []);
+  } else {
+    setLoading(false);
+    setError("Instagram account not connected");
+  }
+}, []);
 
   // Handlers
   const handlePostSelect = (post: MediaItem) => {

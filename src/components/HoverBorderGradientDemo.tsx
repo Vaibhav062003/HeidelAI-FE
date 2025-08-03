@@ -6,7 +6,7 @@ import { Drawer } from 'vaul';
 
 import { useState, useRef, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/LandingPage/ui/flow-hover-button";
 import { Input } from "@/components/ui/input2";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/components/supabase/client";
@@ -29,33 +29,53 @@ export function HoverBorderGradientDemo() {
 
   const handleDemoRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
+    // Basic validation checks
     if (!userName.trim() || !userEmail.trim() || !userPhone.trim() || !companyName.trim()) {
       sonnerToast.error('Please fill all the details.');
       return;
     }
-  
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userEmail.trim())) {
+      sonnerToast.error('Please enter a valid email address.');
+      return;
+    }
+
+    // Phone number validation (basic check for digits and common formats)
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    const cleanedPhone = userPhone.replace(/[\s\-\(\)]/g, ''); // Remove spaces, dashes, parentheses
+    
+    if (!phoneRegex.test(cleanedPhone) || cleanedPhone.length < 8) {
+      sonnerToast.error('Please enter a valid phone number (minimum 8 digits).');
+      return;
+    }
+
     // Create form data to match Google Form's expected format
     const formData = new FormData();
-    formData.append('entry.545040562', userName);       // Name
-    formData.append('entry.1231199003', userEmail);     // Email
-    formData.append('entry.1154213412', userPhone);     // Phone
-    formData.append('entry.1081121699', companyName);   // Company
-  
+    formData.append('entry.545040562', userName.trim());       // Name
+    formData.append('entry.1231199003', userEmail.trim());     // Email
+    formData.append('entry.1154213412', cleanedPhone);         // Phone (cleaned)
+    formData.append('entry.1081121699', companyName.trim());   // Company
+
     try {
       await fetch("https://docs.google.com/forms/d/e/1FAIpQLSdB_mtDsubutUM_y1draxzdbfzcsqcIz9Ok_hTwPayBukJPNg/formResponse", {
         method: 'POST',
         mode: 'no-cors',  // Required to bypass CORS errors
         body: formData,
       });
-  
+
       sonnerToast.success('Request received! We will contact you shortly.');
-  
+
       // Clear the form after successful submission
       setUserName('');
       setUserEmail('');
       setUserPhone('');
       setCompanyName('');
+      
+      // Close the drawer after successful submission
+      setIsOpen(false);
     } catch (error) {
       sonnerToast.error('Failed to submit the form. Please try again.');
       console.error('Error:', error);
@@ -157,18 +177,18 @@ export function HoverBorderGradientDemo() {
     </div>
     <div className=" flex justify-center space-x-2 text-center">
       <Drawer.Root repositionInputs={false} open={isOpen} onOpenChange={setIsOpen}>
-      <HoverBorderGradient
-        containerClassName="rounded-full"
-        className="bg-black/50 backdrop-blur-sm text-white flex items-center space-x-2"
+        <Drawer.Trigger className="focus-visible:border-none">
+      <Button
+        // containerClassName="rounded-full"
+        // className="bg-black/50 backdrop-blur-sm text-white flex items-center space-x-2"
       >
       {/* <Drawer.Trigger className="bg-black/50 backdrop-blur-sm hover:cursor-pointer border border-white/[0.2] py-2 px-4 rounded-full text-white flex items-center space-x-2"> */}
-      <Drawer.Trigger className="focus-visible:border-none">
 
       
-        <span>Request Demo</span>
-      
+        Request Demo
+        
+      </Button>
       </Drawer.Trigger>
-      </HoverBorderGradient>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40" />
         <Drawer.Content className="bg-white flex flex-col  fixed bottom-0  left-0 right-0 max-h-[85vh] rounded-t-[10px] z-[999]">
@@ -208,10 +228,15 @@ export function HoverBorderGradientDemo() {
             </label>
             <input
               value={userPhone}
-              onChange={(e) => setUserPhone(e.target.value)}
-              type="number"
+              onChange={(e) => {
+                // Allow only numbers, spaces, dashes, parentheses, and plus sign
+                const value = e.target.value.replace(/[^0-9\s\-\(\)\+]/g, '');
+                setUserPhone(value);
+              }}
+              type="tel" // Changed from "number" to "tel" for better mobile experience
               name="entry.1154213412"
-              className="border border-gray-200 bg-white w-full resize-none rounded-xl p-3 py-2  text-gray-900 outline-none focus:ring-2 focus:ring-black/5 focus:ring-offset-0"
+              placeholder="+91 9876543210"
+              className="border border-gray-200 bg-white w-full resize-none rounded-xl p-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-black/5 focus:ring-offset-0"
             />
             <label htmlFor="name" className="font-medium text-gray-900 text-sm mt-4 mb-2 block">
               Company name
@@ -226,7 +251,7 @@ export function HoverBorderGradientDemo() {
             <p className="text-neutral-600  text-xs  mt-2 mb-8">
             By submitting you agree to our Terms & Conditions.
           </p>
-            <button onClick={() => setIsOpen(false)} type="submit" className="h-[44px] bg-black mx-auto rounded-full sticky bottom-0 text-gray-50  mt-4 w-full font-medium">Submit</button>
+            <button onClick={() => setIsOpen(false)} type="submit" className="h-[44px] bg-black mx-auto rounded-xl sticky bottom-0 text-gray-50  mt-4 w-full font-medium">Submit</button>
             </form>
           </div>
         </Drawer.Content>

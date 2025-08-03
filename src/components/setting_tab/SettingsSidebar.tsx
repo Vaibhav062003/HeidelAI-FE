@@ -107,7 +107,7 @@ const SettingsDashboard = () => {
   };
 
   return (
-    <Card className="w-full h-screen">
+      <Card className="h-[100vh] w-[1350px] translate-x-[-40px] mx-auto my-2 shadow-lg rounded-xl">
       <CardContent className="p-6 flex h-full">
         <div className="w-64 border-r pr-4">
           <h2 className="text-lg font-semibold mb-4">Account Settings</h2>
