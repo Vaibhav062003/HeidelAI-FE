@@ -24,6 +24,7 @@ export default function LoginPage() {
   // Redirect if already signed in
   React.useEffect(() => {
     if (isLoaded && isSignedIn) {
+      toast.success("Already signed in! Redirecting...");
       router.push("/dashboard");
     }
   }, [isLoaded, isSignedIn, router]);
