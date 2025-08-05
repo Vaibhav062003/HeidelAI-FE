@@ -1,10 +1,18 @@
 'use client';
 
+import Image from "next/image";
+
 export default function PrivacyPolicy() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-8 max-w-4xl mx-auto">
+    <div className="min-h-screen mt-8 bg-zinc-950 text-white p-8 max-w-4xl mx-auto">
+      <Image
+        src="/heidelai.png"
+        alt="Privacy Policy"
+        width={100}
+        height={100}
+        className="rounded-lg mb-8"
+      />
       <h1 className="text-3xl font-bold mb-8">Privacy Policy</h1>
-      
       <div className="space-y-8">
         {/* Introduction */}
         <section>
@@ -476,7 +484,7 @@ Last Updated: March 3, 2025
 
 
         {/* Last Updated */}
-        <footer className="mt-12 pt-6 border-t border-gray-800">
+        <footer className="mt-12 pt-6 border-t border-white/20">
           <p className="text-gray-400 text-sm">
             Last Updated: March 3, 2025
           </p>
