@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Conversation } from '../types/conversation';
 import { syncContactFromConversation } from '../utils/contactSync';
+import { getSessionToken } from '../utils/clerkSession';
 
 interface WhatsAppMessage {
   conversation_id: string;
@@ -16,10 +17,23 @@ export const api = axios.create({
 });
 
 export const conversationService = {
-
   getInstagramConversations: async (instagramId: string) => {
-    const response = await api.get(`https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations`);
-    console.log("Instagram conversations response", response);
+    // Fetch the session token from your API route
+    const tokenRes = await fetch("/api/session-token");
+    const tokenData = await tokenRes.json();
+    if (!tokenRes.ok || !tokenData.token) {
+      throw new Error("Failed to get session token");
+    }
+    const sessionToken = tokenData.token;
+
+    const response = await api.get(
+      `https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+        },
+      }
+    );
     return response.data;
   },
 
