@@ -144,8 +144,7 @@ async function handleDeleteMember(request: Request): Promise<Response> {
   } 
 }
 
-
-export const handleInvitedAgents = async (request: Request): Promise<Response> => {
+async function handleInvitedAgents(request: Request): Promise<Response>{ 
   try {
     const { searchParams } = new URL(request.url);
     const organization_id = searchParams.get('org_id');
@@ -175,9 +174,7 @@ export const handleInvitedAgents = async (request: Request): Promise<Response> =
     return new Response(JSON.stringify({ error: "Internal server error", details: error instanceof Error ? error.message : error }), { status: 500 });
   }
 }
-
-
-export const RevokeInvite = async (request: Request): Promise<Response> => {
+async function RevokeInvite(request: Request): Promise<Response>{
   try {
     const { searchParams } = new URL(request.url);
     const organization_id = searchParams.get('org_id');
