@@ -21,6 +21,14 @@ export default function LoginPage() {
   const { isSignedIn, user } = useUser();
   const router = useRouter();
 
+  // Redirect if already signed in
+  React.useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      toast.success("Already signed in! Redirecting...");
+      router.push("/dashboard");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -39,7 +47,6 @@ export default function LoginPage() {
 
       if (signInAttempt.status === "complete") {
         await setActive({ session: signInAttempt.createdSessionId });
-
         // Fetch organization data after session is active
         const res = await fetch("/api/getorgdata");
         const data = await res.json();
@@ -69,6 +76,8 @@ export default function LoginPage() {
       setIsLoggingIn(false);
     }
   };
+
+
 
   return (
     <section className="h-screen  bg-black text-white px-6 flex items-center justify-center">
