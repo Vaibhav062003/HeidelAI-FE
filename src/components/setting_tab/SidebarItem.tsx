@@ -393,10 +393,11 @@ const InstagramDialog = () => {
       localStorage.setItem('instagram_auth_state', state);
 
       // Build Instagram authorization URL dynamically for the current subdomain
-      const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=${window.location.origin}/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages`;
-      console.log('Redirecting to Instagram login:', authUrl);
+      const redirectUri = 'https://development.heidelai.com/auth/instagram/callback';
+      const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages&state=${state}`;
+
       // Redirect to Instagram authorization page
-      // window.location.href = authUrl;
+      window.location.href = authUrl;
     } catch (error) {
       console.error('Error initiating Instagram login:', error);
       setIsLoading(false);
