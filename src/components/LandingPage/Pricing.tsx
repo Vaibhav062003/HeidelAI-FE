@@ -15,8 +15,7 @@ const TIERS = [
 		features: [
 			"AI Texts - 2,500",
 			"WhatsApp Credits - €7",
-			"AI Voice bot - None",
-			"Admin Users - 1",
+			"Users - 1",
 			"Analytics Dashboard",
 			"Email Support"
 		],
@@ -34,8 +33,7 @@ const TIERS = [
 			"AI Texts - 10,000",
 			"WhatsApp Credits - €15",
 			"Analytics Requests - 300",
-			"AI Voice bot - None",
-			"Admin Users - 1",
+			"Users - 5",
 			"Priority Support",
 			"Advanced Analytics",
 			"Multi-platform Integration"
@@ -55,8 +53,7 @@ const TIERS = [
 			"AI Texts - 55,000",
 			"WhatsApp Credits - €55",
 			"Analytics Requests - 1,200",
-			"AI Voice bot - 300 mins",
-			"Admin Users - 2",
+			"Users - 5",
 			"24/7 Priority Support",
 			"Custom Integrations",
 			"Advanced AI Features",
