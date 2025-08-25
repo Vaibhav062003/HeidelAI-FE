@@ -19,6 +19,7 @@ import { H1, H2, H3, Body, Small } from "@/components/typography";
 
 import { Plus } from "lucide-react";
 import { createClient } from '@supabase/supabase-js';
+import { conversationService, WhatsAppMessage } from "@/components/services/api";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -65,6 +66,7 @@ import '../../app/dashboard/dashboard.css';
 import Image from "next/image";
 import CustomerInfo from './CustomerInfo';
 import LandingDashboard from "./LandingDashboard";
+import api from "@/lib/session_api";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -759,82 +761,58 @@ const ChatView = ({
 
   const handleFileUpload = async (file: File | null, recipient: string, caption: string = "") => {
     if (!file || !selectedConversationId) return;
-    
+
     setUploading(true);
     setUploadProgress(0);
-    
+
     try {
-      // Get the WhatsApp ID from localStorage
       const whatsappId = localStorage.getItem('whatsapp_user_id');
       if (!whatsappId) {
         toast.error('WhatsApp user ID not found');
         return;
       }
-      
-      // Extract the recipient ID from the conversation ID
-      // Assuming format is 'whatsapp_RECIPIENTID'
-      const recipientId = selectedConversationId.split('_')[1];
-      if (!recipientId) {
-        toast.error('Invalid recipient ID');
-        return;
-      }
-      
-      // Create FormData object for the request
+
+      // Prepare FormData for media upload
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('recipient_id', recipientId);
-      
-      // Add caption if provided
-      if (caption.trim()) {
-        formData.append('caption', caption.trim());
+      formData.append('recipient_id', recipient.split('_')[1]);
+      if (caption.trim()) formData.append('caption', caption.trim());
+
+      // Use a dedicated endpoint for WhatsApp media
+      const response = await api.post(
+        `whatsapp/${whatsappId}/media/send`,
+        {
+          data: formData,
+        }
+      );
+
+      if (response.status !== 200) {
+        throw new Error(`Failed to upload file: ${response.statusText || response.status}`);
       }
-      
-      // Send the request to the correct endpoint
-      const response = await fetch(`https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/media/send`, {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to upload file: ${errorText}`);
-      }
-      
-      const data = await response.json();
-      
-      // Determine media type based on file's MIME type
-      let mediaType = 'file';
-      if (file.type.startsWith('image/')) {
-        mediaType = 'image';
-      } else if (file.type.startsWith('video/')) {
-        mediaType = 'video';
-      } else if (file.type.startsWith('audio/')) {
-        mediaType = 'audio';
-      } else if (file.type === 'application/pdf') {
-        mediaType = 'document';
-      }
-      
-      // Add the message to the UI with appropriate metadata
-      setMessages(prev => [...prev, {
-        id: data.details.message_id || Date.now().toString(),
-        content: caption || `[${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)}]`,
-        // Fix: Use the correct string literal types that match the Message interface
-        type: file.type.startsWith('image/') ? 'image' : 
-              file.type.startsWith('video/') ? 'video' : 
-              file.type.startsWith('audio/') ? 'voice' : 'file',
-        role: 'agent',
-        conversation_id: selectedConversationId,
-        timestamp: new Date().toISOString(),
-        sender_id: 'agent',
-        fileUrl: data.details.media_id,
-        fileName: file.name,
-        fileType: file.type
-      }]);
-      
+
+      const data = response.data;
+
+      // Add the message to the UI
+      setMessages(prev => [
+        ...prev,
+        {
+          id: data.details.message_id || Date.now().toString(),
+          content: caption || `[File]`,
+          type: file.type.startsWith('image/') ? 'image' :
+                file.type.startsWith('video/') ? 'video' :
+                file.type.startsWith('audio/') ? 'voice' : 'file',
+          role: 'agent',
+          conversation_id: selectedConversationId,
+          timestamp: new Date().toISOString(),
+          sender_id: 'agent',
+          fileUrl: data.details.media_id,
+          fileName: file.name,
+          fileType: file.type
+        }
+      ]);
+
       toast.success('File sent successfully');
     } catch (error) {
-      console.error('Error uploading file:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to upload file');
     } finally {
       setUploading(false);
@@ -863,7 +841,7 @@ const ChatView = ({
         body: JSON.stringify({
           conversation_id: selectedConversationId,
           product_id: product.product_id,
-          message: messageText.trim() || undefined // Only send message if not empty
+          message: messageText.trim() || undefined
         }),
         credentials: 'include'
       });
@@ -891,8 +869,9 @@ const ChatView = ({
     let contentToSend = message.trim();
     const platform = selectedConversationId.split('_')[0]; 
     const sender_id = selectedConversationId.split('_')[1]; 
+  
 
-    // Check for canned response
+    // Canned response support
     if (contentToSend.startsWith('/')) {
       const shortcode = contentToSend.slice(1).toLowerCase();
       const cannedResponse = cannedResponses.find(
@@ -906,72 +885,38 @@ const ChatView = ({
     setIsSending(true);
     try {
       let response;
-      
-      if (platform === 'instagram') {
-        // Use Instagram-specific endpoint
-        const instagramId = localStorage.getItem('instagram_user_id');
-        
-        if (!instagramId) {
-          console.error('No Instagram ID found for sending message');
-          throw new Error('No Instagram ID found');
-        }
-        
-        response = await fetch(`https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/send_message`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            conversation_id: selectedConversationId,
-            content: contentToSend,
-            type: 'text',
-            sender_id: sender_id
-          }),
-        });
-      } else if (platform === 'whatsapp') {
-        // Use WhatsApp-specific endpoint
+      if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
-        
-        if (!whatsappId) {
-          console.error('No WhatsApp ID found for sending message');
-          throw new Error('No WhatsApp ID found');
-        }
-        
-        response = await fetch(`https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/conversations/send_message`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+        if (!whatsappId) throw new Error('No WhatsApp ID found');
+
+        const payload: WhatsAppMessage = {
+          conversation_id: selectedConversationId,
+          content: contentToSend,
+          sender_id,
+          type: 'text',
+        };
+        response = await conversationService.sendWhatsAppMessage(whatsappId, payload);
+        if (response.status !== "success") throw new Error(response.message || 'Failed to send message');
+      } else if (platform === 'instagram') {
+        const data = {
             conversation_id: selectedConversationId,
             content: contentToSend,
-            type: 'text',
-            sender_id: sender_id
-          }),
-        });
-      } 
-
-      if (response && !response.ok) throw new Error('Failed to send message');
+            sender_id : sender_id
+        }
+        console.log("selectedConversationId:", selectedConversationId);
+        response = await api.post(`instagram/conversations/send_message`,
+         data
+        );
+        if (response.status !== 200) throw new Error('Failed to send message');
+      }
       setMessage('');
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message');
+      toast.error(error instanceof Error ? error.message : 'Failed to send message');
     } finally {
       setIsSending(false);
     }
   };
 
-
-  useEffect(() => {
-    // Scroll to the bottom when new messages are added
-    if (lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
-  }, [messages]);
-
-// Update the toggleAI function
 
   const toggleAI = async () => {
     if (!selectedConversationId || isToggling) return;
@@ -979,48 +924,22 @@ const ChatView = ({
     setIsToggling(true);
     try {
       const platform = selectedConversationId.split('_')[0];
-      let url;
-      
-      if (platform === 'instagram') {
-        const instagramId = localStorage.getItem('instagram_user_id');
-        
-        if (!instagramId) {
-          console.error('No Instagram ID found for toggling AI');
-          throw new Error('No Instagram ID found');
-        }
-        
-        // Use Instagram-specific endpoint
-        url = `https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}/toggle_ai`;
-      } else if (platform === 'whatsapp') {
+      let response;
+      if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
-        
-        if (!whatsappId) {
-          console.error('No WhatsApp ID found for toggling AI');
-          throw new Error('No WhatsApp ID found');
-        }
-        
-        // Use WhatsApp-specific endpoint
-        url = `https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/toggle_ai`;
-      } else {
-        // Use regular endpoint for other conversations
-        url = `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/toggle_ai`;
+        if (!whatsappId) throw new Error('No WhatsApp ID found');
+        response = await conversationService.toggleWhatsAppAi(whatsappId, selectedConversationId, !isAIEnabled);
+        if (response.status !== "success") throw new Error(response.message || 'Failed to toggle AI');
+      } else if (platform === 'instagram') {
+        response = await api.post(`instagram/conversations/${selectedConversationId}/toggle_ai`, {
+          enabled: !isAIEnabled
+        });
+        if (response.status !== 200) throw new Error('Failed to toggle AI');
       }
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ enabled: !isAIEnabled }),
-      });
-
-      if (!response.ok) throw new Error('Failed to toggle AI');
-      
       setIsAIEnabled(!isAIEnabled);
       toast.success(`AI ${!isAIEnabled ? 'enabled' : 'disabled'} for this conversation`);
     } catch (error) {
-      console.error('Failed to toggle AI status', error);
-      toast.error('Failed to toggle AI status');
+      toast.error(error instanceof Error ? error.message : 'Failed to toggle AI status');
     } finally {
       setIsToggling(false);
     }
@@ -1063,244 +982,85 @@ useEffect(() => {
 
   const setUnreadCount = async () => {
     try {
-      // Check if this is an Instagram or WhatsApp conversation
       const platform = selectedConversationId.split('_')[0];
       let url;
-      
-      if (platform === 'instagram') {
-        const instagramId = localStorage.getItem('instagram_user_id');
-        
-        if (!instagramId) {
-          console.error('No Instagram ID found for setting unread count');
-          return;
-        }
-        
-        url = `https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}/read`;
+      if (platform === 'instagram') { 
+        url = `/instagram/conversations/${selectedConversationId}/read`;
+        await api.get(url);
       } else if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
-        
-        if (!whatsappId) {
-          console.error('No WhatsApp ID found for setting unread count');
-          return;
-        }
-        
-        url = `https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/read`;
-      } else {
-        url = `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/read`;
+        if (!whatsappId) return;
+        url = `/whatsapp/${whatsappId}/conversations/${selectedConversationId}/read`;
+        await api.get(url);
       }
-      
-      await fetch(url, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
     } catch (error) {
-      console.error("Error setting unread count:", error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Error setting unread count:", error);
+      }
     }
   };
-  
-  // Fetch conversation details
+
   const fetchConversation = async () => {
     try {
       setLoading(true);
-      
-      // Check if this is an Instagram or WhatsApp conversation
       const platform = selectedConversationId.split('_')[0];
       let response;
-      
       if (platform === 'instagram') {
-        const instagramId = localStorage.getItem('instagram_user_id');
-        
-        if (!instagramId) {
-          console.error('No Instagram ID found for fetching conversation');
-          throw new Error('No Instagram ID found');
-        }
-        
-        response = await fetch(
-          `https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}`, 
-          {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        response = await api.get(`/instagram/conversations/${selectedConversationId}`);
+        setConversation(response?.data);
       } else if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
-        
-        if (!whatsappId) {
-          console.error('No WhatsApp ID found for fetching conversation');
-          throw new Error('No WhatsApp ID found');
+        if (!whatsappId) return;
+        response = await conversationService.getWhatsAppConversations();
+        if (response.status === "success") {
+          const dataArray = Array.isArray(response.data) ? response.data : [];
+          const found = dataArray.find((c: Conversation) => c.id === selectedConversationId);
+          setConversation(found || null);
         }
-        
-        response = await fetch(
-          `https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}`, 
-          {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-      } 
-      // else {
-      //   response = await fetch(
-      //     `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}`, 
-      //     {
-      //       method: "GET",
-      //       credentials: "include",
-      //       headers: {
-      //         "Content-Type": "application/json",
-      //       },
-      //     }
-      //   );
-      // }
-      
-      const data = await response?.json();
-      setConversation(data);
-      console.log("conversation data", data);
+      }
     } catch (error) {
-      console.error("Error fetching conversation:", error);
+      toast.error("Failed to load conversation");
     } finally {
       setLoading(false);
     }
   };
-  
+
   const fetchAIStatus = async () => {
     try {
       setLoading(true);
-      
-      // Check conversation platform
       const platform = selectedConversationId.split('_')[0];
       let response;
-      
       if (platform === 'instagram') {
-        const instagramId = localStorage.getItem('instagram_user_id');
-        
-        if (!instagramId) {
-          console.error('No Instagram ID found for fetching AI status');
-          throw new Error('No Instagram ID found');
-        }
-        
-        response = await fetch(
-          `https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}/ai`, 
-          {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        response = await api.get(`/instagram/conversations/${selectedConversationId}/ai`);
+        setIsAIEnabled(!!response?.data);
       } else if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
-        
-        if (!whatsappId) {
-          console.error('No WhatsApp ID found for fetching AI status');
-          throw new Error('No WhatsApp ID found');
-        }
-        
-        response = await fetch(
-          `https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/ai`, 
-          {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-      } 
-      // else {
-      //   response = await fetch(
-      //     `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/ai`, 
-      //     {
-      //       method: "GET",
-      //       credentials: "include",
-      //       headers: {
-      //         "Content-Type": "application/json",
-      //       },
-      //     }
-      //   );
-      // }
-      
-      const data = await response?.json();
-      setIsAIEnabled(data);
-      console.log("AI data", data);
+        if (!whatsappId) return;
+        response = await conversationService.getWhatsAppAiStatus(whatsappId, selectedConversationId);
+        setIsAIEnabled(!!response.data);
+      }
     } catch (error) {
-      console.error("Error fetching AI status:", error);
+      setIsAIEnabled(true);
     } finally {
       setLoading(false);
     }
   };
-  
+
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      
-      // Check conversation platform
       const platform = selectedConversationId.split('_')[0];
       let response;
-      
       if (platform === 'instagram') {
-        const instagramId = localStorage.getItem('instagram_user_id');
-        
-        if (!instagramId) {
-          console.error('No Instagram ID found for fetching messages');
-          throw new Error('No Instagram ID found');
-        }
-        
-        response = await fetch(
-          `https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}/messages`, 
-          {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        response = await api.get(`/instagram/conversations/${selectedConversationId}/messages`);
+        setMessages(response?.data || []);
       } else if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
-        
-        if (!whatsappId) {
-          console.error('No WhatsApp ID found for fetching messages');
-          throw new Error('No WhatsApp ID found');
-        }
-        
-        response = await fetch(
-          `https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/messages`, 
-          {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-      } 
-      // else {
-      //   response = await fetch(
-      //     `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/messages`, 
-      //     {
-      //       method: "GET",
-      //       credentials: "include",
-      //       headers: {
-      //         "Content-Type": "application/json",
-      //       },
-      //     }
-      //   );
-      // }
-      
-      const data = await response?.json();
-      setMessages(data);
-      console.log("messages data", data);
+        if (!whatsappId) return;
+        response = await conversationService.getWhatsAppMessages(whatsappId, selectedConversationId);
+        setMessages(Array.isArray(response.data) ? response.data : []);
+      }
     } catch (error) {
-      console.error('Error fetching messages:', error);
       toast.error('Failed to load messages');
     } finally {
       setLoading(false);
@@ -1308,7 +1068,9 @@ useEffect(() => {
   };
 
   // Set up WebSocket connection based on platform
+  const WS_BASE_URL = "ws://127.0.0.1:8000/ws2"
   const platform = selectedConversationId.split('_')[0];
+ 
   let ws: WebSocket | null = null;
   
   if (platform === 'instagram') {
@@ -1316,7 +1078,7 @@ useEffect(() => {
     const clientId = `client-${Date.now()}-ig`;
     
     if (instagramId) {
-      ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/instagram/${clientId}/${instagramId}`);
+      ws = new WebSocket(`${WS_BASE_URL}/instagram/${clientId}/${instagramId}`);
       console.log("Connected to Instagram WebSocket");
     } 
   } else if (platform === 'whatsapp') {
@@ -1324,7 +1086,7 @@ useEffect(() => {
     const clientId = `client-${Date.now()}-wa`;
     
     if (whatsappId) {
-      ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/whatsapp/${clientId}/${whatsappId}`);
+      ws = new WebSocket(`${WS_BASE_URL}/whatsapp/${clientId}/${whatsappId}`);
       console.log("Connected to WhatsApp WebSocket");
     } 
   } 
@@ -1352,8 +1114,8 @@ useEffect(() => {
   setUnreadCount();
   fetchAIStatus();
   fetchMessages();
-  
-  return () => {if (ws) ws.close();}
+
+  return () => { /* ...WebSocket cleanup... */ };
 }, [selectedConversationId]);
 
   // Decide on avatar source
@@ -1963,8 +1725,8 @@ useEffect(() => {
                       <><span className="text-gray-200 line-through text-sm ml-2">{botProductInfo[0].price}</span> <br/>  <br/> </>
                     )} 
                      🎉<b>Key Highlights:</b> <br/>  
-                    - EMI Available! ✅ <br/> 
-                    - Get GST invoice and save up to 28% on <br/> business purchases <br/> 
+                    - EMI Available! ✅ <br /> 
+                    - Get GST invoice and save up to 28% on <br /> business purchases <br /> 
                     - Free Shipping all over India 🚚<br/> <br />
                     
                     <span className="text-gray-200 text-sm"> <i>To contact us, simply type Live Agent </i></span>

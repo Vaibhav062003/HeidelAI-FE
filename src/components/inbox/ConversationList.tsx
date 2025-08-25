@@ -52,7 +52,6 @@ const ConversationList = ({
     hasQuery: false,
   });
 
-
   const searchResults: SearchResult[] = conversations
     .filter(conversation => {
       // Apply filters
@@ -198,9 +197,6 @@ const ConversationList = ({
     <>
     <style>
       {`
-
-
-
         .custom-scrollb::-webkit-scrollbar {
           width: 4px;
           opacity: 0;

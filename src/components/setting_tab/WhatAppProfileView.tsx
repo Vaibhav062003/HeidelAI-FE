@@ -16,6 +16,7 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
+import api from '@/lib/session_api';
 
 interface WhatsAppProfileViewProps {
   whatsappId: string;
@@ -134,12 +135,12 @@ const WhatsAppProfileView: React.FC<WhatsAppProfileViewProps> = ({ whatsappId, i
           setLoading(true);
           setError(null);
 
-          const response = await fetch(`https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/details`);
-          if (!response.ok) {
+          const response = await api.get(`whatsapp/${whatsappId}/details`);
+          if (response.status !== 200) {
             throw new Error('Failed to fetch WhatsApp account details');
           }
 
-          const data = await response.json();
+          const data = await response.data();
           setAccountDetails(data);
         } catch (err) {
           console.error('Error fetching WhatsApp account details:', err);

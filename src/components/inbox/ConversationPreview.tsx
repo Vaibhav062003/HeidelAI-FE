@@ -37,6 +37,8 @@ const ConversationPreview = ({
   isAiEnabled = true,
   assignedAgentId
 }: ConversationPreviewProps) => {
+  // console.log("channel: ",channelType)
+
   return (
     <Card
       className={`p-4 w-full rounded-none cursor-pointer transition-colors ${

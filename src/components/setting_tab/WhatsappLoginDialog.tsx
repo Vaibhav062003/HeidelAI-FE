@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner"; 
 import { WhatsAppLogo } from '@/components/icons/WhatsappLogo';
 import WhatsAppProfileView from '@/components/setting_tab/WhatAppProfileView'; // Add this import
+import api from '@/lib/session_api';
 
 
 // WhatsApp app configuration
@@ -93,10 +94,10 @@ const WhatsAppLoginDialog = () => {
         
         if (storedWhatsAppId) {
           // Fetch account info from backend
-          const response = await fetch(`https://egenie-whatsapp.koyeb.app/api/whatsapp/status?user_id=${storedWhatsAppId}`);
-          
-          if (response.ok) {
-            const data = await response.json();
+          const response = await api.get(`whatsapp/status?user_id=${storedWhatsAppId}`);
+
+          if (response.status === 200) {
+            const data = await response.data();
             setConnected(true);
             setAccountInfo({
               name: data.name,
@@ -145,22 +146,18 @@ const WhatsAppLoginDialog = () => {
       setIsLoading(true);
       
       // Exchange authorization code for access token via backend
-      const response = await fetch('https://egenie-whatsapp.koyeb.app/api/whatsapp/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
+      const response = await api.post('whatsapp/auth', {
+        data: JSON.stringify({ 
           code,
           redirect_uri: WHATSAPP_REDIRECT_URI
         }),
       });
       
-      if (!response.ok) {
+      if (response.status !== 200) {
         throw new Error('Failed to exchange code for access token');
       }
       
-      const data = await response.json();
+      const data = await response.data();
       
       // Store data in localStorage
       localStorage.setItem('whatsapp_connection', JSON.stringify({
@@ -289,12 +286,8 @@ const WhatsAppLoginDialog = () => {
       const user_id = localStorage.getItem('whatsapp_user_id');
       if (user_id) {
         // Disconnect using the dedicated WhatsApp API
-        await fetch('https://egenie-whatsapp.koyeb.app/api/whatsapp/disconnect', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
+        await api.post('whatsapp/disconnect', {
+          data: JSON.stringify({ 
             user_id: user_id,
           }),
         });

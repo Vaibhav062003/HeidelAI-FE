@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/components/ui/use-toast";
+import api from '@/lib/session_api';
 
 interface InstagramPost {
   id: string;
@@ -54,19 +55,21 @@ const InstagramProfileView = ({ instagramId, onClose, isOpen }: InstagramProfile
     
     try {
       // Fetch profile data
-      const profileResponse = await fetch(`https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/profile`);
-      if (!profileResponse.ok) {
-        throw new Error('Failed to fetch Instagram profile');
+      const profileResponse = await api.get(`instagram/${instagramId}/profile`);
+      
+      if (profileResponse.status !== 200){
+        throw new Error(`Failed to fetch Instagram profile: ${profileResponse.statusText || profileResponse.status}`);
       }
-      const profileData = await profileResponse.json();
+  
+      const profileData = await profileResponse.data();
       setProfile(profileData.data);
       
       // Fetch posts
-      const postsResponse = await fetch(`https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/posts?limit=24`);
-      if (!postsResponse.ok) {
-        throw new Error('Failed to fetch Instagram posts');
+      const postsResponse = await api.get(`instagram/${instagramId}/posts?limit=24`);
+      if (postsResponse.status !== 200) {
+        throw new Error(`Failed to fetch Instagram posts: ${postsResponse.statusText || postsResponse.status}`);
       }
-      const postsData = await postsResponse.json();
+      const postsData = await postsResponse.data();
       setPosts(postsData.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
