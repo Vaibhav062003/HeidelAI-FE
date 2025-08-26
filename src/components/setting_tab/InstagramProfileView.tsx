@@ -55,7 +55,7 @@ const InstagramProfileView = ({ instagramId, onClose, isOpen }: InstagramProfile
     
     try {
       // Fetch profile data
-      const profileResponse = await api.get(`instagram/${instagramId}/profile`);
+      const profileResponse = await api.get(`https://egenie-whatsapp.koyeb.app/instagram/${instagramId}/profile`);
       
       if (profileResponse.status !== 200){
         throw new Error(`Failed to fetch Instagram profile: ${profileResponse.statusText || profileResponse.status}`);
@@ -65,7 +65,7 @@ const InstagramProfileView = ({ instagramId, onClose, isOpen }: InstagramProfile
       setProfile(profileData.data);
       
       // Fetch posts
-      const postsResponse = await api.get(`instagram/${instagramId}/posts?limit=24`);
+      const postsResponse = await api.get(`https://egenie-whatsapp.koyeb.app/instagram/${instagramId}/posts?limit=24`);
       if (postsResponse.status !== 200) {
         throw new Error(`Failed to fetch Instagram posts: ${postsResponse.statusText || postsResponse.status}`);
       }

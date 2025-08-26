@@ -30,7 +30,7 @@ export const conversationService = {
 
   async getAllConversations(): Promise<ApiResponse> {
     try{
-      const response = await api.get("/conversations");
+      const response = await api.get("https://egenie-whatsapp.koyeb.app/conversations");
       return { status: "success", data: response.data };
     }
     catch (error) {
@@ -44,7 +44,7 @@ export const conversationService = {
    */
   async getInstagramConversations(): Promise<ApiResponse> {
     try {
-      const response = await api.get("/instagram/conversations");
+      const response = await api.get("https://egenie-whatsapp.koyeb.app/instagram/conversations");
       return { status: "success", data: response.data };
     } catch (error) {
       handleApiError(error, "Fetching Instagram conversations");
@@ -57,7 +57,7 @@ export const conversationService = {
    */
   async getWhatsAppConversations(): Promise<ApiResponse> {
     try {
-      const response = await api.get("/whatsapp/conversations");
+      const response = await api.get("https://egenie-whatsapp.koyeb.app/whatsapp/conversations");
       return { status: "success", data: response.data };
     } catch (error) {
       handleApiError(error, "Fetching WhatsApp conversations");
@@ -78,7 +78,7 @@ export const conversationService = {
 
     try {
       const response = await api.get(
-        `/whatsapp/${whatsappId}/conversations/${conversationId}/messages`
+        `https://egenie-whatsapp.koyeb.app/whatsapp/${whatsappId}/conversations/${conversationId}/messages`
       );
       return { status: "success", data: response.data };
     } catch (error) {
@@ -100,7 +100,7 @@ export const conversationService = {
 
     try {
       const response = await api.get(
-        `/whatsapp/${whatsappId}/conversations/${conversationId}/ai`
+        `https://egenie-whatsapp.koyeb.app/whatsapp/${whatsappId}/conversations/${conversationId}/ai`
       );
       return { status: "success", data: response.data };
     } catch (error) {
@@ -123,7 +123,7 @@ export const conversationService = {
 
     try {
       const response = await api.post(
-        `/whatsapp/${whatsappId}/conversations/${conversationId}/toggle_ai`,
+        `https://egenie-whatsapp.koyeb.app/whatsapp/${whatsappId}/conversations/${conversationId}/toggle_ai`,
         { enabled }
       );
       return { status: "success", data: response.data };
@@ -149,7 +149,7 @@ export const conversationService = {
 
     try {
       const response = await api.post(
-        `/whatsapp/${whatsappId}/conversations/send_message`,
+        `https://egenie-whatsapp.koyeb.app/whatsapp/${whatsappId}/conversations/send_message`,
         message
       );
       return { status: "success", data: response.data };

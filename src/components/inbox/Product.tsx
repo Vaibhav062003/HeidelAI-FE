@@ -113,7 +113,7 @@ const ProductsTab = ({
     setLoading(true);
     try {
       // console.log("id:",conversationId);
-      const response = await api.get(`ai/product_recommendations/${conversationId}`);
+      const response = await api.get(`https://egenie-whatsapp.koyeb.app/ai/product_recommendations/${conversationId}`);
 
       if (response.status !== 200) throw new Error("Failed to fetch products");
 
