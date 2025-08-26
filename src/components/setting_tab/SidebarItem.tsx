@@ -396,11 +396,11 @@ const InstagramDialog = () => {
       const state = Math.random().toString(36).substring(2, 15);
       localStorage.setItem('instagram_auth_state', state);
 
-      // Use the working redirect URI for development/production
-      // Change this to your registered URI in Meta dashboard
+      // Build Instagram authorization URL dynamically for the current subdomain
       const redirectUri = 'https://development.heidelai.com/auth/instagram/callback';
       const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages&state=${state}`;
 
+      // Redirect to Instagram authorization page
       window.location.href = authUrl;
     } catch (error) {
       console.error('Error initiating Instagram login:', error);
