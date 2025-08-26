@@ -889,11 +889,10 @@ const ChatView = ({
         const whatsappId = localStorage.getItem('whatsapp_user_id');
         if (!whatsappId) throw new Error('No WhatsApp ID found');
 
-        const payload: WhatsAppMessage = {
+        const payload= {
           conversation_id: selectedConversationId,
           content: contentToSend,
-          sender_id,
-          type: 'text',
+          sender_id: sender_id,
         };
         response = await conversationService.sendWhatsAppMessage(whatsappId, payload);
         if (response.status !== "success") throw new Error(response.message || 'Failed to send message');

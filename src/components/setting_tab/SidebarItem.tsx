@@ -660,45 +660,45 @@ const InstagramDialog = () => {
 
 
 
-const TokenTestBox =()=>{
-  // This function is just a placeholder for the token test box
-  const getToken = async () => {
-    try {
-      const sessionID = localStorage.getItem("sessionId");
-      if (!sessionID) {
-        throw new Error("No session ID found");
-      }
-      const res = await fetch(`/api/session-token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: sessionID }),
-      });
+// const TokenTestBox =()=>{
+//   // This function is just a placeholder for the token test box
+//   const getToken = async () => {
+//     try {
+//       const sessionID = localStorage.getItem("sessionId");
+//       if (!sessionID) {
+//         throw new Error("No session ID found");
+//       }
+//       const res = await fetch(`/api/session-token`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ sessionId: sessionID }),
+//       });
 
 
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Failed to get session token: ${errorText}`);
-      }
+//       if (!res.ok) {
+//         const errorText = await res.text();
+//         throw new Error(`Failed to get session token: ${errorText}`);
+//       }
 
-      const { token: sessionToken } = await res.json();
-      console.log("Session Token:", sessionToken);
-      if (!sessionToken) {
-        throw new Error("Failed to retrieve session token");
-      }
-    } catch (error) {
-      console.error("Error in token_testDialog:", error);
-    }
-  };
+//       const { token: sessionToken } = await res.json();
+//       console.log("Session Token:", sessionToken);
+//       if (!sessionToken) {
+//         throw new Error("Failed to retrieve session token");
+//       }
+//     } catch (error) {
+//       console.error("Error in token_testDialog:", error);
+//     }
+//   };
 
-  return (
-    <div className="p-4 bg-gray-50 border rounded-lg shadow-sm">
-      <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={getToken}>
-        Test Token
-      </button>
-    </div>
-  );
-}
+//   return (
+//     <div className="p-4 bg-gray-50 border rounded-lg shadow-sm">
+//       <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={getToken}>
+//         Test Token
+//       </button>
+//     </div>
+//   );
+// }
 
  
 
@@ -1188,9 +1188,9 @@ export const IntegrationsSettings = () => (
   </div>
 </div>
 
-<div>
+{/* <div>
   <TokenTestBox />
-</div>
+</div> */}
 
       {/* More Integrations Coming Soon Card */}
         {/* <div className="border rounded-lg p-4 bg-gray-50">
