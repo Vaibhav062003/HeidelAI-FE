@@ -1,3 +1,4 @@
+"use cleint"
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Conversation } from '../types/conversation';
@@ -18,8 +19,7 @@ interface WebSocketMessage {
   };
 }
 
-// Use ws:// for localhost, wss:// for production
-const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss' : 'ws';
+// const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss' : 'ws';
 // const WS_BASE_URL = `${WS_PROTOCOL}://127.0.0.1:8000`;
 // const WS_WHATSAPP_ENDPOINT = `${WS_BASE_URL}/ws2/whatsapp`;
 // const WS_INSTAGRAM_ENDPOINT = `${WS_BASE_URL}/ws2/instagram`;
@@ -265,4 +265,11 @@ export const useConversations = () => {
   }, [fetchConversations]);
 
   return { conversations, loading, error };
+};
+
+const getWsProtocol = () => {
+  if (typeof window !== "undefined") {
+    return window.location.protocol === "https:" ? "wss" : "ws";
+  }
+  return "wss"; // default for SSR
 };
