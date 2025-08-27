@@ -555,37 +555,40 @@ const handleNext = async () => {
         setIsTransitioning(false);
       }, 150);
       
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error creating account:", error);
       
-      // Handle the specific "email taken" error
-      if (error.message?.includes("That email address is taken")) {
-        setErrors(prev => ({ 
-          ...prev, 
-          email: "That email address is taken. Please try another." 
-        }));
-        
-        // Scroll to the email field
-        document.querySelector('[placeholder="e.g. elon.musk@x.com"]')?.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'center'
-        });
-      }
-      // Handle the password breach error
-      else if (error.message?.includes("Password has been found in an online data breach")) {
-        setErrors(prev => ({ 
-          ...prev, 
-          password: "Password has been found in an online data breach. For account safety, please use a different password." 
-        }));
-        
-        // Scroll to the password field
-        document.querySelector('[placeholder="Enter your password"]')?.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'center'
-        });
+      // Type guard to check if error is an Error object with message property
+      if (error instanceof Error) {
+        // Now TypeScript knows error has a message property
+        if (error.message.includes("That email address is taken")) {
+          setErrors(prev => ({ 
+            ...prev, 
+            email: "That email address is taken. Please try another." 
+          }));
+          
+          // Scroll to the email field
+          document.querySelector('[placeholder="e.g. elon.musk@x.com"]')?.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }
+        // Handle the password breach error
+        else if (error.message.includes("Password has been found in an online data breach")) {
+          setErrors(prev => ({ 
+            ...prev, 
+            password: "Password has been found in an online data breach. For account safety, please use a different password." 
+          }));
+          
+          // Scroll to the password field
+          document.querySelector('[placeholder="Enter your password"]')?.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }
       } else {
-        // Handle other errors
-        toast.error(error.message || "Failed to create account");
+        // Handle case where the error is not an Error object
+        toast.error("An unexpected error occurred. Please try again.");
       }
     } finally {
       setIsLoading(false);
