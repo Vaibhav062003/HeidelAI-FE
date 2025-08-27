@@ -94,7 +94,7 @@ const WhatsAppLoginDialog = () => {
         
         if (storedWhatsAppId) {
           // Fetch account info from backend
-          const response = await api.post(`https://heidelai-backend.koyeb.app/whatsapp/status?user_id=${storedWhatsAppId}`);
+          const response = await api.post(`/api/whatsapp/status?user_id=${storedWhatsAppId}`);
 
           if (response.status === 200) {
             const data = await response.data();
@@ -146,7 +146,7 @@ const WhatsAppLoginDialog = () => {
       setIsLoading(true);
       
       // Exchange authorization code for access token via backend
-      const response = await api.post('whatsapp/auth', {
+      const response = await api.post('/api/whatsapp/auth', {
         data: JSON.stringify({ 
           code,
           redirect_uri: WHATSAPP_REDIRECT_URI
@@ -286,7 +286,7 @@ const WhatsAppLoginDialog = () => {
       const user_id = localStorage.getItem('whatsapp_user_id');
       if (user_id) {
         // Disconnect using the dedicated WhatsApp API
-        await api.post('https://heidelai-backend.koyeb.app/whatsapp/disconnect', {
+        await api.post('/api/whatsapp/disconnect', {
           data: JSON.stringify({ 
             user_id: user_id,
           }),

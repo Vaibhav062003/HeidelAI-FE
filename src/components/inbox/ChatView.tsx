@@ -904,7 +904,7 @@ const ChatView = ({
             sender_id : sender_id
         }
         console.log("selectedConversationId:", selectedConversationId);
-        response = await api.post(`instagram/conversations/send_message`,
+        response = await api.post(`/api/instagram/conversations/send_message`,
          data
         );
         if (response.status !== 200) throw new Error('Failed to send message');
@@ -931,7 +931,7 @@ const ChatView = ({
         response = await conversationService.toggleWhatsAppAi(whatsappId, selectedConversationId, !isAIEnabled);
         if (response.status !== "success") throw new Error(response.message || 'Failed to toggle AI');
       } else if (platform === 'instagram') {
-        response = await api.post(`https://heidelai-backend.koyeb.app/instagram/conversations/${selectedConversationId}/toggle_ai`, {
+        response = await api.post(`/api/instagram/conversations/${selectedConversationId}/toggle_ai`, {
           enabled: !isAIEnabled
         });
         if (response.status !== 200) throw new Error('Failed to toggle AI');
@@ -985,12 +985,12 @@ useEffect(() => {
       const platform = selectedConversationId.split('_')[0];
       let url;
       if (platform === 'instagram') { 
-        url = `https://heidelai-backend.koyeb.app/instagram/conversations/${selectedConversationId}/read`;
+        url = `/api/instagram/conversations/${selectedConversationId}/read`;
         await api.get(url);
       } else if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
         if (!whatsappId) return;
-        url = `https://heidelai-backend.koyeb.app/whatsapp/${whatsappId}/conversations/${selectedConversationId}/read`;
+        url = `/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/read`;
         await api.get(url);
       }
     } catch (error) {
@@ -1006,7 +1006,7 @@ useEffect(() => {
       const platform = selectedConversationId.split('_')[0];
       let response;
       if (platform === 'instagram') {
-        response = await api.post(`https://heidelai-backend.koyeb.app/instagram/conversations/${selectedConversationId}`);
+        response = await api.post(`/api/instagram/conversations/${selectedConversationId}`);
         setConversation(response?.data);
       } else if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
@@ -1031,7 +1031,7 @@ useEffect(() => {
       const platform = selectedConversationId.split('_')[0];
       let response;
       if (platform === 'instagram') {
-        response = await api.post(`https://heidelai-backend.koyeb.app/instagram/conversations/${selectedConversationId}/ai`);
+        response = await api.post(`/api/instagram/conversations/${selectedConversationId}/ai`);
         setIsAIEnabled(!!response?.data);
       } else if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
@@ -1052,7 +1052,7 @@ useEffect(() => {
       const platform = selectedConversationId.split('_')[0];
       let response;
       if (platform === 'instagram') {
-        response = await api.post(`https://heidelai-backend.koyeb.app/instagram/conversations/${selectedConversationId}/messages`);
+        response = await api.post(`/api/instagram/conversations/${selectedConversationId}/messages`);
         setMessages(response?.data || []);
       } else if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');

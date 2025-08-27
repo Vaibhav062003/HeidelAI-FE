@@ -337,7 +337,7 @@ const InstagramDialog = () => {
           const appUserId = localStorage.getItem('user_id');
           
           // Construct URL based on available IDs
-          let apiUrl = 'instagram/status';
+          let apiUrl = '/api/instagram/status';
           if (storedInstagramId) {
             apiUrl += `?instagram_id=${storedInstagramId}`;
           } else if (appUserId) {
@@ -414,7 +414,7 @@ const InstagramDialog = () => {
     try {
       // Use the same dynamic redirect_uri as above
       const redirectUri = `${window.location.origin}/auth/instagram/callback`;
-      const response = await api.post('instagram/auth', {
+      const response = await api.post('/api/instagram/auth', {
         data: JSON.stringify({ 
           code: code,
           redirect_uri: redirectUri
@@ -486,7 +486,7 @@ const InstagramDialog = () => {
       const user_id = localStorage.getItem('instagram_user_id');
       if (user_id) {
         // Disconnect using the dedicated Instagram API
-        await api.post('instagram/disconnect', {
+        await api.post('/api/instagram/disconnect', {
           data: JSON.stringify({ 
             user_id: user_id,
           }),

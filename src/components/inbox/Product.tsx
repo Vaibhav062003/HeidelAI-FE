@@ -113,7 +113,7 @@ const ProductsTab = ({
     setLoading(true);
     try {
       // console.log("id:",conversationId);
-      const response = await api.post(`https://heidelai-backend.koyeb.app/ai/product-recommendations/${conversationId}`);
+      const response = await api.post(`/api/ai/product-recommendations/${conversationId}`);
 
       if (response.status !== 200) throw new Error("Failed to fetch products");
 

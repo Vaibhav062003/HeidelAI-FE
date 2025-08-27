@@ -30,7 +30,7 @@ export const conversationService = {
 
   async getAllConversations(): Promise<ApiResponse> {
     try{
-      const response = await api.get("https://heidelai-backend.koyeb.app/conversations");
+      const response = await api.get("/api/conversations");
       return { status: "success", data: response.data };
     }
     catch (error) {
@@ -44,7 +44,7 @@ export const conversationService = {
    */
   async getInstagramConversations(): Promise<ApiResponse> {
     try {
-      const response = await api.get("https://heidelai-backend.koyeb.app/instagram/conversations");
+      const response = await api.get("/api/instagram/conversations");
       return { status: "success", data: response.data };
     } catch (error) {
       handleApiError(error, "Fetching Instagram conversations");
@@ -57,7 +57,7 @@ export const conversationService = {
    */
   async getWhatsAppConversations(): Promise<ApiResponse> {
     try {
-      const response = await api.get("https://heidelai-backend.koyeb.app/whatsapp/conversations");
+      const response = await api.get("/api/whatsapp/conversations");
       return { status: "success", data: response.data };
     } catch (error) {
       handleApiError(error, "Fetching WhatsApp conversations");
@@ -78,7 +78,7 @@ export const conversationService = {
 
     try {
       const response = await api.get(
-        `https://heidelai-backend.koyeb.app/whatsapp/${whatsappId}/conversations/${conversationId}/messages`
+        `/api/whatsapp/${whatsappId}/conversations/${conversationId}/messages`
       );
       return { status: "success", data: response.data };
     } catch (error) {
@@ -100,7 +100,7 @@ export const conversationService = {
 
     try {
       const response = await api.get(
-        `https://heidelai-backend.koyeb.app/whatsapp/${whatsappId}/conversations/${conversationId}/ai`
+        `/api/whatsapp/${whatsappId}/conversations/${conversationId}/ai`
       );
       return { status: "success", data: response.data };
     } catch (error) {
@@ -123,7 +123,7 @@ export const conversationService = {
 
     try {
       const response = await api.post(
-        `https://heidelai-backend.koyeb.app/whatsapp/${whatsappId}/conversations/${conversationId}/toggle_ai`,
+        `/api/whatsapp/${whatsappId}/conversations/${conversationId}/toggle_ai`,
         { enabled }
       );
       return { status: "success", data: response.data };
@@ -149,7 +149,7 @@ export const conversationService = {
 
     try {
       const response = await api.post(
-        `https://heidelai-backend.koyeb.app/whatsapp/${whatsappId}/conversations/send_message`,
+        `/api/whatsapp/${whatsappId}/conversations/send_message`,
         message
       );
       return { status: "success", data: response.data };
