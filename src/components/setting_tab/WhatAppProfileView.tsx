@@ -135,7 +135,7 @@ const WhatsAppProfileView: React.FC<WhatsAppProfileViewProps> = ({ whatsappId, i
           setLoading(true);
           setError(null);
 
-          const response = await api.get(`https://egenie-whatsapp.koyeb.app/whatsapp/${whatsappId}/details`);
+          const response = await api.post(`https://heidelai-backend.koyeb.app/whatsapp/${whatsappId}/details`);
           if (response.status !== 200) {
             throw new Error('Failed to fetch WhatsApp account details');
           }

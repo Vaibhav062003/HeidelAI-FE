@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState, useEffect } from 'react';
 import { 
   Send, 
@@ -13,6 +12,11 @@ import {
 } from 'lucide-react';
 import Lottie from 'lottie-react';
 import { useRouter } from 'next/navigation';
+import { MultiStepLoader } from "@/components/ui/multi-step-loader";
+import { toast, Toaster } from "sonner"; // Import toast if you don't have it already
+import { useSignUp, useClerk } from "@clerk/nextjs";
+import { useOrganization } from "@clerk/nextjs";
+
 
 interface Step {
   id: number;
@@ -30,6 +34,9 @@ interface IssueType {
 
 const OnboardingFlow: React.FC = () => {
   const router = useRouter()
+  const { isLoaded: isSignUpLoaded, signUp, setActive } = useSignUp();
+  const clerk = useClerk();
+  const organization = useOrganization();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -41,12 +48,14 @@ const OnboardingFlow: React.FC = () => {
     { id: '4', label: 'Bug report', color: 'bg-red-100 text-red-800' },
     { id: '5', label: 'Special request', color: 'bg-yellow-100 text-yellow-800' },
   ]);
+  const [fullName, setFullName] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [noCompany, setNoCompany] = useState(false);
   const [errors, setErrors] = useState({
+    fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -61,7 +70,27 @@ const OnboardingFlow: React.FC = () => {
   const [emailError, setEmailError] = useState('');
   const [step2Error, setStep2Error] = useState('');
   const [setupComplete, setSetupComplete] = useState(false);
+  const [companyTypeError, setCompanyTypeError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [currentLoadingStep, setCurrentLoadingStep] = useState(0);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationError, setVerificationError] = useState('');
+  const [isResending, setIsResending] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [resendTimeout, setResendTimeout] = useState(0);
+  const [resendIntervalId, setResendIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false);
 
+
+  const loadingStates = [
+    { text: "Creating your account" },
+    { text: companyName ? `Setting up ${companyName}'s organization` : "Creating personal workspace" },
+    { text: "Configuring preferences" },
+    { text: teamMembers.length > 0 ? "Sending team invitations" : "Finalizing setup" },
+    { text: "Logging you in" },
+    { text: "Redirecting to dashboard" }
+  ];
 
   const [userData, setUserData] = useState<{
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -73,17 +102,18 @@ const OnboardingFlow: React.FC = () => {
     completed?: boolean;
   }>({});
 
-  const generateStepData = (step: number) => {
-    switch (step) {
-      case 1:
-        return {
-          account: {
-            email,
-            hasCompany: !noCompany,
-            companyName: companyName || null,
-            createdAt: new Date().toISOString()
-          }
-        };
+const generateStepData = (step: number) => {
+  switch (step) {
+    case 1:
+      return {
+        account: {
+          fullName,
+          email,
+          hasCompany: !noCompany,
+          companyName: companyName || null,
+          createdAt: new Date().toISOString()
+        }
+      };
       case 2:
         return {
           companyDetails: {
@@ -111,7 +141,7 @@ const OnboardingFlow: React.FC = () => {
     }
   };
 
-
+  
 
   const steps: Step[] = [
     {
@@ -123,20 +153,27 @@ const OnboardingFlow: React.FC = () => {
     },
     {
       id: 2,
-      title: 'Your Details',
-      description: 'Tell us a bit more for personalised experience',
-      icon: <BriefcaseBusiness className="w-5 h-5" />,
+      title: 'Verify Email',
+      description: 'Enter the code sent to your email',
+      icon: <MailCheck className="w-5 h-5" />,
       completed: currentStep > 2
     },
     {
       id: 3,
-      title: 'Invite your Team',
-      description: 'Start collaborating with your team',
-      icon: <Send className="w-5 h-5" />,
+      title: 'Your Details',
+      description: 'Tell us a bit more for personalised experience',
+      icon: <BriefcaseBusiness className="w-5 h-5" />,
       completed: currentStep > 3
     },
     {
       id: 4,
+      title: 'Invite your Team',
+      description: 'Start collaborating with your team',
+      icon: <Send className="w-5 h-5" />,
+      completed: currentStep > 4
+    },
+    {
+      id: 5,
       title: 'Success',
       description: 'All done! Account setup successful',
       icon: <Check className="w-5 h-5" />,
@@ -293,27 +330,38 @@ const OnboardingFlow: React.FC = () => {
 
 
   // Enter key handler
-React.useEffect(() => {
-  const handleKeyPress = (event: KeyboardEvent) => {
-    if (event.key === 'Enter') {
-      // Don't trigger handleNext on step 3 if user is in the email input
-      if (currentStep === 3) {
+  React.useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        // Check if the active element is in the verification step OTP input
         const activeElement = document.activeElement;
-        if (activeElement && activeElement.tagName === 'INPUT' && activeElement.getAttribute('type') === 'email') {
-          // Let the input field handle the Enter key (for adding team member)
+        
+        if (currentStep === 2 && activeElement && 
+            activeElement.tagName === 'INPUT' && 
+            verificationCode.trim()) {
+          // If in verification step and OTP is entered, handle verification
+          handleNext();
           return;
         }
+        
+        // Don't trigger handleNext on step 3 if user is in the email input
+        if (currentStep === 3 || currentStep === 4) {
+          if (activeElement && activeElement.tagName === 'INPUT' && activeElement.getAttribute('type') === 'email') {
+            // Let the input field handle the Enter key (for adding team member)
+            return;
+          }
+        }
+        
+        // For other steps, just call handleNext
+        handleNext();
       }
-      handleNext();
-    }
-  };
+    };
 
-  document.addEventListener('keydown', handleKeyPress);
-  return () => {
-    document.removeEventListener('keydown', handleKeyPress);
-  };
-}, [currentStep, email, password, confirmPassword, companyName, noCompany]); // Dependencies to ensure validation runs with current values
-
+    document.addEventListener('keydown', handleKeyPress);
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [currentStep, email, password, confirmPassword, companyName, noCompany, verificationCode]);
 
     // Validation functions
   const validateEmail = (email: string) => {
@@ -330,6 +378,9 @@ React.useEffect(() => {
     setErrors(prev => ({ ...prev, [field]: '' }));
     
     switch (field) {
+      case 'fullName':
+        setFullName(value);
+        break;
       case 'companyName':
         setCompanyName(value);
         break;
@@ -347,11 +398,17 @@ React.useEffect(() => {
 
   const validateStep1 = () => {
     const newErrors = {
+      fullName: '',
       email: '',
       password: '',
       confirmPassword: '',
       companyName: ''
     };
+
+    // Full name validation
+    if (!fullName.trim()) {
+      newErrors.fullName = 'Name is required';
+    }
 
     // Company name validation (only if not checked "no company")
     if (!noCompany && !companyName.trim()) {
@@ -395,53 +452,226 @@ React.useEffect(() => {
 
   // Clear error when user selects a company type
   const toggleCompanyType = (type: string) => {
-    setSelectedCompanyTypes(prev => 
-      prev.includes(type) 
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
-    );
-    // Clear error when user makes a selection
+    setSelectedCompanyTypes(prev => {
+      // If already selected, remove it
+      if (prev.includes(type)) {
+        return prev.filter(t => t !== type);
+      } 
+      // If not selected and we haven't reached the limit, add it
+      else if (prev.length < 3) {
+        return [...prev, type];
+      } 
+      // If we've reached the limit, show error and don't add
+      else {
+        setCompanyTypeError('You can select a maximum of 3 categories');
+        return prev;
+      }
+    });
+    
+    // Clear error when selection changes (either adding or removing)
     if (step2Error) {
       setStep2Error('');
     }
+    
+    // Clear the company type error after a delay
+    if (companyTypeError) {
+      setTimeout(() => setCompanyTypeError(''), 3000);
+    }
   };
 
-  const handleNext = () => {
-    if (currentStep === 1) {
-      if (!validateStep1()) {
-        return;
+const handleResendCode = async () => {
+  setIsResending(true);
+  try {
+    if (!isSignUpLoaded) {
+      throw new Error("Authentication system not loaded");
+    }
+    
+    await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+    toast.success("Verification code resent to your email!");
+    
+    // Start the 30-second countdown
+    setResendTimeout(30);
+    const intervalId = setInterval(() => {
+      setResendTimeout(prev => {
+        if (prev <= 1) {
+          // Clear the interval when countdown reaches 0
+          if (resendIntervalId) clearInterval(resendIntervalId);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    setResendIntervalId(intervalId);
+    
+  } catch (error) {
+    console.error("Error resending code:", error);
+    toast.error("Failed to resend code. Please try again.");
+  } finally {
+    setIsResending(false);
+  }
+};
+
+useEffect(() => {
+  return () => {
+    if (resendIntervalId) clearInterval(resendIntervalId);
+  };
+}, [resendIntervalId]);
+
+const handleNext = async () => {
+  if (currentStep === 1) {
+    if (!validateStep1()) {
+      return;
+    }
+    
+    // Show loading state
+    setIsLoading(true);
+    
+    try {
+      if (!isSignUpLoaded) {
+        throw new Error("Authentication system not loaded");
       }
+
+      // Create the account with Clerk - but don't set active
+      await signUp.create({
+        emailAddress: email,
+        password: password,
+        firstName: fullName.split(' ')[0],
+        lastName: fullName.split(' ').slice(1).join(' ') || '',
+      });
+      
+      // Send verification email
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      
       // Save step 1 data
       setUserData(prev => ({ ...prev, ...generateStepData(1) }));
+      
+      toast.success("Verification code sent to your email!");
+      
+      // Move to verification step
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentStep(2);
+        setIsTransitioning(false);
+      }, 150);
+      
+    } catch (error) {
+      console.error("Error creating account:", error);
+      
+      // Handle the specific "email taken" error
+      if (error.message?.includes("That email address is taken")) {
+        setErrors(prev => ({ 
+          ...prev, 
+          email: "That email address is taken. Please try another." 
+        }));
+        
+        // Scroll to the email field
+        document.querySelector('[placeholder="e.g. elon.musk@x.com"]')?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }
+      // Handle the password breach error
+      else if (error.message?.includes("Password has been found in an online data breach")) {
+        setErrors(prev => ({ 
+          ...prev, 
+          password: "Password has been found in an online data breach. For account safety, please use a different password." 
+        }));
+        
+        // Scroll to the password field
+        document.querySelector('[placeholder="Enter your password"]')?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'center'
+        });
+      } else {
+        // Handle other errors
+        toast.error(error.message || "Failed to create account");
+      }
+    } finally {
+      setIsLoading(false);
+      setIsVerifying(false);
     }
+    
+    return;
+  }
 
-    if (currentStep === 2) {
+  if (currentStep === 2) {
+    // Verify email code
+    if (!verificationCode.trim()) {
+      setVerificationError("Please enter the verification code");
+      return;
+    }
+    
+    // Set loading state for the button
+    setIsVerifyingCode(true);
+    
+    try {
+      if (!isSignUpLoaded) {
+        throw new Error("Authentication system not loaded");
+      }
+
+      // Verify the email without setting the session active
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code: verificationCode,
+      });
+      
+      if (completeSignUp.status !== "complete") {
+        throw new Error("Verification failed");
+      }
+      
+      // Don't set the user as active here - we'll do it at the end
+      // await setActive({ session: completeSignUp.createdSessionId });
+      
+      toast.success("Email verified successfully!");
+      
+      // Move to the next step
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentStep(3);
+        setIsTransitioning(false);
+      }, 150);
+      
+    } catch (error) {
+      console.error("Verification error:", error);
+      setVerificationError("Invalid verification code. Please try again.");
+    } finally {
+      // Clear loading state
+      setIsVerifyingCode(false);
+    }
+    
+    return;
+  }
+    
+    // Update the rest of your handleNext cases to match the new step numbers
+    if (currentStep === 3) {
       if (!validateStep2()) {
         return;
       }
-      // Save step 2 data
+      // Save step 2 data (now step 3)
       setUserData(prev => ({ ...prev, ...generateStepData(2) }));
-    }
-
-    if (currentStep === 3) {
-      // Save step 3 data even if no team members
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentStep(currentStep + 1);
+        setIsTransitioning(false);
+      }, 150);
+    } else if (currentStep === 4) {
+      // Save step 3 data (now step 4)
       setUserData(prev => ({ ...prev, ...generateStepData(3) }));
-    }
-
-    if (currentStep === 4) {
-      // Complete setup
-      setUserData(prev => ({ ...prev, ...generateStepData(4) }));
-      setSetupComplete(true);
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentStep(currentStep + 1);
+        setIsTransitioning(false);
+      }, 150);
+    } else if (currentStep === 5) {
+      // Start the multi-step loader process (now step 5)
+      setLoading(true);
       
-      // Here you would typically send the complete userData to your backend
-      console.log("Complete user data:", userData);
-      
-      // In a real app, you'd redirect to dashboard after API call
-      // For now, we'll just simulate completion
-      return;
-    }
-
-    if (currentStep < 4) {
+      processApiCalls().catch(error => {
+        toast.error("An error occurred. Please try again.");
+        console.error("API call error:", error);
+        setLoading(false);
+      });
+    } else if (currentStep < 5) {
       setIsTransitioning(true);
       setTimeout(() => {
         setCurrentStep(currentStep + 1);
@@ -449,6 +679,131 @@ React.useEffect(() => {
       }, 150);
     }
   };
+
+  const processApiCalls = async () => {
+  try {
+    // Step 1: Since we've already created and verified the account, skip these steps
+    setCurrentLoadingStep(0);
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Step 2: Create organization
+    setCurrentLoadingStep(1);
+    
+    try {
+      // Create an organization name
+      const orgName = noCompany ? `${fullName}'s Workspace` : companyName;
+      const orgSlug = (noCompany ? fullName : companyName)
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+      
+      // Create the organization (this will automatically be associated with the user)
+      const org = await clerk.createOrganization({
+        name: orgName,
+        
+      });
+      
+      // Store the org ID for later use when we log in
+      const orgId = org?.id;
+      
+    } catch (orgError) {
+      console.error("Organization creation error:", orgError);
+      toast.error("Error creating workspace. Please try again.");
+      throw orgError;
+    }  
+      
+    // Step 3: Configure preferences
+    setCurrentLoadingStep(2);
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    // ...existing preferences code...
+      
+    // Step 4: Send team invitations if there are team members
+    if (teamMembers.length > 0) {
+      setCurrentLoadingStep(3);
+      try {
+        // Invite each team member to the organization
+        for (const member of teamMembers) {
+          try {
+            if (!clerk.organization) {
+              throw new Error("Organization not found");
+            }
+            
+            // Use Clerk's invitation API
+            await clerk.organization.inviteMember({
+              emailAddress: member.email,
+              role: "basic_member", // or "admin" depending on your role structure
+            });
+            
+            console.log(`Invitation sent to ${member.email}`);
+            
+            // Small delay between invites to prevent rate limiting
+            await new Promise(resolve => setTimeout(resolve, 300));
+          } catch (individualInviteError) {
+            console.error(`Error inviting ${member.email}:`, individualInviteError);
+            // Continue with other invites even if one fails
+          }
+        }
+        
+        // Show success message if any invitations were sent
+        if (teamMembers.length > 0) {
+          toast.success(`Invitation${teamMembers.length > 1 ? 's' : ''} sent successfully!`);
+        }
+        
+      } catch (inviteError) {
+        console.error("Team invitation error:", inviteError);
+        toast.warning("Some team invitations may not have been sent");
+        // Non-critical error, continue with flow
+      }
+    }
+      
+    // Step 5: Log the user in
+    setCurrentLoadingStep(4);
+    
+    try {
+      if (!isSignUpLoaded) {
+        throw new Error("Authentication system not loaded");
+      }
+      // Now we'll set the user as active - this is essentially "logging them in"
+      const { createdSessionId } = await signUp.attemptEmailAddressVerification({
+        code: verificationCode, // Use the stored code from earlier
+      });
+      
+      // Set the user active with the session ID
+      await setActive({ session: createdSessionId });
+      
+      // If we have an org ID, set it as the active org
+      if (clerk.organization?.id) {
+        await clerk.setActive({ organization: clerk.organization.id });
+      }
+      
+      toast.success("Successfully logged in!");
+      
+    } catch (loginError) {
+      console.error("Login error:", loginError);
+      toast.error("Error logging in. You may need to log in manually.");
+      // Non-critical error, continue with flow
+    }
+    
+    // Step 6: Finalize setup
+    setCurrentLoadingStep(5);
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Complete setup and store final data
+    setUserData(prev => ({ ...prev, ...generateStepData(4) }));
+    setSetupComplete(true);
+    
+    // Redirect to dashboard
+    // router.push('/dashboard');
+    
+  } catch (error) {
+    console.error("Error in API flow:", error);
+    toast.error("Account creation failed. Please try again.");
+    setLoading(false);
+    throw error;
+  }
+};
 
   // Log the current state of userData whenever it changes
   useEffect(() => {
@@ -493,8 +848,11 @@ React.useEffect(() => {
           <div className={`space-y-6 transition-all duration-300 ${isTransitioning ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}>
             <div>
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">Create your account with us</h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 hidden sm:block">
                 Set up your workspace to connect platforms like WhatsApp, Instagram, and more. From here, you can add team members, and streamline conversations across all your channels. All in one place.
+              </p>
+              <p className="text-gray-600 sm:hidden">
+                Set up your workspace to connect platforms like WhatsApp, Instagram, and more. 
               </p>
             </div>
 
@@ -541,6 +899,25 @@ React.useEffect(() => {
               </label>
             </div>
 
+            {/* Full Name Field - New field */}
+            <div className='pl-1'>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Full name *
+              </label>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => handleInputChange('fullName', e.target.value)}
+                placeholder="e.g. Elon Musk"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
+                  errors.fullName ? 'border-red-300' : 'border-gray-300'
+                }`}
+              />
+              {errors.fullName && (
+                <p className="text-sm text-red-600 mt-1">{errors.fullName}</p>
+              )}
+            </div>
+
             {/* Email Address Field */}
             <div className='pl-1'>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -550,7 +927,7 @@ React.useEffect(() => {
                 type="email"
                 value={email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="e.g. musk@x.com"
+                placeholder="e.g. elon.musk@x.com"
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
                   errors.email ? 'border-red-300' : 'border-gray-300'
                 }`}
@@ -574,9 +951,13 @@ React.useEffect(() => {
                   errors.password ? 'border-red-300' : 'border-gray-300'
                 }`}
               />
-              <p className={`text-sm mt-1 ${errors.password ? 'text-red-600' : 'text-gray-500'}`}>
-                Password must be at least 8 characters long
-              </p>
+              {errors.password ? (
+                <p className="text-sm text-red-600 mt-1">{errors.password}</p>
+              ) : (
+                <p className="text-sm text-gray-500 mt-1">
+                  Password must be at least 8 characters long
+                </p>
+              )}
             </div>
 
             {/* Confirm Password Field */}
@@ -606,6 +987,72 @@ React.useEffect(() => {
           return (
             <div className={`space-y-6 transition-all duration-300 ${isTransitioning ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}>
               <div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-2">Verify your email address</h2>
+                <p className="text-gray-600">
+                  We&apos;ve sent a verification code to <span className="font-medium">{email}</span>. 
+                  Please check your inbox and enter the code below to continue.
+                </p>
+              </div>
+              
+              {/* Email verification code input */}
+              <div className="max-w-md mx-auto">
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Verification code
+                  </label>
+                  <input
+                    type="text"
+                    value={verificationCode}
+                    onChange={(e) => {
+                      setVerificationCode(e.target.value);
+                      setVerificationError('');
+                    }}
+                    placeholder="Enter 6-digit code"
+                    className={`w-full px-3 py-3 text-center text-4xl tracking-widest border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
+                      verificationError ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                  />
+                  {verificationError && (
+                    <p className="text-sm text-red-600 mt-2">{verificationError}</p>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+                  {/* Email visualization */}
+                  <div className="flex items-center space-x-2 text-sm text-gray-500">
+                    <MailCheck className="w-4 h-4" />
+                    <span>Code sent to {email}</span>
+                  </div>
+                  
+                  {/* Resend button */}
+                  <button 
+                    onClick={handleResendCode}
+                    disabled={isResending}
+                    className="text-green-600 hover:text-green-800 font-medium text-sm flex items-center transition-all duration-200 disabled:opacity-50"
+                  >
+                    {isResending ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Resending...
+                      </>
+                    ) : (
+                      'Resend code'
+                    )}
+                  </button>
+                </div>
+                
+                
+              </div>
+            </div>
+          );
+
+        case 3:
+          return (
+            <div className={`space-y-6 transition-all duration-300 ${isTransitioning ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}>
+              <div>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-2">
                   Tell us more about {companyName ? `${companyName}` : 'yourself'}
                 </h2>
@@ -620,15 +1067,18 @@ React.useEffect(() => {
 
               {/* Company Type Selection */}
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-5">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   What kind of {companyName ? 'company are you' : 'work do you do'}?
                 </h3>
-                <div className="flex flex-wrap gap-4 max-w-3xl">
+                <p className="text-sm text-gray-500 mb-3">
+                  Select up to 3 categories
+                </p>
+                <div className="flex flex-wrap gap-3 sm:gap-4 max-w-3xl">
                   {companyTypes.map((type) => (
                     <button
                       key={type}
                       onClick={() => toggleCompanyType(type)}
-                      className={`px-4 py-2 rounded-lg ${
+                      className={`px-3 sm:px-4 text-sm sm:text-base py-2 rounded-lg ${
                         selectedCompanyTypes.includes(type)
                           ? 'bg-zinc-800 text-white'
                           : 'bg-[#f0f0f0] text-black hover:bg-[#dbdbdb]'
@@ -638,12 +1088,22 @@ React.useEffect(() => {
                     </button>
                   ))}
                 </div>
-                {/* Show validation error only when step2Error is set */}
+                
+                {/* Company Type Error */}
+                {companyTypeError && (
+                  <p className="text-sm text-red-600 mt-2 transition-all duration-300">
+                    {companyTypeError}
+                  </p>
+                )}
+                
+                {/* Validation Error */}
                 {step2Error && (
                   <p className="text-sm text-red-600 mt-2">
                     {step2Error}
                   </p>
-                )}
+                )
+              
+              }
               </div>
 
               {/* Company Size Slider */}
@@ -697,16 +1157,22 @@ React.useEffect(() => {
             </div>
           );
 
-      case 3:
+      case 4:
     return (
       <div className={`space-y-6 transition-all duration-300 ${isTransitioning ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}>
         <div>
-          <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+          <h2 className="text-2xl hidden sm:block font-semibold text-gray-900 mb-2">
             Invite your team to {companyName || 'your workspace'}
           </h2>
-          <p className="text-gray-600">
+          <h2 className="text-2xl sm:hidden font-semibold text-gray-900 mb-2">
+            Invite your team
+          </h2>
+          <p className="text-gray-600 hidden sm:block">
             Collaborate with your team members by inviting them to join your workspace. 
             They&apos;ll be able to access conversations and help manage customer communications.
+          </p>
+          <p className="text-gray-600 sm:hidden">
+            Collaborate with your team members by inviting them to join your workspace. 
           </p>
         </div>
 
@@ -726,7 +1192,7 @@ React.useEffect(() => {
                 }}
                 placeholder="Enter email address"
                 disabled={teamMembers.length >= 2}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
+                className={`w-full px-3 py-2 text-sm sm:text-base border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
                   emailError ? 'border-red-300' : 'border-gray-300'
                 } ${teamMembers.length >= 2 ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 onKeyPress={(e) => e.key === 'Enter' && addTeamMember()}
@@ -738,7 +1204,7 @@ React.useEffect(() => {
             <button
               onClick={addTeamMember}
               disabled={teamMembers.length >= 2}
-              className={`px-4 py-2 rounded-md text-sm flex items-center transition-all duration-200 ${
+              className={`px-4 py-2 rounded-md text-sm sm:text-base flex items-center transition-all duration-200 ${
                 teamMembers.length >= 2
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-green-700 text-white hover:bg-green-800 hover:shadow-md'
@@ -808,24 +1274,35 @@ React.useEffect(() => {
               <Send className="w-8 h-8 text-gray-400" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No team members yet</h3>
-            <p className="text-gray-500">Add up to 2 email addresses to start building your team</p>
+            <p className="text-gray-500 hidden sm:block">Add up to 2 email addresses to start building your team</p>
           </div>
         )}
       </div>
     );
 
-      case 4:
+      case 5:
         return (
           <div className={`space-y-6 flex flex-col items-center justify-center h-full transition-all duration-300 ${isTransitioning ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}>
             <div className="text-center max-w-lg">
-              <div className="mx-auto w-40 h-40 rounded-full bg-green-100 flex items-center justify-center mb-6">
-                <Check className="w-20 h-20 text-green-600" />
+              <div className="mx-auto w-48 h-48 mb-6 flex items-center justify-center">
+                <Lottie 
+                
+                  // eslint-disable-next-line @typescript-eslint/no-require-imports
+                  animationData={require('./Success.json')} 
+                  loop={false}
+                  autoplay={true}
+
+                  style={{ width: '100%', height: '100%' }}
+                />
               </div>
               <h2 className="text-3xl font-semibold text-gray-900 mb-4">
                 Welcome to Heidel AI!
               </h2>
-              <p className="text-gray-600 mb-8">
-                {companyName ? `${companyName}'s` : 'Your'} workspace is ready to use. You can now start managing your customer conversations and collaborating with your team.
+              <p className="text-gray-600 hidden sm:block mb-8">
+                {companyName ? `${companyName}'s` : 'Your'} workspace is ready to use. You can now start managing your customer conversations and collaborating with your team 🎉
+              </p>
+              <p className="text-gray-600 mb-8 sm:hidden">
+                {companyName ? `${companyName}'s` : 'Your'} workspace is ready to use. We&apos;re excited to have you on board with us 🎉
               </p>
               
               
@@ -842,13 +1319,13 @@ React.useEffect(() => {
 
   return (
   <>
+  <Toaster position="top-right" richColors />
   <style dangerouslySetInnerHTML={{ __html: sliderStyles }} />
   <div className="min-h-screen flex justify-center items-center overflow-hidden bg-white">
-    <div className="w-full mx-auto p-6 ">
+    <div className="w-full mx-auto px-4 py-6 sm:p-6 ">
       <div className="bg-white h-full rounded-xl transition-shadow duration-300">
-        
 
-        <div className="flex sm:h-[calc(100vh-3rem)]">
+        <div className="flex h-screen sm:h-[calc(100vh-3rem)]">
           {/* Sidebar - Fixed */}
           <div className="w-96 bg-[#f0f0f0] rounded-xl hidden sm:flex p-6  flex-col flex-shrink-0">
             {/* Background Logo */}
@@ -926,12 +1403,12 @@ React.useEffect(() => {
           {/* Main Content - Scrollable */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Content Area - Scrollable */}
-            <div className="flex-1 overflow-y-auto px-1 sm:px-20 pb-24 sm:py-12">
-              {renderStepContent()}
+            <div className="flex-1 overflow-y-auto px-1 pt-2 sm:pt-12 pb-24 sm:pb-12 sm:px-20">
+                {renderStepContent()}
             </div>
 
             {/* Navigation - Fixed at bottom */}
-            <div className="flex-shrink-0 px-4 sm:px-20 sm:pb-6 fixed sm:relative bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+            <div className="flex-shrink-0 px-4 sm:px-20 sm:pb-6 fixed sm:relative bottom-0 left-0 right-0 bg-transparent backdrop-blur-sm sm:bg-white border-t border-gray-200">
               <div className="flex items-center justify-between pt-4 md:pt-6">
                 <div>
                   {currentStep > 1 && (
@@ -946,7 +1423,7 @@ React.useEffect(() => {
                 </div>
                 <div className="flex items-center space-x-3">
                   {/* Skip button for step 3 */}
-                  {currentStep === 3 && (
+                  {currentStep === 4 && (
                     <button
                       onClick={handleSkip}
                       className="text-gray-600 hover:text-gray-800 px-4 py-2 rounded-md transition-all duration-200 hover:bg-gray-100 text-sm"
@@ -958,36 +1435,50 @@ React.useEffect(() => {
                   
                   <button
                     onClick={handleNext}
+                    disabled={isLoading || isVerifyingCode}
                     className="px-4 md:px-6 py-2 rounded-md flex items-center transition-all duration-200 hover:shadow-lg transform hover:scale-105 bg-green-700 text-white hover:bg-green-800 text-sm md:text-base"
                   >
                     {/* Desktop text (hidden on mobile) */}
-                    <span className="hidden sm:inline">
-                      {currentStep === 3 && teamMembers.length > 0 
-                        ? `Invite ${teamMembers.length} people` 
-                        : currentStep === 4 
-                        ? `Continue to Dashboard` 
-                        : 'Save and continue'
-                      }
-                    </span>
-                    
-                    {/* Mobile text (hidden on desktop) */}
-                    <span className="inline sm:hidden">
-                      {currentStep === 3 && teamMembers.length > 0 
-                        ? `Invite` 
-                        : currentStep === 4 
-                        ? `Continue` 
-                        : 'Save'
-                      }
-                    </span>
-                    
-                    <ArrowRight className="w-4 h-4 ml-1" />
+                    {(isLoading || isVerifyingCode) ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span className="hidden sm:inline">{currentStep === 2 ? "Verifying..." : "Processing..."}</span>
+                        <span className="inline sm:hidden">Loading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="hidden sm:inline">
+                          {currentStep === 4 && teamMembers.length > 0 
+                            ? `Invite ${teamMembers.length} people` 
+                            : currentStep === 5 
+                            ? `Continue to Dashboard` 
+                            : 'Save and continue'
+                          }
+                        </span>
+                        
+                        {/* Mobile text (hidden on desktop) */}
+                        <span className="inline sm:hidden">
+                          {currentStep === 4 && teamMembers.length > 0 
+                            ? `Invite` 
+                            : currentStep === 5 
+                            ? `Continue` 
+                            : 'Save'
+                          }
+                        </span>
+                        
+                        <ArrowRight className="w-4 h-4 ml-1" />
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
 
               {/* Progress Bars - Only visible on desktop */}
               <div className="hidden sm:flex justify-center mt-6 space-x-2">
-                {[1, 2, 3, 4].map((step) => (
+                {[1, 2, 3, 4, 5].map((step) => (
                   <div
                     key={step}
                     className={`h-2 w-16 rounded-full transition-all duration-300 ${
@@ -1006,6 +1497,13 @@ React.useEffect(() => {
       </div>
     </div>
   </div>
+
+  <MultiStepLoader 
+    loadingStates={loadingStates} 
+    loading={loading} 
+    duration={1500} 
+    loop={false} 
+  />
   </>
 );
 };

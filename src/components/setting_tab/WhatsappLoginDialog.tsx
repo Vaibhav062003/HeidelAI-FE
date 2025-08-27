@@ -94,7 +94,7 @@ const WhatsAppLoginDialog = () => {
         
         if (storedWhatsAppId) {
           // Fetch account info from backend
-          const response = await api.get(`https://egenie-whatsapp.koyeb.app/whatsapp/status?user_id=${storedWhatsAppId}`);
+          const response = await api.post(`https://heidelai-backend.koyeb.app/whatsapp/status?user_id=${storedWhatsAppId}`);
 
           if (response.status === 200) {
             const data = await response.data();
@@ -286,7 +286,7 @@ const WhatsAppLoginDialog = () => {
       const user_id = localStorage.getItem('whatsapp_user_id');
       if (user_id) {
         // Disconnect using the dedicated WhatsApp API
-        await api.post('https://egenie-whatsapp.koyeb.app/whatsapp/disconnect', {
+        await api.post('https://heidelai-backend.koyeb.app/whatsapp/disconnect', {
           data: JSON.stringify({ 
             user_id: user_id,
           }),

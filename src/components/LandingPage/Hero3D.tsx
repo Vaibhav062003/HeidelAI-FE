@@ -91,7 +91,7 @@ const Hero3D = () => {
       
       {/* 3D Background with darker overlay */}
       <div className='absolute inset-0'>
-        <Scene />
+        {/* <Scene /> */}
         {/* Dark overlay for better text readability */}
         <div className="absolute inset-0 bg-black/40 pointer-events-none" />
       </div>

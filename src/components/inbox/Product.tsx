@@ -23,7 +23,7 @@ import api from "@/lib/session_api";
 
 type PlatformType = "pinecone" | "shopify" | "other" | undefined;
 
-const WS_URL = 'wss://egenie-whatsapp.koyeb.app/cs';
+const WS_URL = 'wss://heidelai-backend.koyeb.app/cs';
 
 interface Product {
   id: string;
@@ -113,7 +113,7 @@ const ProductsTab = ({
     setLoading(true);
     try {
       // console.log("id:",conversationId);
-      const response = await api.get(`https://egenie-whatsapp.koyeb.app/ai/product_recommendations/${conversationId}`);
+      const response = await api.post(`https://heidelai-backend.koyeb.app/ai/product-recommendations/${conversationId}`);
 
       if (response.status !== 200) throw new Error("Failed to fetch products");
 
