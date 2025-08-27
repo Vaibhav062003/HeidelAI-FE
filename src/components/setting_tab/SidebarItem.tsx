@@ -70,6 +70,7 @@ import {
 import { toast } from 'sonner';
 import { connectWebSocket } from '../../lib/websocket';
 import WhatsAppLoginDialog from './WhatsappLoginDialog';
+import api from '@/lib/session_api';
 
 const loginWithFacebook = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -84,6 +85,8 @@ const loginWithFacebook = async () => {
 
   if (error) console.error("Login error:", error.message);
 };
+
+
 
 
 const WooCommerceDialog = () => {
@@ -334,7 +337,7 @@ const InstagramDialog = () => {
           const appUserId = localStorage.getItem('user_id');
           
           // Construct URL based on available IDs
-          let apiUrl = 'https://egenie-whatsapp.koyeb.app/instagram/status';
+          let apiUrl = 'instagram/status';
           if (storedInstagramId) {
             apiUrl += `?instagram_id=${storedInstagramId}`;
           } else if (appUserId) {
@@ -345,11 +348,11 @@ const InstagramDialog = () => {
             return;
           }
           
-          const response = await fetch(apiUrl);
-          
-          if (response.ok) {
-            const data = await response.json();
-            
+          const response = await api.get(apiUrl);
+
+          if (response.status === 200) {
+            const data = await response.data();
+
             if (data.instagram_connected) {
               // Save in localStorage for future fast access
               localStorage.setItem('instagram_connection', JSON.stringify({
@@ -383,6 +386,7 @@ const InstagramDialog = () => {
     checkConnection();
   }, []);
 
+
   // Function to initiate Instagram OAuth login
   const handleInstagramLogin = () => {
     setIsLoading(true);
@@ -410,19 +414,16 @@ const InstagramDialog = () => {
     try {
       // Use the same dynamic redirect_uri as above
       const redirectUri = `${window.location.origin}/auth/instagram/callback`;
-      const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
+      const response = await api.post('instagram/auth', {
+        data: JSON.stringify({ 
           code: code,
           redirect_uri: redirectUri
         }),
       });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
+
+
+      if (response.status !== 200) {
+        const errorText = await response.data();
         console.error('API error response:', errorText);
         
         // Parse error as JSON to extract the detail message
@@ -443,7 +444,7 @@ const InstagramDialog = () => {
         throw new Error(`Authentication failed: ${errorMessage}`);
       }
       
-      const data = await response.json();
+      const data = await response.data();
       console.log('API success response:', data);
       
       // Store data in localStorage
@@ -485,12 +486,8 @@ const InstagramDialog = () => {
       const user_id = localStorage.getItem('instagram_user_id');
       if (user_id) {
         // Disconnect using the dedicated Instagram API
-        await fetch('https://egenie-whatsapp.koyeb.app/instagram/disconnect', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
+        await api.post('instagram/disconnect', {
+          data: JSON.stringify({ 
             user_id: user_id,
           }),
         });
@@ -663,6 +660,48 @@ const InstagramDialog = () => {
 
 
 
+// const TokenTestBox =()=>{
+//   // This function is just a placeholder for the token test box
+//   const getToken = async () => {
+//     try {
+//       const sessionID = localStorage.getItem("sessionId");
+//       if (!sessionID) {
+//         throw new Error("No session ID found");
+//       }
+//       const res = await fetch(`/api/session-token`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ sessionId: sessionID }),
+//       });
+
+
+
+//       if (!res.ok) {
+//         const errorText = await res.text();
+//         throw new Error(`Failed to get session token: ${errorText}`);
+//       }
+
+//       const { token: sessionToken } = await res.json();
+//       console.log("Session Token:", sessionToken);
+//       if (!sessionToken) {
+//         throw new Error("Failed to retrieve session token");
+//       }
+//     } catch (error) {
+//       console.error("Error in token_testDialog:", error);
+//     }
+//   };
+
+//   return (
+//     <div className="p-4 bg-gray-50 border rounded-lg shadow-sm">
+//       <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={getToken}>
+//         Test Token
+//       </button>
+//     </div>
+//   );
+// }
+
+ 
+
 export const FacebookCatalogIntegration = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -800,6 +839,9 @@ const handleDisconnect = async () => {
   }
 };
 
+// Move handleClick to the parent scope so it is accessible
+
+
   return (
     <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
       <div className="space-y-4">
@@ -882,7 +924,9 @@ const handleDisconnect = async () => {
                   </Button>
                 </div>
               </DialogContent>
+
             </Dialog>
+      
           )}
         </div>
       </div>
@@ -1144,6 +1188,9 @@ export const IntegrationsSettings = () => (
   </div>
 </div>
 
+{/* <div>
+  <TokenTestBox />
+</div> */}
 
       {/* More Integrations Coming Soon Card */}
         {/* <div className="border rounded-lg p-4 bg-gray-50">
@@ -1213,3 +1260,4 @@ export const SLASettings = () => (
     </div>
   </div>
 );
+

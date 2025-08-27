@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -51,7 +52,6 @@ const ConversationList = ({
     unreadOnly: false,
     hasQuery: false,
   });
-
 
   const searchResults: SearchResult[] = conversations
     .filter(conversation => {
@@ -198,9 +198,6 @@ const ConversationList = ({
     <>
     <style>
       {`
-
-
-
         .custom-scrollb::-webkit-scrollbar {
           width: 4px;
           opacity: 0;

@@ -1,23 +1,32 @@
-import { auth } from "@clerk/nextjs/server"
+interface SessionTokenResponse {
+  token: string;
+  [key: string]: unknown;
+}
 
-export const getSessionToken = async ()=>{
-   const { sessionId } = await auth()
+export const getSessionToken = async (sessionId: string): Promise<string> => {
+  console.log("Requesting session token for sessionId:", sessionId);
 
-  const response = await fetch(`https://api.clerk.com/v1/sessions/${sessionId}/tokens`,{
+  const response = await fetch(`https://api.clerk.com/v1/sessions/${sessionId}/tokens`, {
     method: 'POST',
-    headers:{
+    headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.CLERK_API_KEY}`
+      Authorization: `Bearer ${process.env.CLERK_TOKEN_KEY}`,
     },
     body: JSON.stringify({
       expires_in_seconds: 60
     })
-  })
-
-  if (!response.ok){
-    throw new Error(`Failed to fetch session token: ${response.statusText}`);
+  });
+  if (!response.ok) {
+    const errorBody = await response.json();
+    console.error("Session token request failed", {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorBody
+    });
+    throw new Error(`Failed to fetch session token: ${response.status} ${response.statusText} - ${JSON.stringify(errorBody)}`);
   }
 
   const data = await response.json();
-  return data.token;
+  // Return the jwt property, not token
+  return data.jwt;
 }

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Toaster, toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Session } from '@supabase/supabase-js';
 interface OrgDataItem {
   public_user_data?: {
     identifier?: string;
@@ -47,6 +48,9 @@ export default function LoginPage() {
 
       if (signInAttempt.status === "complete") {
         await setActive({ session: signInAttempt.createdSessionId });
+        if (signInAttempt.createdSessionId) {
+          localStorage.setItem("sessionId", signInAttempt.createdSessionId);
+        }
         // Fetch organization data after session is active
         const res = await fetch("/api/getorgdata");
         const data = await res.json();
