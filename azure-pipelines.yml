@@ -68,7 +68,7 @@ steps:
     
     if [ "$LOCAL_COMMIT" != "$REMOTE_COMMIT" ]; then
       echo "=== Triggering Vercel Deploy Hook ==="
-      curl -X GET "https://api.vercel.com/v1/integrations/deploy/prj_LefjRSOUiT6B5A1Q6YurmMjjo5ZH/itxttq27hk"
+      curl -X GET "https://api.vercel.com/v1/integrations/deploy/prj_RNWR01yIanhCEcX2TFLVkkJJD8sE/Z24Flejapz"
     fi
 
 
