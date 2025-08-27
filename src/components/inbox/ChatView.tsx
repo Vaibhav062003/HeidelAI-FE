@@ -1006,7 +1006,7 @@ useEffect(() => {
       const platform = selectedConversationId.split('_')[0];
       let response;
       if (platform === 'instagram') {
-        response = await api.post(`/api/instagram/conversations/${selectedConversationId}`);
+        response = await api.get(`/api/instagram/conversations/${selectedConversationId}`);
         setConversation(response?.data);
       } else if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
@@ -1031,7 +1031,7 @@ useEffect(() => {
       const platform = selectedConversationId.split('_')[0];
       let response;
       if (platform === 'instagram') {
-        response = await api.post(`/api/instagram/conversations/${selectedConversationId}/ai`);
+        response = await api.get(`/api/instagram/conversations/${selectedConversationId}/ai`);
         setIsAIEnabled(!!response?.data);
       } else if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
@@ -1052,7 +1052,7 @@ useEffect(() => {
       const platform = selectedConversationId.split('_')[0];
       let response;
       if (platform === 'instagram') {
-        response = await api.post(`/api/instagram/conversations/${selectedConversationId}/messages`);
+        response = await api.get(`/api/instagram/conversations/${selectedConversationId}/messages`);
         setMessages(response?.data || []);
       } else if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
