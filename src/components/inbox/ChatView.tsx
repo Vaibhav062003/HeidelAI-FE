@@ -1068,7 +1068,7 @@ useEffect(() => {
   };
 
   // Set up WebSocket connection based on platform
-  const WS_BASE_URL = "wss://heidelai-backend.koyeb.app"
+  const WS_BASE_URL = "wss://egenie-whatsapp.koyeb.app"
   const platform = selectedConversationId.split('_')[0];
  
   let ws: WebSocket | null = null;

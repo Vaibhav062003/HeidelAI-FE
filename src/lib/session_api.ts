@@ -2,7 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
   // baseURL: process.env.NEXT_PUBLIC_API_URL
-  baseURL: "https://heidelai-backend.koyeb.app"
+  baseURL: "https://egenie-whatsapp.koyeb.app"
 })
 
 api.interceptors.request.use(async (config) =>{

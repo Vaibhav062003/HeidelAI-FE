@@ -7,7 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 
-const WS_URL = 'wss://heidelai-backend.koyeb.app/cs';
+const WS_URL = 'wss://egenie-whatsapp.koyeb.app/cs';
 
 interface ConversationSummaryProps {
   selectedConversationId?: string;

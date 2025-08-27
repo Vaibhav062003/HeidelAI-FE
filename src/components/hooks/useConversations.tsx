@@ -25,7 +25,7 @@ interface WebSocketMessage {
 // const WS_INSTAGRAM_ENDPOINT = `${WS_BASE_URL}/ws2/instagram`;
 
 // WebSocket base URLs
-const WS_BASE_URL = 'wss://heidelai-backend.koyeb.app';
+const WS_BASE_URL = 'wss://egenie-whatsapp.koyeb.app';
 const WS_WHATSAPP_ENDPOINT = `${WS_BASE_URL}/ws2/whatsapp`;
 const WS_INSTAGRAM_ENDPOINT = `${WS_BASE_URL}/ws2/instagram`;
 

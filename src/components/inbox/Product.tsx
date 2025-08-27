@@ -23,7 +23,7 @@ import api from "@/lib/session_api";
 
 type PlatformType = "pinecone" | "shopify" | "other" | undefined;
 
-const WS_URL = 'wss://heidelai-backend.koyeb.app/cs';
+const WS_URL = 'wss://egenie-whatsapp.koyeb.app/cs';
 
 interface Product {
   id: string;
