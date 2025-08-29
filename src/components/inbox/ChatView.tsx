@@ -628,7 +628,20 @@ const ChatView = ({
   const [audioModalOpen,setIsAudioModalOpen]= useState(false);
   const [fileCaption, setFileCaption] = useState("");
 
+  const token = async()=>{
+    const sessionId = localStorage.getItem("sessionId");
+    if (!sessionId) throw new Error("Session ID not found in localStorage");
 
+    const res = await fetch("api/session-token",{
+      method: "POST",
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({sessionId})
+    })
+    const { token: sessionToken } = await res.json();
+    return sessionToken
+  }
 
   const startRecording = async () => {
     try {
@@ -1075,11 +1088,16 @@ useEffect(() => {
   
   if (platform === 'instagram') {
     const instagramId = localStorage.getItem('instagram_user_id');
-    const clientId = `client-${Date.now()}-ig`;
-    
+    const clientId = localStorage.getItem('client_id');
+
     if (instagramId) {
-      ws = new WebSocket(`${WS_BASE_URL}/ws2/instagram/${clientId}/${instagramId}`);
-      console.log("Connected to Instagram WebSocket");
+      // Get session token before establishing WebSocket connection
+      token().then(sessionToken => {
+        ws = new WebSocket(`${WS_BASE_URL}/ws2/instagram/${clientId}`, [sessionToken]);
+        console.log("Connected to Instagram WebSocket");
+      }).catch(error => {
+        console.error("Failed to get session token:", error);
+      });
     } 
   } else if (platform === 'whatsapp') {
     const whatsappId = localStorage.getItem('whatsapp_user_id');

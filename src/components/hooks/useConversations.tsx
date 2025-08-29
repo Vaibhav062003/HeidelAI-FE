@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Conversation } from '../types/conversation';
 import { conversationService } from '../services/api';
+import { getSessionToken } from '../utils/clerkSession';
 
 interface WebSocketMessage {
   type: string;
@@ -53,85 +54,85 @@ function normalizeConversation(conv: any): Conversation {
   };
 }
 
-function useWebSocket(
-  url: string | null,
-  onMessage: (event: MessageEvent) => void,
-  enabled: boolean
-) {
-  const wsRef = useRef<WebSocket | null>(null);
-  const [retries, setRetries] = useState(0);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const isConnectingRef = useRef(false);
+// function useWebSocket(
+//   url: string | null,
+//   onMessage: (event: MessageEvent) => void,
+//   enabled: boolean
+// ) {
+//   const wsRef = useRef<WebSocket | null>(null);
+//   const [retries, setRetries] = useState(0);
+//   const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+//   const isConnectingRef = useRef(false);
 
-  useEffect(() => {
-    if (!url || !enabled) return;
+//   useEffect(() => {
+//     if (!url || !enabled) return;
 
-    const connect = () => {
-      if (isConnectingRef.current) return;
-      isConnectingRef.current = true;
+//     const connect = () => {
+//       if (isConnectingRef.current) return;
+//       isConnectingRef.current = true;
 
-      // Close existing connection if any
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.close();
-      }
+//       // Close existing connection if any
+//       if (wsRef.current?.readyState === WebSocket.OPEN) {
+//         wsRef.current.close();
+//       }
 
-      try {
-        const ws = new WebSocket(url);
-        wsRef.current = ws;
+//       try {
+//         const ws = new WebSocket(url);
+//         wsRef.current = ws;
 
-        ws.onopen = () => {
-          setRetries(0);
-          isConnectingRef.current = false;
-          if (process.env.NODE_ENV === 'development') {
-            console.info('WebSocket connected:', url);
-          }
-        };
+//         ws.onopen = () => {
+//           setRetries(0);
+//           isConnectingRef.current = false;
+//           if (process.env.NODE_ENV === 'development') {
+//             console.info('WebSocket connected:', url);
+//           }
+//         };
 
-        ws.onmessage = onMessage;
+//         ws.onmessage = onMessage;
 
-        ws.onerror = (event) => {
-          isConnectingRef.current = false;
-          if (process.env.NODE_ENV === 'development') {
-            console.error('WebSocket error:', event, url);
-          }
-        };
+//         ws.onerror = (event) => {
+//           isConnectingRef.current = false;
+//           if (process.env.NODE_ENV === 'development') {
+//             console.error('WebSocket error:', event, url);
+//           }
+//         };
 
-        ws.onclose = (event) => {
-          isConnectingRef.current = false;
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('WebSocket closed:', event, url);
-          }
+//         ws.onclose = (event) => {
+//           isConnectingRef.current = false;
+//           if (process.env.NODE_ENV === 'development') {
+//             console.warn('WebSocket closed:', event, url);
+//           }
           
-          // Only attempt reconnection if not manually closed
-          if (event.code !== 1000 && retries < MAX_RETRIES) {
-            reconnectTimeoutRef.current = setTimeout(() => {
-              setRetries(r => r + 1);
-            }, RETRY_DELAY * Math.pow(2, retries)); // Exponential backoff
-          }
-        };
-      } catch (error) {
-        isConnectingRef.current = false;
-        if (process.env.NODE_ENV === 'development') {
-          console.error('WebSocket connection error:', error);
-        }
-      }
-    };
+//           // Only attempt reconnection if not manually closed
+//           if (event.code !== 1000 && retries < MAX_RETRIES) {
+//             reconnectTimeoutRef.current = setTimeout(() => {
+//               setRetries(r => r + 1);
+//             }, RETRY_DELAY * Math.pow(2, retries)); // Exponential backoff
+//           }
+//         };
+//       } catch (error) {
+//         isConnectingRef.current = false;
+//         if (process.env.NODE_ENV === 'development') {
+//           console.error('WebSocket connection error:', error);
+//         }
+//       }
+//     };
 
-    connect();
+//     connect();
 
-    return () => {
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
-      if (wsRef.current) {
-        wsRef.current.close(1000, 'Component unmounting');
-      }
-      isConnectingRef.current = false;
-    };
-  }, [url, retries, enabled, onMessage]);
+//     return () => {
+//       if (reconnectTimeoutRef.current) {
+//         clearTimeout(reconnectTimeoutRef.current);
+//       }
+//       if (wsRef.current) {
+//         wsRef.current.close(1000, 'Component unmounting');
+//       }
+//       isConnectingRef.current = false;
+//     };
+//   }, [url, retries, enabled, onMessage]);
 
-  return wsRef.current;
-}
+//   return wsRef.current;
+// }
 
 export const useConversations = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -197,34 +198,63 @@ export const useConversations = () => {
     }
   }, []);
 
-  // WebSocket message handler
+  // Handle WebSocket messages
   const handleWebSocketMessage = useCallback((event: MessageEvent) => {
     try {
-      const data: WebSocketMessage = JSON.parse(event.data);
+      const data = JSON.parse(event.data);
+      console.log("WebSocket message received:", data);
 
+      const ensureValidConversation = (conv: any): Conversation => ({
+        id: conv.id || conv.conversation_id || '',
+        platform: conv.platform || 'whatsapp',
+        customer_id: conv.customer_id || '',
+        customer_name: conv.customer_name || 'Unknown',
+        last_message: conv.last_message || '',
+        timestamp: conv.timestamp || conv.last_message_timestamp || new Date().toISOString(),
+        unread_count: conv.unread_count || 0,
+        is_ai_enabled: conv.is_ai_enabled ?? true,
+        assigned_agent_id: conv.assigned_agent_id || null,
+        priority: (conv.priority === 'high' || conv.priority === 'low') ? conv.priority : 'medium',
+        sentiment: (conv.sentiment === 'positive' || conv.sentiment === 'negative') ? conv.sentiment : 'neutral',
+        email: conv.email || '',
+        billingAddress: conv.billingAddress || '',
+        shippingAddress: conv.shippingAddress || '',
+        gstin: conv.gstin || '',
+        avatar_url: conv.avatar_url || ''
+      });
+
+      // Accept both WhatsApp and Instagram message types
       if (data.type === 'new_conversation' && data.conversation) {
         setConversations(prev => {
           const exists = prev.some(conv => conv.id === data.conversation.id);
           if (exists) return prev;
-          return [...prev, normalizeConversation(data.conversation)];
+          return [...prev, ensureValidConversation(data.conversation)];
         });
-      } else if (data.type === 'conversation_updated' && data.conversation) {
-        setConversations(prev =>
-          prev.map(conv =>
-            conv.id === data.conversation.id ? normalizeConversation(data.conversation) : conv
+      } 
+      else if (data.type === 'conversation_updated' && data.conversation) {
+        setConversations(prev => 
+          prev.map(conv => 
+            conv.id === data.conversation.id ? ensureValidConversation(data.conversation) : conv
           )
         );
-      } else if (['new_message', 'new_whatsapp_message'].includes(data.type) && data.message) {
+      }
+      // Accept Instagram messages as well
+      else if (
+        ['new_message', 'new_whatsapp_message', 'instagram_message', 'new_instagram_message'].includes(data.type)
+        && data.message
+      ) {
         const conversationId = data.message.conversation_id;
         const messageContent = data.message.content || '';
         const messageTimestamp = data.message.timestamp || new Date().toISOString();
 
         setConversations(prev => {
           const conversationExists = prev.some(conv => conv.id === conversationId);
+
           if (!conversationExists) {
             setTimeout(fetchConversations, 500);
             return prev;
           }
+
           return prev.map(conv => {
             if (conv.id === conversationId) {
               return {
@@ -237,27 +267,121 @@ export const useConversations = () => {
             return conv;
           });
         });
+      } else {
+        // Log any other message types for debugging
+        console.log("Unhandled WebSocket message type:", data.type, data);
       }
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('WebSocket message error:', error);
-      }
+      console.error('Error handling WebSocket message:', error);
     }
   }, [fetchConversations]);
 
   // Setup WebSockets
-  const whatsappId = typeof window !== 'undefined' ? localStorage.getItem('whatsapp_user_id') : null;
-  const instagramId = typeof window !== 'undefined' ? localStorage.getItem('instagram_user_id') : null;
+  useEffect(() => {
+    // Connect to WhatsApp WebSocket
+    // const connectWhatsAppWebSocket = () => {
+    //   const whatsappId = localStorage.getItem('whatsapp_user_id');
+    //   if (!whatsappId) {
+    //     console.log('No WhatsApp ID found, skipping WhatsApp WebSocket connection');
+    //     return;
+    //   }
 
-  const whatsappWsUrl = whatsappId
-    ? `${WS_WHATSAPP_ENDPOINT}/client_${Math.random().toString(36).substring(2, 15)}/${whatsappId}`
-    : null;
-  const instagramWsUrl = instagramId
-    ? `${WS_INSTAGRAM_ENDPOINT}/client_${Math.random().toString(36).substring(2, 15)}/${instagramId}`
-    : null;
+    //   try {
+    //     // Generate a client ID for this connection
+    //     const clientId = `client_${Math.random().toString(36).substring(2, 15)}`;
 
-  useWebSocket(whatsappWsUrl, handleWebSocketMessage, !!whatsappId);
-  useWebSocket(instagramWsUrl, handleWebSocketMessage, !!instagramId);
+    //     // Create WebSocket connection with proper URL structure
+    //     const wsUrl = `${WS_WHATSAPP_ENDPOINT}/${clientId}/${whatsappId}`;
+    //     console.log(`Connecting to WhatsApp WebSocket: ${wsUrl}`);
+
+    //     const ws = new WebSocket(wsUrl);
+
+    //     ws.onopen = () => {
+    //       console.log(`WhatsApp WebSocket connected for user ID: ${whatsappId}`);
+    //     };
+
+    //     ws.onmessage = handleWebSocketMessage;
+
+    //     ws.onerror = (error) => {
+    //       console.error('WhatsApp WebSocket error:', error);
+    //     };
+
+    //     ws.onclose = () => {
+    //       console.log('WhatsApp WebSocket closed');
+    //     };
+    //   } catch (error) {
+    //     console.error('Error establishing WhatsApp WebSocket:', error);
+    //   }
+    // };
+
+    // Connect to Instagram WebSocket
+    const connectInstagramWebSocket = async() => {
+      const sessionId = localStorage.getItem('sessionId');
+      if (!sessionId) {
+        console.log('No session ID found, skipping Instagram WebSocket connection');
+        return;
+      }
+      const token = async()=>{
+          const sessionId = localStorage.getItem("sessionId");
+          if (!sessionId) throw new Error("Session ID not found in localStorage");
+      
+          const res = await fetch("api/session-token",{
+            method: "POST",
+            headers: {
+              "content-type": "application/json"
+            },
+            body: JSON.stringify({sessionId})
+          })
+          const { token: sessionToken } = await res.json();
+          return sessionToken
+        }
+      const instagramId = localStorage.getItem('instagram_user_id');
+      if (!instagramId) {
+        console.log('No Instagram ID found, skipping Instagram WebSocket connection');
+        return;
+      }
+
+      try {
+        // Get or generate client ID
+        const clientId = generateAndStoreClientId();
+        
+        // Create WebSocket connection with proper URL structure
+        const wsUrl = `${WS_INSTAGRAM_ENDPOINT}/${clientId}`;
+        console.log(`Connecting to Instagram WebSocket: ${wsUrl}`);
+
+        const sessionToken = await token();
+        console.log("token is passed")
+        const ws = new WebSocket(wsUrl, [sessionToken]);
+
+        ws.onopen = () => {
+          console.log(`Instagram WebSocket connected for user ID: ${instagramId}`);
+          ws.send("hello from frontend");
+        };
+
+        ws.onmessage = (event) => {
+          console.log("message received:", event.data);
+          handleWebSocketMessage(event);
+        };
+
+        ws.onerror = (error) => {
+          console.error('Instagram WebSocket error:', error);
+        };
+
+        ws.onclose = () => {
+          console.log('Instagram WebSocket closed');
+        };
+      } catch (error) {
+        console.error('Error establishing Instagram WebSocket:', error);
+      }
+    };
+
+    // Initial fetch of conversations
+    fetchConversations();
+
+    // Connect to WebSockets if appropriate IDs are available
+    // connectWhatsAppWebSocket();
+    connectInstagramWebSocket();
+  }, [handleWebSocketMessage, fetchConversations]);
 
   // Initial fetch
   useEffect(() => {
@@ -272,4 +396,18 @@ const getWsProtocol = () => {
     return window.location.protocol === "https:" ? "wss" : "ws";
   }
   return "wss"; // default for SSR
+};
+
+const generateAndStoreClientId = (): string => {
+  // Check if client_id already exists in localStorage
+  let clientId = localStorage.getItem('client_id');
+  
+  // If no client_id exists, generate a new one and store it
+  if (!clientId) {
+    // Generate a unique client ID with timestamp and random string
+    clientId = `client_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    localStorage.setItem('client_id', clientId);
+  }
+  
+  return clientId;
 };
