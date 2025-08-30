@@ -1192,7 +1192,7 @@ useEffect(() => {
   fetchAIStatus();
   fetchMessages();
 
-  return () => { /* ...WebSocket cleanup... */ };
+  return () => {if (ws) ws.close();};
 }, [selectedConversationId]);
 
   // Decide on avatar source
