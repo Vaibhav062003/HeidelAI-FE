@@ -355,7 +355,6 @@ export const useConversations = () => {
 
         ws.onopen = () => {
           console.log(`Instagram WebSocket connected for user ID: ${instagramId}`);
-          ws.send("hello from frontend");
         };
 
         ws.onmessage = (event) => {
