@@ -72,6 +72,8 @@ const ConversationList = ({
         return false;
       }
 
+      // console.log("platform: ", conversation.platform)
+
       // Apply search
       const nameMatch = conversation.customer_name
         .toLowerCase()

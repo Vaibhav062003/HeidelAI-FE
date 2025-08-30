@@ -36,7 +36,7 @@ const RETRY_DELAY = 3000;
 function normalizeConversation(conv: any): Conversation {
   return {
     id: conv.id || conv.conversation_id || '',
-    platform: conv.platform || 'whatsapp',
+    platform: conv.platform,
     customer_id: conv.customer_id || '',
     customer_name: conv.customer_name || 'Unknown',
     last_message: conv.last_message || '',
@@ -139,6 +139,7 @@ export const useConversations = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // console.log("con::::", conversations)
   // Fetch conversations from both platforms
   const fetchConversations = useCallback(async () => {
     setLoading(true);
@@ -150,7 +151,7 @@ export const useConversations = () => {
         if (allres.status === "success" && Array.isArray(allres.data)) {
           allConversations = [
             ...allConversations,
-            ...allres.data.map((conv: any) => normalizeConversation({ ...conv, platform: 'whatsapp' }))
+            ...allres.data.map((conv: any) => normalizeConversation({ ...conv }))
           ];
         }
       }
@@ -197,6 +198,7 @@ export const useConversations = () => {
       setLoading(false);
     }
   }, []);
+
 
   // Handle WebSocket messages
   const handleWebSocketMessage = useCallback((event: MessageEvent) => {
