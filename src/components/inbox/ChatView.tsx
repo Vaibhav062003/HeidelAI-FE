@@ -1104,12 +1104,26 @@ useEffect(() => {
         
         if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
           console.log("ChatView: new_message event type ✅ && data conv_id: ", data.message.conversation_id);
-          setMessages(prev => [...prev, data.message]);
+  
+          // Check if this message already exists in the messages array to avoid duplicates
+          const messageExists = messages.some(msg => 
+            msg.id === data.message.id || 
+            (msg.content === data.message.content && 
+            msg.timestamp === data.message.timestamp && 
+            msg.sender_id === data.message.sender_id)
+          );
+          
+          // Only add the message if it's not already in the messages array
+          if (!messageExists) {
+            setMessages(prev => [...prev, data.message]);
+          }
         }
+
         else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
           setMessages(prev => 
             prev.filter(msg => msg.id !== data.message_id)
           );
+          
           console.log(`ChatView: Message with ID ${data.message_id} was deleted`);
         }
       };
