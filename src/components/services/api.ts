@@ -27,6 +27,15 @@ const handleApiError = (error: unknown, context: string): never => {
 export const conversationService = {
   //fetch all conversation from db 
 
+  async getConversation(conversationId: string): Promise<ApiResponse> {
+    try {
+      const response = await api.get(`/api/conversations/${conversationId}`);
+      return { status: "success", data: response.data };
+    } catch (error) {
+      handleApiError(error, "Fetching conversation");
+      return { status: "error", message: "Failed to fetch conversation" };
+    }
+  },
 
   async getAllConversations(): Promise<ApiResponse> {
     try{

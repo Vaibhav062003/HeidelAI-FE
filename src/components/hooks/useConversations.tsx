@@ -251,7 +251,7 @@ export const useConversations = () => {
           const conversationExists = prev.some(conv => conv.id === conversationId);
 
           if (!conversationExists) {
-            setTimeout(fetchConversations, 500);
+            fetchSingleConversation(conversationId);
             return prev;
           }
 
@@ -274,46 +274,26 @@ export const useConversations = () => {
     } catch (error) {
       console.error('Error handling WebSocket message:', error);
     }
-  }, [fetchConversations]);
+  }, []);
+
+  // Single conversation fetcher
+  const fetchSingleConversation = useCallback(async (conversationId: string) => {
+    try {
+      const response = await conversationService.getConversation(conversationId);
+      if (response.status === "success" && response.data) {
+        setConversations(prev => {
+          const exists = prev.some(conv => conv.id === conversationId);
+          if (exists) return prev;
+          return [...prev, normalizeConversation(response.data)];
+        });
+      }
+    } catch (error) {
+      console.error(`Error fetching conversation ${conversationId}:`, error);
+    }
+  }, []);
 
   // Setup WebSockets
   useEffect(() => {
-    // Connect to WhatsApp WebSocket
-    // const connectWhatsAppWebSocket = () => {
-    //   const whatsappId = localStorage.getItem('whatsapp_user_id');
-    //   if (!whatsappId) {
-    //     console.log('No WhatsApp ID found, skipping WhatsApp WebSocket connection');
-    //     return;
-    //   }
-
-    //   try {
-    //     // Generate a client ID for this connection
-    //     const clientId = `client_${Math.random().toString(36).substring(2, 15)}`;
-
-    //     // Create WebSocket connection with proper URL structure
-    //     const wsUrl = `${WS_WHATSAPP_ENDPOINT}/${clientId}/${whatsappId}`;
-    //     console.log(`Connecting to WhatsApp WebSocket: ${wsUrl}`);
-
-    //     const ws = new WebSocket(wsUrl);
-
-    //     ws.onopen = () => {
-    //       console.log(`WhatsApp WebSocket connected for user ID: ${whatsappId}`);
-    //     };
-
-    //     ws.onmessage = handleWebSocketMessage;
-
-    //     ws.onerror = (error) => {
-    //       console.error('WhatsApp WebSocket error:', error);
-    //     };
-
-    //     ws.onclose = () => {
-    //       console.log('WhatsApp WebSocket closed');
-    //     };
-    //   } catch (error) {
-    //     console.error('Error establishing WhatsApp WebSocket:', error);
-    //   }
-    // };
-
     // Connect to Instagram WebSocket
     const connectInstagramWebSocket = async() => {
       const sessionId = localStorage.getItem('sessionId');
@@ -377,7 +357,7 @@ export const useConversations = () => {
     // Connect to WebSockets if appropriate IDs are available
     // connectWhatsAppWebSocket();
     connectInstagramWebSocket();
-  }, [handleWebSocketMessage, fetchConversations]);
+  }, [handleWebSocketMessage]);
 
   return { conversations, loading, error };
 };
