@@ -1085,17 +1085,18 @@ useEffect(() => {
   const platform = selectedConversationId.split('_')[0];
   
   // Create a unique clientId for this chat view instance
-  const chatClientId = `chat-view-${selectedConversationId}-${Date.now()}`;
-  
+  const chatClientId = `chat-view-${Date.now()}`;
+  localStorage.setItem('chat_client_id', chatClientId); // Store it in localStorage if needed elsewhere
   let ws: WebSocket | null = null;
   
   if (platform === 'instagram') {
     token().then(sessionToken => {
       // Use the unique clientId here instead of reusing the one from localStorage
-      ws = new WebSocket(`${WS_BASE_URL}/ws2/instagram/${chatClientId}`, [sessionToken]);
+      const clientId = localStorage.getItem('chat_client_id') || chatClientId;
+      ws = new WebSocket(`${WS_BASE_URL}/ws2/instagram/${clientId}`, [sessionToken]);
 
       ws.onopen = () => {
-        console.log(`ChatView: Connected to Instagram WebSocket with ID ${chatClientId}`);
+        console.log(`ChatView: Connected to Instagram WebSocket with ID ${clientId}`);
       };
 
       ws.onmessage = (event) => {
