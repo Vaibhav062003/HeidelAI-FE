@@ -1120,7 +1120,9 @@ useEffect(() => {
   if (ws) {
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
+      console.log("chat view websocket received message: ", data)
       if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
+        console.log("new_message event type ✅ && data conv_id: ", data.message.conversation_id, "selected conv id: ", selectedConversationId)
         setMessages(prev => [...prev, data.message]);
       }
       else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
