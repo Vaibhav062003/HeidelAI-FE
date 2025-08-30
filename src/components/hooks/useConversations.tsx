@@ -379,11 +379,6 @@ export const useConversations = () => {
     connectInstagramWebSocket();
   }, [handleWebSocketMessage, fetchConversations]);
 
-  // Initial fetch
-  useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
-
   return { conversations, loading, error };
 };
 
