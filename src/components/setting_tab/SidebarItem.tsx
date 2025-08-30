@@ -484,12 +484,13 @@ const InstagramDialog = () => {
       
       // Revoke the token
       const user_id = localStorage.getItem('instagram_user_id');
+      const data = {
+        user_id: user_id
+      }
       if (user_id) {
         // Disconnect using the dedicated Instagram API
         await api.post('/api/instagram/disconnect', {
-          data: JSON.stringify({ 
-            user_id: user_id,
-          }),
+          data
         });
         
         // Clear the connection from local storage
