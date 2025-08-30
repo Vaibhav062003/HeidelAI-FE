@@ -1087,19 +1087,18 @@ useEffect(() => {
   let ws: WebSocket | null = null;
   
   if (platform === 'instagram') {
-    const instagramId = localStorage.getItem('instagram_user_id');
     const clientId = localStorage.getItem('client_id');
 
-    if (instagramId) {
-      // Get session token before establishing WebSocket connection
-      token().then(sessionToken => {
-        ws = new WebSocket(`${WS_BASE_URL}/ws2/instagram/${clientId}`, [sessionToken]);
-        console.log("Connected to Instagram WebSocket");
-      }).catch(error => {
-        console.error("Failed to get session token:", error);
-      });
+    // Get session token before establishing WebSocket connection
+    token().then(sessionToken => {
+      ws = new WebSocket(`${WS_BASE_URL}/ws2/instagram/${clientId}`, [sessionToken]);
+      console.log("Connected to Instagram WebSocket");
+    }).catch(error => {
+      console.error("Failed to get session token:", error);
+    });
+    
     } 
-  } else if (platform === 'whatsapp') {
+  if (platform === 'whatsapp') {
     const whatsappId = localStorage.getItem('whatsapp_user_id');
     const clientId = `client-${Date.now()}-wa`;
     

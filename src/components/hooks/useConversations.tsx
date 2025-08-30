@@ -335,11 +335,8 @@ export const useConversations = () => {
           const { token: sessionToken } = await res.json();
           return sessionToken
         }
-      const instagramId = localStorage.getItem('instagram_user_id');
-      if (!instagramId) {
-        console.log('No Instagram ID found, skipping Instagram WebSocket connection');
-        return;
-      }
+
+      
 
       try {
         // Get or generate client ID
@@ -354,7 +351,7 @@ export const useConversations = () => {
         const ws = new WebSocket(wsUrl, [sessionToken]);
 
         ws.onopen = () => {
-          console.log(`Instagram WebSocket connected for user ID: ${instagramId}`);
+          console.log(`Instagram WebSocket connected from useConvversations hook`);
         };
 
         ws.onmessage = (event) => {
