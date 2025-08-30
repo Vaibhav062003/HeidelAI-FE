@@ -31,6 +31,7 @@ export const conversationService = {
   async getAllConversations(): Promise<ApiResponse> {
     try{
       const response = await api.get("/api/conversations");
+      // console.log("[ConversationService] Fetched all conversations:", response.data);
       return { status: "success", data: response.data };
     }
     catch (error) {
