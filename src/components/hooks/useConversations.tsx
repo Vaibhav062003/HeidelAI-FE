@@ -237,7 +237,7 @@ export const useConversations = () => {
             conv.id === data.conversation.id ? ensureValidConversation(data.conversation) : conv
           )
         );
-      }
+      } 
       // Accept Instagram messages as well
       else if (
         ['new_message', 'new_whatsapp_message', 'instagram_message', 'new_instagram_message'].includes(data.type)

@@ -1080,19 +1080,24 @@ useEffect(() => {
     }
   };
 
-  // Set up WebSocket connection based on platform
-  const WS_BASE_URL = "wss://egenie-whatsapp.koyeb.app"
+  // WebSocket setup
+  const WS_BASE_URL = "wss://egenie-whatsapp.koyeb.app";
   const platform = selectedConversationId.split('_')[0];
- 
+  
+  // Create a unique clientId for this chat view instance
+  const chatClientId = `chat-view-${selectedConversationId}-${Date.now()}`;
+  
   let ws: WebSocket | null = null;
   
   if (platform === 'instagram') {
-    const clientId = localStorage.getItem('client_id');
-
-    // Get session token before establishing WebSocket connection
     token().then(sessionToken => {
-      ws = new WebSocket(`${WS_BASE_URL}/ws2/instagram/${clientId}`, [sessionToken]);
-      console.log("Connected to Instagram WebSocket");
+      // Use the unique clientId here instead of reusing the one from localStorage
+      ws = new WebSocket(`${WS_BASE_URL}/ws2/instagram/${chatClientId}`, [sessionToken]);
+
+      ws.onopen = () => {
+        console.log(`ChatView: Connected to Instagram WebSocket with ID ${chatClientId}`);
+      };
+
     }).catch(error => {
       console.error("Failed to get session token:", error);
     });
