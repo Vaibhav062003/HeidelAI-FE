@@ -1098,6 +1098,31 @@ useEffect(() => {
         console.log(`ChatView: Connected to Instagram WebSocket with ID ${chatClientId}`);
       };
 
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("ChatView: Instagram WebSocket received message: ", data);
+        
+        if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
+          console.log("ChatView: new_message event type ✅ && data conv_id: ", data.message.conversation_id);
+          setMessages(prev => [...prev, data.message]);
+        }
+        else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
+          setMessages(prev => 
+            prev.filter(msg => msg.id !== data.message_id)
+          );
+          console.log(`ChatView: Message with ID ${data.message_id} was deleted`);
+        }
+      };
+      
+      // Also add error and close handlers
+      ws.onerror = (error) => {
+        console.error("ChatView: WebSocket error: ", error);
+      };
+      
+      ws.onclose = (event) => {
+        console.log(`ChatView: WebSocket closed with code ${event.code}: ${event.reason}`);
+      };
+
     }).catch(error => {
       console.error("Failed to get session token:", error);
     });
@@ -1110,6 +1135,34 @@ useEffect(() => {
     if (whatsappId) {
       ws = new WebSocket(`${WS_BASE_URL}/ws2/whatsapp/${clientId}/${whatsappId}`);
       console.log("Connected to WhatsApp WebSocket");
+
+      ws.onopen = () => {
+        console.log(`ChatView: Connected to WhatsApp WebSocket with ID ${clientId}`);
+      };
+      
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("ChatView: WhatsApp WebSocket received message: ", data);
+        
+        if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
+          console.log("ChatView: new_message event type ✅ && data conv_id: ", data.message.conversation_id);
+          setMessages(prev => [...prev, data.message]);
+        }
+        else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
+          setMessages(prev => 
+            prev.filter(msg => msg.id !== data.message_id)
+          );
+          console.log(`ChatView: Message with ID ${data.message_id} was deleted`);
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.error("ChatView: WebSocket error: ", error);
+      };
+      
+      ws.onclose = (event) => {
+        console.log(`ChatView: WebSocket closed with code ${event.code}: ${event.reason}`);
+      };
     } 
   } 
   // else {
@@ -1117,22 +1170,7 @@ useEffect(() => {
   //   ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/client-${Date.now()}`);
   // }
   
-  if (ws) {
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log("chat view websocket received message: ", data)
-      if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
-        console.log("new_message event type ✅ && data conv_id: ", data.message.conversation_id, "selected conv id: ", selectedConversationId)
-        setMessages(prev => [...prev, data.message]);
-      }
-      else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
-        setMessages(prev => 
-          prev.filter(msg => msg.id !== data.message_id)
-        );
-        console.log(`Message with ID ${data.message_id} was deleted`);
-      }
-    };
-  }
+
   
   fetchConversation();
   setUnreadCount();
