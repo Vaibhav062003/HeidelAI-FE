@@ -68,6 +68,7 @@ import Image from "next/image";
 import CustomerInfo from './CustomerInfo';
 import LandingDashboard from "./LandingDashboard";
 import api from "@/lib/session_api";
+import { useTypingIndicator } from "../hooks/typingIndicator";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -627,7 +628,12 @@ const ChatView = ({
   const [audioBlob,setAudioBlob] = useState<Blob | null>(null);
   const [audioModalOpen,setIsAudioModalOpen]= useState(false);
   const [fileCaption, setFileCaption] = useState("");
-
+  const [typing, isTyping] = useState(false)
+  const [typingUsers, setTypingUsers] = useState<Map<string, {
+    agent_name: string;
+    timestamp: number;
+  }>>(new Map());
+  const wsRef = useRef<WebSocket | null>(null);
   const token = async()=>{
     const sessionId = localStorage.getItem("sessionId");
     if (!sessionId) throw new Error("Session ID not found in localStorage");
@@ -990,6 +996,8 @@ const ChatView = ({
     }
   };
 
+  let ws: WebSocket | null = null;
+
 useEffect(() => {
   if (!selectedConversationId) return () => {};
 
@@ -1079,7 +1087,8 @@ useEffect(() => {
       setLoading(false);
     }
   };
-
+  
+  
   // WebSocket setup
   const WS_BASE_URL = "wss://egenie-whatsapp.koyeb.app";
   const platform = selectedConversationId.split('_')[0];
@@ -1087,13 +1096,14 @@ useEffect(() => {
   // Create a unique clientId for this chat view instance
   const chatClientId = `chat-view-${Date.now()}`;
   localStorage.setItem('chat_client_id', chatClientId); // Store it in localStorage if needed elsewhere
-  let ws: WebSocket | null = null;
-  
+
   if (platform === 'instagram') {
     token().then(sessionToken => {
       // Use the unique clientId here instead of reusing the one from localStorage
       const clientId = localStorage.getItem('chat_client_id') || chatClientId;
-      ws = new WebSocket(`${WS_BASE_URL}/ws2/instagram/${clientId}`, [sessionToken]);
+      const ws = new WebSocket(`${WS_BASE_URL}/ws2/${platform}/${clientId}`, [sessionToken]);
+      wsRef.current = ws;
+
 
       ws.onopen = () => {
         console.log(`ChatView: Connected to Instagram WebSocket with ID ${clientId}`);
@@ -1102,7 +1112,29 @@ useEffect(() => {
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
         console.log("ChatView: Instagram WebSocket received message: ", data);
-        
+
+        // Handle typing indicators
+          if (data.type === 'typing_indicator') {
+            if (data.agent_id !== 'current-agent-id') { // Don't show own typing status
+              if (data.is_typing) {
+                setTypingUsers(prev => {
+                  const next = new Map(prev);
+                  next.set(data.agent_id, {
+                    agent_name: data.agent_name,
+                    timestamp: Date.now()
+                  });
+                  return next;
+                });
+              } else {
+                setTypingUsers(prev => {
+                  const next = new Map(prev);
+                  next.delete(data.agent_id);
+                  return next;
+                });
+              }
+            }
+          }
+
         if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
           console.log("ChatView: new_message event type ✅ && data conv_id: ", data.message.conversation_id);
   
@@ -1191,9 +1223,26 @@ useEffect(() => {
   setUnreadCount();
   fetchAIStatus();
   fetchMessages();
+    
 
   return () => {if (ws) ws.close();};
 }, [selectedConversationId]);
+
+  // Get this from your auth context
+
+   const sendFn = (payload:  Record<string, unknown>) => {
+      console.log("🚀 Trying to send:", payload, wsRef.current?.readyState)
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        const msg = JSON.stringify(payload);
+        wsRef.current.send(msg);
+        // console.log("📤 Sent to backend:", msg);
+      } else {
+        // console.warn("⚠️ WS not open:", wsRef.current?.readyState);
+      }
+    };
+
+
+const { handleTyping } = useTypingIndicator(sendFn);
 
   // Decide on avatar source
   let avatarSource = "";
@@ -1217,6 +1266,7 @@ useEffect(() => {
     ? (new Date().getTime() - new Date(lastCustomerMessage.timestamp).getTime()) > (24 * 60 * 60 * 1000)
     : true;
     
+
 
   return (
     <>
@@ -1641,6 +1691,7 @@ useEffect(() => {
             const botProductInfo = message.content ? extractBotProductInfo(message.content) : null;
             const addressData = message.content ? extractAddressData(message.content) : null;
             const agentProductInfo = message.content ? extractAgentProductInfo(message.content) : null;
+             
             // console.log("productInfo", productInfo);
             // console.log("botProductInfo", botProductInfo);
             
@@ -2053,9 +2104,14 @@ useEffect(() => {
                   </Button>
               </div>
               ): (
+               
                 <Input
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(e) =>{
+                     setMessage(e.target.value); 
+                     console.log("⌨️ User typing...");
+                     handleTyping()}
+                    }
                   placeholder={sharedProduct ? "Add a message about this product..." : "Type a message"}
                   onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
@@ -2067,9 +2123,28 @@ useEffect(() => {
                     }
                   }
                 }}
-              />
+              /> 
               )}
-  
+              {typingUsers.size > 0 && (
+                <div className="flex items-center gap-2 text-sm text-gray-500 p-2">
+                  <div className="flex gap-1">
+                    {Array.from(typingUsers.values()).map((user, index) => (
+                      <span key={index}>
+                        {user.agent_name}
+                        {index < typingUsers.size - 1 ? ',' : ''} 
+                      </span>
+                    ))}
+                  </div>
+                  <span>
+                    {typingUsers.size === 1 ? 'is' : 'are'} typing...
+                  </span>
+                  <div className="flex gap-1">
+                    <span className="animate-bounce">.</span>
+                    <span className="animate-bounce delay-100">.</span>
+                    <span className="animate-bounce delay-200">.</span>
+                  </div>
+                </div>
+              )}
             {showCannedResponses && (
               <div className="absolute bottom-14 left-0 w-full bg-white border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
                 {filteredResponses.map(response => (
