@@ -16,6 +16,7 @@ import { MultiStepLoader } from "@/components/ui/multi-step-loader";
 import { toast, Toaster } from "sonner"; // Import toast if you don't have it already
 import { useSignUp, useClerk } from "@clerk/nextjs";
 import { useOrganization } from "@clerk/nextjs";
+import { SignUpResource } from '@clerk/types';
 
 
 interface Step {
@@ -81,7 +82,16 @@ const OnboardingFlow: React.FC = () => {
   const [resendTimeout, setResendTimeout] = useState(0);
   const [resendIntervalId, setResendIntervalId] = useState<NodeJS.Timeout | null>(null);
   const [isVerifyingCode, setIsVerifyingCode] = useState(false);
-
+  const [userData, setUserData] = useState<{
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    account?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    companyDetails?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    team?: any;
+    completed?: boolean;
+    sessionId?: string; 
+  }>({});
 
   const loadingStates = [
     { text: "Creating your account" },
@@ -92,15 +102,7 @@ const OnboardingFlow: React.FC = () => {
     { text: "Redirecting to dashboard" }
   ];
 
-  const [userData, setUserData] = useState<{
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    account?: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    companyDetails?: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    team?: any;
-    completed?: boolean;
-  }>({});
+
 
 const generateStepData = (step: number) => {
   switch (step) {
@@ -518,6 +520,8 @@ useEffect(() => {
   };
 }, [resendIntervalId]);
 
+let sessionId: string | null;
+
 const handleNext = async () => {
   if (currentStep === 1) {
     if (!validateStep1()) {
@@ -564,7 +568,7 @@ const handleNext = async () => {
         if (error.message.includes("That email address is taken")) {
           setErrors(prev => ({ 
             ...prev, 
-            email: "That email address is taken. Please try another." 
+            email: "You already have an account with this email address." 
           }));
           
           // Scroll to the email field
@@ -617,10 +621,20 @@ const handleNext = async () => {
       const completeSignUp = await signUp.attemptEmailAddressVerification({
         code: verificationCode,
       });
-      
-      if (completeSignUp.status !== "complete") {
+
+      if (completeSignUp.status !== "complete" || !completeSignUp.createdSessionId) {
         throw new Error("Verification failed");
       }
+
+      const sessionId = completeSignUp.createdSessionId;
+      if (!sessionId) {
+        throw new Error("No session ID created during verification");
+      }
+
+      setUserData(prev => ({
+        ...prev,
+        sessionId: sessionId // Store the session ID
+      }));
       
       // Don't set the user as active here - we'll do it at the end
       // await setActive({ session: completeSignUp.createdSessionId });
@@ -685,67 +699,108 @@ const handleNext = async () => {
 
   const processApiCalls = async () => {
   try {
-    // Step 1: Since we've already created and verified the account, skip these steps
+    // *** STEP 1: First log the user in and create a session
     setCurrentLoadingStep(0);
-    await new Promise(resolve => setTimeout(resolve, 800));
     
-    // Step 2: Create organization
+
+    try {
+      if (!isSignUpLoaded) {
+        throw new Error("Authentication system not loaded");
+      }
+      
+      // // This creates a session and returns sessionId
+      // const verificationResult = await signUp.attemptEmailAddressVerification({
+      //   code: verificationCode,
+      // });
+      
+      // // Store the session ID
+      // sessionId = verificationResult.createdSessionId;
+      
+      // Set the user as active with the session ID
+      // if (sessionId) {
+      //   await setActive({ session: sessionId });
+      //   toast.success("Successfully logged in!");
+      // } else {
+      //   throw new Error("No session ID created during verification");
+      // }
+      
+      // Use the session ID stored in userData
+      const sessionId = userData.sessionId;
+      
+      if (!sessionId) {
+        throw new Error("No session ID created during verification");
+      }
+      
+      // Set the user as active with the session ID
+      await setActive({ session: sessionId });
+      // toast.success("Successfully logged in!");
+
+      await new Promise(resolve => setTimeout(resolve, 800));
+    } catch (loginError) {
+      console.error("Login error:", loginError);
+      toast.error("Error logging in. You may need to log in manually.");
+      throw loginError; // This is critical, so we need to abort
+    }
+
+    // *** STEP 2: Create organization
     setCurrentLoadingStep(1);
-    
+    let orgId;
+
     try {
       // Create an organization name
       const orgName = noCompany ? `${fullName}'s Workspace` : companyName;
-      const orgSlug = (noCompany ? fullName : companyName)
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '');
       
       // Create the organization (this will automatically be associated with the user)
       const org = await clerk.createOrganization({
         name: orgName,
-        
       });
-      
-      // Store the org ID for later use when we log in
-      const orgId = org?.id;
+
+      console.log("Created organisation: ", org);
+
+      // Store the org ID for later use
+      orgId = org?.id;
+
+      // Now that we have an active session, we can set the active organization
+      if (orgId) {
+        await clerk.setActive({ organization: orgId });
+        console.log("Set organization as active:", orgId);
+      }
       
     } catch (orgError) {
       console.error("Organization creation error:", orgError);
       toast.error("Error creating workspace. Please try again.");
       throw orgError;
-    }  
-      
-    // Step 3: Configure preferences
+    }
+
+
+    // *** STEP 3: Configure preferences
     setCurrentLoadingStep(2);
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    // ...existing preferences code...
-      
-    // Step 4: Send team invitations if there are team members
+
+
+    // *** STEP 4: Send team invitations if there are team members
     if (teamMembers.length > 0) {
       setCurrentLoadingStep(3);
       try {
         // Invite each team member to the organization
         for (const member of teamMembers) {
           try {
+            // Now clerk.organization should be defined
             if (!clerk.organization) {
               throw new Error("Organization not found");
             }
-            
-            // Use Clerk's invitation API
+
             await clerk.organization.inviteMember({
               emailAddress: member.email,
-              role: "basic_member", // or "admin" depending on your role structure
+              role: "org:member",
             });
-            
+
             console.log(`Invitation sent to ${member.email}`);
             
-            // Small delay between invites to prevent rate limiting
             await new Promise(resolve => setTimeout(resolve, 300));
           } catch (individualInviteError) {
             console.error(`Error inviting ${member.email}:`, individualInviteError);
-            // Continue with other invites even if one fails
           }
         }
         
@@ -760,26 +815,26 @@ const handleNext = async () => {
         // Non-critical error, continue with flow
       }
     }
-      
-    // Step 5: Log the user in
+
+    // *** STEP 5: Log the user in
     setCurrentLoadingStep(4);
     
     try {
-      if (!isSignUpLoaded) {
-        throw new Error("Authentication system not loaded");
-      }
-      // Now we'll set the user as active - this is essentially "logging them in"
-      const { createdSessionId } = await signUp.attemptEmailAddressVerification({
-        code: verificationCode, // Use the stored code from earlier
-      });
+      // if (!isSignUpLoaded) {
+      //   throw new Error("Authentication system not loaded");
+      // }
+      // // Now we'll set the user as active - this is essentially "logging them in"
+      // const { createdSessionId } = await signUp.attemptEmailAddressVerification({
+      //   code: verificationCode, // Use the stored code from earlier
+      // });
       
-      // Set the user active with the session ID
-      await setActive({ session: createdSessionId });
+      // // Set the user active with the session ID
+      // await setActive({ session: createdSessionId });
       
-      // If we have an org ID, set it as the active org
-      if (clerk.organization?.id) {
-        await clerk.setActive({ organization: clerk.organization.id });
-      }
+      // // If we have an org ID, set it as the active org
+      // if (clerk.organization?.id) {
+      //   await clerk.setActive({ organization: clerk.organization.id });
+      // }
       
       toast.success("Successfully logged in!");
       
@@ -788,8 +843,8 @@ const handleNext = async () => {
       toast.error("Error logging in. You may need to log in manually.");
       // Non-critical error, continue with flow
     }
-    
-    // Step 6: Finalize setup
+
+    // *** STEP 6: Finalize setup
     setCurrentLoadingStep(5);
     await new Promise(resolve => setTimeout(resolve, 800));
     
@@ -798,7 +853,7 @@ const handleNext = async () => {
     setSetupComplete(true);
     
     // Redirect to dashboard
-    // router.push('/dashboard');
+    router.push('/dashboard');
     
   } catch (error) {
     console.error("Error in API flow:", error);
