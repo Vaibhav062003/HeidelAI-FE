@@ -1,3 +1,4 @@
+'use client'
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from 'react';
 import { Conversation } from '../types/conversation';
@@ -19,7 +20,7 @@ interface WebSocketMessage {
 }
 
 // WebSocket base URLs
-const WS_BASE_URL = 'wss://egenie-whatsapp.koyeb.app';
+const WS_BASE_URL = 'wss://heidelai-backend2.koyeb.app';
 const WS_WHATSAPP_ENDPOINT = `${WS_BASE_URL}/ws2/whatsapp`;
 const WS_INSTAGRAM_ENDPOINT = `${WS_BASE_URL}/ws2/instagram`;
 
@@ -59,6 +60,7 @@ export const useConversations = () => {
           console.error("Error fetching Instagram conversations:", igError);
         }
       }
+      
       
       // Check for WhatsApp connection
       const whatsappId = localStorage.getItem('whatsapp_user_id');

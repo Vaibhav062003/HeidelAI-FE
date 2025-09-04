@@ -7,8 +7,8 @@ import { redirect } from 'next/navigation'
 const LandingDashboard = () => {
   const router = useRouter();
   return (
-    <div className="min-h-screen bg-gray-50 p-8 flex flex-col">
-      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-4     flex-grow">
+    <div className="w-full min-h-screen bg-gray-50 p-8 flex flex-col">
+      <div className="max-w-4xl mx-auto w-full max-h-[90vh] overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* All Conversations Section */}
         <Card className="flex flex-col">
           <CardHeader>

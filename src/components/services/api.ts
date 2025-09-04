@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { Conversation } from '../types/conversation';
 import { syncContactFromConversation } from '../utils/contactSync';
@@ -14,14 +15,18 @@ interface WhatsAppMessage {
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL
 });
+console.log("API baseURL is", process.env.NEXT_PUBLIC_API_URL);
 
 export const conversationService = {
-
-  getInstagramConversations: async (instagramId: string) => {
-    const response = await api.get(`https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations`);
-    console.log("Instagram conversations response", response);
+getInstagramConversations: async (instagramId: string) => {
+  try {
+    const response = await api.get(`/api/instagram/${instagramId}/conversations`);
     return response.data;
-  },
+  } catch (error) {
+    console.error("Error fetching conversations:", error);
+    throw error;
+  }
+},
 
   getWhatsAppConversations: async (whatsappId: string | null) => {
     // Only fetch if a valid whatsapp ID is provided

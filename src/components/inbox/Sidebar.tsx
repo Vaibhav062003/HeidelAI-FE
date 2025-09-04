@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import AddProduct from "@/components/inbox/AddProduct";
 import ProductPreview from "./PreviewProduct";
 import ProductsTab from "./Product";
+import { User, Mail, Users, TrendingUp, Clock, Phone, Fingerprint, IdCard } from "lucide-react";
+import { 
+  Accordion, 
+  AccordionContent, 
+  AccordionItem, 
+  AccordionTrigger 
+} from "@/components/ui/accordion";
 import { X } from "lucide-react";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
 import {
   Tooltip,
   TooltipContent,
@@ -26,20 +24,14 @@ import {
   Package,
   BarChart3,
   Plus,
-  TrendingUp,
-  Clock,
-  Users,
-  Send,
-  ExternalLink,
 } from "lucide-react";
 
 import ConversationSummary from "./ConversationSummary";
-
-
 import TemplateBuilders from "./TemplateBuilders";
 import { WhatsAppTemplateDialog } from "./WhatsAppTemplateDialog";
 import { WhatsAppTemplate } from "../types/template";
 import WhatsAppAnalyticsContent from "@/components/inbox/WhatsAppAnalyticsContent";
+import { Conversation } from '../types/conversation';
 
 interface Product {
   id: string;
@@ -47,114 +39,35 @@ interface Product {
   description: string;
   images: string;
   name: string;
-  on_sale: string; // Use boolean if the data contains `true/false` instead of `"True"/"False"`
+  on_sale: string;
   permalink: string;
   price: number;
   product_id: number;
-  purchasable: string; // Use boolean if the data contains `true/false`
-  regular_price: string; // Use `number` if parsed as numeric values
-  sale_price: string; // Use `number` if parsed as numeric values
+  purchasable: string;
+  regular_price: string;
+  sale_price: string;
   slug: string;
   stock_quantity: number;
 }
 
-type PlatformType = "pinecone" | "shopify" | "other";
-
 interface SidebarProps {
-  selectedConversationId?: string;
-  onConversationSelect?: (id: string) => void;
-  templates?: Array<{ id: string; title: string; category: string }>;
-  products?: Array<Product>; // Update this line to use the main Product interface
+  selectedConversationId: string;
   onShareProduct: (product: Product) => void;
-  analytics?: {
-    responseTime: string;
-    resolutionRate: string;
-    customerSatisfaction: string;
-  };
+  onConversationSelect: (id: string) => void;
 }
 
-
-
-const Sidebar = ({
+const Sidebar = ({ 
   selectedConversationId,
-  analytics = {
-    responseTime: "2m 30s",
-    resolutionRate: "94%",
-    customerSatisfaction: "4.8/5",
-  },
-  onShareProduct
-}: SidebarProps) => {
+  onShareProduct,
+}: SidebarProps) => { 
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
+  const [accordionValue, setAccordionValue] = useState("customer");
   const [searchTemplate, setSearchTemplate] = useState("");
-  const [searchProduct, setSearchProduct] = useState("");
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [showOptions, setShowOptions] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState<PlatformType | "">("");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-
-  // Fetch products from API
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("/Dataset.json");
-      if (!response.ok) {
-        throw new Error("Failed to fetch products");
-      }
-      const data = await response.json();
-      setProducts(data);
-      setFilteredProducts(data);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  // const handleAddProduct = () => {
-  //   fetchProducts(); // Re-fetch products after adding a new one
-  // };
-
-  const toggleForm = () => setShowForm((prev) => !prev);
-
-  // Filter products based on search term and category
-  useEffect(() => {
-    const filtered = products.filter((product: Product) => {
-      const matchesSearch =
-        product.name &&
-        product.name
-          .toLowerCase()
-          .includes(searchProduct.toLowerCase());
+  const [conversation, setConversation] = useState<Conversation | null>(null);
   
-      // Apply category filter
-      const matchesCategory =
-        selectedCategory === "All" || product.category === selectedCategory;
-  
-      return matchesSearch && matchesCategory;
-    });
-    setFilteredProducts(filtered);
-  }, [searchProduct, selectedCategory, products]);
-
-  const handleProductSelect = (product: Product) => {
-    setSelectedProduct(product);
-  };
-
-  const handleOptionSelect = (platform: PlatformType) => {
-    setSelectedPlatform(platform);
-    setShowForm(true);
-    setShowOptions(false);
-  };
-
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
 
@@ -163,8 +76,6 @@ const Sidebar = ({
       setLoading(true);
       try {
         const response = await fetch('/api/fetchTemplate');
-        console.log("Response:", response);
-  
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
@@ -174,123 +85,249 @@ const Sidebar = ({
         
         if (result && result.data){
           setTemplates(result.data);
-        }else {
-          console.error("Invalid response format:", result);
+        } else {
           setError("Invalid response format from server");
         }
-        
       } catch (err) {
-        console.error("Error in fetch:", err);
         setError(err instanceof Error ? err.message : "Fetch error");
       } finally {
         setLoading(false);
-      
       }
     };
     loadTemplates();
   }, []);
 
-  const filteredTemplates = (templates || []).filter((template) =>
-    template.name.toLowerCase().includes(searchTemplate.toLowerCase()) && template.status === 'APPROVED' //added condition
-);
+  // Fetch conversation data when selectedConversationId changes
+  useEffect(() => {
+    const fetchConversation = async () => {
+      if (!selectedConversationId) {
+        setConversation(null);
+        return;
+      }
 
+      try {
+        setLoading(true);
+        
+        // Check if this is an Instagram or WhatsApp conversation
+        const platform = selectedConversationId.split("_")[0];
+        let response;
+
+        if (platform === "instagram") {
+          const instagramId = localStorage.getItem("instagram_user_id");
+          
+          if (!instagramId) {
+            console.error("No Instagram ID found for fetching conversation");
+            throw new Error("No Instagram ID found");
+          }
+
+          response = await fetch(
+            `https://heidelai-backend2.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}`,
+            {
+              method: "GET",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        } else if (platform === "whatsapp") {
+          const whatsappId = localStorage.getItem("whatsapp_user_id");
+          
+          if (!whatsappId) {
+            console.error("No WhatsApp ID found for fetching conversation");
+            throw new Error("No WhatsApp ID found");
+          }
+
+          response = await fetch(
+            `https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}`,
+            {
+              method: "GET",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        }
+
+        if (response && response.ok) {
+          const data = await response.json();
+          setConversation(data);
+        } else {
+          throw new Error("Failed to fetch conversation");
+        }
+      } catch (err) {
+        console.error("Error fetching conversation:", err);
+        setConversation(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConversation();
+  }, [selectedConversationId]);
+
+  const filteredTemplates = (templates || []).filter((template) =>
+    template.name.toLowerCase().includes(searchTemplate.toLowerCase()) && template.status === 'APPROVED'
+  );
+
+  const analytics = {
+    responseTime: "2m 30s",
+    resolutionRate: "94%",
+    customerSatisfaction: "4.8/5",
+  };
   
   return (
-
-      
     <TooltipProvider>
       {selectedTemplate && selectedConversationId && (
         <WhatsAppTemplateDialog
-        template={selectedTemplate}
-        isOpen={!!selectedTemplate}
-        onClose={() => setSelectedTemplate(null)}
-        onSend={() => {
-          // Handle send logic
-          console.log("Sending template:", selectedTemplate);
-          setSelectedTemplate(null);
-    }}
-        selectedConversationId={selectedConversationId}
-        languageCode={selectedTemplate.language}
-      />
+          template={selectedTemplate}
+          isOpen={!!selectedTemplate}
+          onClose={() => setSelectedTemplate(null)}
+          onSend={() => {
+            console.log("Sending template:", selectedTemplate);
+            setSelectedTemplate(null);
+          }}
+          selectedConversationId={selectedConversationId}
+          languageCode={selectedTemplate.language}
+        />
       )}
-     
-     <Card className="h-full max-h-screen p-2 bg-white border-l">
-        <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="summary">
-              <FileText className="h-4 w-4 mr-2" />
-              Summary
-            </TabsTrigger>
-            <TabsTrigger value="templates">
-              <FileText className="h-4 w-4 mr-2" />
-              Templates
-            </TabsTrigger>
-            <TabsTrigger value="products">
-              <Package className="h-4 w-4 mr-2" />
-              Products
-            </TabsTrigger>
-            <TabsTrigger value="analytics">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Analytics
-            </TabsTrigger>
-          </TabsList>
 
-          <TabsContent value="summary" className=" h-full">
-          <div className="h-full">
-            <ConversationSummary selectedConversationId={selectedConversationId}/>
-          </div>
-          </TabsContent>
+      <Card className="h-full max-h-screen p-1 bg-white border-l">
+        <Accordion
+          type="single"
+          collapsible
+          value={accordionValue}
+          onValueChange={setAccordionValue}
+          className="w-full"
+        >
+          {/* Customer Info Section */}
+          <AccordionItem value="customer" className="border-b">
+            <AccordionTrigger className="p-4 hover:no-underline flex justify-between items-center mt-9">
+              <div className="flex items-center">
+                <User className="h-4 w-4 mr-2" />
+                <span>Customer Info</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="p-4">
+              <div className="space-y-3 text-sm text-gray-700">
+  {/* Name Display */}
+  <div className="flex items-start gap-3">
+    <User className="h-4 w-4 text-gray-500 mt-0.5" />
+    <div>
+      <p className="text-xs text-gray-400">Name</p>
+      <p className="font-medium">{conversation?.customer_name || "Not available"}</p>
+    </div>
+  </div>
 
-          <TabsContent value="templates" className="p-4 h-full">
-            {showTemplateBuilder ? (
-              <div className=" space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium">Create Template</h3>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowTemplateBuilder(false)}
-                  >
-                    Back
-                  </Button>
-                </div>
-                <TemplateBuilders 
-                isOpen={showTemplateBuilder} 
-                setIsOpen={setShowTemplateBuilder}
-                templates={templates}
-                setTemplates={setTemplates}
-                searchTemplate={searchTemplate}
-                setSearchTemplate={setSearchTemplate}
+  {/* Email Display */}
+  <div className="flex items-start gap-3">
+    <Mail className="h-4 w-4 text-gray-500 mt-0.5" />
+    <div>
+      <p className="text-xs text-gray-400">Email</p>
+      <p className="font-medium break-all">{conversation?.email || "Not available"}</p>
+    </div>
+  </div>
+
+  {/* Phone/User ID Display */}
+  <div className="flex items-start gap-3">
+  {conversation?.platform === "whatsapp" ? (
+    <Phone className="h-4 w-4 text-gray-500 mt-0.5" />
+  ) : (
+    <IdCard className="h-4 w-4 text-gray-500 mt-0.5" />
+  )}
+  <div>
+    <p className="text-xs text-gray-400">
+      {conversation?.platform === "whatsapp" ? "Phone" : "User ID"}
+    </p>
+    <p className="font-medium">
+      {selectedConversationId?.split('_')[1] || "Not available"}
+    </p>
+  </div>
+</div>
+
+</div>
+
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Summary Section */}
+          <AccordionItem value="summary" className="border-b">
+            <AccordionTrigger className="p-4 hover:no-underline flex justify-between items-center">
+              <div className="flex items-center">
+                <FileText className="h-4 w-4 mr-2" />
+                <span>Summary</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="p-0">
+              <div className="h-full">
+                <ConversationSummary
+                  selectedConversationId={selectedConversationId}
                 />
               </div>
-            ) : (
-              <>
-                <div className="flex items-center gap-2 mb-4">
-                  <Input
-                    placeholder="Search templates..."
-                    value={searchTemplate}
-                    onChange={(e) => setSearchTemplate(e.target.value)}
-                    className="flex-1"
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Templates Section */}
+          <AccordionItem value="templates" className="border-b">
+            <AccordionTrigger className="p-4 hover:no-underline flex justify-between items-center">
+              <div className="flex items-center">
+                <FileText className="h-4 w-4 mr-2" />
+                <span>Templates</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="p-4">
+              {showTemplateBuilder ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium">Create Template</h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowTemplateBuilder(false)}
+                    >
+                      Back
+                    </Button>
+                  </div>
+                  <TemplateBuilders
+                    isOpen={showTemplateBuilder}
+                    setIsOpen={setShowTemplateBuilder}
+                    templates={templates}
+                    setTemplates={setTemplates}
+                    searchTemplate={searchTemplate}
+                    setSearchTemplate={setSearchTemplate}
                   />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={() => setShowTemplateBuilder(true)}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Create new template</TooltipContent>
-                  </Tooltip>
                 </div>
-                <ScrollArea className="h-[calc(100vh-160px)]"> {/* Adjusted height */}
-                    {loading===true ? (
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Input
+                      placeholder="Search templates..."
+                      value={searchTemplate}
+                      onChange={(e) => setSearchTemplate(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          onClick={() => setShowTemplateBuilder(true)}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Create new template</TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <ScrollArea className="h-[calc(100vh-160px)]">
+                    {loading === true ? (
                       <div className="flex items-center justify-center h-40 w-full">
                         <div className="flex flex-col items-center gap-2">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                          <p className="text-sm text-gray-600">Loading templates...</p>
+                          <p className="text-sm text-gray-600">
+                            Loading templates...
+                          </p>
                         </div>
                       </div>
                     ) : error ? (
@@ -300,76 +337,105 @@ const Sidebar = ({
                           <p>{error}</p>
                         </div>
                       </div>
-                    ):(
+                    ) : (
                       filteredTemplates.map((template) => (
-                        <Card 
-                        onClick={() => setSelectedTemplate(template)}
-                        key={template.id}
-                        className="p-3 mb-3 cursor-pointer hover:bg-gray-50">
+                        <Card
+                          onClick={() => setSelectedTemplate(template)}
+                          key={template.id}
+                          className="p-3 mb-3 cursor-pointer hover:bg-gray-50"
+                        >
                           <div className="flex items-center justify-between">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="font-semibold max-w-[150px] block">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="font-semibold max-w-[150px] block">
                                   {template.name}
-                              </span>
-                            </TooltipTrigger>
-                            {/* <TooltipContent>{template.name}</TooltipContent> */}
-                          </Tooltip>
-                        </div>
+                                </span>
+                              </TooltipTrigger>
+                            </Tooltip>
+                          </div>
                         </Card>
-                      )
-                    ))}
-                </ScrollArea>
-              </>
-            )}
-          </TabsContent>
+                      ))
+                    )}
+                  </ScrollArea>
+                </>
+              )}
+            </AccordionContent>
+          </AccordionItem>
 
-          <TabsContent className="max-h-screen" value="products">
-          <ProductsTab 
-            selectedConversationId={selectedConversationId} 
-            onProductSelect={(product: Product) => setSelectedProduct(product)}
-            onShareProduct={onShareProduct}
-          />
-          </TabsContent>
-
-          <TabsContent value="analytics" className="p-0">
-            {selectedConversationId ? (
-              <WhatsAppAnalyticsContent selectedConversationId={selectedConversationId} />
-            ) : (
-              <div className="space-y-4 p-4">
-                <Card className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Clock className="h-5 w-5 text-blue-500" />
-                    <h3 className="font-medium">Avg Response Time</h3>
-                  </div>
-                  <p className="text-2xl font-bold">{analytics.responseTime}</p>
-                </Card>
-
-                <Card className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="h-5 w-5 text-green-500" />
-                    <h3 className="font-medium">Resolution Rate</h3>
-                  </div>
-                  <p className="text-2xl font-bold">{analytics.resolutionRate}</p>
-                </Card>
-
-                <Card className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Users className="h-5 w-5 text-purple-500" />
-                    <h3 className="font-medium">Customer Satisfaction</h3>
-                  </div>
-                  <p className="text-2xl font-bold">
-                    {analytics.customerSatisfaction}
-                  </p>
-                </Card>
-                
-                <div className="text-center text-sm text-gray-500 mt-8">
-                  <p>Select a conversation to view detailed WhatsApp analytics</p>
-                </div>
+          {/* Products Section */}
+          <AccordionItem value="products" className="border-b">
+            <AccordionTrigger className="p-4 hover:no-underline flex justify-between items-center">
+              <div className="flex items-center">
+                <Package className="h-4 w-4 mr-2" />
+                <span>Products</span>
               </div>
-            )}
-          </TabsContent>
-          </Tabs>
+            </AccordionTrigger>
+            <AccordionContent>
+              <ProductsTab
+                selectedConversationId={selectedConversationId}
+                onProductSelect={(product: Product) =>
+                  setSelectedProduct(product)
+                }
+                onShareProduct={onShareProduct}
+              />
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Analytics Section */}
+          <AccordionItem value="analytics" className="border-b">
+            <AccordionTrigger className="p-4 hover:no-underline flex justify-between items-center">
+              <div className="flex items-center">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                <span>Analytics</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="p-0">
+              {selectedConversationId ? (
+                <WhatsAppAnalyticsContent
+                  selectedConversationId={selectedConversationId}
+                />
+              ) : (
+                <div className="space-y-4 p-4">
+                  <Card className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="h-5 w-5 text-blue-500" />
+                      <h3 className="font-medium">Avg Response Time</h3>
+                    </div>
+                    <p className="text-2xl font-bold">
+                      {analytics.responseTime}
+                    </p>
+                  </Card>
+
+                  <Card className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp className="h-5 w-5 text-green-500" />
+                      <h3 className="font-medium">Resolution Rate</h3>
+                    </div>
+                    <p className="text-2xl font-bold">
+                      {analytics.resolutionRate}
+                    </p>
+                  </Card>
+
+                  <Card className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users className="h-5 w-5 text-purple-500" />
+                      <h3 className="font-medium">Customer Satisfaction</h3>
+                    </div>
+                    <p className="text-2xl font-bold">
+                      {analytics.customerSatisfaction}
+                    </p>
+                  </Card>
+
+                  <div className="text-center text-sm text-gray-500 mt-8">
+                    <p>
+                      Select a conversation to view detailed WhatsApp analytics
+                    </p>
+                  </div>
+                </div>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
         {selectedProduct && (
           <ProductPreview
@@ -377,7 +443,7 @@ const Sidebar = ({
             onClose={() => setSelectedProduct(null)}
             onShare={(product) => {
               onShareProduct(product);
-              setSelectedProduct(null)
+              setSelectedProduct(null);
             }}
             open={!!selectedProduct}
           />

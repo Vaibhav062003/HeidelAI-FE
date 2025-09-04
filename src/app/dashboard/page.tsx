@@ -18,8 +18,10 @@ import AutomationRules from "@/components/inbox/AutomationRules";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ContactsDashboard from "@/components/Contacts/ContactsDashboard";
 import SettingsSidebar from "@/components/setting_tab/SettingsSidebar";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Inbox } from "lucide-react";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/inbox_button";
+import { Inbox, X } from "lucide-react";
+import { Conversation } from "@/components/types/conversation";
 import {
   MessageSquare,
   BarChart2,
@@ -80,8 +82,7 @@ export default function DashboardPage() {
     | "analyticsbot"
   >("inbox");
   const [showTeamPanel, setShowTeamPanel] = useState(false);
-  const [selectedConversationId, setSelectedConversationId] =
-    useState<string>("");
+  const [selectedConversationId, setSelectedConversationId] =useState<string>("");
   const [isAIEnabled, setIsAIEnabled] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const [sharedProduct, setSharedProduct] = useState<Product | null>(null);
@@ -317,7 +318,9 @@ export default function DashboardPage() {
                   {/* Conversation List - Fixed width */}
                   <div
                     className={`transition-all duration-300 ease-in-out ${
-                      isConversationListVisible ? "w-[290px]" : "w-0 min-w-0"
+                      isConversationListVisible
+                        ? "w-[340px] max-h-screen bg-white flex flex-col"
+                        : "w-0 min-w-0"
                     } border-r border-gray-200 relative`}
                   >
                     <div
@@ -339,27 +342,34 @@ export default function DashboardPage() {
                     }`}
                   >
                     <div
-                      className={`fixed top-0 h-screen ${
-                        isConversationListVisible ? "left-[400px]" : "left-[2px]"
+                      className={`fixed top-4 h-screen ${
+                        isConversationListVisible
+                          ? "left-[440px]"
+                          : "left-[106px]"
                       } z-20 transition-all duration-300 ease-in-out`}
-                    ></div>
-                    <button
-                      onClick={() =>
-                        setIsConversationListVisible(!isConversationListVisible)
-                      }
-                        className="h-full w-4 flex items-center justify-center bg-gray-200 hover:bg-gray-300 transition-colors"
                     >
-                      {isConversationListVisible ? (
-                        <ChevronLeft className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="!h-8 !w-8 rounded bg-white-100 hover:bg-gray-300"
+                        onClick={() =>
+                          setIsConversationListVisible(
+                            !isConversationListVisible
+                          )
+                        }
+                      >
+                        {isConversationListVisible ? (
+                          <X className="h-4 w-4" />
+                        ) : (
+                          <Menu className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Chat View - Flexible width */}
                   <div className="flex-1 flex flex-col h-full min-w-[400px]">
-                    <div className="h-[800px]">
+                    <div className="h-[750px]">
                       <ChatView
                         selectedConversationId={selectedConversationId}
                         sharedProduct={sharedProduct}
@@ -376,22 +386,29 @@ export default function DashboardPage() {
                   >
                     {/* Collapse Button */}
                     <div
-                      className={`fixed top-0 h-screen ${
-                        isRightSidebarVisible ? "right-[360px]" : "right-[2px]"
+                      className={`fixed top-[1] h-screen ${
+                        isRightSidebarVisible ? "right-[310px] top-[11]" : "right-[10px] top-[20]"
                       } z-20 transition-all duration-300 ease-in-out`}
                     >
-                      <button
+                      <Button
                         onClick={() =>
                           setIsRightSidebarVisible(!isRightSidebarVisible)
                         }
-                        className="h-full w-4 flex items-center justify-center bg-gray-200 hover:bg-gray-300 transition-colors"
+                        variant="ghost"
+                        size="icon"
+                        className="!h-10 !w-10 rounded bg-white-100"
+                        aria-label={
+                          isRightSidebarVisible
+                            ? "Collapse sidebar"
+                            : "Expand sidebar"
+                        }
                       >
                         {isRightSidebarVisible ? (
-                          <ChevronRight className="h-4 w-4" />
+                          <X className="h-4 w-4" />
                         ) : (
-                          <ChevronLeft className="h-4 w-4" />
+                          <Menu className="h-4 w-4" />
                         )}
-                      </button>
+                      </Button>
                     </div>
 
                     {/* Sidebar Content */}
@@ -401,21 +418,21 @@ export default function DashboardPage() {
                       }`}
                     >
                       {selectedConversationId ? (
-                        <Sidebar
-                          selectedConversationId={selectedConversationId}
-                          onConversationSelect={setSelectedConversationId}
-                          onShareProduct={(product) =>
-                            setSharedProduct(product)
-                          }
-                        />
-                      ) : (
+                      <Sidebar
+                        selectedConversationId={selectedConversationId}
+                        onConversationSelect={setSelectedConversationId}
+                        onShareProduct={(product) =>
+                          setSharedProduct(product)
+                        }
+                      />
+                    ) : (
                         <RemainderSideBar />
                       )}
-                      {showTeamPanel && (
+                      {/* {showTeamPanel && (
                         <div className="mt-4">
                           <TeamCollaboration />
                         </div>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 </div>
