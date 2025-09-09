@@ -1090,12 +1090,20 @@ useEffect(() => {
   
   
   // WebSocket setup
-  const WS_BASE_URL = "wss://egenie-whatsapp.koyeb.app";
+  // const WS_BASE_URL = "wss://egenie-whatsapp.koyeb.app";
+  const WS_BASE_URL = `ws://127.0.0.1:8000`;
   const platform = selectedConversationId.split('_')[0];
   
   // Create a unique clientId for this chat view instance
-  const chatClientId = `chat-view-${Date.now()}`;
-  localStorage.setItem('chat_client_id', chatClientId); // Store it in localStorage if needed elsewhere
+  function getOrCreateChatClientId() {
+  let id = localStorage.getItem('chat_client_id');
+  if (!id) {
+    id = `chat-view-${Date.now()}`;
+    localStorage.setItem('chat_client_id', id);
+  }
+  return id;
+}
+  const chatClientId = getOrCreateChatClientId();
 
   if (platform === 'instagram') {
     token().then(sessionToken => {
@@ -1114,15 +1122,19 @@ useEffect(() => {
         console.log("ChatView: Instagram WebSocket received message: ", data);
 
         // Handle typing indicators
+          // ...existing code...
+          // ...existing code...
           if (data.type === 'typing_indicator') {
-            if (data.agent_id !== 'current-agent-id') { // Don't show own typing status
+            const myClientId = localStorage.getItem('chat_client_id');
+            // Only show typing if it's for this conversation
+            if (
+              data.agent_id !== myClientId &&
+              data.conversation_id === selectedConversationId
+            ) {
               if (data.is_typing) {
                 setTypingUsers(prev => {
                   const next = new Map(prev);
-                  next.set(data.agent_id, {
-                    agent_name: data.agent_name,
-                    timestamp: Date.now()
-                  });
+                  next.set(data.agent_id, { agent_name: data.user, timestamp: Date.now() });
                   return next;
                 });
               } else {
@@ -1134,6 +1146,11 @@ useEffect(() => {
               }
             }
           }
+// ...existing code...
+          // ...existing code...
+
+          
+
 
         if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
           console.log("ChatView: new_message event type ✅ && data conv_id: ", data.message.conversation_id);
@@ -1223,6 +1240,7 @@ useEffect(() => {
   setUnreadCount();
   fetchAIStatus();
   fetchMessages();
+  setTypingUsers(new Map());
     
 
   return () => {if (ws) ws.close();};
@@ -1242,7 +1260,7 @@ useEffect(() => {
     };
 
 
-const { handleTyping } = useTypingIndicator(sendFn);
+const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
 
   // Decide on avatar source
   let avatarSource = "";
@@ -1977,6 +1995,26 @@ const { handleTyping } = useTypingIndicator(sendFn);
         </ScrollArea>
 
         <div className={` p-4 border-t `}>
+          {typingUsers.size > 0 && (
+                <div className="flex items-center gap-2 text-sm text-gray-500 p-2">
+                  <div className="flex gap-1">
+                    {Array.from(typingUsers.values()).map((user, index) => (
+                      <span key={index}>
+                        {user.agent_name}
+                        {index < typingUsers.size - 1 ? ',' : ''} 
+                      </span>
+                    ))}
+                  </div>
+                  <span>
+                    {typingUsers.size === 1 ? 'is' : 'are'} typing...
+                  </span>
+                  <div className="flex gap-1">
+                    <span className="animate-bounce">.</span>
+                    <span className="animate-bounce delay-100">.</span>
+                    <span className="animate-bounce delay-200">.</span>
+                  </div>
+                </div>
+              )}
           {/* <div className="flex gap-2 mb-4 overflow-x-auto">
             {suggestedResponses.map((response, index) => (
               <Button
@@ -2125,26 +2163,7 @@ const { handleTyping } = useTypingIndicator(sendFn);
                 }}
               /> 
               )}
-              {typingUsers.size > 0 && (
-                <div className="flex items-center gap-2 text-sm text-gray-500 p-2">
-                  <div className="flex gap-1">
-                    {Array.from(typingUsers.values()).map((user, index) => (
-                      <span key={index}>
-                        {user.agent_name}
-                        {index < typingUsers.size - 1 ? ',' : ''} 
-                      </span>
-                    ))}
-                  </div>
-                  <span>
-                    {typingUsers.size === 1 ? 'is' : 'are'} typing...
-                  </span>
-                  <div className="flex gap-1">
-                    <span className="animate-bounce">.</span>
-                    <span className="animate-bounce delay-100">.</span>
-                    <span className="animate-bounce delay-200">.</span>
-                  </div>
-                </div>
-              )}
+        
             {showCannedResponses && (
               <div className="absolute bottom-14 left-0 w-full bg-white border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
                 {filteredResponses.map(response => (

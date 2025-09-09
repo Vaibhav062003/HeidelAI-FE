@@ -21,12 +21,12 @@ interface WebSocketMessage {
 }
 
 // const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss' : 'ws';
-// const WS_BASE_URL = `${WS_PROTOCOL}://127.0.0.1:8000`;
+const WS_BASE_URL = `ws://127.0.0.1:8000`;
 // const WS_WHATSAPP_ENDPOINT = `${WS_BASE_URL}/ws2/whatsapp`;
 // const WS_INSTAGRAM_ENDPOINT = `${WS_BASE_URL}/ws2/instagram`;
 
 // WebSocket base URLs
-const WS_BASE_URL = 'wss://egenie-whatsapp.koyeb.app';
+// const WS_BASE_URL = 'wss://egenie-whatsapp.koyeb.app';
 const WS_WHATSAPP_ENDPOINT = `${WS_BASE_URL}/ws2/whatsapp`;
 const WS_INSTAGRAM_ENDPOINT = `${WS_BASE_URL}/ws2/instagram`;
 
@@ -269,6 +269,8 @@ export const useConversations = () => {
             return conv;
           });
         });
+      } else if (data.type === 'typing_indicator') {
+        console.log("Typing indicator received:", data);
       } else {
         // Log any other message types for debugging
         console.log("Unhandled WebSocket message type:", data.type, data);
