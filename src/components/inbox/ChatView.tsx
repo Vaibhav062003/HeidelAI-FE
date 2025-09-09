@@ -1304,6 +1304,10 @@ const ChatView = ({
 
   );
 
+    const [mode, setMode] = useState<"reply" | "private">("reply");
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const [showCustomerInfo, setShowCustomerInfo] = useState(false);
 
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
@@ -1311,6 +1315,14 @@ const ChatView = ({
   const [ShowInfo, setShowInfo] = useState(false);
 
   const [audioURL, setAudioURL] = useState<string | null>(null);
+  const [isResolved, setIsResolved] = useState(false);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+
+  const [customerTimers, setCustomerTimers] = useState<Record<string, number>>(
+
+    {}
+
+  );
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
