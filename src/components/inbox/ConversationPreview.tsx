@@ -41,55 +41,65 @@ const ConversationPreview = ({
 
   return (
     <Card
-      className={`p-4 w-full rounded-none cursor-pointer transition-colors ${
+      className={`p-2 w-full rounded-none cursor-pointer transition-colors ${
         isSelected ? "bg-gray-100" : "hover:bg-gray-50"
       }`}
       onClick={onClick}
     >
-      <div className="flex items-start gap-4">
-        <Avatar>
-        {channelType === "whatsapp" && (
-              <img src="/features/whatsapp.png" alt="" />
-            )}
-            {channelType === "telegram" && (
-              <img src="/features/telegram.png" alt="" />
-            )}
-            {channelType === "instagram" && (
-              <img src="/features/instagram.png" alt="" />
-            )}
+      <div className="flex items-start gap-2.5">
+        <Avatar className="relative top-[-3px] left-1">
+          {channelType === "whatsapp" && (
+            <img src="/features/whatsapp.png" alt="" />
+          )}
+          {channelType === "telegram" && (
+            <img src="/features/telegram.png" alt="" />
+          )}
+          {channelType === "instagram" && (
+            <img src="/features/instagram.png" alt="" />
+          )}
         </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-black truncate">{customerName}</span>
-              {/* {isAiEnabled ? (
-                <Bot className="h-4 w-4 text-blue-500" />
-              ) : assignedAgentId ? (
-                <User2 className="h-4 w-4 text-green-500" />
-              ) : null} */}
+              <span className="font-[Inter] font-semibold text-black text-sm truncate mt-[0.5px] ml-[5px]">
+                {customerName}
+              </span>
+
+              {/* Conditional icon block */}
             </div>
-            <span className="text-xs text-gray-500">{getRelativeTime(timestamp)}</span>
+
+            <span className="text-xs text-gray-500">
+              {getRelativeTime(timestamp)}
+            </span>
           </div>
-          <p className="text-sm text-gray-600 truncate">{lastMessage}</p>
-          <div className="flex items-center gap-2 mt-2">
-            {priority && priority === "low" && (
-              <Badge variant="outline" className="bg-green-100 text-green-600">
+          <p className="text-sm text-gray-600 truncate max-w-[200px] mt-1 ml-[5px]">
+            {lastMessage}
+          </p>
+          <div className="flex items-center gap-2 mt-1">
+            {priority === "low" && (
+              <Badge
+                variant="outline"
+                className="ml-52 bg-green-100 text-green-600 text-xs px-1 py-0 rounded-sm h-auto leading-tight min-h-0"
+              >
                 Low
               </Badge>
             )}
-            {priority && priority === "medium" && (
-              <Badge variant="outline" className="bg-yellow-100 text-yellow-600">
+            {priority === "medium" && (
+              <Badge
+                variant="outline"
+                className="ml-52 -mt-1 bg-yellow-100 text-yellow-600 text-xs px-2 py-0 rounded-sm h-auto leading-tight min-h-0"
+              >
                 Medium
               </Badge>
             )}
-            {priority && priority === "high" && (
-              <Badge variant="outline" className="bg-red-100 text-red-600">
+            {priority === "high" && (
+              <Badge
+                variant="outline"
+                className="ml-52 bg-red-100 text-red-600 text-xs px-1 py-0 rounded-sm h-auto leading-tight min-h-0"
+              >
                 High
               </Badge>
             )}
-            {/* {unreadCount > 0 && (
-              <Badge className="rounded-full" variant="destructive">{unreadCount}</Badge>
-            )} */}
           </div>
         </div>
       </div>
