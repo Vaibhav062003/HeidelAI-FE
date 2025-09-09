@@ -300,22 +300,29 @@ export default function DashboardPage() {
                     }`}
                   >
                     <div
-                      className={`fixed top-0 h-screen ${
-                        isConversationListVisible ? "left-[400px]" : "left-[2px]"
+                      className={`fixed top-4 h-screen ${
+                        isConversationListVisible
+                          ? "left-[440px]"
+                          : "left-[106px]"
                       } z-20 transition-all duration-300 ease-in-out`}
-                    ></div>
-                    <button
-                      onClick={() =>
-                        setIsConversationListVisible(!isConversationListVisible)
-                      }
-                        className="h-full w-4 flex items-center justify-center bg-gray-200 hover:bg-gray-300 transition-colors"
                     >
-                      {isConversationListVisible ? (
-                        <ChevronLeft className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="!h-8 !w-8 rounded bg-white-100 hover:bg-gray-300"
+                        onClick={() =>
+                          setIsConversationListVisible(
+                            !isConversationListVisible
+                          )
+                        }
+                      >
+                        {isConversationListVisible ? (
+                          <X className="h-4 w-4" />
+                        ) : (
+                          <Menu className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Chat View - Flexible width */}
