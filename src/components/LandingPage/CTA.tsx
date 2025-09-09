@@ -2,8 +2,10 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { ChromeGrid } from '@/components/LandingPage/ui/chrome-grid';
 import { ScheduleDemo } from '@/components/LandingPage/ui/schedule-demo';
+import { useRouter } from 'next/navigation';
 
 const CTA = () => {
+  const router = useRouter();
   return (
     <section data-section="cta" className="relative h-[80vh] w-full overflow-hidden">
       {/* 3D Chrome Grid Background */}
@@ -31,7 +33,7 @@ const CTA = () => {
           
           {/* Re-enable pointer events for buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pointer-events-auto">
-            <button className="inline-flex items-center px-6 py-3 bg-white text-gray-900 text-sm font-medium rounded-xl hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg">
+            <button onClick={() => {router.push('/onboarding')}} className="inline-flex items-center px-6 py-3 bg-white text-gray-900 text-sm font-medium rounded-xl hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg">
               Start Free Trial
               <ArrowRight className="w-4 h-4 ml-2" />
             </button>

@@ -105,8 +105,16 @@ const WhatsAppAnalyticsContent = ({ selectedConversationId }: { selectedConversa
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
   
+    
+
   useEffect(() => {
     const fetchAnalytics = async () => {
+    const tokenRes = await fetch("/api/session-token");
+    const tokenData = await tokenRes.json();
+    if (!tokenRes.ok || !tokenData.token) {
+      throw new Error("Failed to get session token");
+    }
+    const sessionToken = tokenData.token;
       if (!selectedConversationId) return;
       
       const whatsappId = localStorage.getItem('whatsapp_user_id');
@@ -116,7 +124,11 @@ const WhatsAppAnalyticsContent = ({ selectedConversationId }: { selectedConversa
       setError(null);
       
       try {
-        const response = await fetch(`https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/analytics/conversations`);
+        const response = await fetch(`https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/analytics/conversations`, {
+          headers:{
+            Authorization: `Bearer ${sessionToken}`,
+          }
+        });
         if (!response.ok) throw new Error('Failed to fetch analytics data');
         
         const rawData: WhatsAppAnalytics = await response.json();

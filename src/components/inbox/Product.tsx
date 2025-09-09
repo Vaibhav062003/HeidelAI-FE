@@ -19,6 +19,7 @@ import {
 import { ExternalLink, Send, Plus, Search, Eye, Share2, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
+import api from "@/lib/session_api";
 
 type PlatformType = "pinecone" | "shopify" | "other" | undefined;
 
@@ -112,13 +113,11 @@ const ProductsTab = ({
     setLoading(true);
     try {
       // console.log("id:",conversationId);
-      const response = await fetch(`https://egenie-whatsapp.koyeb.app/product_recommendations/${conversationId}`, {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) throw new Error("Failed to fetch products");
-      
-      const data = await response.json();
+      const response = await api.post(`/api/ai/product-recommendations/${conversationId}`);
+
+      if (response.status !== 200) throw new Error("Failed to fetch products");
+
+      const data = await response.data();
 
       if (data.status === "error") {
         setError('Failed to fetch products');

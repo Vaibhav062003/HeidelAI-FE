@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Toaster, toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Session } from '@supabase/supabase-js';
 interface OrgDataItem {
   public_user_data?: {
     identifier?: string;
@@ -16,14 +17,18 @@ interface OrgDataItem {
   };
 }
 
+// ...existing code...
 export default function LoginPage() {
   const { isLoaded, signIn, setActive } = useSignIn();
   const { isSignedIn, user } = useUser();
   const router = useRouter();
 
+  // Add a ref to track if just signed in
+  const justSignedIn = React.useRef(false);
+
   // Redirect if already signed in
   React.useEffect(() => {
-    if (isLoaded && isSignedIn) {
+    if (isLoaded && isSignedIn && !justSignedIn.current) {
       toast.success("Already signed in! Redirecting...");
       router.push("/dashboard");
     }
@@ -45,8 +50,15 @@ export default function LoginPage() {
         password,
       });
 
+      // ...existing code...
       if (signInAttempt.status === "complete") {
         await setActive({ session: signInAttempt.createdSessionId });
+        if (signInAttempt.createdSessionId) {
+          localStorage.setItem("sessionId", signInAttempt.createdSessionId);
+        }
+        // Mark as just signed in to avoid double toast/redirect
+        justSignedIn.current = true;
+
         // Fetch organization data after session is active
         const res = await fetch("/api/getorgdata");
         const data = await res.json();
@@ -61,11 +73,13 @@ export default function LoginPage() {
           toast.success("Signed in! Redirecting...");
           router.push("/dashboard");
         } else {
-          toast.info("No organization found for this account.");
+          toast.info("No organization found for this account. Redirecting to onboarding...");
+          router.push("/onboarding");
         }
       } else {
         toast.error("Sign in not complete. Further steps required.");
       }
+
     } catch (err) {
       let message = "Invalid email or password.";
       if (err && typeof err === "object" && "errors" in err && Array.isArray(err.errors)) {
@@ -76,8 +90,6 @@ export default function LoginPage() {
       setIsLoggingIn(false);
     }
   };
-
-
 
   return (
     <section className="h-screen  bg-black text-white px-6 flex items-center justify-center">
