@@ -1122,8 +1122,7 @@ useEffect(() => {
         console.log("ChatView: Instagram WebSocket received message: ", data);
 
         // Handle typing indicators
-          // ...existing code...
-          // ...existing code...
+         
           if (data.type === 'typing_indicator') {
             const myClientId = localStorage.getItem('chat_client_id');
             // Only show typing if it's for this conversation
@@ -1146,10 +1145,6 @@ useEffect(() => {
               }
             }
           }
-// ...existing code...
-          // ...existing code...
-
-          
 
 
         if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
