@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/components/firebase";
-import React, { useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import TopNavigation from "@/components/inbox/TopNavigation";
 import ConversationList from "@/components/inbox/ConversationList";
 import ChatView from "@/components/inbox/ChatView";
@@ -91,6 +90,103 @@ export default function DashboardPage() {
   const [isConversationListVisible, setIsConversationListVisible] =
     useState(true);
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
+  const mainContentRef = useRef<HTMLDivElement | null>(null);
+  const userToggledRef = useRef(false);
+  const lastAutoChangeRef = useRef(0);
+  const lastCollapsedRef = useRef<"left" | "right" | null>(null);
+  const lastCollapsedAtRef = useRef(0);
+
+  const setUserToggled = () => {
+    userToggledRef.current = true;
+    setTimeout(() => (userToggledRef.current = false), 1000);
+  };
+
+  const handleToggleLeft = (visible: boolean) => {
+    setUserToggled();
+    setIsConversationListVisible(visible);
+  };
+
+  const handleToggleRight = (visible: boolean) => {
+    setUserToggled();
+    setIsRightSidebarVisible(visible);
+  };
+
+  // Auto-manage sidebars to prevent overlap at extreme zoom levels
+  useEffect(() => {
+    const el = mainContentRef.current;
+    if (!el) return;
+
+    const MIN_CENTER = 560; // min chat width
+    const MIN_LEFT = 240;   // min left width when visible
+    const MIN_RIGHT = 260;  // min right width when visible
+    const MARGINS = 40;     // safety spacing
+    const COOLDOWN_MS = 300;
+
+    const handle = () => {
+      if (!el) return;
+      const width = el.clientWidth;
+      if (width <= 0) return;
+
+      const now = Date.now();
+      if (userToggledRef.current || now - lastAutoChangeRef.current < COOLDOWN_MS) return;
+
+      // Hysteresis thresholds
+      const collapseRightThreshold = MIN_CENTER + (isConversationListVisible ? MIN_LEFT : 0) + MIN_RIGHT + MARGINS + 20;
+      const expandRightThreshold = MIN_CENTER + (isConversationListVisible ? MIN_LEFT : 0) + MIN_RIGHT + MARGINS + 160;
+
+      const collapseLeftThreshold = MIN_CENTER + MIN_LEFT + MARGINS + 20;
+      const expandLeftThreshold = MIN_CENTER + MIN_LEFT + MARGINS + 160;
+
+      // Collapse order: right then left
+      if (isRightSidebarVisible && width < collapseRightThreshold) {
+        setIsRightSidebarVisible(false);
+        lastAutoChangeRef.current = now;
+        lastCollapsedRef.current = "right";
+        lastCollapsedAtRef.current = now;
+        return;
+      }
+      if (isConversationListVisible) {
+        const needWithLeft = MIN_CENTER + MARGINS + (isRightSidebarVisible ? MIN_RIGHT : 0) + MIN_LEFT;
+        if (width < needWithLeft) {
+          setIsConversationListVisible(false);
+          lastAutoChangeRef.current = now;
+          lastCollapsedRef.current = "left";
+          lastCollapsedAtRef.current = now;
+          return;
+        }
+      }
+
+      // Expand order: left then right
+      if (
+        !isConversationListVisible &&
+        width > expandLeftThreshold &&
+        !(lastCollapsedRef.current === "left" && now - lastCollapsedAtRef.current < 1200)
+      ) {
+        setIsConversationListVisible(true);
+        lastAutoChangeRef.current = now;
+        lastCollapsedRef.current = null;
+        return;
+      }
+      if (
+        !isRightSidebarVisible &&
+        width > expandRightThreshold &&
+        !(lastCollapsedRef.current === "right" && now - lastCollapsedAtRef.current < 1200)
+      ) {
+        setIsRightSidebarVisible(true);
+        lastAutoChangeRef.current = now;
+        lastCollapsedRef.current = null;
+      }
+    };
+
+    const ro = new ResizeObserver(() => handle());
+    ro.observe(el);
+    window.addEventListener("resize", handle);
+    handle();
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", handle);
+    };
+  }, [isConversationListVisible, isRightSidebarVisible]);
 
   const handleLogout = async () => {
     try {
@@ -152,10 +248,22 @@ export default function DashboardPage() {
             <TabsList className="h-full flex flex-col items-start justify-between pt-6 bg-white/90 backdrop-blur-sm border-r">
               {/* Top section: Logo and Profile */}
               <div className="w-full">
-                <div className="w-full flex justify-center items-center mb-6">
+                <div className="w-full flex items-center justify-center gap-2 mb-6">
                   <Link href="/">
                     <Image src="/logo.png" alt="logo" width={30} height={30} />
                   </Link>
+                  {/* Show menu button when conversation list is hidden */}
+                  {!isConversationListVisible && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="!h-8 !w-8 rounded bg-white hover:bg-gray-100 shadow"
+                      onClick={() => setIsConversationListVisible(true)}
+                      aria-label="Open conversation list"
+                    >
+                      <Menu className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
 
                 {/* Navigation Tabs */}
@@ -314,12 +422,12 @@ export default function DashboardPage() {
                 value="inbox"
                 className="flex-1 h-full w-full overflow-hidden m-0"
               >
-                <div className="flex w-full">
+                <div className="flex w-full h-[calc(100vh-0px)]">
                   {/* Conversation List - Fixed width */}
                   <div
                     className={`transition-all duration-300 ease-in-out ${
                       isConversationListVisible
-                        ? "w-[340px] max-h-screen bg-white flex flex-col"
+                        ? "bg-white flex flex-col w-[min(22vw,340px)] min-w-[240px] max-w-[420px] max-h-screen pr-2"
                         : "w-0 min-w-0"
                     } border-r border-gray-200 relative`}
                   >
@@ -333,83 +441,59 @@ export default function DashboardPage() {
                         onConversationSelect={setSelectedConversationId}
                       />
                     </div>
+                    {/* Left collapse (X) only when list is visible */}
+                    {isConversationListVisible && (
+                      <div className="absolute top-5 -right-3 z-20">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="!h-8 !w-8 rounded bg-white hover:bg-gray-100 shadow"
+                          onClick={() => handleToggleLeft(false)}
+                          aria-label="Collapse conversation list"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Collapse Button - Positioned to always be visible */}
-                  <div
-                    className={`relative transition-all duration-300 ease-in-out ${
-                      isConversationListVisible ? "w-[2px]" : "w-0 min-w-0"
-                    }`}
-                  >
-                    <div
-                      className={`fixed top-4 h-screen ${
-                        isConversationListVisible
-                          ? "left-[440px]"
-                          : "left-[106px]"
-                      } z-20 transition-all duration-300 ease-in-out`}
-                    >
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="!h-8 !w-8 rounded bg-white-100 hover:bg-gray-300"
-                        onClick={() =>
-                          setIsConversationListVisible(
-                            !isConversationListVisible
-                          )
-                        }
-                      >
-                        {isConversationListVisible ? (
-                          <X className="h-4 w-4" />
-                        ) : (
-                          <Menu className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
 
                   {/* Chat View - Flexible width */}
-                  <div className="flex-1 flex flex-col h-full min-w-[400px]">
-                    <div className="h-[750px]">
+                  <div ref={mainContentRef} className="flex-1 flex flex-col min-w-[min(50vw,560px)] h-full">
+                    <div className="h-[calc(100vh-0px)]">
                       <ChatView
                         selectedConversationId={selectedConversationId}
                         sharedProduct={sharedProduct}
                         onClearSharedProduct={() => setSharedProduct(null)}
+                        isRightSidebarVisible={isRightSidebarVisible}
+                        onOpenRightSidebar={() => setIsRightSidebarVisible(true)}
                       />
                     </div>
                   </div>
 
-                  {/* Right Sidebar - Collapsible */}
+                  {/* Right Sidebar - Collapsible */
+                  }
                   <div
                     className={`relative transition-all duration-300 ease-in-out ${
-                      isRightSidebarVisible ? "w-[360px]" : "w-0 min-w-0"
+                      isRightSidebarVisible
+                        ? "w-[min(24vw,360px)] min-w-[260px] max-w-[420px]"
+                        : "w-0 min-w-0"
                     }`}
                   >
-                    {/* Collapse Button */}
-                    <div
-                      className={`fixed top-[1] h-screen ${
-                        isRightSidebarVisible ? "right-[310px] top-[11]" : "right-[10px] top-[20]"
-                      } z-20 transition-all duration-300 ease-in-out`}
-                    >
-                      <Button
-                        onClick={() =>
-                          setIsRightSidebarVisible(!isRightSidebarVisible)
-                        }
-                        variant="ghost"
-                        size="icon"
-                        className="!h-10 !w-10 rounded bg-white-100"
-                        aria-label={
-                          isRightSidebarVisible
-                            ? "Collapse sidebar"
-                            : "Expand sidebar"
-                        }
-                      >
-                        {isRightSidebarVisible ? (
+                    {/* Right collapse (X) only when sidebar is visible */}
+                    {isRightSidebarVisible && (
+                      <div className="absolute top-5 -left-3 z-20">
+                        <Button
+                          onClick={() => handleToggleRight(false)}
+                          variant="ghost"
+                          size="icon"
+                          className="!h-8 !w-8 rounded bg-white hover:bg-gray-100 shadow"
+                          aria-label="Collapse sidebar"
+                        >
                           <X className="h-4 w-4" />
-                        ) : (
-                          <Menu className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+                        </Button>
+                      </div>
+                    )}
 
                     {/* Sidebar Content */}
                     <div

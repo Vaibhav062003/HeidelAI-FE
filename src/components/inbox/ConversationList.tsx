@@ -44,6 +44,13 @@ const ConversationList = ({
   selectedConversationId,
   onConversationSelect
 }: ConversationListProps) => {
+  // Client-side only state to prevent hydration issues
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const { conversations, loading, error } = useConversations();
   const [activeTab, setActiveTab] = useState<TabValue>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -153,6 +160,22 @@ const ConversationList = ({
     }
   }, [groupedConversations]);
 
+  // Early skeleton render after all hooks are declared to preserve hook order
+  if (!isClient) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="p-4 border-b">
+          <div className="h-10 bg-gray-200 rounded animate-pulse" />
+        </div>
+        <div className="flex-1 p-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <ConversationItemSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <>
@@ -183,7 +206,7 @@ const ConversationList = ({
           `}
         </style>
         <div className="w-[340px] max-h-screen bg-white border-r border-gray-200 flex flex-col">
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 pr-10 border-b border-gray-200">
             <div className="relative" style={{ width: "270px" }}>
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
               <Input
@@ -221,7 +244,7 @@ const ConversationList = ({
   if (error) {
     return (
       <div className="w-[340px] h-full bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 pr-10 border-b border-gray-200">
           <div className="relative" style={{ width: "270px" }}>
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             <Input
@@ -282,7 +305,7 @@ const ConversationList = ({
       </style>
 
       <div className="w-[340px] max-h-screen bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 pr-10 border-b border-gray-200">
           <div className="relative" style={{ width: "270px" }}>
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             <Input

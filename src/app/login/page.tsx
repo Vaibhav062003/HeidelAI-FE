@@ -1,85 +1,97 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useEffect } from "react";
+
+import React, { useState } from "react";
+import { useSignIn, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
 import { Toaster, toast } from "sonner";
-import { IconBrandFacebook } from "@tabler/icons-react";
-import { Loader2 } from "lucide-react";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { cn } from "@/lib/utils";
+import { Session } from '@supabase/supabase-js';
+interface OrgDataItem {
+  public_user_data?: {
+    identifier?: string;
+  };
+  organization?: {
+    id?: string;
+  };
+}
 
 export default function LoginPage() {
+  const { isLoaded, signIn, setActive } = useSignIn();
+  const { isSignedIn, user } = useUser();
+  const router = useRouter();
+
+  // Redirect if already signed in
+  React.useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      toast.success("Already signed in! Redirecting...");
+      router.push("/dashboard");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false); // Toggle between login and signup
-  const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (data?.user) setUser(data.user);
-    };
-    fetchUser();
-  }, []);
-
-  // Handle email/password login or signup
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLoaded) return;
+
+    setIsLoggingIn(true);
+
     try {
-      if (isSignUp) {
-        // Sign up logic
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) {
-          toast.error(error.message);
-        } else if (data.user) {
-          toast.success(
-            "Sign-up successful! Please check your email to confirm your account."
-          );
-          setIsSignUp(false); // Switch back to login after successful signup
+      const signInAttempt = await signIn.create({
+        identifier: email,
+        password,
+      });
+
+      if (signInAttempt.status === "complete") {
+        await setActive({ session: signInAttempt.createdSessionId });
+        if (signInAttempt.createdSessionId) {
+          localStorage.setItem("sessionId", signInAttempt.createdSessionId);
+        }
+        // Fetch organization data after session is active
+        const res = await fetch("/api/getorgdata");
+        const data = await res.json();
+
+        const membership = data?.data?.find(
+          (item: OrgDataItem) =>
+            item.public_user_data?.identifier === email
+        );
+
+        if (membership?.organization?.id && isLoaded) {
+          localStorage.setItem("org_id", membership.organization.id);
+          toast.success("Signed in! Redirecting...");
+          router.push("/dashboard");
+        } else {
+          toast.info("No organization found for this account.");
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) {
-          toast.error("Invalid email or password");
-        } else {
-          toast.success("Login successful! Redirecting...");
-          // console.log("user_detail",user);
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
-          console.log("user data", user);
-          router.push("/dashboard"); // Redirect to dashboard
-        }
+        toast.error("Sign in not complete. Further steps required.");
       }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
-      console.error("Error during authentication:", error);
+    } catch (err) {
+      let message = "Invalid email or password.";
+      if (err && typeof err === "object" && "errors" in err && Array.isArray(err.errors)) {
+        message = err.errors[0]?.message || message;
+      }
+      toast.error(message);
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
+
+
   return (
-    <section className="h-[100vh] px-6 flex items-center justify-center">
+    <section className="h-screen  bg-black text-white px-6 flex items-center justify-center">
       <Toaster position="top-center" richColors />
-
-      <div className="max-w-md w-full mx-auto rounded-none md:rounded-2xl p-4 md:p-8 shadow-input bg-black">
+      <div className="max-w-md shadow-none w-full border-2 border-white/10 mx-auto rounded-2xl p-4 md:p-8 shadow-input bg-black">
         <h2 className="font-semibold pb-6 text-xl text-center text-neutral-200">
-          {isSignUp ? "Create an Account" : "Sign in to your account"}
+          Sign in to your account
         </h2>
-        <p className=" text-sm max-w-sm mt-2 text-neutral-300"></p>
-
-        <form className="my-8" onSubmit={handleAuth}>
-          <LabelInputContainer className=" mb-4">
+        <form className="my-8" onSubmit={handleSubmit}>
+          <LabelInputContainer className="mb-4">
             <Label htmlFor="email">Email Address</Label>
             <Input
               value={email}
@@ -87,6 +99,8 @@ export default function LoginPage() {
               className="border border-white/[0.1] rounded-[0.5rem] h-[45px] bg-zinc-800 placeholder:text-zinc-400 text-white"
               placeholder="projectmayhem@fc.com"
               type="email"
+              autoComplete="username"
+              required
             />
           </LabelInputContainer>
           <LabelInputContainer className="mb-4">
@@ -97,50 +111,40 @@ export default function LoginPage() {
               className="border border-white/[0.2] rounded-[0.5rem] h-[45px] bg-zinc-800 placeholder:text-zinc-400 text-white"
               placeholder="••••••••"
               type="password"
+              autoComplete="current-password"
+              required
             />
           </LabelInputContainer>
-
           <button
-            className="bg-gradient-to-br relative group/btn rounded-[0.5rem] from-zinc-900 to-zinc-900  block bg-zinc-800 w-full text-white  h-10 font-medium  shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
+            className={cn(
+              "bg-gradient-to-br relative group/btn rounded-[0.5rem] from-zinc-900 to-zinc-900 block bg-zinc-800 w-full text-white h-10 font-medium shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]",
+              { "opacity-50 cursor-not-allowed": isLoggingIn }
+            )}
             type="submit"
+            disabled={isLoggingIn}
           >
-            {isSignUp ? "Sign Up" : "Log in"} &rarr;
+            {isLoggingIn ? "Logging in..." : "Log in →"}
             <BottomGradient />
           </button>
-          <div className="flex items-center my-8">
-            <div className="flex-grow bg-neutral-800  h-[1px]" />
-            <span className="text-neutral-300 text-sm text-center mx-4"></span>
-            <p className="whitespace-nowrap -ml-8">
-            Don&apos;t have an account? Contact your administrator
+          <div className="flex items-center my-8 text-neutral-400 text-sm">
+            <div className="flex-grow bg-neutral-800 h-[1px]" />
+            <p className="px-4 text-center whitespace-nowrap">
+              Don&apos;t have an account? Contact your admin
             </p>
             <div className="flex-grow bg-neutral-800 h-[1px]" />
           </div>
         </form>
-
-        {/* <div className="bg-gradient-to-r from-transparent via-neutral-700 to-transparent my-8 h-[1px] w-full" />
-
-        <div className="flex flex-col space-y-4">
-          <button
-            className="bg-gradient-to-br relative group/btn rounded-[0.5rem] from-zinc-900 to-zinc-900  block bg-zinc-800 w-full text-white  h-10 font-medium  shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
-            onClick={() => setIsSignUp(!isSignUp)}
-          >
-            {isSignUp ? "Already have an account? Log in" : "Don't have an account? Sign up"}
-            <BottomGradient />
-          </button>
-        </div> */}
       </div>
     </section>
   );
 }
 
-const BottomGradient = () => {
-  return (
-    <>
-      <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
-      <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
-    </>
-  );
-};
+const BottomGradient = () => (
+  <>
+    <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
+    <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
+  </>
+);
 
 const LabelInputContainer = ({
   children,
@@ -148,10 +152,8 @@ const LabelInputContainer = ({
 }: {
   children: React.ReactNode;
   className?: string;
-}) => {
-  return (
-    <div className={cn("flex flex-col space-y-2 w-full", className)}>
-      {children}
-    </div>
-  );
-};
+}) => (
+  <div className={cn("flex flex-col space-y-2 w-full", className)}>
+    {children}
+  </div>
+);

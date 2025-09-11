@@ -148,6 +148,8 @@ import {
 
   MoreVertical,
 
+  Menu,
+
   // Phone,
 
   // Video,
@@ -331,6 +333,10 @@ interface ChatViewProps {
   sharedProduct: Product | null;
 
   onClearSharedProduct: () => void;
+
+  // Controls for right sidebar visibility (to place open button near 3-dots)
+  isRightSidebarVisible?: boolean;
+  onOpenRightSidebar?: () => void;
 
 }
 
@@ -1253,6 +1259,9 @@ const ChatView = ({
   sharedProduct,
 
   onClearSharedProduct,
+
+  isRightSidebarVisible,
+  onOpenRightSidebar,
 
 }: ChatViewProps) => {
 
@@ -3571,6 +3580,19 @@ const handleFollowUp = () => {
 
                 </DropdownMenu>
 
+                {/* Right sidebar menu button (only when hidden) */}
+                {!isRightSidebarVisible && onOpenRightSidebar && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="ml-2 rounded-full bg-gray-100 hover:bg-blue-100"
+                    onClick={onOpenRightSidebar}
+                    aria-label="Open right sidebar"
+                  >
+                    <Menu className="h-5 w-5 text-gray-600" />
+                  </Button>
+                )}
+
               </div>
 
             </div>
@@ -5073,22 +5095,11 @@ const handleFollowUp = () => {
 
                         {/* Professional Send Button */}
 
-                        {/* word count */}
-
-                        <div className="flex justify-between items-center ml-[330]">
-
-                          <div className="text-xs text-gray-400">
-
-                            {mode === "reply" && ""}
-
-                          </div>
-
-                          <div className="text-xs text-gray-500 mr-6">
-
+                        {/* word count - keep inline next to send button */}
+                        <div className="flex items-center gap-3 ml-auto mr-2">
+                          <div className="text-xs text-gray-500 whitespace-nowrap">
                             {message.length}/1000
-
                           </div>
-
                         </div>
 
 
