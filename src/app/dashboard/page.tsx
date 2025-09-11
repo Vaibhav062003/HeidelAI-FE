@@ -92,14 +92,15 @@ export default function DashboardPage() {
 
   const handleSignOut = async () => {
     await signOut();
+    window.location.href = "/"; 
     // your custom logic here
     toast.success("Signed out successfully!");
     localStorage.clear();
-    window.location.href = "/"; // redirect manually
+    // redirect manually
   };
 
   useEffect(() => {
-    console.log(user);
+    // console.log(user);
     if (isLoaded && !isSignedIn) {
       router.push("/");
     }
