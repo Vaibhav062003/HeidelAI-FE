@@ -3581,7 +3581,7 @@ const handleFollowUp = () => {
                 </DropdownMenu>
 
                 {/* Right sidebar menu button (only when hidden) */}
-                {!isRightSidebarVisible && onOpenRightSidebar && (
+                {/* {!isRightSidebarVisible && onOpenRightSidebar && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -3591,7 +3591,7 @@ const handleFollowUp = () => {
                   >
                     <Menu className="h-5 w-5 text-gray-600" />
                   </Button>
-                )}
+                )} */}
 
               </div>
 

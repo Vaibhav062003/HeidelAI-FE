@@ -6,19 +6,11 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Route segment layouts should not re-declare <html>/<body>. Use wrappers only.
   return (
-    <html lang="en">
-      <head>
-      <link rel="icon" href="/HeidelAi Favicon.ico.ico" />
-
-        <title>Dashboard</title>
-      </head>
-      <body>
-        <div className="min-h-screen bg-gray-100">
-          <Toaster position="top-right" richColors />
-          {children}
-        </div>
-      </body>
-    </html>
+    <div className="min-h-screen bg-gray-100">
+      <Toaster position="top-right" richColors />
+      {children}
+    </div>
   )
 }
