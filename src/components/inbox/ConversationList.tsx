@@ -2,12 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Filter, X } from "lucide-react";
+import { Search, Filter, X, Menu, ChevronLeft, ChevronRight } from "lucide-react";
 import ConversationPreview from "./ConversationPreview";
 import { useConversations } from '../hooks/useConversations';
 import { Conversation } from '@/components/types/conversation';
 import { FilterMenu, FilterOptions } from './FilterMenu';
-import { format, isToday, isYesterday, subDays, startOfDay } from 'date-fns';
+import { format, isToday, isYesterday, subDays, startOfDay, subMonths } from 'date-fns';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/inbox_button";
@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/inbox_button";
 interface ConversationListProps {
   selectedConversationId?: string;
   onConversationSelect?: (id: string) => void;
+  isVisible?: boolean;
+  onToggleVisibility?: () => void;
 }
 
 type TabValue = 'all' | 'live_agent' | 'AI';
@@ -43,7 +45,9 @@ const EmptyState = ({ message }: { message: string }) => (
 
 const ConversationList = ({
   selectedConversationId,
-  onConversationSelect
+  onConversationSelect,
+  isVisible = true,
+  onToggleVisibility
 }: ConversationListProps) => {
   // Client-side only state to prevent hydration issues
   const [isClient, setIsClient] = useState(false);
@@ -117,19 +121,24 @@ const ConversationList = ({
       }
     });
 
-  // Group conversations by date
+  // Group conversations by date with simplified categories
   const groupedConversations = searchResults.reduce((groups, { conversation, matchedOn, matchedText }) => {
     const date = new Date(conversation.timestamp);
+    const now = new Date();
     let groupLabel: string;
 
     if (isToday(date)) {
       groupLabel = "Today";
     } else if (isYesterday(date)) {
       groupLabel = "Yesterday";
-    } else if (date >= subDays(startOfDay(new Date()), 7)) {
+    } else if (date >= subDays(startOfDay(now), 7)) {
       groupLabel = "This Week";
+    } else if (date >= subMonths(startOfDay(now), 1)) {
+      // Format as "January" without year for this month and previous month
+      groupLabel = format(date, "MMMM");
     } else {
-      groupLabel = format(date, "MMMM d, yyyy");
+      // For older dates, just show month name
+      groupLabel = format(date, "MMMM");
     }
 
     if (!groups[groupLabel]) {
@@ -140,17 +149,20 @@ const ConversationList = ({
     return groups;
   }, {} as Record<string, SearchResult[]>);
 
-  // Order groups: Today -> Yesterday -> This Week -> Specific dates
+  // Order groups: Today -> Yesterday -> This Week -> Month names (most recent first)
   const fixedGroups = ["Today", "Yesterday", "This Week"];
-  const specificDateGroups = Object.keys(groupedConversations)
+  const monthGroups = Object.keys(groupedConversations)
     .filter(label => !fixedGroups.includes(label))
-    .sort((a, b) => 
-      new Date(b).getTime() - new Date(a).getTime()
-    );
+    .sort((a, b) => {
+      // Sort month names by their most recent conversation date
+      const aLatest = Math.max(...groupedConversations[a].map(item => new Date(item.conversation.timestamp).getTime()));
+      const bLatest = Math.max(...groupedConversations[b].map(item => new Date(item.conversation.timestamp).getTime()));
+      return bLatest - aLatest;
+    });
   
   const orderedGroupLabels = [
     ...fixedGroups.filter(label => groupedConversations[label]),
-    ...specificDateGroups
+    ...monthGroups
   ];
 
   // Set all groups open by default on initial load
@@ -211,36 +223,50 @@ const ConversationList = ({
           `}
         </style>
         <div className="w-full max-h-screen bg-white border-r border-gray-200 flex flex-col">
-          <div className="p-3 lg:p-4 border-b border-gray-200">
-            <div className="relative w-3/4 lg:w-4/5">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search conversations..."
-                className="pl-9 pr-10 text-xs lg:text-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearSearch}
-                  className="absolute right-2 top-1.5 h-6 w-6 p-0 hover:bg-gray-200"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              )}
+          <div className="p-2 sm:p-3 lg:p-4 border-b border-gray-200">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search conversations..."
+                  className="pl-9 pr-10 text-xs lg:text-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearSearch}
+                    className="absolute right-2 top-1.5 h-6 w-6 p-0 hover:bg-gray-200"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+              
+              {/* Left Sidebar Toggle Button - Only for hiding */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onToggleVisibility}
+                className="h-8 w-8 hover:bg-gray-200 hidden lg:flex flex-shrink-0"
+                title="Hide conversation list"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
-            <div className="flex items-center justify-between mt-2">
-              <Tabs defaultValue="all">
-                <TabsList className="flex gap-1 lg:gap-2 h-8 lg:h-10">
-                  <TabsTrigger value="all" className="text-xs lg:text-sm px-2 lg:px-3">Me</TabsTrigger>
-                  <TabsTrigger value="live_agent" className="text-xs lg:text-sm px-2 lg:px-3">Live Agent</TabsTrigger>
-                  <TabsTrigger value="AI" className="text-xs lg:text-sm px-2 lg:px-3">AI</TabsTrigger>
+            
+            <div className="flex items-center justify-between mt-2 gap-1 sm:gap-2">
+              <Tabs defaultValue="all" className="flex-1 min-w-0">
+                <TabsList className="flex gap-0.5 sm:gap-1 lg:gap-2 h-8 lg:h-10 w-full">
+                  <TabsTrigger value="all" className="text-xs lg:text-sm px-1 sm:px-2 lg:px-3 flex-1">Me</TabsTrigger>
+                  <TabsTrigger value="live_agent" className="text-xs lg:text-sm px-1 sm:px-2 lg:px-3 flex-1">Agent</TabsTrigger>
+                  <TabsTrigger value="AI" className="text-xs lg:text-sm px-1 sm:px-2 lg:px-3 flex-1">AI</TabsTrigger>
                 </TabsList>
               </Tabs>
 
-              <div className="ml-2 lg:ml-4">
+              <div className="flex-shrink-0">
                 <FilterMenu filters={filters} onFilterChange={setFilters} />
               </div>
             </div>
@@ -259,38 +285,52 @@ const ConversationList = ({
   if (error) {
     return (
       <div className="w-full h-full bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-3 lg:p-4 border-b border-gray-200">
-          <div className="relative w-3/4 lg:w-4/5">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search conversations..."
-              className="pl-9 pr-10 text-xs lg:text-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {searchQuery && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearSearch}
-                className="absolute right-2 top-1.5 h-6 w-6 p-0 hover:bg-gray-200"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
+        <div className="p-2 sm:p-3 lg:p-4 border-b border-gray-200">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search conversations..."
+                className="pl-9 pr-10 text-xs lg:text-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSearch}
+                  className="absolute right-2 top-1.5 h-6 w-6 p-0 hover:bg-gray-200"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+            
+            {/* Left Sidebar Toggle Button - Only for hiding */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleVisibility}
+              className="h-8 w-8 hover:bg-gray-200 hidden lg:flex flex-shrink-0"
+              title="Hide conversation list"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-            <div className="flex items-center justify-between mt-2">
-            <Tabs defaultValue="all">
-              <TabsList className="flex gap-1 lg:gap-2 h-8 lg:h-10">
-                <TabsTrigger value="all" className="text-xs lg:text-sm px-2 lg:px-3">Me</TabsTrigger>
-                <TabsTrigger value="live_agent" className="text-xs lg:text-sm px-2 lg:px-3">Live Agent</TabsTrigger>
-                <TabsTrigger value="AI" className="text-xs lg:text-sm px-2 lg:px-3">AI</TabsTrigger>
+          
+          <div className="flex items-center justify-between mt-2 gap-1 sm:gap-2">
+            <Tabs defaultValue="all" className="flex-1 min-w-0">
+              <TabsList className="flex gap-0.5 sm:gap-1 lg:gap-2 h-8 lg:h-10 w-full">
+                <TabsTrigger value="all" className="text-xs lg:text-sm px-1 sm:px-2 lg:px-3 flex-1">Me</TabsTrigger>
+                <TabsTrigger value="live_agent" className="text-xs lg:text-sm px-1 sm:px-2 lg:px-3 flex-1">Agent</TabsTrigger>
+                <TabsTrigger value="AI" className="text-xs lg:text-sm px-1 sm:px-2 lg:px-3 flex-1">AI</TabsTrigger>
               </TabsList>
             </Tabs>
 
-              <div className="ml-2 lg:ml-4">
-                <FilterMenu filters={filters} onFilterChange={setFilters} />
-              </div>
+            <div className="flex-shrink-0">
+              <FilterMenu filters={filters} onFilterChange={setFilters} />
+            </div>
           </div>
         </div>
         <div className="p-4 text-neutral-700 text-xs lg:text-sm">
@@ -330,39 +370,52 @@ const ConversationList = ({
       </style>
 
       <div className="w-full max-h-screen bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-3 lg:p-4 border-b border-gray-200">
-          <div className="relative w-3/4 lg:w-4/5">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search conversations..."
-              className="pl-9 pr-10 text-xs lg:text-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {searchQuery && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearSearch}
-                className="absolute right-2 top-1.5 h-6 w-6 p-0 hover:bg-gray-200"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
+        <div className="p-2 sm:p-3 lg:p-4 border-b border-gray-200">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search conversations..."
+                className="pl-9 pr-10 text-xs lg:text-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSearch}
+                  className="absolute right-2 top-1.5 h-6 w-6 p-0 hover:bg-gray-200"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+            
+            {/* Left Sidebar Toggle Button - Only for hiding conversation list */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleVisibility}
+              className="h-8 w-8 hover:bg-gray-200 hidden lg:flex flex-shrink-0"
+              title="Hide conversation list"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
 
-            <div className="flex items-center justify-between mt-2">
-            <Tabs defaultValue="all">
-              <TabsList className="flex gap-1 lg:gap-2 h-8 lg:h-10">
-                <TabsTrigger value="all" className="text-xs lg:text-sm px-2 lg:px-3">Me</TabsTrigger>
-                <TabsTrigger value="live_agent" className="text-xs lg:text-sm px-2 lg:px-3">Live Agent</TabsTrigger>
-                <TabsTrigger value="AI" className="text-xs lg:text-sm px-2 lg:px-3">AI</TabsTrigger>
+          <div className="flex items-center justify-between mt-2 gap-1 sm:gap-2">
+            <Tabs defaultValue="all" className="flex-1 min-w-0">
+              <TabsList className="flex gap-0.5 sm:gap-1 lg:gap-2 h-8 lg:h-10 w-full">
+                <TabsTrigger value="all" className="text-xs lg:text-sm px-1 sm:px-2 lg:px-3 flex-1">Me</TabsTrigger>
+                <TabsTrigger value="live_agent" className="text-xs lg:text-sm px-1 sm:px-2 lg:px-3 flex-1">Agent</TabsTrigger>
+                <TabsTrigger value="AI" className="text-xs lg:text-sm px-1 sm:px-2 lg:px-3 flex-1">AI</TabsTrigger>
               </TabsList>
             </Tabs>
 
-              <div className="ml-2 lg:ml-4">
-                <FilterMenu filters={filters} onFilterChange={setFilters} />
-              </div>
+            <div className="flex-shrink-0">
+              <FilterMenu filters={filters} onFilterChange={setFilters} />
+            </div>
           </div>
         </div>
 
@@ -393,9 +446,8 @@ const ConversationList = ({
                   <AccordionTrigger className="py-2 px-2 lg:px-3 bg-gray-50 hover:bg-gray-100 rounded-md hover:no-underline">
                     <div className="flex items-center justify-between w-full pr-2">
                       <span className="font-medium text-gray-700 text-xs lg:text-sm">{label}</span>
-                      <span className="text-xs bg-blue-100 text-blue-800 px-1 lg:px-2 py-1 rounded-full">
-                        {groupedConversations[label].length} conversation
-                        {groupedConversations[label].length !== 1 ? 's' : ''}
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full min-w-[24px] text-center">
+                        {groupedConversations[label].length}
                       </span>
                     </div>
                   </AccordionTrigger>
@@ -407,31 +459,52 @@ const ConversationList = ({
                             new Date(b.conversation.timestamp).getTime() -
                             new Date(a.conversation.timestamp).getTime()
                         )
-                        .map(({ conversation, matchedOn, matchedText }) => (
-                          <div key={conversation.id} className="flex w-full flex-col">
-                            <ConversationPreview
-                              id={conversation.id}
-                              channelType={
-                                conversation.platform as
-                                  | "telegram"
-                                  | "whatsapp"
-                                  | "instagram"
-                                  | "web"
-                              }
-                              customerName={conversation.customer_name}
-                              lastMessage={formatLastMessage(conversation.last_message)}
-                              timestamp={conversation.timestamp}
-                              unreadCount={conversation.unread_count}
-                              avatarUrl={conversation.avatar_url}
-                              isAiEnabled={conversation.is_ai_enabled}
-                              assignedAgentId={conversation.assigned_agent_id}
-                              isSelected={selectedConversationId === conversation.id}
-                              onClick={() => onConversationSelect?.(conversation.id)}
-                              priority={conversation.priority}
-                              sentiment={conversation.sentiment}
-                            />
-                          </div>
-                        ))}
+                        .map(({ conversation, matchedOn, matchedText }) => {
+                          // Format timestamp without year
+                          const formatTimestampWithoutYear = (timestamp: string) => {
+                            const date = new Date(timestamp);
+                            
+                            if (isToday(date)) {
+                              // Show exact time for today: "2:30 PM"
+                              return format(date, "h:mm a");
+                            } else if (isYesterday(date)) {
+                              // Show time for yesterday: "Yesterday 2:30 PM"
+                              return `Yesterday ${format(date, "h:mm a")}`;
+                            } else if (date >= subDays(startOfDay(new Date()), 7)) {
+                              // Show day and time for this week: "Mon 2:30 PM"
+                              return format(date, "EEE h:mm a");
+                            } else {
+                              // Show month and day for older: "Jan 15"
+                              return format(date, "MMM d");
+                            }
+                          };
+
+                          return (
+                            <div key={conversation.id} className="flex w-full flex-col">
+                              <ConversationPreview
+                                id={conversation.id}
+                                channelType={
+                                  conversation.platform as
+                                    | "telegram"
+                                    | "whatsapp"
+                                    | "instagram"
+                                    | "web"
+                                }
+                                customerName={conversation.customer_name}
+                                lastMessage={formatLastMessage(conversation.last_message)}
+                                timestamp={formatTimestampWithoutYear(conversation.timestamp)}
+                                unreadCount={conversation.unread_count}
+                                avatarUrl={conversation.avatar_url}
+                                isAiEnabled={conversation.is_ai_enabled}
+                                assignedAgentId={conversation.assigned_agent_id}
+                                isSelected={selectedConversationId === conversation.id}
+                                onClick={() => onConversationSelect?.(conversation.id)}
+                                priority={conversation.priority}
+                                sentiment={conversation.sentiment}
+                              />
+                            </div>
+                          );
+                        })}
                     </div>
                   </AccordionContent>
                 </AccordionItem>

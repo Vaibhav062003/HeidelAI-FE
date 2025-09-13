@@ -45,7 +45,21 @@ const ContactsDashboard = () => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [tagsLoading, setTagsLoading] = useState(true);
-  const itemsPerPage = 10;
+  const [screenWidth, setScreenWidth] = useState(0);
+  
+  // Responsive configuration
+  const [itemsPerPage, setItemsPerPage] = useState(10); // Make this dynamic
+
+  // Screen size detection
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchContacts = useCallback(async () => {
     try {
@@ -67,15 +81,13 @@ const ContactsDashboard = () => {
         ...c,
         tags: Array.isArray(c.tags) ? c.tags : []
       })) || []);
-      // console.log("contact",contacts);
-
-  } catch (err) {
-    console.error("Failed to fetch contacts:", err); // Add detailed logging
-    setError("Failed to load contacts. Please try again.");
+    } catch (err) {
+      console.error("Failed to fetch contacts:", err);
+      setError("Failed to load contacts. Please try again.");
     } finally {
       setLoading(false);
     }
-  }, [selectedTag]); // Add selectedTagId as a dependency
+  }, [selectedTag]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -292,82 +304,108 @@ const ContactsDashboard = () => {
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
     });
-  }, [contacts, searchQuery]); // Removed client-side tag filtering
-  // console.log( "filtered contact", filteredContacts );
+  }, [contacts, searchQuery]);
 
   const paginatedContacts = filteredContacts.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  return (
-      <div className="h-screen w-[1400px] flex flex-row bg-background">
-      <TagSidebar
-        tags={tags}
-        tagsLoading={tagsLoading}
-        onCreateTag={handleCreateTag}
-        onEditTag={handleEditTag}
-        onDeleteTag={handleDeleteTag}
-        onTagSelect={setSelectedTag}
-        selectedTag={selectedTag}
-        onTagModalOpen={() => setIsTagModalOpen(true)}
-        onTagModalClose={() => setIsTagModalOpen(false)}
-        error={error}
-      />
+  // Get responsive classes for sidebar width - Reduced sizes
+  const getSidebarWidth = () => {
+    if (screenWidth < 768) return "w-48";     // Mobile: reduced from w-64
+    if (screenWidth < 1024) return "w-52";   // Tablet: reduced from w-72
+    if (screenWidth < 1280) return "w-56";   // Small desktop: reduced from w-80
+    if (screenWidth < 1536) return "w-60";   // Medium desktop: reduced from w-96
+    return "w-64";                           // Large screens: reduced from w-96
+  };
 
-      <div className="flex-1 flex flex-col h-screen max-h-screen">
-        <div className="flex-none">
+    const handleItemsPerPageChange = useCallback((newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when items per page changes
+  }, []);
+
+
+  return (
+    <div className="h-screen w-full flex flex-row bg-background overflow-hidden">
+      {/* Responsive TagSidebar - Reduced widths */}
+      <div className={`${getSidebarWidth()} h-full bg-white border-r border-gray-200 flex-shrink-0`}>
+        <TagSidebar
+          tags={tags}
+          tagsLoading={tagsLoading}
+          onCreateTag={handleCreateTag}
+          onEditTag={handleEditTag}
+          onDeleteTag={handleDeleteTag}
+          onTagSelect={setSelectedTag}
+          selectedTag={selectedTag}
+          onTagModalOpen={() => setIsTagModalOpen(true)}
+          onTagModalClose={() => setIsTagModalOpen(false)}
+          error={error}
+        />
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col h-screen max-h-screen min-w-0">
+        {/* Header - Simplified without toggle buttons */}
+        <div className="flex-none bg-white border-b border-gray-200">
           <ContactListHeader
             searchValue={searchQuery}
             onSearch={setSearchQuery}
             onAddContact={() => setSelectedContact({} as Contact)}
             onImportCSV={handleFileUpload}
-            onMessageSend={() => {}} // Add your message sending logic here
+            onMessageSend={() => {}}
           />
         </div>
 
-       <div className="flex-1 overflow-hidden p-4">
-        {loading ? (
-          <div className="h-full flex items-center justify-center">
-            <Spinner />
-          </div>
-        ) : filteredContacts.length === 0 ? ( 
-          <div className="h-full flex items-center justify-center">
-            <p className="text-gray-500 text-lg">
-              {searchQuery ? "No matching contacts found 🔍" : "No contacts found 🔍"}
-            </p>
-          </div>
-        ) : (
-          <div className="h-full flex flex-col">
-            <div className="flex-1 overflow-y-auto bg-white rounded-lg shadow-sm border">
-              {paginatedContacts.map((contact) => ( 
-                <ContactItem
-                  key={contact.id}
-                  contact={contact}
-                  onEdit={() => handleEdit(contact)}
-                  onDelete={() => handleDelete(contact.id)}
-                />
-              ))}
+        {/* Content Area with responsive padding */}
+        <div className="flex-1 overflow-hidden p-2 sm:p-4 lg:p-6">
+          {loading ? (
+            <div className="h-full flex items-center justify-center">
+              <Spinner />
             </div>
-
-              {filteredContacts.length > itemsPerPage && (
-                <div className="flex-none pt-4">
-                  <PaginationFooter
-                    currentPage={currentPage}
-                    totalItems={filteredContacts.length}
-                    itemsPerPage={itemsPerPage}
-                    onPageChange={setCurrentPage}
-                  />
+          ) : filteredContacts.length === 0 ? (
+            <div className="h-full flex items-center justify-center">
+              <p className="text-gray-500 text-sm sm:text-base lg:text-lg text-center px-4">
+                {searchQuery ? "No matching contacts found 🔍" : "No contacts found 🔍"}
+              </p>
+            </div>
+          ) : (
+            <div className="h-full flex flex-col">
+              {/* Contacts List with responsive container */}
+              <div className="flex-1 overflow-y-auto bg-white rounded-lg shadow-sm border">
+                <div className="divide-y divide-gray-100">
+                  {paginatedContacts.map((contact) => (
+                    <ContactItem
+                      key={contact.id}
+                      contact={contact}
+                      onEdit={() => handleEdit(contact)}
+                      onDelete={() => handleDelete(contact.id)}
+                    />
+                  ))}
                 </div>
-              )}
+              </div>
+
+              {/* Responsive Pagination */}
+              {filteredContacts.length > itemsPerPage && (
+    <div className="flex-none pt-3 sm:pt-4">
+      <PaginationFooter
+        currentPage={currentPage}
+        totalItems={filteredContacts.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={handleItemsPerPageChange} // Add this
+      />
+    </div>
+  )}
             </div>
           )}
         </div>
       </div>
 
+      {/* Contact Modal with responsive sizing */}
       {selectedContact && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-xl">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-2xl w-full max-w-sm sm:max-w-md lg:max-w-xl max-h-[90vh] overflow-y-auto">
             <ContactForm
               contact={selectedContact}
               onClose={() => setSelectedContact(null)}
@@ -377,22 +415,24 @@ const ContactsDashboard = () => {
         </div>
       )}
 
+      {/* Error Toast with responsive positioning */}
       {error && (
-        <div className="fixed bottom-4 right-4 bg-red-100 text-red-700 p-4 rounded flex items-center">
-          {error}
+        <div className="fixed bottom-2 right-2 sm:bottom-4 sm:right-4 bg-red-100 text-red-700 p-3 sm:p-4 rounded-lg shadow-lg flex items-center z-50 max-w-xs sm:max-w-sm">
+          <span className="text-sm sm:text-base">{error}</span>
           <button
             onClick={() => setError(null)}
-            className="ml-4 text-red-700 hover:text-red-900"
+            className="ml-3 sm:ml-4 text-red-700 hover:text-red-900 text-sm sm:text-base"
           >
             Dismiss
           </button>
         </div>
       )}
 
+      {/* Import Toast with responsive positioning */}
       {isImporting && (
-        <div className="fixed bottom-4 right-4 bg-blue-100 text-blue-700 p-4 rounded-lg shadow-md flex items-center gap-2">
+        <div className="fixed bottom-2 right-2 sm:bottom-4 sm:right-4 bg-blue-100 text-blue-700 p-3 sm:p-4 rounded-lg shadow-md flex items-center gap-2 z-50 max-w-xs sm:max-w-sm">
           <Spinner />
-          <span>
+          <span className="text-sm sm:text-base">
             Importing {importingCount} contact{importingCount !== 1 ? "s" : ""}
             ...
           </span>

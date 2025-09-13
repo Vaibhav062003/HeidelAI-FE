@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ProductPreview from "./PreviewProduct";
 import ProductsTab from "./Product";
-import { User, Mail, Users, TrendingUp, Clock, Phone, Fingerprint, IdCard } from "lucide-react";
+import CustomerInfo from "./CustomerInfo"; // Add this import
+import { User, Mail, Users, TrendingUp, Clock, Phone, Fingerprint, IdCard, MapPin } from "lucide-react"; // Added MapPin
 import { 
   Accordion, 
   AccordionContent, 
@@ -19,6 +20,12 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"; // Add Dialog imports
 import {
   FileText,
   Package,
@@ -61,12 +68,13 @@ const Sidebar = ({
   onShareProduct,
 }: SidebarProps) => { 
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
-  const [accordionValue, setAccordionValue] = useState("customer");
+  const [accordionValue, setAccordionValue] = useState("summary");
   const [searchTemplate, setSearchTemplate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [showCustomerInfo, setShowCustomerInfo] = useState(false); // Add state for CustomerInfo dialog
   
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
@@ -167,6 +175,40 @@ const Sidebar = ({
     fetchConversation();
   }, [selectedConversationId]);
 
+  // Function to save customer info
+  const saveCustomerInfo = async (updatedData: {
+    name: string;
+    email: string;
+    billingaddress: string;
+    shippingaddress: string;
+    gstin: string;
+    phoneOrUserId: string;
+  }) => {
+    try {
+      const response = await fetch(
+        `https://your-api-endpoint/conversations/${selectedConversationId}/update_customer_info`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update customer info");
+      }
+
+      const updatedConversation = await response.json();
+      setConversation(updatedConversation); // Update the state with the new data
+      console.log("Customer information updated successfully!");
+    } catch (error) {
+      console.error("Error updating customer info:", error);
+      throw error; // Re-throw to handle in CustomerInfo component
+    }
+  };
+
   const filteredTemplates = (templates || []).filter((template) =>
     template.name.toLowerCase().includes(searchTemplate.toLowerCase()) && template.status === 'APPROVED'
   );
@@ -193,7 +235,100 @@ const Sidebar = ({
         />
       )}
 
+      {/* Customer Info Dialog */}
+      <Dialog open={showCustomerInfo} onOpenChange={setShowCustomerInfo}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-gray-800 flex items-center">
+              <User className="h-6 w-6 mr-2 text-blue-600" />
+              Customer Information
+            </DialogTitle>
+          </DialogHeader>
+          
+          {conversation && (
+            <CustomerInfo
+              name={conversation?.customer_name || "Not Saved"}
+              email={conversation?.email || "Not Saved"}
+              billingaddress={conversation?.billingAddress || "Not Saved"}
+              shippingaddress={conversation?.shippingAddress || "Not Saved"}
+              platform={conversation?.platform || ""}
+              selectedConversationId={selectedConversationId}
+              saveCustomerInfo={saveCustomerInfo}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Card className="h-full max-h-screen p-1 bg-white border-l">
+        {/* Customer Info Section - Direct Display */}
+        <div className="flex items-center justify-between p-3 bg-white-900 text-black border-b border-gray-500">
+  <h2 className="text-lg font-medium">Contact</h2>
+</div>
+
+        <div className="p-4 border-b bg-gray-50">
+          {/* Customer Avatar and Name */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-medium text-sm">
+                {conversation?.customer_name?.charAt(0).toUpperCase() || 'V'}
+              </span>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-900">
+                {conversation?.customer_name || "Vaibhav"}
+              </h3>
+            </div>
+          </div>
+
+          {/* Contact Details */}
+          <div className="space-y-3 text-sm">
+            
+            {/* Phone/User ID */}
+            <div className="flex items-center gap-3">
+              {conversation?.platform === "whatsapp" ? (
+                <Phone className="h-4 w-4 text-gray-500" />
+              ) : (
+                <IdCard className="h-4 w-4 text-gray-500" />
+              )}
+              <span className="text-gray-700">
+                {selectedConversationId?.split('_')[1] || "Not Available"}
+              </span>
+            </div>
+
+            {/* Email */}
+            <div className="flex items-center gap-3">
+              <Mail className="h-4 w-4 text-gray-500" />
+              <span className="text-gray-700">
+                {conversation?.email || "Not Available"}
+              </span>
+            </div>
+
+            {/* Address */}
+            <div className="flex items-center gap-3">
+              <MapPin className="h-4 w-4 text-gray-500" />
+              <span className="text-gray-700">Not Available</span>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 mt-1">  
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="p-2 ml-[-8]"
+                  onClick={() => setShowCustomerInfo(true)}
+                >
+                  <User className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Profile</TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+
+        {/* Accordion for other sections */}
         <Accordion
           type="single"
           collapsible
@@ -201,56 +336,6 @@ const Sidebar = ({
           onValueChange={setAccordionValue}
           className="w-full"
         >
-          {/* Customer Info Section */}
-          <AccordionItem value="customer" className="border-b">
-            <AccordionTrigger className="p-4 hover:no-underline flex justify-between items-center mt-9">
-              <div className="flex items-center">
-                <User className="h-4 w-4 mr-2" />
-                <span>Customer Info</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="p-4">
-              <div className="space-y-3 text-sm text-gray-700">
-  {/* Name Display */}
-  <div className="flex items-start gap-3">
-    <User className="h-4 w-4 text-gray-500 mt-0.5" />
-    <div>
-      <p className="text-xs text-gray-400">Name</p>
-      <p className="font-medium">{conversation?.customer_name || "Not available"}</p>
-    </div>
-  </div>
-
-  {/* Email Display */}
-  <div className="flex items-start gap-3">
-    <Mail className="h-4 w-4 text-gray-500 mt-0.5" />
-    <div>
-      <p className="text-xs text-gray-400">Email</p>
-      <p className="font-medium break-all">{conversation?.email || "Not available"}</p>
-    </div>
-  </div>
-
-  {/* Phone/User ID Display */}
-  <div className="flex items-start gap-3">
-  {conversation?.platform === "whatsapp" ? (
-    <Phone className="h-4 w-4 text-gray-500 mt-0.5" />
-  ) : (
-    <IdCard className="h-4 w-4 text-gray-500 mt-0.5" />
-  )}
-  <div>
-    <p className="text-xs text-gray-400">
-      {conversation?.platform === "whatsapp" ? "Phone" : "User ID"}
-    </p>
-    <p className="font-medium">
-      {selectedConversationId?.split('_')[1] || "Not available"}
-    </p>
-  </div>
-</div>
-
-</div>
-
-            </AccordionContent>
-          </AccordionItem>
-
           {/* Summary Section */}
           <AccordionItem value="summary" className="border-b">
             <AccordionTrigger className="p-4 hover:no-underline flex justify-between items-center">

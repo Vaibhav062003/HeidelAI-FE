@@ -13,7 +13,7 @@ interface ConversationPreviewProps {
   customerName: string;
   lastMessage: string;
   timestamp: string;
-  unreadCount: number;
+  unreadCount: number; // Keep in interface for future use
   avatarUrl: string;
   isSelected?: boolean;
   onClick?: () => void;
@@ -29,7 +29,7 @@ const ConversationPreview = ({
   customerName,
   lastMessage,
   timestamp,
-  unreadCount,
+  unreadCount, // Keep parameter for future use
   avatarUrl,
   isSelected = false,
   onClick,
@@ -57,7 +57,7 @@ const ConversationPreview = ({
       onClick={onClick}
     >
       <div className="flex items-start gap-2.5">
-        <Avatar className="relative top-[-3px] left-1">
+        <Avatar className="relative top-[-3px] left-1 w-8 h-8 flex-shrink-0">
           {channelType === "whatsapp" && (
             <img src="/features/whatsapp.png" alt="" />
           )}
@@ -68,35 +68,41 @@ const ConversationPreview = ({
             <img src="/features/instagram.png" alt="" />
           )}
         </Avatar>
+        
         <div className="flex-1 min-w-0">
+          {/* Header row with name and timestamp */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="font-[Inter] font-semibold text-black text-sm truncate mt-[0.5px] ml-[5px]">
-                {customerName}
-              </span>
-            </div>
-            <span className="text-xs text-gray-500">
-              {getRelativeTime(timestamp)}
+            <span className="font-[Inter] font-semibold text-black text-sm truncate mt-[0.5px] ml-[5px]">
+              {customerName}
             </span>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="text-xs text-gray-500">
+                {getRelativeTime(timestamp)}
+              </span>
+              {/* TODO: Implement unread count display in future
+              {unreadCount > 0 && (
+                <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center min-w-[16px]">
+                  <span className="text-xs text-white font-medium leading-none">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                </div>
+              )}
+              */}
+            </div>
           </div>
           
-          {/* Message and Priority Badge on the same line */}
+          {/* Message row with priority badge */}
           <div className="flex items-center justify-between mt-1 ml-[5px] gap-2">
             <p className="text-sm text-gray-600 truncate flex-1">
               {lastMessage}
             </p>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="min-w-[60px] flex justify-end flex-shrink-0">
               <Badge
                 variant="outline"
-                className={`${getPriorityBadgeStyles(priority)} text-xs px-2 py-0 rounded-sm h-auto leading-tight min-h-0 capitalize`}
+                className={`${getPriorityBadgeStyles(priority)} text-xs px-2 py-0 rounded-sm h-auto leading-tight min-h-0 capitalize font-medium`}
               >
                 {priority}
               </Badge>
-              {unreadCount > 0 && (
-                <Badge className="bg-blue-500 text-white text-xs px-2 py-0 rounded-full h-auto leading-tight min-h-0">
-                  {unreadCount}
-                </Badge>
-              )}
             </div>
           </div>
         </div>

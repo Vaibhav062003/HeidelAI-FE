@@ -60,7 +60,9 @@ import {
 
   CheckCircle,
 
-  RefreshCw
+  RefreshCw,
+
+  XCircle
 
 } from "lucide-react";
 
@@ -1342,21 +1344,9 @@ const ChatView = ({
   const [currentTimer, setCurrentTimer] = useState(0);
 
 const [isResolved, setIsResolved] = useState(false);
-
-const [resolveHistory, setResolveHistory] = useState<Array<{
-
-  action: string, 
-
-  agent: string, 
-
-  timestamp: Date
-
-}>>([]);
-
+const [isFollowUp, setIsFollowUp] = useState(false);
+const [conversationStatus, setConversationStatus] = useState<'open' | 'closed' | 'followup'>('open');
 const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-
-
-
 
   // Add this useEffect to handle the timer logic
 
@@ -3000,15 +2990,16 @@ const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
 
   
 
-// Update your handleResolve and handleReopen functions
 const handleResolve = () => {
   setIsResolved(true);
+  setIsFollowUp(false);
+  setConversationStatus('closed');
   setIsStatusDropdownOpen(false);
   const agentName = "You";
   
   const systemMessage: Message = {
     id: `system-${Date.now()}`,
-    content: `Conversation was marked resolved by ${agentName}`,
+    content: `Conversation was marked Closed by ${agentName}`,
     type: 'system',
     role: 'system',
     conversation_id: selectedConversationId || '',
@@ -3030,6 +3021,8 @@ const handleResolve = () => {
 
 const handleReopen = () => {
   setIsResolved(false);
+  setIsFollowUp(false);
+  setConversationStatus('open');
   setIsStatusDropdownOpen(false);
   const agentName = "You";
   
@@ -3055,8 +3048,10 @@ const handleReopen = () => {
   }, 100);
 };
 
-// Add the handleFollowUp function
 const handleFollowUp = () => {
+  setIsResolved(false);
+  setIsFollowUp(true);
+  setConversationStatus('followup');
   setIsStatusDropdownOpen(false);
   const agentName = "You";
   
@@ -3081,8 +3076,6 @@ const handleFollowUp = () => {
     }
   }, 100);
 };
-
-
 
 
   return (
@@ -3173,23 +3166,15 @@ const handleFollowUp = () => {
 
               <div className="flex items-center space-x-4">
 
-                <div className="flex items-center">
+                {/* Timer display - Only for WhatsApp conversations */}
+{selectedConversationId &&
+  customerTimers[selectedConversationId] !== undefined &&
+  conversation?.platform === 'whatsapp' && (
+    <TimerDisplay
+      hours={customerTimers[selectedConversationId]}
+    />
+  )}
 
-                  {/* Timer display */}
-
-                  {selectedConversationId &&
-
-                    customerTimers[selectedConversationId] !== undefined && (
-
-                      <TimerDisplay
-
-                        hours={customerTimers[selectedConversationId]}
-
-                      />
-
-                    )}
-
-                </div>
 
                 <div className="relative ml-3">
 
@@ -3297,303 +3282,181 @@ const handleFollowUp = () => {
 
 
 
-              {/* Action Buttons Section */}
-
-            <div className="flex items-center space-x-1 mr-10">
-
+             {/* Action Buttons Section */}
+<div className="flex items-center space-x-3 mr-4">
   {/* Resolve/Reopen Button */}
-
 <DropdownMenu open={isStatusDropdownOpen} onOpenChange={setIsStatusDropdownOpen}>
-  <DropdownMenuTrigger asChild>
+    <DropdownMenuTrigger asChild>
+      <Button
+        variant="ghost"
+        className="rounded-lg hover:bg-blue-50 border border-gray-200 transition-colors duration-200 flex items-center space-x-2 px-3 py-2"
+      >
+        {conversationStatus === 'closed' ? (
+          <XCircle className="h-4 w-4 text-red-600" />
+        ) : conversationStatus === 'followup' ? (
+          <Clock className="h-4 w-4 text-amber-600" />
+        ) : (
+          <CheckCircle className="h-4 w-4 text-green-600" />
+        )}
+        <span className="text-sm font-medium text-gray-700">
+          {conversationStatus === 'closed' ? "Closed" : 
+           conversationStatus === 'followup' ? "Follow-up" : 
+           "Open"}
+        </span>
+        <ChevronDown className="h-4 w-4 text-gray-500" />
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="end" className="w-48 rounded-lg shadow-md border border-gray-200 py-1">
+      {conversationStatus === 'open' && (
+        <>
+          <DropdownMenuItem 
+            onClick={handleResolve}
+            className="flex items-center px-3 py-2 cursor-pointer text-sm hover:bg-red-50"
+          >
+            <XCircle className="h-4 w-4 mr-3 text-red-600" />
+            <span className="font-medium">Close</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={handleFollowUp}
+            className="flex items-center px-3 py-2 cursor-pointer text-sm hover:bg-amber-50"
+          >
+            <Clock className="h-4 w-4 mr-3 text-amber-600" />
+            <span className="font-medium">Mark for Follow-up</span>
+          </DropdownMenuItem>
+        </>
+      )}
+      
+      {(conversationStatus === 'closed' || conversationStatus === 'followup') && (
+        <DropdownMenuItem 
+          onClick={handleReopen}
+          className="flex items-center px-3 py-2 cursor-pointer text-sm hover:bg-green-50"
+        >
+          <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
+          <span className="font-medium">Reopen Conversation</span>
+        </DropdownMenuItem>
+      )}
+    </DropdownMenuContent>
+  </DropdownMenu>
+
+  {/* Reminders Button */}
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <div className="relative">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-lg hover:bg-blue-50 border border-gray-200 transition-colors duration-200 w-10 h-10 relative"
+            >
+              <Clock className="h-4 w-4 text-gray-600" />
+              {reminders.length > 0 && (
+                <Badge
+                  variant="secondary"
+                  className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs bg-gray-900 text-white"
+                >
+                  {reminders.length}
+                </Badge>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <RemindersPopover
+            reminders={reminders}
+            onCreateReminder={() => setShowReminder(true)}
+            onDeleteReminder={async (id) => {
+              try {
+                const response = await fetch(
+                  `https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders/${id}`,
+                  {
+                    method: "DELETE",
+                    credentials: "include",
+                  }
+                );
+                if (!response.ok) {
+                  throw new Error("Failed to delete reminder");
+                }
+                toast.success("Reminder deleted successfully");
+                refetchReminders();
+              } catch (error) {
+                toast.error("Failed to delete reminder");
+                console.error("Error deleting reminder:", error);
+              }
+            }}
+          />
+        </Popover>
+      </div>
+    </TooltipTrigger>
+    <TooltipContent>
+      {reminders.length > 0
+        ? `${reminders.length} reminder${reminders.length > 1 ? "s" : ""} set`
+        : "Set reminder"}
+    </TooltipContent>
+  </Tooltip>
+
+  {/* AI Toggle */}
+  <div className="flex items-center bg-gray-50 rounded-lg px-3 py-2 border border-gray-200 hover:bg-blue-50 transition-colors duration-200">
+    <Switch
+      checked={isAIEnabled}
+      onCheckedChange={toggleAI}
+      disabled={isToggling}
+      className="data-[state=checked]:bg-gray-900 mr-2"
+    />
+    <span className="text-sm font-medium text-gray-700">
+      AI
+    </span>
+  </div>
+
+  {/* More Options Menu */}
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="rounded-lg hover:bg-blue-50 border border-gray-200 transition-colors duration-200 w-10 h-10"
+      >
+        <MoreVertical className="h-4 w-4 text-gray-600" />
+      </Button>
+    </DropdownMenuTrigger>
+
+    <DropdownMenuContent
+      align="end"
+      className="rounded-lg shadow-md border border-gray-200 min-w-[180px] py-1"
+    >
+      <DropdownMenuItem
+        onClick={() => setShowCustomerInfo(true)}
+        className="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer"
+      >
+        <User className="h-4 w-4 mr-3 text-gray-600" />
+        <span className="font-medium">Customer Info</span>
+      </DropdownMenuItem>
+      
+      <DropdownMenuItem className="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer">
+        <FileText className="h-4 w-4 mr-3 text-gray-600" />
+        <span className="font-medium">Export Chat</span>
+      </DropdownMenuItem>
+      
+      <DropdownMenuItem className="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer">
+        <Trash2 className="h-4 w-4 mr-3 text-gray-600" />
+        <span className="font-medium">Clear Chat</span>
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
+
+  {/* Right sidebar menu button (only when hidden) */}
+  {!isRightSidebarVisible && onOpenRightSidebar && (
     <Button
       variant="ghost"
-      className="rounded-full hover:bg-blue-100 transition-colors duration-200 flex items-center space-x-1"
+      size="icon"
+      className="rounded-lg hover:bg-blue-50 border border-gray-200 transition-colors duration-200 w-10 h-10"
+      onClick={onOpenRightSidebar}
+      aria-label="Open right sidebar"
     >
-      <svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        className="h-5 w-5 text-blue-600" 
-        viewBox="0 0 20 20" 
-        fill="currentColor"
-      >
-        <path 
-          fillRule="evenodd" 
-          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-          clipRule="evenodd" 
-        />
-      </svg>
-      <span className="text-sm font-medium text-blue-600">
-        {isResolved ? "Reopen" : "Resolve"}
-      </span>
-      <ChevronDown className="h-4 w-4 text-blue-600" />
+      <Menu className="h-4 w-4 text-gray-600" />
     </Button>
-  </DropdownMenuTrigger>
-  <DropdownMenuContent align="end" className="w-48 rounded-lg shadow-lg">
-    {!isResolved && (
-      <DropdownMenuItem 
-        onClick={handleResolve}
-        className="flex items-center px-4 py-2.5 cursor-pointer text-sm"
-      >
-        <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
-        Mark as Resolved
-      </DropdownMenuItem>
-    )}
-    {isResolved && (
-      <DropdownMenuItem 
-        onClick={handleReopen}
-        className="flex items-center px-4 py-2.5 cursor-pointer text-sm"
-      >
-        <RefreshCw className="h-4 w-4 mr-2 text-blue-600" />
-        Reopen Conversation
-      </DropdownMenuItem>
-    )}
-    <DropdownMenuItem 
-      onClick={handleFollowUp}
-      className="flex items-center px-4 py-2.5 cursor-pointer text-sm"
-    >
-      <Clock className="h-4 w-4 mr-2 text-amber-600" />
-      Mark for Follow-up
-    </DropdownMenuItem>
-  </DropdownMenuContent>
-</DropdownMenu>
+  )}
+</div>
 
 
-
-                {/* Reminders Button */}
-
-                <Tooltip>
-
-                  <TooltipTrigger asChild>
-
-                    <div className="relative">
-
-                      <Popover>
-
-                        <PopoverTrigger asChild>
-
-                          <Button
-
-                            variant="ghost"
-
-                            size="icon"
-
-                            className="rounded-full hover:bg-blue-100 transition-colors duration-200 group relative"
-
-                          >
-
-                            <Clock className="h-5 w-5 text-gray-600 group-hover:text-blue-600" />
-
-                            {reminders.length > 0 && (
-
-                              <Badge
-
-                                variant="secondary"
-
-                                className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-
-                              >
-
-                                {reminders.length}
-
-                              </Badge>
-
-                            )}
-
-                          </Button>
-
-                        </PopoverTrigger>
-
-                        <RemindersPopover
-
-                          reminders={reminders}
-
-                          onCreateReminder={() => setShowReminder(true)}
-
-                          onDeleteReminder={async (id) => {
-
-                            try {
-
-                              const response = await fetch(
-
-                                `https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders/${id}`,
-
-                                {
-
-                                  method: "DELETE",
-
-                                  credentials: "include",
-
-                                }
-
-                              );
-
-
-
-                              if (!response.ok) {
-
-                                throw new Error("Failed to delete reminder");
-
-                              }
-
-
-
-                              toast.success("Reminder deleted successfully");
-
-                              // Refresh reminders after deletion
-
-                              refetchReminders();
-
-                            } catch (error) {
-
-                              toast.error("Failed to delete reminder");
-
-                              console.error("Error deleting reminder:", error);
-
-                            }
-
-                          }}
-
-                        />
-
-                      </Popover>
-
-                    </div>
-
-                  </TooltipTrigger>
-
-                  <TooltipContent>
-
-                    {reminders.length > 0
-
-                      ? `${reminders.length} reminder${
-
-                          reminders.length > 1 ? "s" : ""
-
-                        } set`
-
-                      : "Set reminder"}
-
-                  </TooltipContent>
-
-                </Tooltip>
-
-
-
-                {/* AI Toggle */}
-
-                <div className="flex flex-col items-center">
-
-                  <div className="flex items-center space-x-2 rounded-full px-3 py-1.5">
-
-                    <Switch
-
-                      checked={isAIEnabled}
-
-                      onCheckedChange={toggleAI}
-
-                      disabled={isToggling}
-
-                      className="data-[state=checked]:bg-blue-600"
-
-                    />
-
-                    <span className="text-xs font-medium text-gray-700">
-
-                      AI
-
-                    </span>
-
-                  </div>
-
-                  {/* <span className="text-[10px] text-gray-500 mt-1">
-
-                    {isAIEnabled ? "Enabled" : "Disabled"}
-
-                  </span> */}
-
-                </div>
-
-
-
-                {/* More Options Menu */}
-
-                <DropdownMenu>
-
-                  <DropdownMenuTrigger asChild>
-
-                    <Button
-
-                      variant="ghost"
-
-                      size="icon"
-
-                      className="rounded-full bg-gray-100 hover:bg-blue-100 transition-colors duration-200"
-
-                    >
-
-                      <MoreVertical className="h-5 w-5 text-gray-600" />
-
-                    </Button>
-
-                  </DropdownMenuTrigger>
-
-
-
-                  <DropdownMenuContent
-
-                    align="end"
-
-                    className="rounded-xl shadow-lg border border-gray-200 min-w-[200px] py-2"
-
-                  >
-
-                    <DropdownMenuItem
-
-                      onClick={() => setShowCustomerInfo(true)}
-
-                      className="flex items-center px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors"
-
-                    >
-
-                      <User className="h-4 w-4 mr-3 text-gray-600" />
-
-                      <span className="font-medium">View Customer Info</span>
-
-                    </DropdownMenuItem>
-
-                    <DropdownMenuItem className="flex items-center px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors">
-
-                      <FileText className="h-4 w-4 mr-3 text-gray-600" />
-
-                      <span className="font-medium">Export Chat</span>
-
-                    </DropdownMenuItem>
-
-                    <DropdownMenuItem className="flex items-center px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors">
-
-                      <Trash2 className="h-4 w-4 mr-3 text-gray-600" />
-
-                      <span className="font-medium">Clear Chat</span>
-
-                    </DropdownMenuItem>
-
-                  </DropdownMenuContent>
-
-                </DropdownMenu>
-
-                {/* Right sidebar menu button (only when hidden) */}
-                {/* {!isRightSidebarVisible && onOpenRightSidebar && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="ml-2 rounded-full bg-gray-100 hover:bg-blue-100"
-                    onClick={onOpenRightSidebar}
-                    aria-label="Open right sidebar"
-                  >
-                    <Menu className="h-5 w-5 text-gray-600" />
-                  </Button>
-                )} */}
-
-              </div>
 
             </div>
 
@@ -4777,7 +4640,7 @@ const handleFollowUp = () => {
 
 
 
-            <div className={` p-5 border-t `}>
+            {/* <div className={` p-5 border-t `}> */}
 
               {/* <div className="flex gap-2 mb-4 overflow-x-auto">
 
@@ -4805,466 +4668,221 @@ const handleFollowUp = () => {
 
 
 
-              {sharedProduct && (
-
-                <div className="flex justify-start ml-36 mr-12">
-
-                  <SharedProductPreview
-
-                    product={sharedProduct}
-
-                    onRemove={onClearSharedProduct}
-
-                  />
-
-                </div>
-
-              )}
-
-
-
-              {/* <div className="w-full p-4 bg-white border-t border-gray-100 rounded-t-lg shadow-[0_-4px_12px_rgba(0,0,0,0.02)]"> */}
-
-              {/* Compact Mode Toggle */}
-
-
-
-              {/* Professional Input Area */}
-
-              <div className="w-full p-3 bg-white border-t border-gray-100 rounded-t-lg shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
-
-                <div className="relative w-full">
-
-                  {audioURL ? (
-
-                    <div className="flex items-center gap-2 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
-
-                      <audio controls src={audioURL} className="flex-1" />
-
-                      <button
-
-                        className="p-1.5 rounded-lg hover:bg-gray-100"
-
-                        onClick={() => setAudioURL(null)}
-
-                      >
-
-                        <X className="h-4 w-4 text-gray-500" />
-
-                      </button>
-
-                    </div>
-
-                  ) : (
-
-                    <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:border-gray-300 flex flex-col">
-
-                      {/* Reply/Private buttons inside the text box */}
-
-                      <div className="mb-3 w-36 bg-gray-100 rounded-full p-1 flex items-center shadow-inner">
-
-                        <button
-
-                          className={`flex-1 text-sm px-4 py-1.5 rounded-full transition-all duration-300 ${
-
-                            mode === "reply"
-
-                              ? "bg-blue-600 text-white font-semibold shadow-md"
-
-                              : "text-gray-600 hover:text-blue-600"
-
-                          }`}
-
-                          onClick={() => setMode("reply")}
-
-                        >
-
-                          Reply
-
-                        </button>
-
-                        <button
-
-                          className={`flex-1 text-sm px-3 py-1.5 rounded-full transition-all duration-300 ${
-
-                            mode === "private"
-
-                              ? "bg-purple-600 text-white font-semibold shadow-md"
-
-                              : "text-gray-600 hover:text-purple-600"
-
-                          }`}
-
-                          onClick={() => setMode("private")}
-
-                        >
-
-                          Private
-
-                        </button>
-
-                      </div>
-
-
-
-                      {/* Textarea below the buttons */}
-
-                      <div className="flex-1">
-
-                        <textarea
-
-                          ref={textareaRef}
-
-                          value={message}
-
-                          onChange={(e) => setMessage(e.target.value)}
-
-                          onKeyDown={handleKeyDown}
-
-                          placeholder={
-
-                            mode === "reply"
-
-                              ? sharedProduct
-
-                                ? "Add a message about this product..."
-
-                                : "Shift+Enter for new line • Type / for canned responses"
-
-                              : "Add a private note (only visible to agents)"
-
-                          }
-
-                          rows={1}
-
-                          className="w-full bg-transparent border-none outline-none focus:outline-none resize-none max-h-40 overflow-y-auto text-gray-800 placeholder-gray-400 text-sm"
-
-                        />
-
-
-
-                        {/* Hint text below textarea */}
-
-                        {/* <div className="flex justify-between mt-[-11]">
-
-            <p className="text-xs text-gray-500">
-
-              {mode === "private"
-
-                ? "Shift+Enter for new line • Visible only to agents"
-
-                : "Shift+Enter for new line • Type / for canned responses"}
-
-            </p>
-
-          </div> */}
-
-                      </div>
-
-
-
-                      {/* Action buttons at the bottom */}
-
-                      <div className="flex justify-between items-center mt-3">
-
-                        <div className="flex gap-1.5">
-
-                          <Popover>
-
-                            <PopoverTrigger asChild>
-
-                              <button className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-
-                                <Smile className="h-4 w-4 text-gray-500" />
-
-                              </button>
-
-                            </PopoverTrigger>
-
-                            <PopoverContent
-
-                              className="w-80 p-0 rounded-xl shadow-lg"
-
-                              side="top"
-
-                              align="start"
-
-                            >
-
-                              <Picker
-
-                                onEmojiClick={(emojiData) =>
-
-                                  setMessage((prev) => prev + emojiData.emoji)
-
-                                }
-
-                                width="100%"
-
-                                height={350}
-
-                                previewConfig={{ showPreview: false }}
-
-                                searchPlaceholder="Search emoji..."
-
-                                lazyLoadEmojis={true}
-
-                                skinTonesDisabled
-
-                              />
-
-                            </PopoverContent>
-
-                          </Popover>
-
-
-
-                          <Tooltip>
-
-                            <TooltipTrigger asChild>
-
-                              <button
-
-                                className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-
-                                onClick={() => setIsFileModalOpen(true)}
-
-                              >
-
-                                <Paperclip className="h-4 w-4 text-gray-500" />
-
-                              </button>
-
-                            </TooltipTrigger>
-
-                            <TooltipContent className="text-xs py-1 px-2 bg-gray-800 text-white">
-
-                              Attach file
-
-                            </TooltipContent>
-
-                          </Tooltip>
-
-
-
-                          <Tooltip>
-
-                            <TooltipTrigger asChild>
-
-                              <button
-
-                                className={`p-2 rounded-lg transition-colors ${
-
-                                  isRecording
-
-                                    ? "bg-red-50 hover:bg-red-100 text-red-500"
-
-                                    : "bg-gray-50 hover:bg-gray-100 text-gray-500"
-
-                                }`}
-
-                                onClick={
-
-                                  isRecording ? stopRecording : startRecording
-
-                                }
-
-                              >
-
-                                <Mic className="h-4 w-4" />
-
-                              </button>
-
-                            </TooltipTrigger>
-
-                            <TooltipContent className="text-xs py-1 px-2 bg-gray-800 text-white">
-
-                              {isRecording
-
-                                ? "Stop recording"
-
-                                : "Record voice message"}
-
-                            </TooltipContent>
-
-                          </Tooltip>
-
-                        </div>
-
-
-
-                        {/* Professional Send Button */}
-
-                        {/* word count - keep inline next to send button */}
-                        <div className="flex items-center gap-3 ml-auto mr-2">
-                          <div className="text-xs text-gray-500 whitespace-nowrap">
-                            {message.length}/1000
-                          </div>
-                        </div>
-
-
-
-                        <button
-
-                          className={`p-2.5 rounded-lg flex items-center justify-center transition-colors duration-200 ${
-
-                            message.trim() || audioURL || sharedProduct
-
-                              ? mode === "reply"
-
-                                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-
-                                : "bg-purple-600 hover:bg-purple-700 text-white shadow-md"
-
-                              : "bg-gray-100 text-gray-400 cursor-not-allowed"
-
-                          }`}
-
-                          onClick={() => {
-
-                            if (sharedProduct) {
-
-                              handleShareProduct(message, sharedProduct);
-
-                            } else if (audioURL) {
-
-                              handleSendAudio();
-
-                            } else {
-
-                              sendMessage();
-
-                            }
-
-                          }}
-
-                          disabled={
-
-                            isSending ||
-
-                            (!message.trim() && !audioURL && !sharedProduct)
-
-                          }
-
-                        >
-
-                          {isSending ? (
-
-                            <Loader2 className="h-4 w-4 animate-spin" />
-
-                          ) : (
-
-                            <>
-
-                              <Send className="h-4 w-4" />
-
-                              <span className="ml-1.5 text-xs font-medium">
-
-                                {mode === "reply" ? "Send" : "Add Note"}
-
-                              </span>
-
-                            </>
-
-                          )}
-
-                        </button>
-
-                      </div>
-
-                    </div>
-
-                  )}
-
-
-
-                  {/* Canned responses dropdown */}
-
-                  {showCannedResponses && (
-
-                    <div className="absolute bottom-full left-0 w-full bg-white border border-gray-200 rounded-lg shadow-lg mb-2 max-h-60 overflow-y-auto z-10">
-
-                      <div className="p-2 border-b border-gray-100">
-
-                        <input
-
-                          type="text"
-
-                          placeholder="Search canned responses..."
-
-                          className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-200"
-
-                          onChange={(e) => {
-
-                            // Add filtering logic here
-
-                          }}
-
-                        />
-
-                      </div>
-
-                      <div className="max-h-52 overflow-y-auto">
-
-                        {filteredResponses.map((response) => (
-
-                          <div
-
-                            key={response.id}
-
-                            onClick={() => {
-
-                              setMessage(response.message);
-
-                              setShowCannedResponses(false);
-
-                            }}
-
-                            className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
-
-                          >
-
-                            <div className="flex items-start justify-between">
-
-                              <div>
-
-                                <span className="text-xs font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-
-                                  /{response.shortcode}
-
-                                </span>
-
-                                <p className="text-gray-700 text-sm mt-1.5 line-clamp-2">
-
-                                  {response.message}
-
-                                </p>
-
-                              </div>
-
-                              <span className="text-xs text-gray-400 whitespace-nowrap">
-
-                                {format(parseISO(response.created_at), "MMM d")}
-
-                              </span>
-
-                            </div>
-
-                          </div>
-
-                        ))}
-
-                      </div>
-
-                    </div>
-
-                  )}
-
-                </div>
-
-              </div>
-
+             {/* Replace the current input section with this: */}
+<div className="border-t border-gray-200 bg-white">
+  {sharedProduct && (
+    <div className="flex justify-start ml-4 mr-4 pt-3">
+      <SharedProductPreview
+        product={sharedProduct}
+        onRemove={onClearSharedProduct}
+      />
+    </div>
+  )}
+
+  <div className="relative p-3">
+    {audioURL ? (
+      <div className="flex items-center gap-2 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+        <audio controls src={audioURL} className="flex-1" />
+        <button
+          className="p-1.5 rounded-lg hover:bg-gray-100"
+          onClick={() => setAudioURL(null)}
+        >
+          <X className="h-4 w-4 text-gray-500" />
+        </button>
+      </div>
+    ) : (
+      <div className="bg-gray-50 rounded-lg border border-gray-200 p-3 hover:border-gray-300 flex flex-col">
+        {/* Reply/Private buttons inside the text box */}
+        <div className="mb-3 w-36 bg-gray-100 rounded-full p-1 flex items-center shadow-inner">
+          <button
+            className={`flex-1 text-sm px-4 py-1.5 rounded-full transition-all duration-300 ${
+              mode === "reply"
+                ? "bg-blue-600 text-white font-semibold shadow-md"
+                : "text-gray-600 hover:text-blue-600"
+            }`}
+            onClick={() => setMode("reply")}
+          >
+            Reply
+          </button>
+          <button
+            className={`flex-1 text-sm px-3 py-1.5 rounded-full transition-all duration-300 ${
+              mode === "private"
+                ? "bg-purple-600 text-white font-semibold shadow-md"
+                : "text-gray-600 hover:text-purple-600"
+            }`}
+            onClick={() => setMode("private")}
+          >
+            Private
+          </button>
+        </div>
+
+        {/* Textarea */}
+        <div className="flex-1">
+          <textarea
+            ref={textareaRef}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={
+              mode === "reply"
+                ? sharedProduct
+                  ? "Add a message about this product..."
+                  : "Shift+Enter for new line • Type / for canned responses"
+                : "Add a private note (only visible to agents)"
+            }
+            rows={1}
+            className="w-full bg-transparent border-none outline-none focus:outline-none resize-none max-h-40 overflow-y-auto text-gray-800 placeholder-gray-400 text-sm"
+          />
+        </div>
+
+        {/* Action buttons at the bottom */}
+        <div className="flex justify-between items-center mt-3">
+          <div className="flex gap-1.5">
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <Smile className="h-4 w-4 text-gray-500" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-80 p-0 rounded-xl shadow-lg"
+                side="top"
+                align="start"
+              >
+                <Picker
+                  onEmojiClick={(emojiData) =>
+                    setMessage((prev) => prev + emojiData.emoji)
+                  }
+                  width="100%"
+                  height={350}
+                  previewConfig={{ showPreview: false }}
+                  searchPlaceholder="Search emoji..."
+                  lazyLoadEmojis={true}
+                  skinTonesDisabled
+                />
+              </PopoverContent>
+            </Popover>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                  onClick={() => setIsFileModalOpen(true)}
+                >
+                  <Paperclip className="h-4 w-4 text-gray-500" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs py-1 px-2 bg-gray-800 text-white">
+                Attach file
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className={`p-2 rounded-lg transition-colors ${
+                    isRecording
+                      ? "bg-red-50 hover:bg-red-100 text-red-500"
+                      : "bg-gray-50 hover:bg-gray-100 text-gray-500"
+                  }`}
+                  onClick={isRecording ? stopRecording : startRecording}
+                >
+                  <Mic className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs py-1 px-2 bg-gray-800 text-white">
+                {isRecording ? "Stop recording" : "Record voice message"}
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
+          {/* Word count and send button */}
+          <div className="flex items-center gap-3 ml-auto mr-2">
+            <div className="text-xs text-gray-500 whitespace-nowrap">
+              {message.length}/1000
             </div>
+          </div>
+
+          <button
+            className={`p-2.5 rounded-lg flex items-center justify-center transition-colors duration-200 ${
+              message.trim() || audioURL || sharedProduct
+                ? mode === "reply"
+                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+                  : "bg-purple-600 hover:bg-purple-700 text-white shadow-md"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            }`}
+            onClick={() => {
+              if (sharedProduct) {
+                handleShareProduct(message, sharedProduct);
+              } else if (audioURL) {
+                handleSendAudio();
+              } else {
+                sendMessage();
+              }
+            }}
+            disabled={
+              isSending ||
+              (!message.trim() && !audioURL && !sharedProduct)
+            }
+          >
+            {isSending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                <span className="ml-1.5 text-xs font-medium">
+                  {mode === "reply" ? "Send" : "Add Note"}
+                </span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    )}
+
+    {/* Canned responses dropdown */}
+    {showCannedResponses && (
+      <div className="absolute bottom-full left-3 right-3 bg-white border border-gray-200 rounded-lg shadow-lg mb-2 max-h-60 overflow-y-auto z-10">
+        <div className="p-2 border-b border-gray-100">
+          <input
+            type="text"
+            placeholder="Search canned responses..."
+            className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-200"
+            onChange={(e) => {
+              // Add filtering logic here
+            }}
+          />
+        </div>
+        <div className="max-h-52 overflow-y-auto">
+          {filteredResponses.map((response) => (
+            <div
+              key={response.id}
+              onClick={() => {
+                setMessage(response.message);
+                setShowCannedResponses(false);
+              }}
+              className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-xs font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                    /{response.shortcode}
+                  </span>
+                  <p className="text-gray-700 text-sm mt-1.5 line-clamp-2">
+                    {response.message}
+                  </p>
+                </div>
+                <span className="text-xs text-gray-400 whitespace-nowrap">
+                  {format(parseISO(response.created_at), "MMM d")}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+</div>
 
 
 
