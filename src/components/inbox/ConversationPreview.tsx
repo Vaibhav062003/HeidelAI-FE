@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { MessageCircle, AlertCircle, ThumbsUp, Bot, User2 } from "lucide-react";
 import { getRelativeTime } from '@/components/utils/dateUtils';
 
-
 interface ConversationPreviewProps {
   id: string;
   channelType: "telegram" | "whatsapp" | "instagram" | "web";
@@ -37,6 +36,19 @@ const ConversationPreview = ({
   isAiEnabled = true,
   assignedAgentId
 }: ConversationPreviewProps) => {
+  const getPriorityBadgeStyles = (priority: "high" | "medium" | "low") => {
+    switch (priority) {
+      case "high":
+        return "bg-red-100 text-red-600 border-red-200";
+      case "medium":
+        return "bg-yellow-100 text-yellow-600 border-yellow-200";
+      case "low":
+        return "bg-green-100 text-green-600 border-green-200";
+      default:
+        return "bg-gray-100 text-gray-600 border-gray-200";
+    }
+  };
+
   return (
     <Card
       className={`p-2 w-full rounded-none cursor-pointer transition-colors ${
@@ -62,42 +74,30 @@ const ConversationPreview = ({
               <span className="font-[Inter] font-semibold text-black text-sm truncate mt-[0.5px] ml-[5px]">
                 {customerName}
               </span>
-
-              {/* Conditional icon block */}
             </div>
-
             <span className="text-xs text-gray-500">
               {getRelativeTime(timestamp)}
             </span>
           </div>
-          <p className="text-sm text-gray-600 truncate max-w-[200px] mt-1 ml-[5px]">
-            {lastMessage}
-          </p>
-          <div className="flex items-center gap-2 mt-1">
-            {priority === "low" && (
+          
+          {/* Message and Priority Badge on the same line */}
+          <div className="flex items-center justify-between mt-1 ml-[5px] gap-2">
+            <p className="text-sm text-gray-600 truncate flex-1">
+              {lastMessage}
+            </p>
+            <div className="flex items-center gap-2 flex-shrink-0">
               <Badge
                 variant="outline"
-                className="ml-52 bg-green-100 text-green-600 text-xs px-1 py-0 rounded-sm h-auto leading-tight min-h-0"
+                className={`${getPriorityBadgeStyles(priority)} text-xs px-2 py-0 rounded-sm h-auto leading-tight min-h-0 capitalize`}
               >
-                Low
+                {priority}
               </Badge>
-            )}
-            {priority === "medium" && (
-              <Badge
-                variant="outline"
-                className="ml-52 -mt-1 bg-yellow-100 text-yellow-600 text-xs px-2 py-0 rounded-sm h-auto leading-tight min-h-0"
-              >
-                Medium
-              </Badge>
-            )}
-            {priority === "high" && (
-              <Badge
-                variant="outline"
-                className="ml-52 bg-red-100 text-red-600 text-xs px-1 py-0 rounded-sm h-auto leading-tight min-h-0"
-              >
-                High
-              </Badge>
-            )}
+              {unreadCount > 0 && (
+                <Badge className="bg-blue-500 text-white text-xs px-2 py-0 rounded-full h-auto leading-tight min-h-0">
+                  {unreadCount}
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
       </div>

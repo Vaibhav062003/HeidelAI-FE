@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, X } from "lucide-react";
 import ConversationPreview from "./ConversationPreview";
 import { useConversations } from '../hooks/useConversations';
 import { Conversation } from '@/components/types/conversation';
@@ -10,6 +10,7 @@ import { FilterMenu, FilterOptions } from './FilterMenu';
 import { format, isToday, isYesterday, subDays, startOfDay } from 'date-fns';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { SlidersHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/inbox_button";
 
 interface ConversationListProps {
   selectedConversationId?: string;
@@ -160,10 +161,14 @@ const ConversationList = ({
     }
   }, [groupedConversations]);
 
+  const clearSearch = () => {
+    setSearchQuery('');
+  };
+
   // Early skeleton render after all hooks are declared to preserve hook order
   if (!isClient) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full w-full">
         <div className="p-4 border-b">
           <div className="h-10 bg-gray-200 rounded animate-pulse" />
         </div>
@@ -205,29 +210,39 @@ const ConversationList = ({
             }
           `}
         </style>
-        <div className="w-[340px] max-h-screen bg-white border-r border-gray-200 flex flex-col">
-          <div className="p-4 pr-10 border-b border-gray-200">
-            <div className="relative" style={{ width: "270px" }}>
+        <div className="w-full max-h-screen bg-white border-r border-gray-200 flex flex-col">
+          <div className="p-3 lg:p-4 border-b border-gray-200">
+            <div className="relative w-3/4 lg:w-4/5">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="Search conversations..."
-                className="pl-9 pr-4"
+                className="pl-9 pr-10 text-xs lg:text-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSearch}
+                  className="absolute right-2 top-1.5 h-6 w-6 p-0 hover:bg-gray-200"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
             </div>
-            <div className="flex items-center justify-between mt-2 px-[-1]">
+            <div className="flex items-center justify-between mt-2">
               <Tabs defaultValue="all">
-                <TabsList className="flex gap-2">
-                  <TabsTrigger value="all">Me</TabsTrigger>
-                  <TabsTrigger value="live_agent">Live Agent</TabsTrigger>
-                  <TabsTrigger value="AI">AI</TabsTrigger>
+                <TabsList className="flex gap-1 lg:gap-2 h-8 lg:h-10">
+                  <TabsTrigger value="all" className="text-xs lg:text-sm px-2 lg:px-3">Me</TabsTrigger>
+                  <TabsTrigger value="live_agent" className="text-xs lg:text-sm px-2 lg:px-3">Live Agent</TabsTrigger>
+                  <TabsTrigger value="AI" className="text-xs lg:text-sm px-2 lg:px-3">AI</TabsTrigger>
                 </TabsList>
               </Tabs>
 
-              <div className="ml-15 pr-5 w-64">
-      <FilterMenu filters={filters} onFilterChange={setFilters} />
-    </div>
+              <div className="ml-2 lg:ml-4">
+                <FilterMenu filters={filters} onFilterChange={setFilters} />
+              </div>
             </div>
           </div>
           {/* Loading Skeletons */}
@@ -243,32 +258,42 @@ const ConversationList = ({
 
   if (error) {
     return (
-      <div className="w-[340px] h-full bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 pr-10 border-b border-gray-200">
-          <div className="relative" style={{ width: "270px" }}>
+      <div className="w-full h-full bg-white border-r border-gray-200 flex flex-col">
+        <div className="p-3 lg:p-4 border-b border-gray-200">
+          <div className="relative w-3/4 lg:w-4/5">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Search conversations..."
-              className="pl-9 pr-4"
+              className="pl-9 pr-10 text-xs lg:text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearSearch}
+                className="absolute right-2 top-1.5 h-6 w-6 p-0 hover:bg-gray-200"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
           </div>
-            <div className="flex items-center justify-between mt-2 px-[-1]">
+            <div className="flex items-center justify-between mt-2">
             <Tabs defaultValue="all">
-              <TabsList className="flex gap-2">
-                <TabsTrigger value="all">Me</TabsTrigger>
-                <TabsTrigger value="live_agent">Live Agent</TabsTrigger>
-                <TabsTrigger value="AI">AI</TabsTrigger>
+              <TabsList className="flex gap-1 lg:gap-2 h-8 lg:h-10">
+                <TabsTrigger value="all" className="text-xs lg:text-sm px-2 lg:px-3">Me</TabsTrigger>
+                <TabsTrigger value="live_agent" className="text-xs lg:text-sm px-2 lg:px-3">Live Agent</TabsTrigger>
+                <TabsTrigger value="AI" className="text-xs lg:text-sm px-2 lg:px-3">AI</TabsTrigger>
               </TabsList>
             </Tabs>
 
-              <div className="ml-15 pr-5 w-64">
-      <FilterMenu filters={filters} onFilterChange={setFilters} />
-    </div>
+              <div className="ml-2 lg:ml-4">
+                <FilterMenu filters={filters} onFilterChange={setFilters} />
+              </div>
           </div>
         </div>
-        <div className="p-4 text-neutral-700">
+        <div className="p-4 text-neutral-700 text-xs lg:text-sm">
           Error loading conversations: {error.message}
         </div>
       </div>
@@ -304,30 +329,40 @@ const ConversationList = ({
         `}
       </style>
 
-      <div className="w-[340px] max-h-screen bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 pr-10 border-b border-gray-200">
-          <div className="relative" style={{ width: "270px" }}>
+      <div className="w-full max-h-screen bg-white border-r border-gray-200 flex flex-col">
+        <div className="p-3 lg:p-4 border-b border-gray-200">
+          <div className="relative w-3/4 lg:w-4/5">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Search conversations..."
-              className="pl-9 pr-4"
+              className="pl-9 pr-10 text-xs lg:text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearSearch}
+                className="absolute right-2 top-1.5 h-6 w-6 p-0 hover:bg-gray-200"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
           </div>
 
-            <div className="flex items-center justify-between mt-2 px-[-1]">
+            <div className="flex items-center justify-between mt-2">
             <Tabs defaultValue="all">
-              <TabsList className="flex gap-2">
-                <TabsTrigger value="all">Me</TabsTrigger>
-                <TabsTrigger value="live_agent">Live Agent</TabsTrigger>
-                <TabsTrigger value="AI">AI</TabsTrigger>
+              <TabsList className="flex gap-1 lg:gap-2 h-8 lg:h-10">
+                <TabsTrigger value="all" className="text-xs lg:text-sm px-2 lg:px-3">Me</TabsTrigger>
+                <TabsTrigger value="live_agent" className="text-xs lg:text-sm px-2 lg:px-3">Live Agent</TabsTrigger>
+                <TabsTrigger value="AI" className="text-xs lg:text-sm px-2 lg:px-3">AI</TabsTrigger>
               </TabsList>
             </Tabs>
 
-              <div className="ml-15 pr-5 w-64">
-      <FilterMenu filters={filters} onFilterChange={setFilters} />
-    </div>
+              <div className="ml-2 lg:ml-4">
+                <FilterMenu filters={filters} onFilterChange={setFilters} />
+              </div>
           </div>
         </div>
 
@@ -355,10 +390,10 @@ const ConversationList = ({
                   value={label} 
                   className="border-none"
                 >
-                  <AccordionTrigger className="py-2 px-3 bg-gray-50 hover:bg-gray-100 rounded-md hover:no-underline">
+                  <AccordionTrigger className="py-2 px-2 lg:px-3 bg-gray-50 hover:bg-gray-100 rounded-md hover:no-underline">
                     <div className="flex items-center justify-between w-full pr-2">
-                      <span className="font-medium text-gray-700">{label}</span>
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                      <span className="font-medium text-gray-700 text-xs lg:text-sm">{label}</span>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-1 lg:px-2 py-1 rounded-full">
                         {groupedConversations[label].length} conversation
                         {groupedConversations[label].length !== 1 ? 's' : ''}
                       </span>
