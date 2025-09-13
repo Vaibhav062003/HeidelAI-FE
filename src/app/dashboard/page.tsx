@@ -111,7 +111,7 @@ export default function DashboardPage() {
           className="flex-1 flex overflow-hidden"
         >
           {/* Left Sidebar */}
-          <div className="w-36 fixed left-0 h-full z-20">
+          <div className="w-36 md:fixed md:left-0 h-full z-20">
             <TabsList className="h-full flex flex-col items-start justify-between pt-6 bg-white/90 backdrop-blur-sm border-r">
               {/* Top section: Logo and Profile */}
               <div className="w-full">
@@ -120,7 +120,6 @@ export default function DashboardPage() {
                     <Image src="/logo.png" alt="logo" width={30} height={30} />
                   </Link>
                 </div>
-
                 {/* Navigation Tabs */}
                 <div className="w-full space-y-1">
                   <TabsTrigger
@@ -211,7 +210,6 @@ export default function DashboardPage() {
                   </TabsTrigger>
                 </div>
               </div>
-
               {/* Bottom section: User controls */}
               <div className="w-full pb-4">
                 {isSignedIn && (
@@ -236,7 +234,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Main Content Area */}
-          <div className="flex-1 flex flex-col ml-36 overflow-hidden">
+          <div className="flex-1 flex flex-col md:ml-36 overflow-hidden">
             <TabsContent
               value="inbox"
               className="flex-1 h-full w-full overflow-hidden m-0"
@@ -246,27 +244,21 @@ export default function DashboardPage() {
                 className="flex-1 h-full w-full overflow-hidden m-0"
               >
                 <div className="flex w-full h-[calc(100vh-0px)]">
-                  {/* Conversation List - Fixed width */}
-                  <div
-                    className={`transition-all duration-300 ease-in-out ${
-                      isConversationListVisible
-                        ? "bg-white flex flex-col w-[min(22vw,340px)] min-w-[240px] max-w-[420px] max-h-screen pr-2"
-                        : "w-0 min-w-0"
-                    } border-r border-gray-200 relative`}
-                  >
+                  {/* Conversation List - Fixed width, only render when visible */}
+                  {isConversationListVisible && (
                     <div
-                      className={`${
-                        isConversationListVisible ? "block" : "hidden"
-                      }`}
+                      className="transition-all duration-300 ease-in-out bg-white flex flex-col w-full md:w-[340px] md:min-w-[240px] md:max-w-[420px] md:pr-2 max-h-screen border-r border-gray-200 relative"
                     >
-                      <ConversationList
-                        selectedConversationId={selectedConversationId}
-                        onConversationSelect={setSelectedConversationId}
-                      />
+                      <div className="h-full">
+                        <ConversationList
+                          selectedConversationId={selectedConversationId}
+                          onConversationSelect={setSelectedConversationId}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Collapse Button - Positioned to always be visible */}
+                   {/* Collapse Button - Positioned to always be visible */}
                   <div
                     className={`relative transition-all duration-300 ease-in-out ${
                       isConversationListVisible ? "w-[2px]" : "w-0 min-w-0"
@@ -299,7 +291,7 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Chat View - Flexible width */}
-                  <div ref={mainContentRef} className="flex-1 flex flex-col min-w-[min(50vw,560px)] h-full">
+                  <div ref={mainContentRef} className="flex-1 flex flex-col min-w-0 h-screen w-full">
                     <div className="h-[calc(100vh-0px)]">
                       <ChatView
                         selectedConversationId={selectedConversationId}
