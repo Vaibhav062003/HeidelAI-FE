@@ -1,5 +1,4 @@
-
-
+"use client"
 import React, { useState, useEffect, useRef, use } from "react";
 
 import { Card } from "@/components/ui/card";
@@ -97,10 +96,8 @@ import { User } from "lucide-react";
 import TimerDisplay from "./TimerDisplay";
 
 import { Plus } from "lucide-react";
-
-import { createClient } from "@supabase/supabase-js";
-
-
+import { createClient } from '@supabase/supabase-js';
+import { conversationService, WhatsAppMessage } from "@/components/services/api";
 
 const supabase = createClient(
 
@@ -189,7 +186,7 @@ import Image from "next/image";
 import CustomerInfo from "./CustomerInfo";
 
 import LandingDashboard from "./LandingDashboard";
-
+import api from "@/lib/session_api";
 // import Image from "next/image";
 
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
@@ -1058,18 +1055,15 @@ const AddressMessage = ({ data }: { data: AddressData }) => {
 
 
 
-const FilePreview = ({
-
-  file,
-
-  // progress,
-
-  onCancel,
-
-}: {
-
+const FilePreview = ({ 
+  file, 
+  caption,
+  setCaption,
+  onCancel 
+}: { 
   file: File;
-
+  caption: string;
+  setCaption: (text: string) => void;
   progress: number;
 
   onCancel: () => void;
@@ -1080,88 +1074,59 @@ const FilePreview = ({
 
   const previewUrl = URL.createObjectURL(file);
 
-
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
 
   return (
 
     <div className="relative">
-
-      <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100">
-
-        {isVideo ? (
-
-          <video
-
-            src={previewUrl}
-
-            className="w-full h-full object-cover"
-
-            controls={false}
-
-          />
-
-        ) : (
-
-          <img
-
-            src={previewUrl}
-
-            alt="Preview"
-
-            className="w-full h-full object-cover"
-
-          />
-
-        )}
-
-
-
-        {/* Progress overlay */}
-
-        {/* <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center">
-
-          <div className="w-3/4">
-
-            <div className="text-white text-sm mb-2 text-center">
-
-              {progress < 100 ? 'Uploading...' : 'Processing...'}
-
-              {progress < 100 && ` ${Math.round(progress)}%`}
-
-            </div>
-
-            <div className="w-full bg-gray-200 rounded-full h-2">
-
-              <div 
-
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-
-                style={{ width: `${progress}%` }}
-
+      <div className="relative w-full rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+        {/* Media preview */}
+        <div className="aspect-video w-full relative">
+          {isVideo ? (
+            <video
+              src={previewUrl}
+              className="w-full h-full object-contain"
+              controls={false}
+            />
+          ) : (
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="w-full h-full object-contain"
+            />
+          )}
+          
+          {/* Cancel button */}
+          <button
+            onClick={onCancel}
+            className="absolute top-2 right-2 p-1 rounded-full bg-black/50 hover:bg-black/75 transition-colors"
+          >
+            <X className="h-4 w-4 text-white" />
+          </button>
+        </div>
+        
+        {/* Caption input - WhatsApp style */}
+        <div className="p-3 bg-white border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <Input 
+                placeholder="Add a caption..." 
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                className="border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-400 text-sm"
               />
-
+              <div className="text-xs text-gray-500 mt-1">
+                {formatFileSize(file.size)}
+              </div>
             </div>
-
           </div>
-
-        </div> */}
-
-
-
-        {/* Cancel button */}
-
-        <button
-
-          onClick={onCancel}
-
-          className="absolute top-2 right-2 p-1 rounded-full bg-black/50 hover:bg-black/75 transition-colors"
-
-        >
-
-          <X className="h-4 w-4 text-white" />
-
-        </button>
-
+        </div>
       </div>
 
     </div>
@@ -1443,8 +1408,22 @@ const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
     }
 
   }, [message]);
+  const [fileCaption, setFileCaption] = useState("");
 
+  const token = async()=>{
+    const sessionId = localStorage.getItem("sessionId");
+    if (!sessionId) throw new Error("Session ID not found in localStorage");
 
+    const res = await fetch("api/session-token",{
+      method: "POST",
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({sessionId})
+    })
+    const { token: sessionToken } = await res.json();
+    return sessionToken
+  }
 
   const startRecording = async () => {
 
@@ -1732,74 +1711,62 @@ const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
 
 
 
-  const handleFileUpload = async (file: File | null, recipient: string) => {
-
-    if (!file) return;
-
-
+  const handleFileUpload = async (file: File | null, recipient: string, caption: string = "") => {
+    if (!file || !selectedConversationId) return;
 
     setUploading(true);
 
     setUploadProgress(0);
 
-    const formData = new FormData();
-
-    formData.append("file", file);
-
-
-
     try {
+      const whatsappId = localStorage.getItem('whatsapp_user_id');
+      if (!whatsappId) {
+        toast.error('WhatsApp user ID not found');
+        return;
+      }
 
-      const response = await fetch(
+      // Prepare FormData for media upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('recipient_id', recipient.split('_')[1]);
+      if (caption.trim()) formData.append('caption', caption.trim());
 
-        `https://egenie-whatsapp.koyeb.app/media/${recipient}/upload`,
-
+      // Use a dedicated endpoint for WhatsApp media
+      const response = await api.post(
+        `whatsapp/${whatsappId}/media/send`,
         {
-
-          method: "POST",
-
-          credentials: "include",
-
-          body: formData,
-
+          data: formData,
         }
-
       );
 
-      const data = await response.json();
+      if (response.status !== 200) {
+        throw new Error(`Failed to upload file: ${response.statusText || response.status}`);
+      }
 
+      const data = response.data;
 
+      // Add the message to the UI
+      setMessages(prev => [
+        ...prev,
+        {
+          id: data.details.message_id || Date.now().toString(),
+          content: caption || `[File]`,
+          type: file.type.startsWith('image/') ? 'image' :
+                file.type.startsWith('video/') ? 'video' :
+                file.type.startsWith('audio/') ? 'voice' : 'file',
+          role: 'agent',
+          conversation_id: selectedConversationId,
+          timestamp: new Date().toISOString(),
+          sender_id: 'agent',
+          fileUrl: data.details.media_id,
+          fileName: file.name,
+          fileType: file.type
+        }
+      ]);
 
-      // setMessages(prev => [...prev, {
-
-      //   id: Date.now().toString(),
-
-      //   content: data.fileUrl,
-
-      //   type: file.type.startsWith('image/') ? 'image' : 'video',
-
-      //   role: 'agent',
-
-      //   conversation_id: selectedConversationId ?? '', // Ensure it's always a string
-
-      //   timestamp: new Date().toISOString(),
-
-      //   sender_id: 'agent',
-
-      //   fileUrl: data.fileUrl,
-
-      //   fileName: file.name,
-
-      //   fileType: file.type
-
-      // }]);
-
+      toast.success('File sent successfully');
     } catch (error) {
-
-      toast.error("Failed to upload file");
-
-      console.log("file upload error:", error);
-
+      toast.error(error instanceof Error ? error.message : 'Failed to upload file');
     } finally {
 
       setUploading(false);
@@ -1807,14 +1774,12 @@ const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
       setUploadProgress(0);
 
       setSelectedFile(null);
-
+      setFileCaption("");
       setIsFileModalOpen(false);
 
     }
 
   };
-
-
 
   const handleShareProduct = async (messageText: string, product: Product) => {
 
@@ -1839,39 +1804,19 @@ const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
     setIsSending(true);
 
     try {
-
-      const response = await fetch(
-
-        "https://egenie-whatsapp.koyeb.app/api/send_single_product",
-
-        {
-
-          method: "POST",
-
-          headers: {
-
-            "Content-Type": "application/json",
-
-          },
-
-          body: JSON.stringify({
-
-            conversation_id: selectedConversationId,
-
-            product_id: product.product_id,
-
-            message: messageText.trim() || undefined, // Only send message if not empty
-
-          }),
-
-          credentials: "include",
-
-        }
-
-      );
-
-
-
+      const response = await fetch('https://egenie-whatsapp.koyeb.app/api/send_single_product', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          conversation_id: selectedConversationId,
+          product_id: product.product_id,
+          message: messageText.trim() || undefined
+        }),
+        credentials: 'include'
+      });
+  
       if (!response.ok) {
 
         throw new Error("Failed to share product");
@@ -1913,17 +1858,12 @@ const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
 
 
     let contentToSend = message.trim();
+    const platform = selectedConversationId.split('_')[0]; 
+    const sender_id = selectedConversationId.split('_')[1]; 
+  
 
-    const platform = selectedConversationId.split("_")[0];
-
-    const sender_id = selectedConversationId.split("_")[1];
-
-
-
-    // Check for canned response
-
-    if (contentToSend.startsWith("/")) {
-
+    // Canned response support
+    if (contentToSend.startsWith('/')) {
       const shortcode = contentToSend.slice(1).toLowerCase();
 
       const cannedResponse = cannedResponses.find(
@@ -1947,123 +1887,32 @@ const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
     try {
 
       let response;
+      if (platform === 'whatsapp') {
+        const whatsappId = localStorage.getItem('whatsapp_user_id');
+        if (!whatsappId) throw new Error('No WhatsApp ID found');
 
-
-
-      if (platform === "instagram") {
-
-        // Use Instagram-specific endpoint
-
-        const instagramId = localStorage.getItem("instagram_user_id");
-
-
-
-        if (!instagramId) {
-
-          console.error("No Instagram ID found for sending message");
-
-          throw new Error("No Instagram ID found");
-
+        const payload= {
+          conversation_id: selectedConversationId,
+          content: contentToSend,
+          sender_id: sender_id,
+        };
+        response = await conversationService.sendWhatsAppMessage(whatsappId, payload);
+        if (response.status !== "success") throw new Error(response.message || 'Failed to send message');
+      } else if (platform === 'instagram') {
+        const data = {
+            conversation_id: selectedConversationId,
+            content: contentToSend,
+            sender_id : sender_id
         }
-
-
-
-        response = await fetch(
-
-          `https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/send_message`,
-
-          {
-
-            method: "POST",
-
-            credentials: "include",
-
-            headers: {
-
-              "Content-Type": "application/json",
-
-            },
-
-            body: JSON.stringify({
-
-              conversation_id: selectedConversationId,
-
-              content: contentToSend,
-
-              type: "text",
-
-              sender_id: sender_id,
-
-            }),
-
-          }
-
+        console.log("selectedConversationId:", selectedConversationId);
+        response = await api.post(`/api/instagram/conversations/send_message`,
+         data
         );
-
-      } else if (platform === "whatsapp") {
-
-        // Use WhatsApp-specific endpoint
-
-        const whatsappId = localStorage.getItem("whatsapp_user_id");
-
-
-
-        if (!whatsappId) {
-
-          console.error("No WhatsApp ID found for sending message");
-
-          throw new Error("No WhatsApp ID found");
-
-        }
-
-
-
-        response = await fetch(
-
-          `https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/conversations/send_message`,
-
-          {
-
-            method: "POST",
-
-            credentials: "include",
-
-            headers: {
-
-              "Content-Type": "application/json",
-
-            },
-
-            body: JSON.stringify({
-
-              conversation_id: selectedConversationId,
-
-              content: contentToSend,
-
-              type: "text",
-
-              sender_id: sender_id,
-
-            }),
-
-          }
-
-        );
-
+        if (response.status !== 200) throw new Error('Failed to send message');
       }
-
-
-
-      if (response && !response.ok) throw new Error("Failed to send message");
-
-      setMessage("");
-
+      setMessage('');
     } catch (error) {
-
-      console.error("Error sending message:", error);
-
-      toast.error("Failed to send message");
-
+      toast.error(error instanceof Error ? error.message : 'Failed to send message');
     } finally {
 
       setIsSending(false);
@@ -2107,83 +1956,19 @@ const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
     setIsToggling(true);
 
     try {
-
-      const platform = selectedConversationId.split("_")[0];
-
-      let url;
-
-
-
-      if (platform === "instagram") {
-
-        const instagramId = localStorage.getItem("instagram_user_id");
-
-
-
-        if (!instagramId) {
-
-          console.error("No Instagram ID found for toggling AI");
-
-          throw new Error("No Instagram ID found");
-
-        }
-
-
-
-        // Use Instagram-specific endpoint
-
-        url = `https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}/toggle_ai`;
-
-      } else if (platform === "whatsapp") {
-
-        const whatsappId = localStorage.getItem("whatsapp_user_id");
-
-
-
-        if (!whatsappId) {
-
-          console.error("No WhatsApp ID found for toggling AI");
-
-          throw new Error("No WhatsApp ID found");
-
-        }
-
-
-
-        // Use WhatsApp-specific endpoint
-
-        url = `https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/toggle_ai`;
-
-      } else {
-
-        // Use regular endpoint for other conversations
-
-        url = `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/toggle_ai`;
-
+      const platform = selectedConversationId.split('_')[0];
+      let response;
+      if (platform === 'whatsapp') {
+        const whatsappId = localStorage.getItem('whatsapp_user_id');
+        if (!whatsappId) throw new Error('No WhatsApp ID found');
+        response = await conversationService.toggleWhatsAppAi(whatsappId, selectedConversationId, !isAIEnabled);
+        if (response.status !== "success") throw new Error(response.message || 'Failed to toggle AI');
+      } else if (platform === 'instagram') {
+        response = await api.post(`/api/instagram/conversations/${selectedConversationId}/toggle_ai`, {
+          enabled: !isAIEnabled
+        });
+        if (response.status !== 200) throw new Error('Failed to toggle AI');
       }
-
-
-
-      const response = await fetch(url, {
-
-        method: "POST",
-
-        headers: {
-
-          "Content-Type": "application/json",
-
-        },
-
-        body: JSON.stringify({ enabled: !isAIEnabled }),
-
-      });
-
-
-
-      if (!response.ok) throw new Error("Failed to toggle AI");
-
-
-
       setIsAIEnabled(!isAIEnabled);
 
       toast.success(
@@ -2193,11 +1978,7 @@ const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
       );
 
     } catch (error) {
-
-      console.error("Failed to toggle AI status", error);
-
-      toast.error("Failed to toggle AI status");
-
+      toast.error(error instanceof Error ? error.message : 'Failed to toggle AI status');
     } finally {
 
       setIsToggling(false);
@@ -2225,9 +2006,7 @@ const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
     try {
 
       const response = await fetch(
-
-        `https://your-api-endpoint/conversations/${selectedConversationId}/update_customer_info`,
-
+        `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/update_customer_info`,
         {
 
           method: "POST",
@@ -2270,639 +2049,213 @@ const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
 
   };
 
+useEffect(() => {
+  if (!selectedConversationId) return () => {};
 
-
-  useEffect(() => {
-
-    if (!selectedConversationId) return () => {};
-
-
-
-    const setUnreadCount = async () => {
-
-      try {
-
-        // Check if this is an Instagram or WhatsApp conversation
-
-        const platform = selectedConversationId.split("_")[0];
-
-        let url;
-
-
-
-        if (platform === "instagram") {
-
-          const instagramId = localStorage.getItem("instagram_user_id");
-
-
-
-          if (!instagramId) {
-
-            console.error("No Instagram ID found for setting unread count");
-
-            return;
-
-          }
-
-
-
-          url = `https://egenie-whatsapp.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}/read`;
-
-        } else if (platform === "whatsapp") {
-
-          const whatsappId = localStorage.getItem("whatsapp_user_id");
-
-
-
-          if (!whatsappId) {
-
-            console.error("No WhatsApp ID found for setting unread count");
-
-            return;
-
-          }
-
-
-
-          url = `https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/read`;
-
-        } else {
-
-          url = `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/read`;
-
-        }
-
-
-
-        await fetch(url, {
-
-          method: "GET",
-
-          credentials: "include",
-
-          headers: {
-
-            "Content-Type": "application/json",
-
-          },
-
-        });
-
-      } catch (error) {
-
+  const setUnreadCount = async () => {
+    try {
+      const platform = selectedConversationId.split('_')[0];
+      let url;
+      if (platform === 'instagram') { 
+        url = `/api/instagram/conversations/${selectedConversationId}/read`;
+        await api.get(url);
+      } else if (platform === 'whatsapp') {
+        const whatsappId = localStorage.getItem('whatsapp_user_id');
+        if (!whatsappId) return;
+        url = `/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/read`;
+        await api.get(url);
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
         console.error("Error setting unread count:", error);
-
       }
-
-    };
-
-
-
-    // Fetch conversation details
-
-    const fetchConversation = async () => {
-
-      try {
-
-        setLoading(true);
-
-
-
-        // Check if this is an Instagram or WhatsApp conversation
-
-        const platform = selectedConversationId.split("_")[0];
-
-        let response;
-
-
-
-        if (platform === "instagram") {
-
-          const instagramId = localStorage.getItem("instagram_user_id");
-
-
-
-          if (!instagramId) {
-
-            console.error("No Instagram ID found for fetching conversation");
-
-            throw new Error("No Instagram ID found");
-
-          }
-
-
-
-          response = await fetch(
-
-            `https://heidelai-backend2.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}`,
-
-            {
-
-              method: "GET",
-
-              credentials: "include",
-
-              headers: {
-
-                "Content-Type": "application/json",
-
-              },
-
-            }
-
-          );
-
-        } else if (platform === "whatsapp") {
-
-          const whatsappId = localStorage.getItem("whatsapp_user_id");
-
-
-
-          if (!whatsappId) {
-
-            console.error("No WhatsApp ID found for fetching conversation");
-
-            throw new Error("No WhatsApp ID found");
-
-          }
-
-
-
-          response = await fetch(
-
-            `https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}`,
-
-            {
-
-              method: "GET",
-
-              credentials: "include",
-
-              headers: {
-
-                "Content-Type": "application/json",
-
-              },
-
-            }
-
-          );
-
-        }
-
-        // else {
-
-        //   response = await fetch(
-
-        //     `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}`,
-
-        //     {
-
-        //       method: "GET",
-
-        //       credentials: "include",
-
-        //       headers: {
-
-        //         "Content-Type": "application/json",
-
-        //       },
-
-        //     }
-
-        //   );
-
-        // }
-
-
-
-        const data = await response?.json();
-
-        const enhancedData = {
-
-          ...data,
-
-          customer_name: data.customer?.name || "Unknown",
-
-          email: data.customer?.email || "Unknown",
-
-          billingAddress: data.customer?.billing_address || "Unknown",
-
-          shippingAddress: data.customer?.shipping_address || "Unknown",
-
-        };
-
-        setConversation(data);
-
-        console.log("conversation data", data);
-
-      } catch (error) {
-
-        console.error("Error fetching conversation:", error);
-
-      } finally {
-
-        setLoading(false);
-
-      }
-
-    };
-
-
-
-    const fetchAIStatus = async () => {
-
-      try {
-
-        setLoading(true);
-
-
-
-        // Check conversation platform
-
-        const platform = selectedConversationId.split("_")[0];
-
-        let response;
-
-
-
-        if (platform === "instagram") {
-
-          const instagramId = localStorage.getItem("instagram_user_id");
-
-
-
-          if (!instagramId) {
-
-            console.error("No Instagram ID found for fetching AI status");
-
-            throw new Error("No Instagram ID found");
-
-          }
-
-
-
-          response = await fetch(
-
-            `https://heidelai-backend2.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}/ai`,
-
-            {
-
-              method: "GET",
-
-              credentials: "include",
-
-              headers: {
-
-                "Content-Type": "application/json",
-
-              },
-
-            }
-
-          );
-
-        } else if (platform === "whatsapp") {
-
-          const whatsappId = localStorage.getItem("whatsapp_user_id");
-
-
-
-          if (!whatsappId) {
-
-            console.error("No WhatsApp ID found for fetching AI status");
-
-            throw new Error("No WhatsApp ID found");
-
-          }
-
-
-
-          response = await fetch(
-
-            `https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/ai`,
-
-            {
-
-              method: "GET",
-
-              credentials: "include",
-
-              headers: {
-
-                "Content-Type": "application/json",
-
-              },
-
-            }
-
-          );
-
-        }
-
-        // else {
-
-        //   response = await fetch(
-
-        //     `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/ai`,
-
-        //     {
-
-        //       method: "GET",
-
-        //       credentials: "include",
-
-        //       headers: {
-
-        //         "Content-Type": "application/json",
-
-        //       },
-
-        //     }
-
-        //   );
-
-        // }
-
-
-
-        const data = await response?.json();
-
-        setIsAIEnabled(data);
-
-        console.log("AI data", data);
-
-      } catch (error) {
-
-        console.error("Error fetching AI status:", error);
-
-      } finally {
-
-        setLoading(false);
-
-      }
-
-    };
-
-
-
-    const fetchMessages = async () => {
-
-      try {
-
-        setLoading(true);
-
-
-
-        // Check conversation platform
-
-        const platform = selectedConversationId.split("_")[0];
-
-        let response;
-
-
-
-        if (platform === "instagram") {
-
-          const instagramId = localStorage.getItem("instagram_user_id");
-
-
-
-          if (!instagramId) {
-
-            console.error("No Instagram ID found for fetching messages");
-
-            throw new Error("No Instagram ID found");
-
-          }
-
-
-
-          response = await fetch(
-
-            `https://heidelai-backend2.koyeb.app/api/instagram/${instagramId}/conversations/${selectedConversationId}/messages`,
-
-            {
-
-              method: "GET",
-
-              credentials: "include",
-
-              headers: {
-
-                "Content-Type": "application/json",
-
-              },
-
-            }
-
-          );
-
-        } else if (platform === "whatsapp") {
-
-          const whatsappId = localStorage.getItem("whatsapp_user_id");
-
-
-
-          if (!whatsappId) {
-
-            console.error("No WhatsApp ID found for fetching messages");
-
-            throw new Error("No WhatsApp ID found");
-
-          }
-
-
-
-          response = await fetch(
-
-            `https://egenie-whatsapp.koyeb.app/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/messages`,
-
-            {
-
-              method: "GET",
-
-              credentials: "include",
-
-              headers: {
-
-                "Content-Type": "application/json",
-
-              },
-
-            }
-
-          );
-
-        }
-
-        // else {
-
-        //   response = await fetch(
-
-        //     `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/messages`,
-
-        //     {
-
-        //       method: "GET",
-
-        //       credentials: "include",
-
-        //       headers: {
-
-        //         "Content-Type": "application/json",
-
-        //       },
-
-        //     }
-
-        //   );
-
-        // }
-
-
-
-        const data = await response?.json();
-
-        setMessages(data);
-
-        console.log("messages data", data);
-
-      } catch (error) {
-
-        console.error("Error fetching messages:", error);
-
-        toast.error("Failed to load messages");
-
-      } finally {
-
-        setLoading(false);
-
-      }
-
-    };
-
-
-
-    // Set up WebSocket connection based on platform
-
-    const platform = selectedConversationId.split("_")[0];
-
-    let ws: WebSocket | null = null;
-
-
-
-    if (platform === "instagram") {
-
-      const instagramId = localStorage.getItem("instagram_user_id");
-
-      const clientId = `client-${Date.now()}-ig`;
-
-
-
-      if (instagramId) {
-
-        ws = new WebSocket(
-
-          `wss://heidelai-backend2.koyeb.app/ws2/instagram/${clientId}/${instagramId}`
-
-        );
-
-        console.log("Connected to Instagram WebSocket");
-
-      }
-
-    } else if (platform === "whatsapp") {
-
-      const whatsappId = localStorage.getItem("whatsapp_user_id");
-
-      const clientId = `client-${Date.now()}-wa`;
-
-
-
-      if (whatsappId) {
-
-        ws = new WebSocket(
-
-          `wss://egenie-whatsapp.koyeb.app/ws2/whatsapp/${clientId}/${whatsappId}`
-
-        );
-
-        console.log("Connected to WhatsApp WebSocket");
-
-      }
-
     }
-
-    // else {
-
-    //   // Regular WebSocket for other conversations
-
-    //   ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/client-${Date.now()}`);
-
-    // }
+  };
 
 
-
-    if (ws) {
-
-      ws.onmessage = (event) => {
-
-        const data = JSON.parse(event.data);
-
-        if (
-
-          data.type === "new_message" &&
-
-          data.message.conversation_id === selectedConversationId
-
-        ) {
-
-          setMessages((prev) => [...prev, data.message]);
-
-        } else if (
-
-          data.type === "message_deleted" &&
-
-          data.conversation_id === selectedConversationId
-
-        ) {
-
-          setMessages((prev) =>
-
-            prev.filter((msg) => msg.id !== data.message_id)
-
-          );
-
-          console.log(`Message with ID ${data.message_id} was deleted`);
-
+  
+  // Fetch conversation details
+  const fetchConversation = async () => {
+    try {
+      setLoading(true);
+      const platform = selectedConversationId.split('_')[0];
+      let response;
+      if (platform === 'instagram') {
+        response = await api.get(`/api/instagram/conversations/${selectedConversationId}`);
+        setConversation(response?.data);
+      } else if (platform === 'whatsapp') {
+        const whatsappId = localStorage.getItem('whatsapp_user_id');
+        if (!whatsappId) return;
+        response = await conversationService.getWhatsAppConversations();
+        if (response.status === "success") {
+          const dataArray = Array.isArray(response.data) ? response.data : [];
+          const found = dataArray.find((c: Conversation) => c.id === selectedConversationId);
+          setConversation(found || null);
         }
+      }
+    } catch (error) {
+      toast.error("Failed to load conversation");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const fetchAIStatus = async () => {
+    try {
+      setLoading(true);
+      const platform = selectedConversationId.split('_')[0];
+      let response;
+      if (platform === 'instagram') {
+        response = await api.get(`/api/instagram/conversations/${selectedConversationId}/ai`);
+        setIsAIEnabled(!!response?.data);
+      } else if (platform === 'whatsapp') {
+        const whatsappId = localStorage.getItem('whatsapp_user_id');
+        if (!whatsappId) return;
+        response = await conversationService.getWhatsAppAiStatus(whatsappId, selectedConversationId);
+        setIsAIEnabled(!!response.data);
+      }
+    } catch (error) {
+      setIsAIEnabled(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const fetchMessages = async () => {
+    try {
+      setLoading(true);
+      const platform = selectedConversationId.split('_')[0];
+      let response;
+      if (platform === 'instagram') {
+        response = await api.get(`/api/instagram/conversations/${selectedConversationId}/messages`);
+        setMessages(response?.data || []);
+      } else if (platform === 'whatsapp') {
+        const whatsappId = localStorage.getItem('whatsapp_user_id');
+        if (!whatsappId) return;
+        response = await conversationService.getWhatsAppMessages(whatsappId, selectedConversationId);
+        setMessages(Array.isArray(response.data) ? response.data : []);
+      }
+    } catch (error) {
+      toast.error('Failed to load messages');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // WebSocket setup
+  const WS_BASE_URL = "wss://egenie-whatsapp.koyeb.app";
+  const platform = selectedConversationId.split('_')[0];
+  
+  // Create a unique clientId for this chat view instance
+  const chatClientId = `chat-view-${Date.now()}`;
+  localStorage.setItem('chat_client_id', chatClientId); // Store it in localStorage if needed elsewhere
+  let ws: WebSocket | null = null;
+  
+  if (platform === 'instagram') {
+    token().then(sessionToken => {
+      // Use the unique clientId here instead of reusing the one from localStorage
+      const clientId = localStorage.getItem('chat_client_id') || chatClientId;
+      ws = new WebSocket(`${WS_BASE_URL}/ws2/instagram/${clientId}`, [sessionToken]);
+
+      ws.onopen = () => {
+        console.log(`ChatView: Connected to Instagram WebSocket with ID ${clientId}`);
       };
 
-    }
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("ChatView: Instagram WebSocket received message: ", data);
+        
+        if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
+          console.log("ChatView: new_message event type ✅ && data conv_id: ", data.message.conversation_id);
+  
+          // Check if this message already exists in the messages array to avoid duplicates
+          const messageExists = messages.some(msg => 
+            msg.id === data.message.id || 
+            (msg.content === data.message.content && 
+            msg.timestamp === data.message.timestamp && 
+            msg.sender_id === data.message.sender_id)
+          );
+          
+          // Only add the message if it's not already in the messages array
+          if (!messageExists) {
+            setMessages(prev => [...prev, data.message]);
+          }
+        }
 
+        else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
+          setMessages(prev => 
+            prev.filter(msg => msg.id !== data.message_id)
+          );
+          
+          console.log(`ChatView: Message with ID ${data.message_id} was deleted`);
+        }
+      };
+      
+      // Also add error and close handlers
+      ws.onerror = (error) => {
+        console.error("ChatView: WebSocket error: ", error);
+      };
+      
+      ws.onclose = (event) => {
+        console.log(`ChatView: WebSocket closed with code ${event.code}: ${event.reason}`);
+      };
 
+    }).catch(error => {
+      console.error("Failed to get session token:", error);
+    });
+    
+    } 
+  if (platform === 'whatsapp') {
+    const whatsappId = localStorage.getItem('whatsapp_user_id');
+    const clientId = `client-${Date.now()}-wa`;
+    
+    if (whatsappId) {
+      ws = new WebSocket(`${WS_BASE_URL}/ws2/whatsapp/${clientId}/${whatsappId}`);
+      console.log("Connected to WhatsApp WebSocket");
 
-    fetchConversation();
+      ws.onopen = () => {
+        console.log(`ChatView: Connected to WhatsApp WebSocket with ID ${clientId}`);
+      };
+      
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("ChatView: WhatsApp WebSocket received message: ", data);
+        
+        if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
+          console.log("ChatView: new_message event type ✅ && data conv_id: ", data.message.conversation_id);
+          setMessages(prev => [...prev, data.message]);
+        }
+        else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
+          setMessages(prev => 
+            prev.filter(msg => msg.id !== data.message_id)
+          );
+          console.log(`ChatView: Message with ID ${data.message_id} was deleted`);
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.error("ChatView: WebSocket error: ", error);
+      };
+      
+      ws.onclose = (event) => {
+        console.log(`ChatView: WebSocket closed with code ${event.code}: ${event.reason}`);
+      };
+    } 
+  } 
+  // else {
+  //   // Regular WebSocket for other conversations
+  //   ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/client-${Date.now()}`);
+  // }
+  
 
-    setUnreadCount();
+  
+  fetchConversation();
+  setUnreadCount();
+  fetchAIStatus();
+  fetchMessages();
 
-    fetchAIStatus();
-
-    fetchMessages();
-
-
-
-    return () => {
-
-      if (ws) ws.close();
-
-    };
-
-  }, [selectedConversationId]);
-
-
+  return () => {if (ws) ws.close();};
+}, [selectedConversationId]);
 
   // Decide on avatar source
 
@@ -3784,187 +3137,99 @@ const handleFollowUp = () => {
 
             </Dialog>
 
-
-
-            {/* Modal for attaching files */}
-
-            <Dialog open={isFileModalOpen} onOpenChange={setIsFileModalOpen}>
-
-              <DialogContent className="sm:max-w-lg">
-
-                <DialogHeader>
-
-                  <DialogTitle>Upload Media</DialogTitle>
-
-                  <DialogDescription>
-
-                    Upload an image or video file
-
-                  </DialogDescription>
-
-                </DialogHeader>
-
-
-
-                <div className="grid gap-4">
-
-                  {!selectedFile ? (
-
-                    <div
-
-                      className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer"
-
-                      onClick={() => inputFileRef.current?.click()}
-
-                      onDragOver={(e) => e.preventDefault()}
-
-                      onDrop={(e) => {
-
-                        e.preventDefault();
-
-                        const file = e.dataTransfer.files[0];
-
-                        if (
-
-                          file &&
-
-                          (file.type.startsWith("image/") ||
-
-                            file.type.startsWith("video/"))
-
-                        ) {
-
-                          setSelectedFile(file);
-
-                        }
-
-                      }}
-
-                    >
-
-                      <Upload className="h-8 w-8 text-gray-400 mb-2" />
-
-                      <p className="text-sm text-gray-500">
-
-                        Drop your media here or click to browse
-
-                      </p>
-
-                    </div>
-
-                  ) : (
-
-                    <FilePreview
-
-                      file={selectedFile}
-
-                      progress={uploadProgress}
-
-                      onCancel={() => {
-
-                        setSelectedFile(null);
-
-                        setUploadProgress(0);
-
-                      }}
-
-                    />
-
-                  )}
-
-
-
-                  <input
-
-                    type="file"
-
-                    ref={inputFileRef}
-
-                    className="hidden"
-
-                    onChange={(e) => {
-
-                      const file = e.target.files?.[0];
-
-                      if (
-
-                        file &&
-
-                        (file.type.startsWith("image/") ||
-
-                          file.type.startsWith("video/"))
-
-                      ) {
-
-                        setSelectedFile(file);
-
-                      }
-
-                    }}
-
-                    accept="image/*,video/*"
-
-                  />
-
-                </div>
-
-
-
-                <div className="flex justify-end gap-2">
-
-                  <Button
-
-                    type="button"
-
-                    variant="outline"
-
-                    onClick={() => setIsFileModalOpen(false)}
-
-                    disabled={uploading}
-
-                  >
-
-                    Cancel
-
-                  </Button>
-
-                  <Button
-
-                    type="button"
-
-                    disabled={!selectedFile || uploading}
-
-                    onClick={() =>
-
-                      handleFileUpload(selectedFile, selectedConversationId)
-
+        {/* Modal for attaching files */}
+        <Dialog open={isFileModalOpen} onOpenChange={(open) => {
+          setIsFileModalOpen(open);
+          if (!open) {
+            setFileCaption("");
+            setSelectedFile(null);
+          }
+        }}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Upload Media</DialogTitle>
+              <DialogDescription>
+                Upload an image or video file with an optional caption
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4">
+              {!selectedFile ? (
+                <div
+                  className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer"
+                  onClick={() => inputFileRef.current?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files[0];
+                    if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+                      setSelectedFile(file);
                     }
-
-                  >
-
-                    {uploading ? (
-
-                      <>
-
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-
-                        Sending...
-
-                      </>
-
-                    ) : (
-
-                      "Send"
-
-                    )}
-
-                  </Button>
-
+                  }}
+                >
+                  <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-500">
+                    Drop your media here or click to browse
+                  </p>
                 </div>
+              ) : (
+                <FilePreview 
+                  file={selectedFile}
+                  caption={fileCaption}
+                  setCaption={setFileCaption}
+                  progress={uploadProgress}
+                  onCancel={() => {
+                    setSelectedFile(null);
+                    setFileCaption("");
+                    setUploadProgress(0);
+                  }}
+                />
+              )}
+              
+              <input
+                type="file"
+                ref={inputFileRef}
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+                    setSelectedFile(file);
+                  }
+                }}
+                accept="image/*,video/*"
+              />
+            </div>
 
-              </DialogContent>
-
-            </Dialog>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsFileModalOpen(false);
+                  setSelectedFile(null);
+                  setFileCaption("");
+                }}
+                disabled={uploading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                disabled={!selectedFile || uploading}
+                onClick={() => handleFileUpload(selectedFile, selectedConversationId, fileCaption)}
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Sending...
+                  </>
+                ) : (
+                  'Send'
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
 
 

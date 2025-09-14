@@ -17,7 +17,7 @@ import {
 
 interface QuickAction {
   id: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   label: string;
   action: () => void;
   variant?: "default" | "secondary" | "outline" | "ghost";

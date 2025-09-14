@@ -123,7 +123,7 @@ export default function DashboardPage() {
   useEffect(() => {
     console.log(user);
     if (isLoaded && !isSignedIn) {
-      router.push("/dashboard");
+      router.push("/");
     }
   }, [isLoaded, isSignedIn, router, user]);
 
@@ -319,21 +319,53 @@ export default function DashboardPage() {
                   ))}
                 </div>
               </div>
-              
+
               {/* Bottom section: User controls */}
               <div className="w-full pb-4">
                 {isSignedIn && (
-                  <div className="w-full flex justify-center items-center">
-                    <UserButton 
-                      appearance={{
-                        elements: {
-                          userButtonAvatarBox: showIconsOnly ? "w-6 h-6" : "w-6 h-6",
-                          userButtonAvatar: "rounded-full",
-                          userButtonAction: "hidden",
-                        },
-                      }}
-                    />
-                  </div>
+                  <>
+                    <div className="w-full flex justify-center items-center mb-4">
+                      <div>
+                        <UserButton 
+                          appearance={{
+                            elements: {
+                              userButtonAvatarBox: "w-10 h-10",
+                              userButtonAvatar: "rounded-full",
+                              userButtonAction: "hidden",
+                            },
+                          }}
+                        />
+                      </div>
+                    </div>
+                    {/* <div className="w-full flex justify-center items-center">
+                      <div className="relative flex items-center">
+                        <button
+                          onClick={() => setShowOrgSwitcher((v) => !v)}
+                          className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition"
+                          title="Switch Organization"
+                        >
+                          <span className="text-gray-700 font-bold">Org</span>
+                        </button>
+                        {showOrgSwitcher && (
+                          <div className="absolute left-full top-0 z-30 ml-2">
+                            <OrganizationSwitcher
+                              afterCreateOrganizationUrl="/org/:slug"
+                              afterSelectOrganizationUrl="/org/:slug"
+                              afterSelectPersonalUrl="/dashboard"
+                              appearance={{
+                                elements: {
+                                  organizationSwitcherButton:
+                                    "w-10 h-10 rounded-full bg-transparent p-0 flex items-center justify-center",
+                                  organizationPreviewAvatarBox: "w-10 h-10",
+                                  organizationPreviewAvatar: "hidden",
+                                },
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div> */}
+                  </>   
                 )}
               </div>
             </TabsList>

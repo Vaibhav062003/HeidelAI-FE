@@ -1,8 +1,16 @@
 'use client';
+import Image from "next/image";
 
 export default function TermsOfService() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-8 max-w-4xl mx-auto">
+            <Image
+              src="/heidelai.png"
+              alt="Privacy Policy"
+              width={100}
+              height={100}
+              className="rounded-lg mb-8"
+            />
       <h1 className="text-3xl font-bold mb-8">Terms and Conditions of Use</h1>
 
       <div className="space-y-8">

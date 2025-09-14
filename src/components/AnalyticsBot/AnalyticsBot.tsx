@@ -212,6 +212,15 @@ function formatBotMessage(output: string) {
   return formatted;
 }
 
+type ConversationPhase = 
+  | 'idle'
+  | 'awaiting-refinement'
+  | 'platform-analysis'
+  | 'awaiting-followup'
+  | 'final-analysis';
+
+const DEFAULT_PLATFORMS = ["youtube", "reddit", "google", "instagram"]; // or let user select
+
 const AnalyticsBot = () => {
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -228,6 +237,11 @@ const AnalyticsBot = () => {
   });
   const [showProcessing, setShowProcessing] = useState(true);
   const [isAnalysisComplete, setIsAnalysisComplete] = useState(false);
+  const [conversationPhase, setConversationPhase] = useState<ConversationPhase>('idle');
+  const [pendingRefinementQuestion, setPendingRefinementQuestion] = useState<string | null>(null);
+  const [pendingFollowupQuestion, setPendingFollowupQuestion] = useState<string | null>(null);
+  const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
+  const [followUpAnswers, setFollowUpAnswers] = useState<{ [q: string]: string }>({});
   const [screenWidth, setScreenWidth] = useState(0);
   const ws = useRef<WebSocket | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -247,7 +261,7 @@ const AnalyticsBot = () => {
   const scrollToBottom = () => {
     if (lastMessageRef.current) {
       lastMessageRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
+    } 
   };
 
   useEffect(() => {
@@ -272,7 +286,8 @@ const AnalyticsBot = () => {
   }, [messages]);
 
   useEffect(() => {
-    const wsUrl = 'wss://backend-chatbot.koyeb.app/ws2 ';
+    // Use ws:// and correct path
+    const wsUrl = 'ws://localhost:8000/ws/analyze';
     ws.current = new WebSocket(wsUrl);
     
     ws.current.onopen = () => {
@@ -349,18 +364,16 @@ const AnalyticsBot = () => {
           }
           break;
 
-        case "question":
-          setIsTyping(true);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          const questionMessage: ChatMessage = {
-            type: 'incoming',
-            content: data.content.includes("candidate") || data.content.includes("political party")
-              ? `🎯 ${data.content}`
-              : `🤖 ${data.content}`
-          };
-          setMessages(prev => [...prev, questionMessage]);
+        case "follow_up_questions":
+          // Backend sends a list of questions
+          setFollowUpQuestions(data.questions || []);
+          setConversationPhase('awaiting-followup');
           setIsWaitingForAnswer(true);
           setIsTyping(false);
+          // Show each question as a message
+          (data.questions || []).forEach((q: string) => {
+            setMessages(prev => [...prev, { type: 'incoming', content: `🤖 ${q}` }]);
+          });
           break;
 
         case "result":
@@ -384,7 +397,50 @@ const AnalyticsBot = () => {
           };
           setMessages(prev => [...prev, readyMessage]);
           setIsAnalysisComplete(true);
+          setIsTyping(false); // Ensure typing indicator is off
+          setConversationPhase('idle');
+          break;
+
+        case "final_result":
+          await animateThinking();
+          setMessages(prev => [
+            ...prev,
+            {
+              type: 'incoming',
+              content: `✨ ${formatBotMessage(data.combined_analysis)}`
+            }
+          ]);
+          setIsWaitingForAnswer(false);
+          setProcessingState(prev => ({
+            ...prev,
+            isVisible: false,
+            platform: ''
+          }));
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          setMessages(prev => [
+            ...prev,
+            { type: 'incoming', content: '🤖 Ready for your next question!' }
+          ]);
+          setIsAnalysisComplete(true);
           setIsTyping(false);
+          setConversationPhase('idle');
+          break;
+
+        case "platform-analysis-start":
+          setConversationPhase('platform-analysis');
+          setProcessingState(prev => ({
+            ...prev,
+            phase: 'platform-analysis',
+            isVisible: true,
+          }));
+          break;
+
+        case "platform-analysis-end":
+          setProcessingState(prev => ({
+            ...prev,
+            isVisible: false,
+            platform: ''
+          }));
           break;
 
         case "error":
@@ -394,6 +450,7 @@ const AnalyticsBot = () => {
           };
           setMessages(prev => [...prev, errorMessage]);
           setIsWaitingForAnswer(false);
+          setConversationPhase('idle');
           break;
       }
     } catch (error) {
@@ -403,7 +460,7 @@ const AnalyticsBot = () => {
 
   const handleSendMessage = () => {
     if (!inputMessage.trim()) return;
-  
+
     try {
       const newMessage: ChatMessage = { 
         type: 'outgoing', 
@@ -412,11 +469,35 @@ const AnalyticsBot = () => {
       setMessages(prev => [...prev, newMessage]);
       setIsTyping(true);
       setIsAnalysisComplete(false);
-      
+
       if (ws.current?.readyState === WebSocket.OPEN) {
-        ws.current.send(inputMessage);
+        if (conversationPhase === 'idle') {
+          // Initial user query: send {query, platforms}
+          ws.current.send(JSON.stringify({
+            query: inputMessage,
+            platforms: DEFAULT_PLATFORMS
+          }));
+          setConversationPhase('platform-analysis');
+        } else if (conversationPhase === 'awaiting-followup' && followUpQuestions.length > 0) {
+          // Collect answers for all follow-up questions
+          const nextQuestion = followUpQuestions.find(q => !followUpAnswers[q]);
+          if (nextQuestion) {
+            setFollowUpAnswers(prev => ({ ...prev, [nextQuestion]: inputMessage }));
+            // If all answered, send context to backend
+            const allAnswered = followUpQuestions.every(q => followUpAnswers[q] || (q === nextQuestion));
+            if (allAnswered) {
+              ws.current.send(JSON.stringify({
+                context: { ...followUpAnswers, [nextQuestion]: inputMessage }
+              }));
+              setFollowUpQuestions([]);
+              setFollowUpAnswers({});
+              setConversationPhase('final-analysis');
+            }
+          }
+        }
+        // ...other phases as needed...
       }
-  
+
       setInputMessage('');
       setTimeout(scrollToBottom, 50);
     } catch (error) {

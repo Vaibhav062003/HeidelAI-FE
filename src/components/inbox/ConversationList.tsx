@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -88,6 +89,8 @@ const ConversationList = ({
       if (filters.hasQuery && !conversation.query) {
         return false;
       }
+
+      // console.log("platform: ", conversation.platform)
 
       // Apply search
       const nameMatch = conversation.customer_name
