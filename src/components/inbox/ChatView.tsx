@@ -1313,15 +1313,20 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
       </style>
     <TooltipProvider>
       {!selectedConversationId ? (
-        <Card className="h-full flex flex-col bg-white  items-center justify-center">
-          <div className="text-center text-gray-500">
-            <LandingDashboard/>
-            {/* <h3 className="text-3xl font-bold text-black mb-2">Welcome to your dashboard!</h3>
-            <p>Select a conversation from the list to continue</p> */}
-          </div>
-        </Card>
+       
+          <div className="flex flex-col h-full w-full min-h-0 min-w-0 bg-gradient-to-br from-gray-50 to-gray-100">
+            <div className="flex-1 flex flex-col h-full w-full min-h-0 min-w-0 p-2 sm:p-4 md:p-6 lg:p-8">
+            <div className="text-center text-gray-500">
+              <LandingDashboard/>
+              {/* <h3 className="text-3xl font-bold text-black mb-2">Welcome to your dashboard!</h3>
+              <p>Select a conversation from the list to continue</p> */}
+            </div>
+            </div>
+           </div>
+     
+        
       ) : (
-      <Card className="h-full flex flex-col bg-white max-h-screen">
+      <Card >
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">

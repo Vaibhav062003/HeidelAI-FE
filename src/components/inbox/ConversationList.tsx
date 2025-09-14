@@ -111,9 +111,6 @@ const ConversationList = ({
       <>
       <style>
       {`
-
-
-
         .custom-scrollb::-webkit-scrollbar {
           width: 4px;
           opacity: 0;
@@ -270,7 +267,7 @@ const ConversationList = ({
           ))}
         </div>
       </ScrollArea> */}
-        <div className="flex-1 custom-scrollb  overflow-y-scroll">
+      <div className="flex-1 h-[10px] custom-scrollb  overflow-y-scroll">
       {searchResults.length === 0 ? (
         <EmptyState 
           message={
