@@ -267,8 +267,14 @@ const ConversationList = ({
               </Tabs>
 
               <div className="flex-shrink-0">
-                <FilterMenu filters={filters} onFilterChange={setFilters} />
-              </div>
+  <div className="border border-gray-300 rounded-md hover:border-gray-400 transition-colors">
+    <FilterMenu 
+      filters={filters} 
+      onFilterChange={setFilters}
+    />
+  </div>
+</div>
+
             </div>
           </div>
           {/* Loading Skeletons */}
@@ -329,8 +335,14 @@ const ConversationList = ({
             </Tabs>
 
             <div className="flex-shrink-0">
-              <FilterMenu filters={filters} onFilterChange={setFilters} />
-            </div>
+  <div className="border border-gray-300 rounded-md hover:border-gray-400 transition-colors">
+    <FilterMenu 
+      filters={filters} 
+      onFilterChange={setFilters}
+    />
+  </div>
+</div>
+
           </div>
         </div>
         <div className="p-4 text-neutral-700 text-xs lg:text-sm">
@@ -414,8 +426,14 @@ const ConversationList = ({
             </Tabs>
 
             <div className="flex-shrink-0">
-              <FilterMenu filters={filters} onFilterChange={setFilters} />
-            </div>
+  <div className="border border-gray-300 rounded-md hover:border-gray-400 transition-colors">
+    <FilterMenu 
+      filters={filters} 
+      onFilterChange={setFilters}
+    />
+  </div>
+</div>
+
           </div>
         </div>
 

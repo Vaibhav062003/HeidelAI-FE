@@ -46,18 +46,17 @@ export const FilterMenu: React.FC<FilterMenuProps> = ({
 
   return (
     <Popover>
-      {/* IMPORTANT: asChild so this div IS the trigger */}
+      {/* Updated trigger with tight spacing and proper centering */}
       <PopoverTrigger asChild>
-  <div
-    tabIndex={0}
-    role="button"
-    aria-haspopup="true"
-    className="w-full flex items-center gap-0 px-4 py-2 rounded-md hover:bg-gray-10 cursor-pointer z-50 pointer-events-auto"
-  >
-    <Filter className="h-4 w-4 ml-3" />
-  </div>
-</PopoverTrigger>
-
+        <div
+          tabIndex={0}
+          role="button"
+          aria-haspopup="true"
+          className="h-8 lg:h-10 w-8 lg:w-10 flex items-center justify-center hover:bg-gray-50 cursor-pointer transition-colors"
+        >
+          <Filter className="h-4 w-4 text-gray-600" />
+        </div>
+      </PopoverTrigger>
 
       <PopoverContent className="w-72">
         <div className="space-y-4">
