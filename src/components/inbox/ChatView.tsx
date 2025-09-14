@@ -3969,675 +3969,323 @@ const handleFollowUp = () => {
 
 
             <ScrollArea
-
-              ref={scrollAreaRef}
-
-              className="flex-1 h-full pl-5 pr-4 py-0"
-
-            >
-
-              <div className="space-y-3">
-
-                {messages.map((message, index) => {
-
-
-
-                  if (message.role === "system") {
-
-    return (
-
-      <div key={message.id} className="flex justify-center my-4">
-
-        <div className="bg-gray-100 text-gray-600 text-xs px-4 py-2 rounded-full">
-
-          <span className="font-medium">{message.content}</span>
-
-          <span className="ml-2 text-gray-400">
-
-            {formatMessageTime(message.timestamp)}
-
-          </span>
-
-        </div>
-
-      </div>
-
-    );
-
-  }
-
-
-
-                  const productInfo = message.content
-
-                    ? extractProductInfo(message.content)
-
-                    : null;
-
-                  const botProductInfo = message.content
-
-                    ? extractBotProductInfo(message.content)
-
-                    : null;
-
-                  const addressData = message.content
-
-                    ? extractAddressData(message.content)
-
-                    : null;
-
-                  const agentProductInfo = message.content
-
-                    ? extractAgentProductInfo(message.content)
-
-                    : null;
-
-
-
-                  return (
-
-                    <div key={message.id}>
-
-      {productInfo && message.role === "customer" && (
-
-        <div className="flex flex-col w-fit mb-4">
-
-          {productInfo.map(
-
-            (product: ProductInfo, idx: number) => (
-
-              <a
-
-                key={idx}
-
-                href={product.link}
-
-                target="_blank"
-
-                rel="noopener noreferrer"
-
-                className="flex items-center space-x-4 p-3 rounded-lg border hover:shadow-md transition-shadow"
-
-              >
-
-                <img
-
-                  src={product.image_url}
-
-                  alt={product.name}
-
-                  className="w-16 h-16 object-cover rounded"
-
-                />
-
-                <div className="flex-1 min-w-0">
-
-                  <h3 className="text-sm font-medium line-clamp-2">
-
-                    {product.name}
-
-                  </h3>
-
-                  <div className="flex items-center space-x-2 mt-1">
-
-                    <span className="text-black font-semibold">
-
-                      {product.sale_price}
-
-                    </span>
-
-                    {!product.sale_price && (
-
-                      <>
-
-                        <span className="text-black font-semibold">
-
-                          {product.price}
-
-                        </span>
-
-                      </>
-
-                    )}
-
-                    {product.sale_price && (
-
-                      <span className="text-gray-500 line-through text-sm">
-
-                        {product.price}
-
-                      </span>
-
-                    )}
-
-                  </div>
-
+  ref={scrollAreaRef}
+  className="flex-1 h-full px-3 sm:px-4 py-1 sm:py-2"
+>
+  <div className="space-y-1 sm:space-y-2 max-w-full">
+    {messages.map((message, index) => {
+      // System message styling
+      if (message.role === "system") {
+        return (
+          <div key={message.id} className="flex justify-center my-2 sm:my-3">
+            <div className="bg-gray-100 text-gray-600 text-xs px-3 py-1.5 rounded-full">
+              <span className="font-medium">{message.content}</span>
+              <span className="ml-2 text-gray-400">
+                {formatMessageTime(message.timestamp)}
+              </span>
+            </div>
+          </div>
+        );
+      }
+
+      const productInfo = message.content ? extractProductInfo(message.content) : null;
+      const botProductInfo = message.content ? extractBotProductInfo(message.content) : null;
+      const addressData = message.content ? extractAddressData(message.content) : null;
+      const agentProductInfo = message.content ? extractAgentProductInfo(message.content) : null;
+
+      return (
+        <div key={message.id} className="w-full">
+          {/* Product Preview Cards for Customer Messages */}
+          {productInfo && message.role === "customer" && (
+            <div className="flex flex-col gap-2 mb-2">
+              {productInfo.map((product: ProductInfo, idx: number) => (
+                <div
+                  key={idx}
+                  className={`flex ${message.role === "customer" ? "justify-start" : "justify-end"}`}
+                >
+                  <a
+                    href={product.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-3 p-2.5 rounded-lg border border-gray-200 hover:shadow-md transition-shadow bg-white max-w-[80%] sm:max-w-[70%]"
+                  >
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xs sm:text-sm font-medium line-clamp-2 text-gray-900">
+                        {product.name}
+                      </h3>
+                      <div className="flex items-center space-x-2 mt-1">
+                        {product.sale_price ? (
+                          <>
+                            <span className="text-sm font-semibold text-black">
+                              {product.sale_price}
+                            </span>
+                            <span className="text-xs text-gray-500 line-through">
+                              {product.price}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-sm font-semibold text-black">
+                            {product.price}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </a>
                 </div>
-
-              </a>
-
-            )
-
+              ))}
+            </div>
           )}
-
-        </div>
-
-      )}
-
-      
-
-                      <div
-
-                        className={`flex ${
-
-                          message.role === "customer"
-
-                            ? "justify-start"
-
-                            : "justify-end"
-
-                        }`}
-
-                      >
-
-                        <div
-
-                          className={`max-w-[75%] flex flex-col ${
-
-                            message.role === "customer"
-
-                              ? "items-start"
-
-                              : "items-end"
-
-                          }`}
-
-                        >
-
-                          {botProductInfo && message.role === "ai" && (
-
-                            <img
-
-                              className="w-80 rounded-lg border mb-2"
-
-                              src={botProductInfo[0].image_url}
-
-                            />
-
-                          )}
-
-                          {agentProductInfo && message.role === "ai" && (
-
-                            <img
-
-                              className="w-80 rounded-lg border mb-2"
-
-                              src={agentProductInfo[0].image_url}
-
-                            />
-
-                          )}
-
-
-
-                          {/* Message Bubble Container */}
-
-                          <div
-
-                            className={`rounded-2xl p-2 w-full ${
-
-                              message.role === "customer"
-
-                                ? "bg-gray-100 rounded-tl-sm text-black"
-
-                                : "bg-blue-500 text-white"
-
-                            } ${
-
-                              (extractCartData(message.content) &&
-
-                                message.role === "customer") ||
-
-                              (addressData && message.role === "customer") ||
-
-                              message.fileUrl
-
-                                ? "bg-transparent"
-
-                                : ""
-
-                            }`}
-
-                            style={{ wordBreak: "break-word" }}
-
-                          >
-
-                            {message.content &&
-
-                              extractCartData(message.content) &&
-
-                              message.role === "customer" && (
-
-                                <CartMessage
-
-                                  items={extractCartData(message.content) ?? []}
-
-                                />
-
-                              )}
-
-
-
-                            {addressData && message.role === "customer" && (
-
-                              <AddressMessage data={addressData} />
-
-                            )}
-
-
-
-                            {/* Message content */}
-
-                            {message.type === "image" && message.fileUrl && (
-
-                              <img
-
-                                src={message.fileUrl}
-
-                                alt="Shared image"
-
-                                className="rounded-lg mb-2 border shadow-sm max-w-full"
-
-                              />
-
-                            )}
-
-                            {message.type === "video" && message.fileUrl && (
-
-                              <video
-
-                                src={message.fileUrl}
-
-                                className="rounded-lg mb-2 border shadow-sm max-w-full"
-
-                                controls
-
-                              />
-
-                            )}
-
-                            {message.type === "voice" && message.fileUrl && (
-
-                              <audio
-
-                                controls
-
-                                src={message.fileUrl}
-
-                                className="w-full"
-
-                              />
-
-                            )}
-
-
-
-                            {/* Text content with guaranteed wrapping */}
-
-                            <div className="whitespace-normal break-words">
-
-                              {(message.type === "text" || !message.type) &&
-
-                                !productInfo &&
-
-                                !agentProductInfo &&
-
-                                !botProductInfo &&
-
-                                !extractCartData(message.content) &&
-
-                                !checkAIMessage(message) &&
-
-                                !addressData && <p>{message.content}</p>}
-
-                              {(message.type === "text" || !message.type) &&
-
-                                message.role === "ai" &&
-
-                                checkAIMessage(message) && (
-
-                                  <p>{checkAIMessage(message)}</p>
-
-                                )}
-
-                              {(message.type === "text" || !message.type) &&
-
-                                productInfo &&
-
-                                message.role === "customer" && (
-
-                                  <p>Know more.</p>
-
-                                )}
-
-                              {(message.type === "text" || !message.type) &&
-
-                                botProductInfo &&
-
-                                message.role === "ai" && (
-
-                                  <div>
-
-                                    <b>{botProductInfo[0].name}</b>
-
-                                    <br />
-
-                                    <br />
-
-                                    <span className="text-white font-semibold">
-
-                                      {botProductInfo[0].sale_price}
-
-                                    </span>
-
-                                    {!botProductInfo[0].sale_price && (
-
-                                      <>
-
-                                        <span className="text-white font-semibold">
-
-                                          {botProductInfo[0].price}
-
-                                        </span>
-
-                                        <br />
-
-                                        <br />
-
-                                      </>
-
-                                    )}
-
-                                    {botProductInfo[0].sale_price && (
-
-                                      <>
-
-                                        <span className="text-gray-200 line-through text-sm ml-2">
-
-                                          {botProductInfo[0].price}
-
-                                        </span>
-
-                                        <br />
-
-                                        <br />
-
-                                      </>
-
-                                    )}
-
-                                    🎉<b>Key Highlights:</b>
-
-                                    <br />
-
-                                    - EMI Available! ✅<br />
-
-                                    - Get GST invoice and save up to 28% on
-
-                                    business purchases
-
-                                    <br />
-
-                                    - Free Shipping all over India 🚚
-
-                                    <br />
-
-                                    <br />
-
-                                    <span className="text-gray-200 text-sm">
-
-                                      <i>
-
-                                        To contact us, simply type Live Agent
-
-                                      </i>
-
-                                    </span>
-
-                                  </div>
-
-                                )}
-
-                              {(message.type === "text" || !message.type) &&
-
-                                agentProductInfo &&
-
-                                message.role === "ai" && (
-
-                                  <div>
-
-                                    <b>{agentProductInfo[0].name}</b>
-
-                                    <br />
-
-                                    <br />
-
-                                    <span className="text-white font-semibold">
-
-                                      {agentProductInfo[0].sale_price}
-
-                                    </span>
-
-                                    {!agentProductInfo[0].sale_price && (
-
-                                      <>
-
-                                        <span className="text-white font-semibold">
-
-                                          {agentProductInfo[0].price}
-
-                                        </span>
-
-                                        <br />
-
-                                        <br />
-
-                                      </>
-
-                                    )}
-
-                                    {agentProductInfo[0].sale_price && (
-
-                                      <>
-
-                                        <span className="text-gray-200 line-through text-sm ml-2">
-
-                                          {agentProductInfo[0].price}
-
-                                        </span>
-
-                                        <br />
-
-                                        <br />
-
-                                      </>
-
-                                    )}
-
-                                    {extractAgentProductText(
-
-                                      message.content
-
-                                    ) && (
-
-                                      <span className="block mb-2">
-
-                                        {extractAgentProductText(
-
-                                          message.content
-
-                                        )}
-
-                                      </span>
-
-                                    )}
-
-                                  </div>
-
-                                )}
-
-                            </div>
-
-
-
-                            {/* Timestamp */}
-
-                            <div className="flex justify-end mt-2">
-
-                              <span
-
-                                className={`text-xs ${
-
-                                  message.role === "customer"
-
-                                    ? "text-gray-500"
-
-                                    : "text-blue-100"
-
-                                } ${message.fileUrl ? "!text-gray-800" : ""}`}
-
-                              >
-
-                                {formatMessageTime(message.timestamp)}
-
+          
+          {/* Main Message Container */}
+          <div
+            className={`flex ${
+              message.role === "customer" ? "justify-start" : "justify-end"
+            }`}
+          >
+            <div
+              className={`flex flex-col max-w-[80%] sm:max-w-[75%] ${
+                message.role === "customer" ? "items-start" : "items-end"
+              }`}
+            >
+              {/* Product Images for AI Messages */}
+              {(botProductInfo || agentProductInfo) && message.role === "ai" && (
+                <div className="mb-2">
+                  <img
+                    className="w-64 sm:w-72 rounded-lg border shadow-sm"
+                    src={(botProductInfo || agentProductInfo)?.[0]?.image_url}
+                    alt="Product"
+                  />
+                </div>
+              )}
+
+              {/* Message Bubble */}
+              <div
+                className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5 w-full ${
+                  message.role === "customer"
+                    ? "bg-gray-100 rounded-tl-sm text-black"
+                    : "bg-blue-500 text-white"
+                } ${
+                  (extractCartData(message.content) && message.role === "customer") ||
+                  (addressData && message.role === "customer") ||
+                  message.fileUrl
+                    ? "!bg-transparent !p-0"
+                    : ""
+                }`}
+                style={{ wordBreak: "break-word" }}
+              >
+                {/* Special Message Types */}
+                {message.content &&
+                  extractCartData(message.content) &&
+                  message.role === "customer" && (
+                    <CartMessage items={extractCartData(message.content) ?? []} />
+                  )}
+
+                {addressData && message.role === "customer" && (
+                  <AddressMessage data={addressData} />
+                )}
+
+                {/* Media Content */}
+                {message.type === "image" && message.fileUrl && (
+                  <img
+                    src={message.fileUrl}
+                    alt="Shared image"
+                    className="rounded-lg border shadow-sm max-w-full"
+                  />
+                )}
+
+                {message.type === "video" && message.fileUrl && (
+                  <video
+                    src={message.fileUrl}
+                    className="rounded-lg border shadow-sm max-w-full"
+                    controls
+                    playsInline
+                  />
+                )}
+
+                {message.type === "voice" && message.fileUrl && (
+                  <audio
+                    controls
+                    src={message.fileUrl}
+                    className="w-full"
+                  />
+                )}
+
+                {/* Text Content */}
+                <div className="break-words">
+                  {/* Regular text messages */}
+                  {(message.type === "text" || !message.type) &&
+                    !productInfo &&
+                    !agentProductInfo &&
+                    !botProductInfo &&
+                    !extractCartData(message.content) &&
+                    !checkAIMessage(message) &&
+                    !addressData && (
+                      <p className="text-sm sm:text-base">
+                        {message.content}
+                      </p>
+                    )}
+
+                  {/* AI Response */}
+                  {(message.type === "text" || !message.type) &&
+                    message.role === "ai" &&
+                    checkAIMessage(message) && (
+                      <p className="text-sm sm:text-base">
+                        {checkAIMessage(message)}
+                      </p>
+                    )}
+
+                  {/* Product inquiry message */}
+                  {(message.type === "text" || !message.type) &&
+                    productInfo &&
+                    message.role === "customer" && (
+                      <p className="text-sm sm:text-base">Know more.</p>
+                    )}
+
+                  {/* Bot product details */}
+                  {(message.type === "text" || !message.type) &&
+                    botProductInfo &&
+                    message.role === "ai" && (
+                      <div>
+                        <b className="text-sm sm:text-base">{botProductInfo[0].name}</b>
+                        <br /><br />
+                        
+                        <div className="mb-2">
+                          {botProductInfo[0].sale_price ? (
+                            <>
+                              <span className="text-white font-semibold text-base sm:text-lg">
+                                {botProductInfo[0].sale_price}
                               </span>
-
-                            </div>
-
-                          </div>
-
-
-
-                          {/* Product data */}
-
-                          {message.product_data && (
-
-                            <div className="w-full bg-white mt-4">
-
-                              <div className="relative overflow-x-auto">
-
-                                <div className="flex gap-4 snap-x snap-mandatory product-scroll overflow-x-auto py-4 px-2">
-
-                                  {message.product_data.map((product) => (
-
-                                    <a
-
-                                      href={product.permalink}
-
-                                      target="_blank"
-
-                                      rel="noopener noreferrer"
-
-                                      key={product.id}
-
-                                      className="snap-start flex-none w-[280px] border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
-
-                                    >
-
-                                      <div className="relative">
-
-                                        <img
-
-                                          src={product.image_link}
-
-                                          alt={product.name}
-
-                                          className="w-full h-48 object-cover"
-
-                                        />
-
-                                        {product.on_sale === "True" && (
-
-                                          <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-
-                                            Sale
-
-                                          </span>
-
-                                        )}
-
-                                      </div>
-
-                                      <div className="p-4">
-
-                                        <h3 className="font-medium text-black text-sm line-clamp-2 mb-2">
-
-                                          {product.name}
-
-                                        </h3>
-
-                                        <div className="flex items-baseline gap-2">
-
-                                          <span className="text-lg text-black font-bold">
-
-                                            ₹
-
-                                            {product.price.toLocaleString(
-
-                                              "en-IN"
-
-                                            )}
-
-                                          </span>
-
-                                          {product.on_sale === "True" && (
-
-                                            <span className="text-sm text-gray-500 line-through">
-
-                                              ₹
-
-                                              {parseInt(
-
-                                                product.regular_price
-
-                                              ).toLocaleString("en-IN")}
-
-                                            </span>
-
-                                          )}
-
-                                        </div>
-
-                                      </div>
-
-                                    </a>
-
-                                  ))}
-
-                                </div>
-
-                              </div>
-
-                            </div>
-
+                              <span className="text-gray-200 line-through text-sm ml-2">
+                                {botProductInfo[0].price}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-white font-semibold text-base sm:text-lg">
+                              {botProductInfo[0].price}
+                            </span>
                           )}
-
                         </div>
 
+                        <div className="text-sm">
+                          🎉<b>Key Highlights:</b><br />
+                          - EMI Available! ✅<br />
+                          - Get GST invoice and save up to 28% on business purchases<br />
+                          - Free Shipping all over India 🚚<br /><br />
+                          
+                          <span className="text-gray-200 text-xs italic">
+                            To contact us, simply type Live Agent
+                          </span>
+                        </div>
                       </div>
+                    )}
 
-                    </div>
+                  {/* Agent product details */}
+                  {(message.type === "text" || !message.type) &&
+                    agentProductInfo &&
+                    message.role === "ai" && (
+                      <div>
+                        <b className="text-sm sm:text-base">{agentProductInfo[0].name}</b>
+                        <br /><br />
+                        
+                        <div className="mb-2">
+                          {agentProductInfo[0].sale_price ? (
+                            <>
+                              <span className="text-white font-semibold text-base">
+                                {agentProductInfo[0].sale_price}
+                              </span>
+                              <span className="text-gray-200 line-through text-sm ml-2">
+                                {agentProductInfo[0].price}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-white font-semibold text-base">
+                              {agentProductInfo[0].price}
+                            </span>
+                          )}
+                        </div>
 
-                  );
+                        {extractAgentProductText(message.content) && (
+                          <span className="text-sm">
+                            {extractAgentProductText(message.content)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                </div>
 
-                })}
-
-                <div ref={lastMessageRef} />
-
+                {/* Timestamp */}
+                <div className="flex justify-end mt-1.5">
+                  <span
+                    className={`text-xs ${
+                      message.role === "customer"
+                        ? "text-gray-500"
+                        : "text-blue-100"
+                    } ${message.fileUrl ? "!text-gray-800" : ""}`}
+                  >
+                    {formatMessageTime(message.timestamp)}
+                  </span>
+                </div>
               </div>
 
-            </ScrollArea>
-
+              {/* Product Data Carousel */}
+              {message.product_data && (
+                <div className="w-full bg-white mt-2">
+                  <div className="relative overflow-x-auto">
+                    <div className="flex gap-3 snap-x snap-mandatory overflow-x-auto py-2 px-1">
+                      {message.product_data.map((product) => (
+                        <a
+                          href={product.permalink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          key={product.id}
+                          className="snap-start flex-none w-[240px] sm:w-[280px] border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+                        >
+                          <div className="relative">
+                            <img
+                              src={product.image_link}
+                              alt={product.name}
+                              className="w-full h-40 sm:h-48 object-cover"
+                            />
+                            {product.on_sale === "True" && (
+                              <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+                                Sale
+                              </span>
+                            )}
+                          </div>
+                          <div className="p-3">
+                            <h3 className="font-medium text-black text-sm line-clamp-2 mb-2">
+                              {product.name}
+                            </h3>
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-base text-black font-bold">
+                                ₹{product.price.toLocaleString("en-IN")}
+                              </span>
+                              {product.on_sale === "True" && (
+                                <span className="text-sm text-gray-500 line-through">
+                                  ₹{parseInt(product.regular_price).toLocaleString("en-IN")}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    })}
+    <div ref={lastMessageRef} />
+  </div>
+</ScrollArea>
 
 
             {/* <div className={` p-5 border-t `}> */}

@@ -86,23 +86,38 @@ export default function DashboardPage() {
   const [showOrgSwitcher, setShowOrgSwitcher] = useState(false);
   const [isConversationListVisible, setIsConversationListVisible] = useState(true);
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
+  const [isNavigationVisible, setIsNavigationVisible] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(100);
   const { isSignedIn, isLoaded, user } = useUser();
   const mainContentRef = useRef<HTMLDivElement | null>(null);
 
   // Detect zoom level and screen size
   const [screenWidth, setScreenWidth] = useState(0);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
 
+  // Better device detection that accounts for zoom
   useEffect(() => {
-    const handleResize = () => {
-      setScreenWidth(window.innerWidth);
+    const detectDevice = () => {
+      // Check if it's a touch device
+      const touchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      setIsTouchDevice(touchDevice);
+
+      // Get actual screen dimensions (not affected by zoom)
+      const actualWidth = window.screen.width;
+      const currentWidth = window.innerWidth;
       const zoom = Math.round(window.devicePixelRatio * 100);
+      
+      setScreenWidth(currentWidth);
       setZoomLevel(zoom);
+
+      // Use actual screen width for mobile detection, not current viewport width
+      // This prevents zoom from triggering mobile layout on desktop
+      console.log('Actual screen width:', actualWidth, 'Current width:', currentWidth, 'Touch device:', touchDevice);
     };
 
-    handleResize(); // Initial call
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    detectDevice();
+    window.addEventListener('resize', detectDevice);
+    return () => window.removeEventListener('resize', detectDevice);
   }, []);
 
   useEffect(() => {
@@ -122,6 +137,11 @@ export default function DashboardPage() {
 
   const toggleRightSidebar = () => {
     setIsRightSidebarVisible(!isRightSidebarVisible);
+  };
+
+  // Toggle main navigation sidebar
+  const toggleNavigationSidebar = () => {
+    setIsNavigationVisible(!isNavigationVisible);
   };
 
   // Determine sidebar widths based on screen size - Further reduced
@@ -150,6 +170,29 @@ export default function DashboardPage() {
 
   const showIconsOnly = screenWidth < 1280; // Show icons only below 1280px
 
+  // Better mobile detection - use actual screen size and touch capability
+  const isActualMobile = () => {
+    const actualScreenWidth = window.screen.width;
+    return (actualScreenWidth <= 768 && isTouchDevice) || 
+           (actualScreenWidth <= 1024 && isTouchDevice && window.innerWidth < 768);
+  };
+
+  const needsMobileHeader = isActualMobile();
+
+  // Get tab title for mobile header
+  const getTabTitle = () => {
+    switch (activeView) {
+      case "inbox": return "Inbox";
+      case "Contacts": return "Contacts";
+      case "talktodata": return "Talk to Data";
+      case "analyticsbot": return "Analytics Bot";
+      case "influencerbot": return "InfluIndex";
+      case "billing": return "Billing";
+      case "settings": return "Settings";
+      default: return "Dashboard";
+    }
+  };
+
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-gray-100 flex">
@@ -158,17 +201,39 @@ export default function DashboardPage() {
           onValueChange={(value) => setActiveView(value as typeof activeView)}
           className="flex-1 flex overflow-hidden"
         >
-          {/* Left Sidebar - Much smaller widths */}
+          {/* Mobile Header - Only show on actual mobile devices, not zoomed desktop */}
+          {needsMobileHeader && (
+            <div className="fixed top-0 left-0 right-0 z-40 bg-white border-b px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleNavigationSidebar}
+                  className="h-8 w-8 hover:bg-gray-100"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+                <h1 className="text-lg font-semibold text-gray-900">
+                  {getTabTitle()}
+                </h1>
+              </div>
+            </div>
+          )}
+
+          {/* Left Sidebar - Only show mobile behavior on actual mobile devices */}
           <div className={`
-            ${isConversationListVisible && activeView === "inbox" ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+            ${needsMobileHeader ? 
+              (isNavigationVisible ? "translate-x-0" : "-translate-x-full") : 
+              "translate-x-0"
+            }
             ${getLeftSidebarWidth()}
-            fixed lg:static left-0 top-0 h-full z-20
+            ${needsMobileHeader ? "fixed" : "static"} left-0 top-0 h-full z-30
             transform transition-all duration-300 ease-in-out
-            bg-black bg-opacity-50 lg:bg-transparent
+            ${needsMobileHeader ? "bg-white shadow-lg" : "bg-transparent"}
             flex-shrink-0
           `}>
             <TabsList className="h-full flex flex-col items-start justify-between py-4 bg-white/95 backdrop-blur-sm border-r w-full">
-              {/* Top section: Logo */}
+              {/* Top section: Logo and Close button */}
               <div className="w-full">
                 <div className="w-full flex justify-center items-center mb-6 relative">
                   <Link href="/">
@@ -180,8 +245,21 @@ export default function DashboardPage() {
                       className="transition-all duration-200" 
                     />
                   </Link>
-                  {/* Show conversation list button when collapsed */}
-                  {!isConversationListVisible && (
+                  
+                  {/* Close button - Only show on actual mobile devices */}
+                  {needsMobileHeader && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleNavigationSidebar}
+                      className="absolute -right-2 -top-2 h-6 w-6 hover:bg-gray-200 bg-white/80 border shadow-sm"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                  
+                  {/* Show conversation list button when collapsed - only for inbox and not on mobile */}
+                  {!needsMobileHeader && !isConversationListVisible && activeView === "inbox" && (
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -200,7 +278,7 @@ export default function DashboardPage() {
                   )}
                 </div>
                 
-                {/* Navigation Tabs - Moved downwards with increased spacing */}
+                {/* Navigation Tabs */}
                 <div className="w-full space-y-2 px-1 mt-8">
                   {[
                     { value: "inbox", icon: MessageSquare, label: "Inbox" },
@@ -216,6 +294,10 @@ export default function DashboardPage() {
                         <TabsTrigger
                           onClick={() => {
                             if (value === "inbox") setSelectedConversationId("");
+                            // Close navigation on mobile after selection
+                            if (needsMobileHeader) {
+                              setIsNavigationVisible(false);
+                            }
                           }}
                           value={value}
                           className="group w-full flex items-center px-1.5 py-3 hover:bg-gray-100 rounded-md justify-center lg:justify-start transition-all duration-200"
@@ -257,14 +339,24 @@ export default function DashboardPage() {
             </TabsList>
           </div>
 
-          {/* Main Content Area - Maximum space for chat */}
-          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+          {/* Mobile Overlay - Only on actual mobile devices */}
+          {needsMobileHeader && isNavigationVisible && (
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-50 z-20"
+              onClick={toggleNavigationSidebar}
+            />
+          )}
+
+          {/* Main Content Area - Only add padding on actual mobile devices */}
+          <div className={`flex-1 flex flex-col overflow-hidden min-w-0 ${
+            needsMobileHeader ? "pt-16" : ""
+          }`}>
             <TabsContent
               value="inbox"
               className="flex-1 h-full w-full overflow-hidden m-0"
             >
               <div className="flex w-full h-screen">
-                {/* Conversation List - Much smaller widths */}
+                {/* Conversation List */}
                 {isConversationListVisible && (
                   <div className={`bg-white flex flex-col ${getConversationListWidth()} flex-shrink-0 max-h-screen border-r border-gray-200`}>
                     <ConversationList
@@ -276,7 +368,7 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                {/* Chat View - Takes maximum available space */}
+                {/* Chat View */}
                 <div ref={mainContentRef} className="flex-1 flex flex-col min-w-0 h-screen">
                   <div className="h-full">
                     <ChatView
@@ -289,7 +381,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Right Sidebar - Much smaller widths */}
+                {/* Right Sidebar */}
                 {isRightSidebarVisible && (
                   <div className={`relative ${getRightSidebarWidth()} flex-shrink-0 hidden xl:block`}>
                     {/* Right Sidebar Toggle Button */}
