@@ -261,16 +261,17 @@ const Sidebar = ({
 
       <Card className="h-full max-h-screen p-1 bg-white border-l">
         {/* Customer Info Section - Direct Display */}
-        <div className="flex items-center justify-between p-3 bg-white-900 text-black border-b border-gray-500">
+        <div className="flex items-center justify-between p-3 bg-white-900 text-black border-gray-500">
   <h2 className="text-lg font-medium">Contact</h2>
 </div>
-
-        <div className="p-4 border-b bg-gray-50">
+           
+        <div className="p-4 border-b bg-gray-30">
           {/* Customer Avatar and Name */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center -ml-2">
               <span className="text-white font-medium text-sm">
-                {conversation?.customer_name?.charAt(0).toUpperCase() || 'V'}
+                {conversation?.customer_name?.charAt(0).toUpperCase() || 'U'}
+                
               </span>
             </div>
             <div className="flex-1">

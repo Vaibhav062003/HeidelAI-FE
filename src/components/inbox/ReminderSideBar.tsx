@@ -107,15 +107,15 @@ import {
     return (
       <div className="h-full flex flex-col bg-gray-50">
         {/* Header - reduced padding */}
-        <div className="flex items-center justify-between p-3 bg-white border-b shadow-sm">
-          <div className="flex items-center gap-2 ml-11">
-            <Bell className="text-blue-600 mt-2" size={18} />
-            <h1 className="text-base font-medium text-gray-800 mt-2">Reminders</h1>
-          </div>
-          <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
-            {remainder.length} Active
-          </span>
-        </div>
+<div className="flex items-center justify-between p-3 bg-white border-b shadow-sm">
+  <div className="flex items-center gap-2 ml-3">
+    <Bell className="text-blue-600 mt-2" size={18} />
+    <h1 className="text-base font-medium text-gray-800 mt-2">Reminders</h1>
+  </div>
+  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full -mr-[-50] mt-1">
+    {remainder.length} Active
+  </span>
+</div>
   
         {/* Content - reduced padding and spacing */}
         <div className="flex-1 overflow-auto p-3 space-y-3">

@@ -2557,7 +2557,7 @@ const handleFollowUp = () => {
 
                       <div className="group cursor-pointer">
 
-                        <h3 className="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition-colors duration-200">
+<h3 className="font-bold text-m text-gray-800 group-hover:text-blue-500 transition-colors duration-200">
 
                           {conversation?.customer_name}
 
@@ -2642,7 +2642,7 @@ const handleFollowUp = () => {
     <DropdownMenuTrigger asChild>
       <Button
         variant="ghost"
-        className="rounded-lg hover:bg-blue-50 border border-gray-200 transition-colors duration-200 flex items-center space-x-2 px-3 py-2"
+        className="rounded-lg hover:bg-blue-50  transition-colors duration-200 flex items-center space-x-2 px-3 py-2"
       >
         {conversationStatus === 'closed' ? (
           <XCircle className="h-4 w-4 text-red-600" />
@@ -2700,7 +2700,7 @@ const handleFollowUp = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-lg hover:bg-blue-50 border border-gray-200 transition-colors duration-200 w-10 h-10 relative"
+              className="rounded-lg hover:bg-blue-50  transition-colors duration-200 w-10 h-10 relative"
             >
               <Clock className="h-4 w-4 text-gray-600" />
               {reminders.length > 0 && (
@@ -2747,12 +2747,12 @@ const handleFollowUp = () => {
   </Tooltip>
 
   {/* AI Toggle */}
-  <div className="flex items-center bg-gray-50 rounded-lg px-3 py-2 border border-gray-200 hover:bg-blue-50 transition-colors duration-200">
+  <div className="flex items-center bg-gray-50 rounded-lg px-3 py-2 hover:bg-blue-50 transition-colors duration-200">
     <Switch
       checked={isAIEnabled}
       onCheckedChange={toggleAI}
       disabled={isToggling}
-      className="data-[state=checked]:bg-gray-900 mr-2"
+      className="data-[state=checked]:bg-gray-500 mr-2"
     />
     <span className="text-sm font-medium text-gray-700">
       AI
@@ -2765,7 +2765,7 @@ const handleFollowUp = () => {
       <Button
         variant="ghost"
         size="icon"
-        className="rounded-lg hover:bg-blue-50 border border-gray-200 transition-colors duration-200 w-10 h-10"
+        className="rounded-lg hover:bg-blue-50 transition-colors duration-200 w-10 h-10"
       >
         <MoreVertical className="h-4 w-4 text-gray-600" />
       </Button>
@@ -2800,7 +2800,7 @@ const handleFollowUp = () => {
     <Button
       variant="ghost"
       size="icon"
-      className="rounded-lg hover:bg-blue-50 border border-gray-200 transition-colors duration-200 w-10 h-10"
+      className="rounded-lg hover:bg-blue-50 transition-colors duration-200 w-10 h-10"
       onClick={onOpenRightSidebar}
       aria-label="Open right sidebar"
     >
@@ -3235,20 +3235,21 @@ const handleFollowUp = () => {
 
             <ScrollArea
   ref={scrollAreaRef}
-  className="flex-1 h-full px-3 sm:px-4 py-1 sm:py-2"
+  className="flex-1 h-full px-3 sm:px-4 py-0 sm:py-0"
 >
-  <div className="space-y-1 sm:space-y-2 max-w-full">
+  <div className="space-y-1 sm:space-y-1 max-w-full">
     {messages.map((message, index) => {
       // System message styling
       if (message.role === "system") {
         return (
           <div key={message.id} className="flex justify-center my-2 sm:my-3">
-            <div className="bg-gray-100 text-gray-600 text-xs px-3 py-1.5 rounded-full">
-              <span className="font-medium">{message.content}</span>
-              <span className="ml-2 text-gray-400">
-                {formatMessageTime(message.timestamp)}
-              </span>
-            </div>
+            <div className="bg-gray-100 text-gray-600 text-xs sm:text-xs px-3 py-1.5 rounded-full">
+  <span className="font-medium">{message.content}</span>
+  <span className="ml-2 text-gray-400 text-[0.5625rem] sm:text-[0.625rem]">
+    {formatMessageTime(message.timestamp)}
+  </span>
+</div>
+
           </div>
         );
       }
@@ -3333,7 +3334,7 @@ const handleFollowUp = () => {
                 className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5 w-full ${
                   message.role === "customer"
                     ? "bg-gray-100 rounded-tl-sm text-black"
-                    : "bg-blue-500 text-white"
+                    : "bg-gray-100 rounded-tl-sm text-black"
                 } ${
                   (extractCartData(message.content) && message.role === "customer") ||
                   (addressData && message.role === "customer") ||
@@ -3489,7 +3490,7 @@ const handleFollowUp = () => {
                     className={`text-xs ${
                       message.role === "customer"
                         ? "text-gray-500"
-                        : "text-blue-100"
+                        : "text-gray-500"
                     } ${message.fileUrl ? "!text-gray-800" : ""}`}
                   >
                     {formatMessageTime(message.timestamp)}
@@ -3582,7 +3583,7 @@ const handleFollowUp = () => {
 
 
              {/* Replace the current input section with this: */}
-<div className="border-t border-gray-200 bg-white">
+<div>
   {sharedProduct && (
     <div className="flex justify-start ml-4 mr-4 pt-3">
       <SharedProductPreview
@@ -3592,7 +3593,7 @@ const handleFollowUp = () => {
     </div>
   )}
 
-  <div className="relative p-3">
+  <div className="relative p-2">
     {audioURL ? (
       <div className="flex items-center gap-2 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
         <audio controls src={audioURL} className="flex-1" />

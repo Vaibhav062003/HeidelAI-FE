@@ -269,8 +269,8 @@ const ConversationList = ({
                 </TabsList>
               </Tabs>
 
-              <div className="flex-shrink-0">
-  <div className="border border-gray-300 rounded-md hover:border-gray-400 transition-colors">
+              <div  >
+  <div className="border border-gray-300 rounded-md">
     <FilterMenu 
       filters={filters} 
       onFilterChange={setFilters}
@@ -464,7 +464,7 @@ const ConversationList = ({
                   value={label} 
                   className="border-none"
                 >
-                  <AccordionTrigger className="py-2 px-2 lg:px-3 bg-gray-50 hover:bg-gray-100 rounded-md hover:no-underline">
+                  <AccordionTrigger className="py-2 px-2 lg:px-3 bg-gray-50 hover:bg-gray-80 rounded-md hover:no-underline">
                     <div className="flex items-center justify-between w-full pr-2">
                       <span className="font-medium text-gray-700 text-xs lg:text-sm">{label}</span>
                       <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full min-w-[24px] text-center">

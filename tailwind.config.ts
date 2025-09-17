@@ -115,6 +115,10 @@ export default {
               '"Noto Color Emoji"',
             ],
         },
+      fontSize: {
+        'xxs': '0.625rem',  // 10px
+        'xxxs': '0.5rem',   // 8px
+    },
       }
   },
   plugins: [addVariablesForColors ,require("tailwindcss-animate")],
@@ -130,3 +134,4 @@ function addVariablesForColors({ addBase, theme }: any) {
       ":root": newVars,
     });
   }
+

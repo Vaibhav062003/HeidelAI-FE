@@ -136,8 +136,8 @@ const SettingsDashboard = () => {
   const isDesktop = screenWidth >= 1024;
 
   return (
-    <div className="h-screen w-full flex items-center justify-center p-2 sm:p-4 lg:p-6 bg-gray-50">
-      <Card className="h-full w-full max-w-full shadow-lg rounded-lg sm:rounded-xl overflow-hidden">
+    <div className="h-screen w-full flex bg-gray-50">
+      <Card className="h-full w-full max-w-full shadow-lg rounded-none overflow-hidden">
         <CardContent className="p-0 flex flex-col lg:flex-row h-full">
           
           {/* Mobile Header */}
@@ -276,7 +276,7 @@ const SettingsDashboard = () => {
               </div>
             )}
 
-            {/* Content Container */}
+            {/* Content Container - Only inner content scrolls */}
             <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
               <div className="max-w-none">
                 <activeSection.component />
