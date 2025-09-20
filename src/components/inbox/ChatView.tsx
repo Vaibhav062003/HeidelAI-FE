@@ -1090,8 +1090,8 @@ useEffect(() => {
   
   
   // WebSocket setup
-  // const WS_BASE_URL = "wss://egenie-whatsapp.koyeb.app";
-  const WS_BASE_URL = `ws://127.0.0.1:8000`;
+  const WS_BASE_URL = "wss://egenie-whatsapp.koyeb.app";
+  // const WS_BASE_URL = `ws://127.0.0.1:8000`;
   const platform = selectedConversationId.split('_')[0];
   
   // Create a unique clientId for this chat view instance
