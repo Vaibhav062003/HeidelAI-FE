@@ -1279,7 +1279,7 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
     ? (new Date().getTime() - new Date(lastCustomerMessage.timestamp).getTime()) > (24 * 60 * 60 * 1000)
     : true;
     
-
+    
 
   return (
     <>
@@ -1313,7 +1313,7 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
       </style>
     <TooltipProvider>
       {!selectedConversationId ? (
-       
+        <Card className="h-full flex flex-col bg-white  items-center justify-center">
           <div className="flex flex-col h-full w-full min-h-0 min-w-0 bg-gradient-to-br from-gray-50 to-gray-100">
             <div className="flex-1 flex flex-col h-full w-full min-h-0 min-w-0 p-2 sm:p-4 md:p-6 lg:p-8">
             <div className="text-center text-gray-500">
@@ -1323,10 +1323,9 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
             </div>
             </div>
            </div>
-     
-        
+        </Card>
       ) : (
-      <Card >
+      <Card className="h-full flex flex-col bg-white max-h-screen">
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
@@ -1709,7 +1708,6 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
             const botProductInfo = message.content ? extractBotProductInfo(message.content) : null;
             const addressData = message.content ? extractAddressData(message.content) : null;
             const agentProductInfo = message.content ? extractAgentProductInfo(message.content) : null;
-             
             // console.log("productInfo", productInfo);
             // console.log("botProductInfo", botProductInfo);
             
@@ -2142,8 +2140,7 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
                   </Button>
               </div>
               ): (
-               
-                <Input
+                 <Input
                   value={message}
                   onChange={(e) =>{
                      setMessage(e.target.value); 
@@ -2163,7 +2160,7 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
                 }}
               /> 
               )}
-        
+  
             {showCannedResponses && (
               <div className="absolute bottom-14 left-0 w-full bg-white border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
                 {filteredResponses.map(response => (
