@@ -28,9 +28,11 @@ function InstagramCallbackContent() {
       try {
         const response = await api.post('/api/instagram/auth', {
             code,
-            redirect_uri: `${window.location.origin}/auth/instagram/callback`,
-            // redirect_uri: `https://development.heidelai.com/auth/instagram/callback`,
+            // redirect_uri: `${window.location.origin}/auth/instagram/callback`,
+            redirect_uri: `https://development.heidelai.com/auth/instagram/callback`,
           });
+
+          console.log('Instagram auth response:', response);
   
           if (response.status !== 200) {
             let errorMessage = 'Failed to connect Instagram account';
@@ -45,7 +47,7 @@ function InstagramCallbackContent() {
             throw new Error(errorMessage);
           }
   
-        const data = await response.data
+        const data = response.data
 
         localStorage.setItem('instagram_connection', JSON.stringify({
           username: data.username,
