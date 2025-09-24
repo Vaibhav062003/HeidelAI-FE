@@ -32,27 +32,21 @@ function InstagramCallbackContent() {
             // redirect_uri: `https://development.heidelai.com/auth/instagram/callback`,
           });
   
-        if (response.status !== 200) {
-          const errorText = "Failed"
-          console.error('API error response:', errorText);
-  
-          let errorMessage = 'Failed to connect Instagram account';
-          try {
-            const errorJson = JSON.parse(errorText);
-            if (errorJson.detail) {
-              errorMessage = errorJson.detail;
+          if (response.status !== 200) {
+            let errorMessage = 'Failed to connect Instagram account';
+            const errorData = response.data;
+
+            if (errorData && typeof errorData === 'object' && errorData.detail) {
+              errorMessage = errorData.detail;
+            } else if (typeof errorData === 'string' && errorData.length < 100) {
+              errorMessage = errorData;
             }
-          } catch {
-            if (errorText && errorText.length < 100) {
-              errorMessage = errorText;
-            }
+
+            throw new Error(errorMessage);
           }
   
-          throw new Error(errorMessage);
-        }
-  
         const data = await response.data
-        
+
         localStorage.setItem('instagram_connection', JSON.stringify({
           username: data.username,
           profileImage: data.profile_picture,
