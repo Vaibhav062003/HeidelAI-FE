@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import api from "@/lib/session_api";
 
 function InstagramCallbackContent() {
   const router = useRouter();
@@ -25,20 +26,14 @@ function InstagramCallbackContent() {
   
     const exchangeCodeForToken = async () => {
       try {
-        const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+        const response = await api.post('/api/instagram/auth', {
             code,
             redirect_uri: `${window.location.origin}/auth/instagram/callback`,
             // redirect_uri: `https://development.heidelai.com/auth/instagram/callback`,
-          }),
-        });
+          });
   
-        if (!response.ok) {
-          const errorText = await response.text();
+        if (response.status !== 200) {
+          const errorText = "Failed"
           console.error('API error response:', errorText);
   
           let errorMessage = 'Failed to connect Instagram account';
