@@ -51,8 +51,8 @@ function InstagramCallbackContent() {
           throw new Error(errorMessage);
         }
   
-        const data = await response.json();
-  
+        const data = await response.data
+        
         localStorage.setItem('instagram_connection', JSON.stringify({
           username: data.username,
           profileImage: data.profile_picture,
