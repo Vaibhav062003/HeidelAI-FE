@@ -234,7 +234,7 @@ const ProductsTab = ({
           <div className="flex-1 relative">
             <Input
               placeholder="Search products..."
-              className="pl-8 pr-3 py-1.5 text-sm border-gray-300 focus:ring-1 focus:ring-blue-500"
+              className="pl-9 pr-3 py-1.5 text-sm border-gray-300 focus:ring-1 focus:ring-blue-500"
             />
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
           </div>
@@ -262,9 +262,9 @@ const ProductsTab = ({
   return (
     <div className="p-3 mb-2 bg-white shadow-sm">
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
-        <div className="flex-1 relative">
+        <div className="flex-1 relative top-[1.5]">
           <Input
-            placeholder="Search products..."
+            placeholder="Search products.."
             value={searchProduct}
             onChange={(e) => setSearchProduct(e.target.value)}
             className="pl-8 pr-3 py-1.5 text-sm border-gray-300 focus:ring-1 focus:ring-blue-500"

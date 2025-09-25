@@ -32,7 +32,7 @@ function InstagramCallbackContent() {
             redirect_uri: `https://development.heidelai.com/auth/instagram/callback`,
           });
 
-          console.log('Instagram auth response:', response);
+          console.log('Instagram auth response:', response.data);
   
           if (response.status !== 200) {
             let errorMessage = 'Failed to connect Instagram account';
