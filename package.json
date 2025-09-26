@@ -56,6 +56,7 @@
     "cmdk": "^1.0.4",
     "cobe": "^0.6.3",
     "country-flag-icons": "^1.5.16",
+    "crypto-js": "^4.2.0",
     "date-fns-tz": "^3.2.0",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
@@ -97,6 +98,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/crypto-js": "^4.2.2",
     "@types/leaflet": "^1.9.16",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.17",

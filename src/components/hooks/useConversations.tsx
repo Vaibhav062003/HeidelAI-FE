@@ -20,10 +20,6 @@ interface WebSocketMessage {
   };
 }
 
-// const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss' : 'ws';
-// const WS_BASE_URL = `${WS_PROTOCOL}://127.0.0.1:8000`;
-// const WS_WHATSAPP_ENDPOINT = `${WS_BASE_URL}/ws2/whatsapp`;
-// const WS_INSTAGRAM_ENDPOINT = `${WS_BASE_URL}/ws2/instagram`;
 
 // WebSocket base URLs
 const WS_BASE_URL = 'wss://egenie-whatsapp.koyeb.app';
@@ -145,7 +141,7 @@ export const useConversations = () => {
     setLoading(true);
     try {
       let allConversations: Conversation[] = [];
-      //all conversationa
+      //all conversations
       try{
         const allres = await conversationService.getAllConversations();
         if (allres.status === "success" && Array.isArray(allres.data)) {

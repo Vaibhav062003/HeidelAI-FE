@@ -26,6 +26,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { createClient } from '@supabase/supabase-js';
 import InstagramProfileView from './InstagramProfileView';
 import FacebookSDK, { FacebookLoginResponse } from '@/components/facebook/FacebookSDK';
+import { useIntegrations } from '@/components/hooks/useIntegrations';
+import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
+
 
 // Instagram OAuth configuration
 const INSTAGRAM_CLIENT_ID = '1197084761515978'; // Replace with your Instagram app ID
@@ -54,6 +57,22 @@ interface CatalogResponse {
   };
 }
 
+interface InstagramConnectionData {
+  status: boolean;          // Connection status
+    username: string;         // From API response
+    profileImage: string;     // From profile_picture_url in API
+    userId: string;           // From id in API
+    businessInfo: {
+        id?: string;
+        biography?: string;
+        followers_count?: number;
+        follows_count?: number;
+        media_count?: number;
+        name?: string;
+        website?: string;
+    };
+    lastUpdated?: number;
+}
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -71,6 +90,7 @@ import { toast } from 'sonner';
 import { connectWebSocket } from '../../lib/websocket';
 import WhatsAppLoginDialog from './WhatsappLoginDialog';
 import api from '@/lib/session_api';
+import { useUser } from '@clerk/nextjs';
 
 const loginWithFacebook = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -287,105 +307,44 @@ const InstagramDialog = () => {
       username?: string;
     };
   } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [showProfileView, setShowProfileView] = useState(false);
+
+  const { user } = useUser();
+  const isAdmin = user?.publicMetadata?.role === 'admin';
+  
+
+  const { integrations, loading: integrationsLoading, refreshIntegrations } = useIntegrations();
   
   // Check if user has already connected Instagram
   useEffect(() => {
-    const checkConnection = async () => {
-      setIsLoading(true);
-      
-      try {
-        // Check localStorage for quick loading
-        const instagramConnection = localStorage.getItem('instagram_connection');
-        if (instagramConnection) {
-          try {
-            const parsedData = JSON.parse(instagramConnection);
-            setConnected(true);
-            setAccountInfo({
-              username: parsedData.username,
-              profileImage: parsedData.profileImage || '/default-avatar.png',
-              businessInfo: parsedData.businessInfo || {}
-            });
-            setIsLoading(false);
-            return;
-          } catch (error) {
-            console.error('Error parsing Instagram connection data:', error);
-          }
-        }
-        
-        // Check for callback in URL (after redirect from Instagram)
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const state = urlParams.get('state');
-        
-        // If there's a code in the URL, exchange it for an access token
-        if (code && state === localStorage.getItem('instagram_auth_state')) {
-          await handleInstagramCallback(code);
-          // Clean up URL parameters after processing
-          window.history.replaceState({}, document.title, window.location.pathname);
-          setIsLoading(false);
-          return;
-        }
-        
-        // Otherwise, check with backend using dedicated Instagram collection API
-        try {
-          // Get ID from localStorage (if available from previous connection)
-          const storedInstagramId = localStorage.getItem('instagram_user_id');
-          
-          // Check for connections linked to this user
-          const appUserId = localStorage.getItem('user_id');
-          
-          // Construct URL based on available IDs
-          let apiUrl = '/api/instagram/status';
-          if (storedInstagramId) {
-            apiUrl += `?instagram_id=${storedInstagramId}`;
-          } else if (appUserId) {
-            apiUrl += `?app_user_id=${appUserId}`;
-          } else {
-            // If no IDs available, we can't check for connections
-            setIsLoading(false);
-            return;
-          }
-          
-          const response = await api.get(apiUrl);
+  if (!integrationsLoading) {
+    if (integrations.instagram && integrations.instagram.status) {
+      setConnected(true);
+      setAccountInfo({
+        username: integrations.instagram.username,
+        profileImage: integrations.instagram.profileImage || '/default-avatar.png',
+        businessInfo: integrations.instagram.businessInfo || {}
+      });
+    } else {
+      setConnected(false);
+    }
+  }
+}, [integrations, integrationsLoading]);
 
-          if (response.status === 200) {
-            const data = await response.data();
 
-            if (data.instagram_connected) {
-              // Save in localStorage for future fast access
-              localStorage.setItem('instagram_connection', JSON.stringify({
-                username: data.instagram_data.username,
-                profileImage: data.instagram_data.profile_picture || '/default-avatar.png',
-                token: data.instagram_data.access_token,
-                userId: data.instagram_data.user_id,
-                businessInfo: data.instagram_data.business_info || {},
-                connected: true
-              }));
-              
-              // Store Instagram ID separately for future quick lookups
-              localStorage.setItem('instagram_user_id', data.instagram_data.user_id);
-              
-              setConnected(true);
-              setAccountInfo({
-                username: data.instagram_data.username,
-                profileImage: data.instagram_data.profile_picture || '/default-avatar.png',
-                businessInfo: data.instagram_data.business_info || {}
-              });
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching Instagram status from backend:', error);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    checkConnection();
-  }, []);
-
+  const getInstagramUserId = async () => {
+    try {
+      const instagramData = await getData<InstagramConnectionData>(
+        'integrations', 
+        DB_KEYS.INTEGRATIONS.INSTAGRAM
+      );
+      return instagramData?.userId || null;
+    } catch (error) {
+      console.error('Error retrieving Instagram user ID:', error);
+      return null;
+    }
+  };
 
   // Function to initiate Instagram OAuth login
   const handleInstagramLogin = () => {
@@ -482,23 +441,41 @@ const InstagramDialog = () => {
     try {
       setIsLoading(true);
       
-      // Revoke the token
-      const user_id = localStorage.getItem('instagram_user_id');
-      const data = {
-        user_id: user_id
-      }
+      // Get the user ID from IndexedDB instead of localStorage
+      const user_id = await getInstagramUserId();
+      
       if (user_id) {
-        // Disconnect using the dedicated Instagram API
-        await api.post('/api/instagram/disconnect', {
-          data
-        });
+        const data = { user_id };
         
-        // Clear the connection from local storage
-        localStorage.removeItem('instagram_connection');
-        localStorage.removeItem('instagram_user_id');
+        // Disconnect using the dedicated Instagram API
+        await api.post('/api/instagram/disconnect', { data });
+        
+        // Update IndexedDB - set connected to false but keep other data
+        try {
+          const existingData = await getData<InstagramConnectionData>(
+            'integrations', 
+            DB_KEYS.INTEGRATIONS.INSTAGRAM
+          );
+          
+          if (existingData) {
+            await storeData('integrations', DB_KEYS.INTEGRATIONS.INSTAGRAM, {
+              ...existingData,
+              connected: false,
+              lastUpdated: Date.now()
+            });
+          }
+        } catch (dbError) {
+          console.error("Error updating IndexedDB on disconnect:", dbError);
+        }
+        
+        // For backward compatibility, also clear localStorage
         localStorage.removeItem('instagram_auth_state');
+        
         setConnected(false);
         setAccountInfo(null);
+        
+        // Update integrations status
+        refreshIntegrations();
         
         toast.success('Instagram account disconnected successfully');
       } else {
@@ -516,7 +493,7 @@ const InstagramDialog = () => {
     <Dialog>
       <DialogTrigger asChild>
         <Button className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white">
-          {isLoading ? (
+          {isLoading || integrationsLoading ? (
             <span className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" /> Checking...
             </span>
@@ -597,16 +574,26 @@ const InstagramDialog = () => {
               variant="destructive" 
               className="w-full mt-4" 
               onClick={disconnectInstagram}
-              disabled={isLoading}
+              disabled={isLoading || !isAdmin}
+              title={!isAdmin ? "Only admins can disconnect integrations" : ""}
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> Processing...
                 </span>
+              ) : !isAdmin ? (
+                "Admin permission required"
               ) : (
                 'Disconnect Account'
               )}
             </Button>
+            
+            {/* Show explanatory text for members */}
+            {!isAdmin && connected && (
+              <p className="text-sm text-amber-600">
+                Only administrators can disconnect integrations.
+              </p>
+            )}
           </div>
         ) : (
           <div className="py-4 space-y-4">
@@ -648,9 +635,8 @@ const InstagramDialog = () => {
         )}
       </DialogContent>
       
-      {connected && localStorage.getItem('instagram_user_id') && (
+      {connected && (
         <InstagramProfileView
-          instagramId={localStorage.getItem('instagram_user_id') || ''}
           isOpen={showProfileView}
           onClose={() => setShowProfileView(false)}
         />
