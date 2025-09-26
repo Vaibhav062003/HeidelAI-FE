@@ -28,13 +28,20 @@ import InstagramProfileView from './InstagramProfileView';
 import FacebookSDK, { FacebookLoginResponse } from '@/components/facebook/FacebookSDK';
 import { useIntegrations } from '@/components/hooks/useIntegrations';
 import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
-
-
-// Instagram OAuth configuration
-const INSTAGRAM_CLIENT_ID = '1197084761515978'; // Replace with your Instagram app ID
-const INSTAGRAM_REDIRECT_URI = `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/instagram/callback`;
-const INSTAGRAM_SCOPE = 'user_profile,user_media,instagram_business_basic, instagram_business_manage_messages'; // Basic permissions
-
+import { 
+  Table, 
+  TableBody, 
+  TableCell,  
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+// import { Shopify } from '@shopify/shopify-api';
+import { toast } from 'sonner';
+import { connectWebSocket } from '../../lib/websocket';
+import WhatsAppLoginDialog from './WhatsappLoginDialog';
+import api from '@/lib/session_api';
+import { useUser, useOrganization } from '@clerk/nextjs';
 
 // Function to fetch catalog data from the backend
 interface CatalogProduct {
@@ -77,20 +84,7 @@ interface InstagramConnectionData {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
-import { 
-  Table, 
-  TableBody, 
-  TableCell,  
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-// import { Shopify } from '@shopify/shopify-api';
-import { toast } from 'sonner';
-import { connectWebSocket } from '../../lib/websocket';
-import WhatsAppLoginDialog from './WhatsappLoginDialog';
-import api from '@/lib/session_api';
-import { useUser } from '@clerk/nextjs';
+
 
 const loginWithFacebook = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -309,9 +303,29 @@ const InstagramDialog = () => {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showProfileView, setShowProfileView] = useState(false);
-
   const { user } = useUser();
-  const isAdmin = user?.publicMetadata?.role === 'admin';
+  const { organization } = useOrganization();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+
+  useEffect(() => {
+    const checkRole = async () => {
+      if (organization && user) {
+        // Fetch all memberships for this org
+        const memberships = await organization.getMemberships();
+        console.log(memberships)
+        // Find current user's membership
+        const membership = memberships.data.find(
+          (m) => m.publicUserData?.userId === user.id
+        );
+        console.log(membership)
+        setIsAdmin(membership?.roleName === "Admin");
+      }
+    };
+
+    checkRole();
+  }, [organization, user]);
+
   
 
   const { integrations, loading: integrationsLoading, refreshIntegrations } = useIntegrations();
@@ -351,87 +365,28 @@ const InstagramDialog = () => {
     setIsLoading(true);
 
     try {
-      // Generate a random state to prevent CSRF attacks
-      const state = Math.random().toString(36).substring(2, 15);
-      localStorage.setItem('instagram_auth_state', state);
+      // Generate cryptographically secure state
+      const state = window.crypto.getRandomValues(new Uint32Array(1))[0].toString(36);
+      localStorage.setItem("instagram_auth_state", state);
 
-      // Build Instagram authorization URL dynamically for the current subdomain
-      const redirectUri = 'https://development.heidelai.com/auth/instagram/callback';
-      const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages&state=${state}`;
+      // Configurable values
+      const redirectUri = process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI!;
+      const clientId = process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID;
 
-      // Redirect to Instagram authorization page
-      window.location.href = authUrl;
+      const scopes = [
+        "instagram_business_basic",
+        "instagram_business_manage_messages",
+      ].join("%2C");
+
+      // Build auth URL
+      const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=${clientId}&redirect_uri=${encodeURIComponent(
+        redirectUri
+      )}&response_type=code&scope=${scopes}&state=${state}`;
+
+      window.location.assign(authUrl);
     } catch (error) {
-      console.error('Error initiating Instagram login:', error);
-      setIsLoading(false);
-      toast.error('Could not initiate Instagram login. Please try again later.');
-    }
-  };
-  
-  // Handle Instagram OAuth callback (code exchange)
-  const handleInstagramCallback = async (code: string) => {
-    try {
-      // Use the same dynamic redirect_uri as above
-      const redirectUri = `${window.location.origin}/auth/instagram/callback`;
-      const response = await api.post('/api/instagram/auth', {
-        data: JSON.stringify({ 
-          code: code,
-          redirect_uri: redirectUri
-        }),
-      });
-
-
-      if (response.status !== 200) {
-        const errorText = await response.data();
-        console.error('API error response:', errorText);
-        
-        // Parse error as JSON to extract the detail message
-        let errorMessage = 'Failed to connect Instagram account';
-        try {
-          const errorJson = JSON.parse(errorText);
-          if (errorJson.detail) {
-            errorMessage = errorJson.detail;
-          }
-        } catch {
-          // Otherwise, use the raw error text if it's not too long
-          if (errorText && errorText.length < 100) {
-            errorMessage = errorText;
-          }
-        }
-        
-        toast.error(`Instagram connection failed: ${errorMessage}`);
-        throw new Error(`Authentication failed: ${errorMessage}`);
-      }
-      
-      const data = await response.data();
-      console.log('API success response:', data);
-      
-      // Store data in localStorage
-      localStorage.setItem('instagram_connection', JSON.stringify({
-        username: data.username,
-        profileImage: data.profile_picture,
-        token: data.access_token,
-        userId: data.user_id,
-        connected: true
-      }));
-      
-      // Store Instagram ID separately for future quick lookups
-      localStorage.setItem('instagram_user_id', data.user_id);
-      
-      setConnected(true);
-      setAccountInfo({
-        username: data.username,
-        profileImage: data.profile_picture || '/default-avatar.png',
-        businessInfo: data.business_info || {}
-      });
-      
-      toast.success('Instagram connected successfully!');
-    } catch (error) {
-      console.error('Error exchanging token:', error);
-      
-      // Get error message
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      toast.error(`Instagram connection failed: ${errorMessage}`);
+      console.error("Error initiating Instagram login:", error);
+      toast.error("Could not initiate Instagram login. Please try again later.");
     } finally {
       setIsLoading(false);
     }
