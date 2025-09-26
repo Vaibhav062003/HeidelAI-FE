@@ -87,6 +87,7 @@ export default function DashboardPage() {
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
   const { isSignedIn, isLoaded, user } = useUser();
 
+
   useEffect(() => {
     console.log(user);
     if (isLoaded && !isSignedIn) {
@@ -116,7 +117,7 @@ export default function DashboardPage() {
               <div className="w-full">
                 <div className="w-full flex justify-center items-center mb-6">
                   <Link href="/">
-                    <Image src="/logo.png" alt="logo" width={30} height={30} />
+                    <Image src="/heidelai.png" alt="logo" width={30} height={30} />
                   </Link>
                 </div>
 
