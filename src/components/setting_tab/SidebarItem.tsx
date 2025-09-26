@@ -572,20 +572,32 @@ const InstagramDialog = () => {
             </div>
             
             <Button 
-              className="w-full mt-4 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white" 
+              className={`w-full mt-4 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white `} 
               onClick={handleInstagramLogin}
-              disabled={isLoading}
+              disabled={isLoading || !isAdmin}
+              title={!isAdmin ? "Only admins can connect integrations" : ""}
             >
+              <span className="flex items-center gap-2">
               {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Processing...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Instagram className="h-4 w-4" /> Login with Instagram
-                </span>
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Processing...
+                  </>
+                ) : !isAdmin ? (
+                  "Admin permission required"
+                ) : (
+                  <>
+                    <Instagram className="h-4 w-4" /> Login with Instagram
+                  </>
               )}
+              </span>
             </Button>
+
+             {/* Show explanatory text for members */}
+            {!isAdmin && !connected && (
+              <p className="text-sm text-amber-600">
+                Only administrators can connect integrations.
+              </p>
+            )}
           </div>
         )}
       </DialogContent>
@@ -600,10 +612,7 @@ const InstagramDialog = () => {
   );
 };
 
-
-
-const TokenTestBox =()=>{
-  // This function is just a placeholder for the token test box
+const TokenTestBox = () => {
   const getToken = async () => {
     try {
       const sessionID = localStorage.getItem("sessionId");
@@ -616,20 +625,22 @@ const TokenTestBox =()=>{
         body: JSON.stringify({ sessionId: sessionID }),
       });
 
-
-
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(`Failed to get session token: ${errorText}`);
       }
 
       const { token: sessionToken } = await res.json();
-      console.log("Session Token:", sessionToken);
       if (!sessionToken) {
         throw new Error("Failed to retrieve session token");
       }
+
+      // Copy token to clipboard
+      await navigator.clipboard.writeText(sessionToken);
+      toast.success("Token copied");
     } catch (error) {
       console.error("Error in token_testDialog:", error);
+      toast.error("Failed to copy token");
     }
   };
 
@@ -640,7 +651,7 @@ const TokenTestBox =()=>{
       </button>
     </div>
   );
-}
+};
 
  
 
