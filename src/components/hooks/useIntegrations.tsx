@@ -120,7 +120,7 @@ export const useIntegrations = () => {
                 DB_KEYS.INTEGRATIONS.INSTAGRAM
             );
 
-            if (instagramData) {
+            if (instagramData && instagramData.status) {
                 console.log("Loaded Instagram from IndexedDB:", instagramData);
                 setIntegrations((prev) => ({
                     ...prev,
