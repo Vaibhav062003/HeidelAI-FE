@@ -14,7 +14,7 @@ interface ConversationListProps {
   onConversationSelect?: (id: string) => void;
 }
 
-type TabValue = 'all' | 'live_agent' | 'AI';
+type TabValue = 'all' | 'open' | 'closed';
 
 interface SearchResult {
   conversation: Conversation;
@@ -38,12 +38,19 @@ const EmptyState = ({ message }: { message: string }) => (
   </div>
 );
 
+const tabToStatus: Record<TabValue, "open" | "closed" | undefined> = {
+  all: undefined,      // No status param for "all"
+  open: "open",
+  closed: "closed",
+};
+
+
 const ConversationList = ({
   selectedConversationId,
   onConversationSelect
 }: ConversationListProps) => {
-  const { conversations, loading, error } = useConversations();
   const [activeTab, setActiveTab] = useState<TabValue>('all');
+  const { conversations, loading, error } = useConversations(tabToStatus[activeTab]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({
     platform: [],
@@ -95,16 +102,18 @@ const ConversationList = ({
       matchedText: searchQuery ? conversation.last_message : undefined
     };
   })
-    .filter(result => {
-      switch (activeTab) {
-        case 'AI':
-          return result.conversation.is_ai_enabled;
-        case 'live_agent':
-          return !result.conversation.is_ai_enabled;
-        default:
-          return true;
-      }
-    });
+    // .filter(result => {
+    //   switch (activeTab) {
+    //     case 'AI':
+    //       return result.conversation.is_ai_enabled;
+    //     case 'live_agent':
+    //       return !result.conversation.is_ai_enabled;
+    //     default:
+    //       return true;
+    //   }
+    // });
+
+    // console.log("activeTab: ", activeTab);
 
   if (loading) {
     return (
@@ -143,9 +152,9 @@ const ConversationList = ({
         </div>
         <Tabs defaultValue="all" className="mt-4">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">Me</TabsTrigger>
-            <TabsTrigger value="live_agent">Live Agent</TabsTrigger>
-            <TabsTrigger value="AI">AI</TabsTrigger>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="open">Open</TabsTrigger>
+            <TabsTrigger value="closed">Closed</TabsTrigger>
           </TabsList>
         </Tabs>
         <div className="mt-4">
@@ -176,9 +185,9 @@ const ConversationList = ({
         </div>
         <Tabs defaultValue="all" className="mt-4">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">Me</TabsTrigger>
-            <TabsTrigger value="live_agent">Live Agent</TabsTrigger>
-            <TabsTrigger value="AI">AI</TabsTrigger>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="open">Open</TabsTrigger>
+            <TabsTrigger value="closed">Closed</TabsTrigger>
           </TabsList>
         </Tabs>
         <div className="mt-4">
@@ -235,9 +244,9 @@ const ConversationList = ({
           </div>
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabValue)} className="mt-4">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="all">Me</TabsTrigger>
-              <TabsTrigger value="live_agent">Live Agent</TabsTrigger>
-              <TabsTrigger value="AI">AI</TabsTrigger>
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="open">Open</TabsTrigger>
+              <TabsTrigger value="closed">Closed</TabsTrigger>
             </TabsList>
           </Tabs>
           <div className="mt-4">
@@ -271,10 +280,10 @@ const ConversationList = ({
       {searchResults.length === 0 ? (
         <EmptyState 
           message={
-            activeTab === 'live_agent' 
-              ? "No conversations have Live Agent enabled" 
-              : activeTab === 'AI' 
-                ? "No conversations have AI enabled"
+            activeTab === 'open' 
+              ? "No open conversations found" 
+              : activeTab === 'closed' 
+                ? "No closed conversations found"
                 : "No conversations found"
           } 
         />

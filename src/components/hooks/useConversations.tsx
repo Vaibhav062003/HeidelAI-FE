@@ -20,6 +20,13 @@ interface WebSocketMessage {
   };
 }
 
+// <<<<<<< HEAD
+// // const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss' : 'ws';
+// // const WS_BASE_URL = `ws://127.0.0.1:8000`;
+// // const WS_WHATSAPP_ENDPOINT = `${WS_BASE_URL}/ws2/whatsapp`;
+// // const WS_INSTAGRAM_ENDPOINT = `${WS_BASE_URL}/ws2/instagram`;
+// =======
+// >>>>>>> 46af3aa4b10e3dc3eb7d0949fafa717556636c2d
 
 // WebSocket base URLs
 const WS_BASE_URL = 'wss://egenie-whatsapp.koyeb.app';
@@ -130,10 +137,12 @@ function normalizeConversation(conv: any): Conversation {
 //   return wsRef.current;
 // }
 
-export const useConversations = () => {
+export const useConversations = (status?: "open" | "closed") => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  // console.log("status in useConv::::", status)
 
   // console.log("con::::", conversations)
   // Fetch conversations from both platforms
@@ -143,7 +152,9 @@ export const useConversations = () => {
       let allConversations: Conversation[] = [];
       //all conversations
       try{
-        const allres = await conversationService.getAllConversations();
+        const allres = await conversationService.getConversationByStatus(status);
+        // Example: in useConversations or API service
+        // console.log("Fetching conversations with status:", status);
         if (allres.status === "success" && Array.isArray(allres.data)) {
           allConversations = [
             ...allConversations,
@@ -193,7 +204,7 @@ export const useConversations = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [status]);
 
 
   // Handle WebSocket messages
@@ -357,7 +368,7 @@ export const useConversations = () => {
     // Connect to WebSockets if appropriate IDs are available
     // connectWhatsAppWebSocket();
     connectInstagramWebSocket();
-  }, [handleWebSocketMessage]);
+  }, [handleWebSocketMessage, fetchConversations]);
 
   return { conversations, loading, error };
 };
