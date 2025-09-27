@@ -6,8 +6,10 @@ export function useTypingIndicator(sendFn: (payload: Record<string, unknown>) =>
   const [isTyping, setIsTyping] = useState(false);
   const { user, isLoaded } = useUser();
   const typingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const agentId = localStorage.getItem('chat_client_id');
-
+  let agentId: string | null = null;
+  if (typeof window !== 'undefined') {
+    agentId = localStorage.getItem('chat_client_id');
+  }
    
   const handleTyping = useCallback(() => {
     if (!isLoaded || !user) return;

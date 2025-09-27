@@ -91,14 +91,13 @@ export default function DashboardPage() {
 
 
   const handleSignOut = async () => {
-    await signOut();
+  await signOut();
+  toast.success("Signed out successfully!");
+  if (typeof window !== "undefined") {
+    localStorage.clear();
     window.location.href = "/";
-    toast.success("Signed out successfully!");
-    if (typeof window !== "undefined") {
-      localStorage.clear();
-    }
-    // redirect manually
-  };
+  }
+};
 
 
   useEffect(() => {
