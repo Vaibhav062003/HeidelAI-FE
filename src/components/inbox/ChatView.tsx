@@ -63,7 +63,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import ReminderDialog from "./ReminderDialog";
 
-import '../../app/dashboard/dashboard.css';
+// import '../../app/dashboard/dashboard.css';
 import Image from "next/image";
 import CustomerInfo from './CustomerInfo';
 import LandingDashboard from "./LandingDashboard";
