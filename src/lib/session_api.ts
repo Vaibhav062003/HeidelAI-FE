@@ -9,7 +9,8 @@ api.interceptors.request.use(async (config) =>{
   const sessionId = localStorage.getItem("sessionId");
   if (!sessionId) throw new Error("Session ID not found in localStorage");
 
-  const res = await fetch("api/session-token",{
+
+  const res = await fetch(`${window.location.origin}/api/session-token`,{
     method: "POST",
     headers: {
       "content-type": "application/json"
