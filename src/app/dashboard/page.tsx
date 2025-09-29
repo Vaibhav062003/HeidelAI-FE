@@ -39,12 +39,13 @@ import { InstagramLogoIcon } from "@radix-ui/react-icons";
 import RemainderSideBar from "@/components/inbox/ReminderSideBar";
 import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
 import InfluencerBot from "@/components/influencerBot/influencerbot";
-import { UserButton, UserProfile, useUser, SignedIn, OrganizationSwitcher } from '@clerk/nextjs';
+import { UserButton, UserProfile, useUser, SignedIn, OrganizationSwitcher, SignOutButton, useClerk } from '@clerk/nextjs';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 
 interface Product {
   id: string;
@@ -85,10 +86,22 @@ export default function DashboardPage() {
   const [isConversationListVisible, setIsConversationListVisible] = useState(true);
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
   const { isSignedIn, isLoaded, user } = useUser();
+  const { signOut } = useClerk();
+
+
+
+  const handleSignOut = async () => {
+  await signOut();
+  toast.success("Signed out successfully!");
+  if (typeof window !== "undefined") {
+    localStorage.clear();
+    window.location.href = "/";
+  }
+};
 
 
   useEffect(() => {
-    console.log(user);
+    // console.log(user);
     if (isLoaded && !isSignedIn) {
       router.push("/");
     }
@@ -216,17 +229,15 @@ export default function DashboardPage() {
                 {isSignedIn && (
                   <>
                     <div className="w-full flex justify-center items-center mb-4">
-                      <div>
-                        <UserButton 
-                          appearance={{
-                            elements: {
-                              userButtonAvatarBox: "w-10 h-10",
-                              userButtonAvatar: "rounded-full",
-                              userButtonAction: "hidden",
-                            },
-                          }}
-                        />
-                      </div>
+                      <div className="w-full flex justify-center items-center mb-4">
+                          <button
+                            onClick={handleSignOut}
+                            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-600 hover:bg-red-700 transition shadow-lg"
+                            title="Logout"
+                          >
+                            <LogOut className="h-5 w-5 text-white" />
+                          </button>
+                        </div>
                     </div>
                     {/* <div className="w-full flex justify-center items-center">
                       <div className="relative flex items-center">

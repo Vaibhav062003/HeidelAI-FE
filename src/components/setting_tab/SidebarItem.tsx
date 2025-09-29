@@ -45,6 +45,23 @@ interface CatalogProduct {
   [key: string]: string | number | boolean | undefined; // For any additional fields
 }
 
+interface AgentMember {
+  id: string | number;
+  identifier: string;
+  role_name: string;
+  user_id: string; 
+  public_user_data?: {
+    identifier?: string;
+    user_id?: string;
+  };
+}
+
+interface InvitedAgent {
+  id: string | number;
+  email_address: string;
+  status: string;
+}
+
 interface CatalogResponse {
   data: CatalogProduct[];
   paging?: {
@@ -647,8 +664,7 @@ const InstagramDialog = () => {
 
 
 
-const TokenTestBox =()=>{
-  // This function is just a placeholder for the token test box
+const TokenTestBox = () => {
   const getToken = async () => {
     try {
       const sessionID = localStorage.getItem("sessionId");
@@ -661,20 +677,22 @@ const TokenTestBox =()=>{
         body: JSON.stringify({ sessionId: sessionID }),
       });
 
-
-
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(`Failed to get session token: ${errorText}`);
       }
 
       const { token: sessionToken } = await res.json();
-      console.log("Session Token:", sessionToken);
       if (!sessionToken) {
         throw new Error("Failed to retrieve session token");
       }
+
+      // Copy token to clipboard
+      await navigator.clipboard.writeText(sessionToken);
+      toast.success("Token copied");
     } catch (error) {
       console.error("Error in token_testDialog:", error);
+      toast.error("Failed to copy token");
     }
   };
 
@@ -685,7 +703,7 @@ const TokenTestBox =()=>{
       </button>
     </div>
   );
-}
+};
 
  
 
@@ -924,6 +942,11 @@ const handleDisconnect = async () => {
 
 
 export default function DashboardPage() {
+  const members: AgentMember[] = [];
+  const invited: InvitedAgent[] = [];
+  const initialLoading = false;
+  const refresh = () => {};
+  const agentLimit = 0;
   const handleInsertResponse = (message: string) => {
     // Handle the canned response insertion
     console.log('Inserting canned response:', message);
@@ -934,7 +957,13 @@ export default function DashboardPage() {
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
       
       {/* Add component */}
-      <AgentsSettings />
+      <AgentsSettings
+        members={members}
+        invited={invited}
+        initialLoading={initialLoading}
+        refresh={refresh}
+        agentLimit={agentLimit}
+      />
       <TeamsConfiguration />
       <CannedResponses onInsertResponse={handleInsertResponse} />
       {/* You can add other dashboard components here */}
