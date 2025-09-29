@@ -45,34 +45,25 @@ const ContactsDashboard = () => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [tagsLoading, setTagsLoading] = useState(true);
-  const [screenWidth, setScreenWidth] = useState(0);
-  
-  // Responsive configuration
-  const [itemsPerPage, setItemsPerPage] = useState(10); // Make this dynamic
+  const [showTagSidebar, setShowTagSidebar] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Screen size detection
   useEffect(() => {
-    const handleResize = () => {
-      setScreenWidth(window.innerWidth);
+    const handleOpenContactsTags = () => {
+      setShowTagSidebar(true);
     };
 
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('openContactsTags', handleOpenContactsTags);
+    return () => window.removeEventListener('openContactsTags', handleOpenContactsTags);
   }, []);
 
   const fetchContacts = useCallback(async () => {
     try {
-      let query = supabase
-        .from('contacts')
-        .select('*');
+      let query = supabase.from('contacts').select('*');
       
-      console.log("contacts :" ,query);
       if (selectedTag) {
         query = query.contains('tags', [selectedTag]);
       }
-      console.log("selected",selectedTag);
-      console.log("query",query);
   
       const { data, error } = await query;
       
@@ -311,42 +302,53 @@ const ContactsDashboard = () => {
     currentPage * itemsPerPage
   );
 
-  // Get responsive classes for sidebar width - Reduced sizes
-  const getSidebarWidth = () => {
-    if (screenWidth < 768) return "w-48";     // Mobile: reduced from w-64
-    if (screenWidth < 1024) return "w-52";   // Tablet: reduced from w-72
-    if (screenWidth < 1280) return "w-56";   // Small desktop: reduced from w-80
-    if (screenWidth < 1536) return "w-60";   // Medium desktop: reduced from w-96
-    return "w-64";                           // Large screens: reduced from w-96
-  };
-
-    const handleItemsPerPageChange = useCallback((newItemsPerPage: number) => {
+  const handleItemsPerPageChange = useCallback((newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1); // Reset to first page when items per page changes
+    setCurrentPage(1);
   }, []);
 
-
   return (
-    <div className="h-screen w-full flex flex-row bg-background overflow-hidden">
-      {/* Responsive TagSidebar - Reduced widths */}
-      <div className={`${getSidebarWidth()} h-full bg-white border-r border-gray-200 flex-shrink-0`}>
-        <TagSidebar
-          tags={tags}
-          tagsLoading={tagsLoading}
-          onCreateTag={handleCreateTag}
-          onEditTag={handleEditTag}
-          onDeleteTag={handleDeleteTag}
-          onTagSelect={setSelectedTag}
-          selectedTag={selectedTag}
-          onTagModalOpen={() => setIsTagModalOpen(true)}
-          onTagModalClose={() => setIsTagModalOpen(false)}
-          error={error}
-        />
+    <div className="h-full w-full flex bg-background overflow-hidden">
+      {/*  Tag Sidebar Container */}
+      <div className={`
+        ${showTagSidebar 
+          ? 'fixed inset-0 z-30 md:relative md:inset-auto md:z-auto' 
+          : 'hidden md:block'
+        }
+        w-80 md:w-64 bg-white border-r border-gray-200 flex-shrink-0
+        h-full
+      `}>
+        {/* Mobile backdrop */}
+        {showTagSidebar && (
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-20 md:hidden"
+            onClick={() => setShowTagSidebar(false)}
+          />
+        )}
+        
+        {/* Direct TagSidebar without extra wrapper */}
+        <div className="relative z-40 w-full h-full md:z-auto">
+          <TagSidebar
+            tags={tags}
+            tagsLoading={tagsLoading}
+            onCreateTag={handleCreateTag}
+            onEditTag={handleEditTag}
+            onDeleteTag={handleDeleteTag}
+            onTagSelect={(tag) => {
+              setSelectedTag(tag);
+              setShowTagSidebar(false);
+            }}
+            selectedTag={selectedTag}
+            onTagModalOpen={() => setIsTagModalOpen(true)}
+            onTagModalClose={() => setIsTagModalOpen(false)}
+            error={error}
+            onClose={() => setShowTagSidebar(false)}
+          />
+        </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-screen max-h-screen min-w-0">
-        {/* Header - Simplified without toggle buttons */}
+      <div className="flex-1 flex flex-col h-full min-w-0">
         <div className="flex-none bg-white border-b border-gray-200">
           <ContactListHeader
             searchValue={searchQuery}
@@ -357,22 +359,21 @@ const ContactsDashboard = () => {
           />
         </div>
 
-        {/* Content Area with responsive padding */}
-        <div className="flex-1 overflow-hidden p-2 sm:p-4 lg:p-6">
+        {/* Content Area */}
+        <div className="flex-1 flex flex-col overflow-hidden p-2 sm:p-4 lg:p-6 min-h-0">
           {loading ? (
-            <div className="h-full flex items-center justify-center">
+            <div className="flex-1 flex items-center justify-center">
               <Spinner />
             </div>
           ) : filteredContacts.length === 0 ? (
-            <div className="h-full flex items-center justify-center">
+            <div className="flex-1 flex items-center justify-center">
               <p className="text-gray-500 text-sm sm:text-base lg:text-lg text-center px-4">
                 {searchQuery ? "No matching contacts found 🔍" : "No contacts found 🔍"}
               </p>
             </div>
           ) : (
-            <div className="h-full flex flex-col">
-              {/* Contacts List with responsive container */}
-              <div className="flex-1 overflow-y-auto bg-white rounded-lg shadow-sm border">
+            <>
+              <div className="flex-1 overflow-y-auto bg-white rounded-lg shadow-sm border min-h-0">
                 <div className="divide-y divide-gray-100">
                   {paginatedContacts.map((contact) => (
                     <ContactItem
@@ -385,27 +386,24 @@ const ContactsDashboard = () => {
                 </div>
               </div>
 
-              {/* Responsive Pagination */}
-              {filteredContacts.length > itemsPerPage && (
-    <div className="flex-none pt-3 sm:pt-4">
-      <PaginationFooter
-        currentPage={currentPage}
-        totalItems={filteredContacts.length}
-        itemsPerPage={itemsPerPage}
-        onPageChange={setCurrentPage}
-        onItemsPerPageChange={handleItemsPerPageChange} // Add this
-      />
-    </div>
-  )}
-            </div>
+              <div className="flex-none pt-3 sm:pt-4">
+                <PaginationFooter
+                  currentPage={currentPage}
+                  totalItems={filteredContacts.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                  onItemsPerPageChange={handleItemsPerPageChange}
+                />
+              </div>
+            </>
           )}
         </div>
       </div>
 
-      {/* Contact Modal with responsive sizing */}
+      {/* Contact Modal */}
       {selectedContact && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-2xl w-full max-w-sm sm:max-w-md lg:max-w-xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto w-full max-w-sm sm:max-w-md lg:max-w-xl mx-2">
             <ContactForm
               contact={selectedContact}
               onClose={() => setSelectedContact(null)}
@@ -415,22 +413,22 @@ const ContactsDashboard = () => {
         </div>
       )}
 
-      {/* Error Toast with responsive positioning */}
+      {/* Error Toast */}
       {error && (
-        <div className="fixed bottom-2 right-2 sm:bottom-4 sm:right-4 bg-red-100 text-red-700 p-3 sm:p-4 rounded-lg shadow-lg flex items-center z-50 max-w-xs sm:max-w-sm">
-          <span className="text-sm sm:text-base">{error}</span>
+        <div className="fixed bottom-20 sm:bottom-4 left-2 right-2 sm:left-auto sm:right-4 sm:max-w-xs lg:max-w-sm bg-red-100 text-red-700 rounded-lg shadow-lg flex items-center z-50 p-3 sm:p-4">
+          <span className="text-sm sm:text-base flex-1">{error}</span>
           <button
             onClick={() => setError(null)}
-            className="ml-3 sm:ml-4 text-red-700 hover:text-red-900 text-sm sm:text-base"
+            className="ml-3 sm:ml-4 text-red-700 hover:text-red-900 text-sm sm:text-base flex-shrink-0"
           >
             Dismiss
           </button>
         </div>
       )}
 
-      {/* Import Toast with responsive positioning */}
+      {/* Import Toast */}
       {isImporting && (
-        <div className="fixed bottom-2 right-2 sm:bottom-4 sm:right-4 bg-blue-100 text-blue-700 p-3 sm:p-4 rounded-lg shadow-md flex items-center gap-2 z-50 max-w-xs sm:max-w-sm">
+        <div className="fixed bottom-20 sm:bottom-4 left-2 right-2 sm:left-auto sm:right-4 sm:max-w-xs lg:max-w-sm bg-blue-100 text-blue-700 rounded-lg shadow-md flex items-center gap-2 z-50 p-3 sm:p-4">
           <Spinner />
           <span className="text-sm sm:text-base">
             Importing {importingCount} contact{importingCount !== 1 ? "s" : ""}

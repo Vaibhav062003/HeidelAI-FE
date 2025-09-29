@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { auth } from "@/components/firebase";
 import React from "react";
 import TopNavigation from "@/components/inbox/TopNavigation";
 import ConversationList from "@/components/inbox/ConversationList";
@@ -22,16 +20,18 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/inbox_button";
 import { Inbox, X } from "lucide-react";
 import { Conversation } from "@/components/types/conversation";
+import { ConversationProvider } from "@/components/hooks/useGlobalConversations";
 import {
   MessageSquare,
   BarChart2,
   CreditCard,
   Settings,
   Contact,
-  Contact2Icon,
   ContactRoundIcon,
   BotMessageSquare,
   LogOut,
+  ChevronLeft,
+  Tag
 } from "lucide-react";
 import { EmojiProvider } from "@/components/EmojiProvider";
 import TalkToDataTab from "@/components/TalkToData/TalkToDataTab";
@@ -41,7 +41,7 @@ import { InstagramLogoIcon } from "@radix-ui/react-icons";
 import RemainderSideBar from "@/components/inbox/ReminderSideBar";
 import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
 import InfluencerBot from "@/components/influencerBot/influencerbot";
-import { UserButton, UserProfile, useUser, SignedIn, OrganizationSwitcher } from '@clerk/nextjs';
+import { UserButton, useUser } from '@clerk/nextjs';
 import {
   Tooltip,
   TooltipContent,
@@ -70,7 +70,6 @@ export default function DashboardPage() {
   const router = useRouter();
   const [activeView, setActiveView] = useState<
     | "inbox"
-    | "analytics"
     | "billing"
     | "settings"
     | "talktodata"
@@ -78,401 +77,369 @@ export default function DashboardPage() {
     | "Contacts"
     | "influencerbot"
   >("inbox");
-  const [showTeamPanel, setShowTeamPanel] = useState(false);
+  
   const [selectedConversationId, setSelectedConversationId] = useState<string>("");
-  const [isAIEnabled, setIsAIEnabled] = useState(false);
-  const [showContact, setShowContact] = useState(false);
   const [sharedProduct, setSharedProduct] = useState<Product | null>(null);
-  const [showOrgSwitcher, setShowOrgSwitcher] = useState(false);
   const [isConversationListVisible, setIsConversationListVisible] = useState(true);
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
-  const [isNavigationVisible, setIsNavigationVisible] = useState(true);
-  const [zoomLevel, setZoomLevel] = useState(100);
-  const { isSignedIn, isLoaded, user } = useUser();
-  const mainContentRef = useRef<HTMLDivElement | null>(null);
-
-  // Detect zoom level and screen size
-  const [screenWidth, setScreenWidth] = useState(0);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
-
-  // Better device detection that accounts for zoom
-  useEffect(() => {
-    const detectDevice = () => {
-      // Check if it's a touch device
-      const touchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      setIsTouchDevice(touchDevice);
-
-      // Get actual screen dimensions (not affected by zoom)
-      const actualWidth = window.screen.width;
-      const currentWidth = window.innerWidth;
-      const zoom = Math.round(window.devicePixelRatio * 100);
-      
-      setScreenWidth(currentWidth);
-      setZoomLevel(zoom);
-
-      // Use actual screen width for mobile detection, not current viewport width
-      // This prevents zoom from triggering mobile layout on desktop
-      console.log('Actual screen width:', actualWidth, 'Current width:', currentWidth, 'Touch device:', touchDevice);
-    };
-
-    detectDevice();
-    window.addEventListener('resize', detectDevice);
-    return () => window.removeEventListener('resize', detectDevice);
-  }, []);
+  const [isNavigationVisible, setIsNavigationVisible] = useState(false);
+  const { isSignedIn, isLoaded } = useUser();
+  const [showMobileConversationList, setShowMobileConversationList] = useState(true);
 
   useEffect(() => {
-    console.log(user);
     if (isLoaded && !isSignedIn) {
       router.push("/");
     }
-  }, [isLoaded, isSignedIn, router, user]);
+  }, [isLoaded, isSignedIn, router]);
 
-  const handleConversationSelect = (id: string) => {
+  const handleMobileConversationSelect = (id: string) => {
+    setSelectedConversationId(id);
+    setShowMobileConversationList(false);
+  };
+
+  const handleMobileBackToList = () => {
+    setShowMobileConversationList(true);
+  };
+
+  const handleDesktopConversationSelect = (id: string) => {
     setSelectedConversationId(id);
   };
 
-  const toggleConversationList = () => {
-    setIsConversationListVisible(!isConversationListVisible);
-  };
-
-  const toggleRightSidebar = () => {
-    setIsRightSidebarVisible(!isRightSidebarVisible);
-  };
-
-  // Toggle main navigation sidebar
-  const toggleNavigationSidebar = () => {
-    setIsNavigationVisible(!isNavigationVisible);
-  };
-
-  // Determine sidebar widths based on screen size - Further reduced
-  const getLeftSidebarWidth = () => {
-    if (screenWidth < 768) return "w-8"; // Mobile: smaller icon only
-    if (screenWidth < 1024) return "w-10"; // Tablet: smaller icon only
-    if (screenWidth < 1280) return "w-12"; // Small desktop: icon only
-    if (screenWidth < 1536) return "w-34"; // Medium desktop: significantly reduced
-    return "w-38"; // Large desktop: significantly reduced
-  };
-
-  // Get conversation list width based on screen size - Further reduced
-  const getConversationListWidth = () => {
-    if (screenWidth < 1280) return "w-[280px]"; // Small screens: reduced
-    if (screenWidth < 1536) return "w-[320px]"; // Medium screens: significantly reduced
-    if (screenWidth < 1920) return "w-[340px]"; // Large screens: significantly reduced
-    return "w-[360px]"; // Extra large screens: reduced even for wide screens
-  };
-
-  // Get right sidebar width based on screen size - Further reduced
-  const getRightSidebarWidth = () => {
-    if (screenWidth < 1536) return "w-[320px]"; // Medium screens: significantly reduced
-    if (screenWidth < 1920) return "w-[340px]"; // Large screens: significantly reduced
-    return "w-[360px]"; // Extra large screens: much smaller
-  };
-
-  const showIconsOnly = screenWidth < 1280; // Show icons only below 1280px
-
-  // Better mobile detection - use actual screen size and touch capability
-  const isActualMobile = () => {
-    const actualScreenWidth = window.screen.width;
-    return (actualScreenWidth <= 768 && isTouchDevice) || 
-           (actualScreenWidth <= 1024 && isTouchDevice && window.innerWidth < 768);
-  };
-
-  const needsMobileHeader = isActualMobile();
-
-  // Get tab title for mobile header
-  const getTabTitle = () => {
-    switch (activeView) {
-      case "inbox": return "Inbox";
-      case "Contacts": return "Contacts";
-      case "talktodata": return "Talk to Data";
-      case "analyticsbot": return "Analytics Bot";
-      case "influencerbot": return "InfluIndex";
-      case "billing": return "Billing";
-      case "settings": return "Settings";
-      default: return "Dashboard";
+  const handleConversationSelect = (id: string) => {
+    setSelectedConversationId(id);
+    if (window.innerWidth < 768) {
+      setShowMobileConversationList(false);
     }
   };
 
+  const getTabTitle = () => {
+    const titles = {
+      inbox: "Inbox",
+      Contacts: "Contacts", 
+      talktodata: "Talk to Data",
+      analyticsbot: "Analytics Bot",
+      influencerbot: "InfluIndex",
+      billing: "Billing",
+      settings: "Settings"
+    };
+    return titles[activeView] || "Inbox";
+  };
+
+  const handleNavigation = (value: string) => {
+    if (value === "inbox") setSelectedConversationId("");
+    setIsNavigationVisible(false);
+  };
+
+  const navigationItems = [
+    { value: "inbox", icon: MessageSquare, label: "Inbox" },
+    { value: "Contacts", icon: ContactRoundIcon, label: "Contacts" },
+    { value: "talktodata", icon: BotMessageSquare, label: "Talk to Data" },
+    { value: "analyticsbot", icon: BarChart2, label: "Analytics" },
+    { value: "influencerbot", icon: InstagramLogoIcon, label: "InfluIndex" },
+    { value: "billing", icon: CreditCard, label: "Billing" },
+    { value: "settings", icon: Settings, label: "Settings" }
+  ];
+
   return (
-    <TooltipProvider>
-      <div className="min-h-screen bg-gray-100 flex">
-        <Tabs
-          value={activeView}
-          onValueChange={(value) => setActiveView(value as typeof activeView)}
-          className="flex-1 flex overflow-hidden"
-        >
-          {/* Mobile Header - Only show on actual mobile devices, not zoomed desktop */}
-          {needsMobileHeader && (
-            <div className="fixed top-0 left-0 right-0 z-40 bg-white border-b px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={toggleNavigationSidebar}
-                  className="h-8 w-8 hover:bg-gray-100"
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
+    <ConversationProvider>
+      <TooltipProvider>
+        <div className="h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex overflow-hidden">
+          <Tabs
+            value={activeView}
+            onValueChange={(value) => setActiveView(value as typeof activeView)}
+            className="flex-1 flex overflow-hidden h-full"
+          >
+            {/* Mobile Header - Only show on mobile */}
+<header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md px-4 py-3 flex items-center justify-between shadow-sm border-b border-gray-200/50 md:hidden">
+  <div className="flex items-center gap-3">
+    {/*  Main navigation button */}
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => setIsNavigationVisible(true)}
+      className="h-10 w-10 hover:bg-gray-100/80 rounded-2xl transition-all duration-200"
+      aria-label="Open navigation"
+    >
+      <Menu className="h-5 w-5" />
+    </Button>
+    
+    {/* Settings menu button */}
+    {activeView === "settings" && (
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => {
+          // Trigger settings sidebar to open
+          const event = new CustomEvent('openSettingsSidebar');
+          window.dispatchEvent(event);
+        }}
+        className="h-10 w-10 hover:bg-gray-100/80 rounded-2xl transition-all duration-200"
+        aria-label="Open settings menu"
+      >
+        <Settings className="h-5 w-5" />
+      </Button>
+    )}
+
+    {activeView === "Contacts" && (
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => {
+          const event = new CustomEvent('openContactsTags');
+          window.dispatchEvent(event);
+        }}
+        className="h-10 w-10 hover:bg-gray-100/80 rounded-2xl transition-all duration-200"
+        aria-label="Open tags menu"
+      >
+        <Tag className="h-5 w-5" />
+      </Button>
+    )}
+                
+                {activeView === "inbox" && !showMobileConversationList && selectedConversationId && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleMobileBackToList}
+                    className="h-10 w-10 hover:bg-gray-100/80 rounded-2xl transition-all duration-200"
+                    aria-label="Back to conversations"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                )}
+                
                 <h1 className="text-lg font-semibold text-gray-900">
-                  {getTabTitle()}
+                  {activeView === "inbox" && !showMobileConversationList && selectedConversationId 
+                    ? "Chat" 
+                    : getTabTitle()
+                  }
                 </h1>
               </div>
-            </div>
-          )}
+            </header>
 
-          {/* Left Sidebar - Only show mobile behavior on actual mobile devices */}
-          <div className={`
-            ${needsMobileHeader ? 
-              (isNavigationVisible ? "translate-x-0" : "-translate-x-full") : 
-              "translate-x-0"
-            }
-            ${getLeftSidebarWidth()}
-            ${needsMobileHeader ? "fixed" : "static"} left-0 top-0 h-full z-30
-            transform transition-all duration-300 ease-in-out
-            ${needsMobileHeader ? "bg-white shadow-lg" : "bg-transparent"}
-            flex-shrink-0
-          `}>
-            <TabsList className="h-full flex flex-col items-start justify-between py-4 bg-white/95 backdrop-blur-sm border-r w-full">
-              {/* Top section: Logo and Close button */}
-              <div className="w-full">
-                <div className="w-full flex justify-center items-center mb-6 relative">
-                  <Link href="/">
-                    <Image 
-                      src="/logo.png" 
-                      alt="logo" 
-                      width={showIconsOnly ? 20 : 22} 
-                      height={showIconsOnly ? 20 : 22}
-                      className="transition-all duration-200" 
-                    />
-                  </Link>
-                  
-                  {/* Close button - Only show on actual mobile devices */}
-                  {needsMobileHeader && (
+            {/* Left Navigation Sidebar */}
+            <aside className={`
+              ${isNavigationVisible 
+                ? 'fixed inset-y-0 left-0 z-40 transform translate-x-0' 
+                : 'fixed inset-y-0 left-0 z-40 transform -translate-x-full md:translate-x-0'
+              }
+              md:static md:transform-none
+              w-20 bg-white/95 backdrop-blur-md border-r border-gray-200/60 
+              rounded-none md:rounded-r-xl shadow-lg z-50
+              transition-transform duration-200
+              flex-shrink-0
+            `}>
+              <TabsList className="h-full flex flex-col justify-between p-3 w-full bg-transparent">
+                <div className="w-full space-y-4">
+                  <div className="flex justify-center items-center relative">
+                    <Link href="/" className="group">
+                      <div className="w-8 h-8 bg-gradient-to-br rounded-2xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
+                        <Image
+                          src="/logo.png"
+                          alt="Logo"
+                          width={28}
+                          height={28}
+                          className="transition-all duration-200"
+                        />
+                      </div>
+                    </Link>
+
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={toggleNavigationSidebar}
-                      className="absolute -right-2 -top-2 h-6 w-6 hover:bg-gray-200 bg-white/80 border shadow-sm"
+                      onClick={() => setIsNavigationVisible(false)}
+                      className="absolute -right-2 -top-2 h-8 w-8 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 md:hidden"
+                      aria-label="Close navigation"
                     >
                       <X className="h-4 w-4" />
                     </Button>
-                  )}
-                  
-                  {/* Show conversation list button when collapsed - only for inbox and not on mobile */}
-                  {!needsMobileHeader && !isConversationListVisible && activeView === "inbox" && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={toggleConversationList}
-                          className="absolute left-24 top-3.5 h-5.5 w-5.5 hover:bg-gray-200 bg-white border shadow-sm"
-                        >
-                          <Menu className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">
-                        Show conversation list
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                </div>
-                
-                {/* Navigation Tabs */}
-                <div className="w-full space-y-2 px-1 mt-8">
-                  {[
-                    { value: "inbox", icon: MessageSquare, label: "Inbox" },
-                    { value: "Contacts", icon: ContactRoundIcon, label: "Contacts" },
-                    { value: "talktodata", icon: BotMessageSquare, label: "Talk to Data" },
-                    { value: "analyticsbot", icon: BarChart2, label: "Analytics" },
-                    { value: "influencerbot", icon: InstagramLogoIcon, label: "InfluIndex" },
-                    { value: "billing", icon: CreditCard, label: "Billing" },
-                    { value: "settings", icon: Settings, label: "Settings" }
-                  ].map(({ value, icon: Icon, label }) => (
-                    <Tooltip key={value}>
-                      <TooltipTrigger asChild>
-                        <TabsTrigger
-                          onClick={() => {
-                            if (value === "inbox") setSelectedConversationId("");
-                            // Close navigation on mobile after selection
-                            if (needsMobileHeader) {
-                              setIsNavigationVisible(false);
-                            }
-                          }}
-                          value={value}
-                          className="group w-full flex items-center px-1.5 py-3 hover:bg-gray-100 rounded-md justify-center lg:justify-start transition-all duration-200"
-                        >
-                          <div className="flex items-center w-full">
-                            <div className={`flex justify-center items-center flex-shrink-0 ${showIconsOnly ? 'w-full' : 'w-5'}`}>
-                              <Icon className={`${showIconsOnly ? 'h-4 w-4' : 'h-3.5 w-3.5'}`} />
-                            </div>
-                            {!showIconsOnly && (
-                              <span className="ml-2.5 text-xs font-medium truncate flex-1 text-left">
-                                {label}
-                              </span>
-                            )}
-                          </div>
-                        </TabsTrigger>
-                      </TooltipTrigger>
-                      {showIconsOnly && <TooltipContent side="right">{label}</TooltipContent>}
-                    </Tooltip>
-                  ))}
-                </div>
-              </div>
 
-              {/* Bottom section: User controls */}
-              <div className="w-full pb-4">
-                {isSignedIn && (
-                  <>
-                    <div className="w-full flex justify-center items-center mb-4">
-                      <div>
-                        <UserButton 
-                          appearance={{
-                            elements: {
-                              userButtonAvatarBox: "w-10 h-10",
-                              userButtonAvatar: "rounded-full",
-                              userButtonAction: "hidden",
-                            },
-                          }}
-                        />
-                      </div>
-                    </div>
-                    {/* <div className="w-full flex justify-center items-center">
-                      <div className="relative flex items-center">
-                        <button
-                          onClick={() => setShowOrgSwitcher((v) => !v)}
-                          className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition"
-                          title="Switch Organization"
-                        >
-                          <span className="text-gray-700 font-bold">Org</span>
-                        </button>
-                        {showOrgSwitcher && (
-                          <div className="absolute left-full top-0 z-30 ml-2">
-                            <OrganizationSwitcher
-                              afterCreateOrganizationUrl="/org/:slug"
-                              afterSelectOrganizationUrl="/org/:slug"
-                              afterSelectPersonalUrl="/dashboard"
-                              appearance={{
-                                elements: {
-                                  organizationSwitcherButton:
-                                    "w-10 h-10 rounded-full bg-transparent p-0 flex items-center justify-center",
-                                  organizationPreviewAvatarBox: "w-10 h-10",
-                                  organizationPreviewAvatar: "hidden",
-                                },
-                              }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div> */}
-                  </>   
-                )}
-              </div>
-            </TabsList>
-          </div>
+                    {!isConversationListVisible && activeView === "inbox" && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setIsConversationListVisible(true)}
+                            className="absolute left-16 top-0 h-8 w-8 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-200 hidden md:flex"
+                            aria-label="Show conversation list"
+                          >
+                            <Menu className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="z-[60]">
+                          Show conversations
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
 
-          {/* Mobile Overlay - Only on actual mobile devices */}
-          {needsMobileHeader && isNavigationVisible && (
-            <div 
-              className="fixed inset-0 bg-black bg-opacity-50 z-20"
-              onClick={toggleNavigationSidebar}
+                  <nav className="relative top-5 space-y-3 ml-2">
+                    {navigationItems.map(({ value, icon: Icon, label }) => (
+                      <Tooltip key={value} delayDuration={300}>
+                        <TooltipTrigger asChild>
+                          <TabsTrigger
+                            value={value}
+                            onClick={() => handleNavigation(value)}
+                            className={`
+                              group w-10 h-10 flex items-center justify-center
+                              rounded-2xl transition-all duration-200
+                              hover:scale-110 hover:shadow-lg
+                              focus:outline-none
+                              ${activeView === value 
+                                ? 'bg-gray-200 text-black shadow-lg' 
+                                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100/80'
+                              }
+                            `}
+                          >
+                            <Icon className="h-6 w-6" />
+                          </TabsTrigger>
+                        </TooltipTrigger>
+                        
+                        <TooltipContent 
+                          side="right" 
+                          className="bg-gray-900/90 backdrop-blur-sm text-white px-3 py-2 rounded-xl shadow-lg border-0 z-[60]"
+                          sideOffset={8}
+                        >
+                          <span className="text-sm font-medium">{label}</span>
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
+                  </nav>
+                </div>
+
+                <div className="flex justify-center">
+                  <Tooltip delayDuration={300}>
+                    <TooltipTrigger asChild>
+                      <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 p-0.5 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110">
+                        <div className="w-full h-full rounded-2xl overflow-hidden bg-white flex items-center justify-center">
+                          <UserButton
+                            appearance={{
+                              elements: {
+                                userButtonAvatarBox: "w-10 h-10 rounded-2xl",
+                                userButtonAvatar: "rounded-2xl",
+                                userButtonAction: "hidden",
+                              },
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent 
+                      side="right" 
+                      className="bg-gray-900/90 backdrop-blur-sm text-white px-3 py-2 rounded-xl shadow-lg border-0 z-[60]"
+                      sideOffset={8}
+                    >
+                      <span className="text-sm font-medium">Profile</span>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TabsList>
+            </aside>
+
+            {/* Mobile Overlay */}
+            <div className={`
+              fixed inset-0 bg-black/20 backdrop-blur-sm z-30 md:hidden
+              ${isNavigationVisible ? 'block' : 'hidden'}
+            `}
+              onClick={() => setIsNavigationVisible(false)}
+              aria-hidden="true"
             />
-          )}
 
-          {/* Main Content Area - Only add padding on actual mobile devices */}
-          <div className={`flex-1 flex flex-col overflow-hidden min-w-0 ${
-            needsMobileHeader ? "pt-16" : ""
-          }`}>
-            <TabsContent
-              value="inbox"
-              className="flex-1 h-full w-full overflow-hidden m-0"
-            >
-              <div className="flex w-full h-screen">
-                {/* Conversation List */}
-                {isConversationListVisible && (
-                  <div className={`bg-white flex flex-col ${getConversationListWidth()} flex-shrink-0 max-h-screen border-r border-gray-200`}>
+            {/* Main Content Container */}
+            <main className="flex-1 flex flex-col h-full min-w-0 overflow-hidden pt-16 md:pt-0">
+              <div className="flex-1 h-full overflow-hidden">
+                {/* Inbox Tab Content */}
+                <TabsContent value="inbox" className="flex-1 h-full w-full overflow-hidden m-0">
+                  <div className={`h-full block md:hidden ${showMobileConversationList ? '' : 'hidden'}`}>
                     <ConversationList
                       selectedConversationId={selectedConversationId}
-                      onConversationSelect={setSelectedConversationId}
-                      isVisible={isConversationListVisible}
-                      onToggleVisibility={toggleConversationList}
+                      onConversationSelect={handleConversationSelect}
+                      isVisible={true}
                     />
                   </div>
-                )}
 
-                {/* Chat View */}
-                <div ref={mainContentRef} className="flex-1 flex flex-col min-w-0 h-screen">
-                  <div className="h-full">
+                  <div className={`h-full block md:hidden ${showMobileConversationList ? 'hidden' : ''}`}>
                     <ChatView
                       selectedConversationId={selectedConversationId}
                       sharedProduct={sharedProduct}
                       onClearSharedProduct={() => setSharedProduct(null)}
-                      isRightSidebarVisible={isRightSidebarVisible}
-                      onOpenRightSidebar={() => setIsRightSidebarVisible(true)}
+                      isRightSidebarVisible={false}
+                      onOpenRightSidebar={() => {}}
+                      onBackToList={handleMobileBackToList}
                     />
                   </div>
-                </div>
 
-                {/* Right Sidebar */}
-                {isRightSidebarVisible && (
-                  <div className={`relative ${getRightSidebarWidth()} flex-shrink-0 hidden xl:block`}>
-                    {/* Right Sidebar Toggle Button */}
-                    <div className="absolute -left-[-290] top-3 z-20">
-                      <Button
-                        onClick={toggleRightSidebar}
-                        variant="ghost"
-                        size="icon"
-                        className="!h-7 !w-7 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white hover:shadow-xl transition-all duration-200 ease-in-out hover:scale-105 active:scale-95"
-                        aria-label="Hide details sidebar"
-                      >
-                        <X className="h-3.5 w-3.5 text-gray-600" />
-                      </Button>
-                    </div>
-
-                    {/* Sidebar Content */}
-                    <div className="border-l border-gray-200 h-full">
-                      {selectedConversationId ? (
-                        <Sidebar
+                  <div className="hidden md:flex h-full">
+                    {isConversationListVisible && (
+                      <section className="w-72 lg:w-80 xl:w-96 flex-shrink-0 bg-white/95 backdrop-blur-md border-r border-gray-200/60 overflow-hidden z-10">
+                        <ConversationList
                           selectedConversationId={selectedConversationId}
-                          onConversationSelect={setSelectedConversationId}
-                          onShareProduct={(product) => setSharedProduct(product)}
+                          onConversationSelect={handleConversationSelect}
+                          isVisible={isConversationListVisible}
+                          onToggleVisibility={() => setIsConversationListVisible(false)}
                         />
-                      ) : (
-                        <RemainderSideBar />
-                      )}
+                      </section>
+                    )}
+
+                    <section className="flex-1 min-w-0 h-full border-r border-gray-200/60 z-10">
+                      <ChatView
+                        selectedConversationId={selectedConversationId}
+                        sharedProduct={sharedProduct}
+                        onClearSharedProduct={() => setSharedProduct(null)}
+                        isRightSidebarVisible={isRightSidebarVisible}
+                        onOpenRightSidebar={() => setIsRightSidebarVisible(true)}
+                        onBackToList={() => {}}
+                      />
+                    </section>
+
+                    {isRightSidebarVisible && (
+                      <aside className="relative w-[280px] xl:w-[320px] flex-shrink-0 hidden xl:block z-10">
+                        {selectedConversationId ? (
+                          <Sidebar
+                            selectedConversationId={selectedConversationId}
+                            onConversationSelect={handleConversationSelect}
+                            onShareProduct={setSharedProduct}
+                            onToggleVisibility={() => setIsRightSidebarVisible(false)}
+                          />
+                        ) : (
+                          <RemainderSideBar 
+                            onToggleVisibility={() => setIsRightSidebarVisible(false)}
+                          />
+                        )}
+                      </aside>
+                    )}
+                  </div>
+                </TabsContent>
+
+                {/* Other Tab Contents */}
+                {["Contacts", "talktodata", "analyticsbot", "influencerbot"].map((tab) => (
+                  <TabsContent key={tab} value={tab} className="flex-1 h-full overflow-hidden m-0">
+                    <div className="h-full w-full bg-gray-50/50 overflow-hidden">
+                      {tab === "Contacts" && <ContactsDashboard />}
+                      {tab === "talktodata" && <TalkToDataTab />}
+                      {tab === "analyticsbot" && <AnalyticsBot />}
+                      {tab === "influencerbot" && <InfluencerBot />}
+                    </div>
+                  </TabsContent>
+                ))}
+
+                {/* Settings & Billing Tabs */}
+                <TabsContent value="settings" className="flex-1 h-full overflow-hidden m-0">
+                  <SettingsSidebar />
+                </TabsContent>
+
+                <TabsContent value="billing" className="flex-1 h-full overflow-hidden m-0">
+                  <div className="h-full w-full overflow-y-auto bg-white">
+                    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+                      <BillingPlans />
                     </div>
                   </div>
-                )}
+                </TabsContent>
               </div>
-            </TabsContent>
-
-            {/* Other Tab Contents */}
-            <TabsContent value="Contacts" className="m-0 flex-1 h-full w-full overflow-hidden">
-              <ContactsDashboard />
-            </TabsContent>
-
-            <TabsContent value="talktodata" className="m-0 flex-1 h-full w-full overflow-hidden">
-              <TalkToDataTab />
-            </TabsContent>
-
-            <TabsContent value="analyticsbot" className="m-0 flex-1 h-full w-full overflow-hidden">
-              <AnalyticsBot />
-            </TabsContent>
-
-            <TabsContent value="influencerbot" className="m-0 flex-1 h-full w-full overflow-hidden">
-              <InfluencerBot />
-            </TabsContent>
-
-            <TabsContent value="billing" className="m-0 flex-1 p-4 overflow-auto h-full">
-              <BillingPlans />
-            </TabsContent>
-
-            <TabsContent value="settings" className="m-0 flex-1 p-4 overflow-auto h-full">
-              <SettingsSidebar />
-            </TabsContent>
-          </div>
-        </Tabs>
-      </div>
-    </TooltipProvider>
+            </main>
+          </Tabs>
+        </div>
+      </TooltipProvider>
+    </ConversationProvider>
   );
 }

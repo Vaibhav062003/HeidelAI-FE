@@ -11,6 +11,8 @@ import { Switch } from "@/components/ui/switch";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+import Sidebar from "./Sidebar";
+
 import {
 
   Popover,
@@ -61,7 +63,9 @@ import {
 
   RefreshCw,
 
-  XCircle
+  XCircle,
+  
+  ChevronLeft
 
 } from "lucide-react";
 
@@ -336,6 +340,8 @@ interface ChatViewProps {
   // Controls for right sidebar visibility (to place open button near 3-dots)
   isRightSidebarVisible?: boolean;
   onOpenRightSidebar?: () => void;
+    isMobile?: boolean;
+  onBackToList?: () => void;
 
 }
 
@@ -1229,6 +1235,8 @@ const ChatView = ({
 
   isRightSidebarVisible,
   onOpenRightSidebar,
+    isMobile = false,
+  onBackToList,
 
 }: ChatViewProps) => {
 
@@ -1243,8 +1251,6 @@ const ChatView = ({
   const [messages, setMessages] = useState<Message[]>([]);
 
   const [loading, setLoading] = useState(false);
-
-  const [conversation, setConversation] = useState<Conversation | null>(null);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -1312,7 +1318,8 @@ const [isResolved, setIsResolved] = useState(false);
 const [isFollowUp, setIsFollowUp] = useState(false);
 const [conversationStatus, setConversationStatus] = useState<'open' | 'closed' | 'followup'>('open');
 const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-
+const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+const [conversation, setConversation] = useState<Conversation | null>(null);
   // Add this useEffect to handle the timer logic
 
   useEffect(() => {
@@ -2075,30 +2082,32 @@ useEffect(() => {
 
   
   // Fetch conversation details
-  const fetchConversation = async () => {
-    try {
-      setLoading(true);
-      const platform = selectedConversationId.split('_')[0];
-      let response;
-      if (platform === 'instagram') {
-        response = await api.get(`/api/instagram/conversations/${selectedConversationId}`);
-        setConversation(response?.data);
-      } else if (platform === 'whatsapp') {
-        const whatsappId = localStorage.getItem('whatsapp_user_id');
-        if (!whatsappId) return;
-        response = await conversationService.getWhatsAppConversations();
-        if (response.status === "success") {
-          const dataArray = Array.isArray(response.data) ? response.data : [];
-          const found = dataArray.find((c: Conversation) => c.id === selectedConversationId);
-          setConversation(found || null);
+const fetchConversation = async () => {
+  try {
+    setLoading(true);
+    const platform = selectedConversationId.split('_')[0];
+    let response;
+    
+    if (platform === 'instagram') {
+      response = await api.get(`/api/instagram/conversations/${selectedConversationId}`);
+      setConversation(response?.data);
+    } else if (platform === 'whatsapp') {
+      const whatsappId = localStorage.getItem('whatsapp_user_id');
+      if (!whatsappId) return;
+      
+      response = await conversationService.getWhatsAppConversations();
+      if (response.status === "success") {
+        const dataArray = Array.isArray(response.data) ? response.data : [];
+        const found = dataArray.find((c: Conversation) => c.id === selectedConversationId);
+        setConversation(found || null);
         }
-      }
-    } catch (error) {
-      toast.error("Failed to load conversation");
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    toast.error("Failed to load conversation");
+  } finally {
+    setLoading(false);
+  }
+};
   
   const fetchAIStatus = async () => {
     try {
@@ -2430,1409 +2439,644 @@ const handleFollowUp = () => {
   }, 100);
 };
 
-
-  return (
-
-    <>
-
-      <Toaster richColors position="top-right" />
-
-      <style>
-
-        {`
-
-          
-
-          .product-scroll::-webkit-scrollbar {
-
-            width: 6px;
-
-            height: 6px;
-
-          }
-
-          .product-scroll::-webkit-scrollbar-thumb {
-
-            background-color: #cbd5e1;
-
-            border-radius: 20px;
-
-          }
-
-          .product-scroll::-webkit-scrollbar-track {
-
-            background: transparent;
-
-          }
-
-          .custom-scroll::-webkit-scrollbar {
-
-            width: 6px;
-
-            height: 6px;
-
-          }
-
-          .custom-scroll::-webkit-scrollbar-thumb {
-
-            background-color: #cbd5e1;
-
-            border-radius: 20px;
-
-          }
-
-          .custom-scroll::-webkit-scrollbar-track {
-
-            background: transparent;
-
-          }
-
-        `}
-
-      </style>
-
-      <TooltipProvider>
-
-        {!selectedConversationId ? (
-
-          <Card className="h-full flex flex-col bg-white  items-center justify-center">
-
-            <div className="text-center text-gray-500">
-
-              <LandingDashboard />
-
-              {/* <h3 className="text-3xl font-bold text-black mb-2">Welcome to your dashboard!</h3>
-
-            <p>Select a conversation from the list to continue</p> */}
-
-            </div>
-
-          </Card>
-
-        ) : (
-
-          <Card className="h-full flex flex-col bg-white max-h-screen">
-
-            <div className="p-2 border-b border-gray-200 bg-gradient-to-r from-white to-gray-50 flex items-center justify-between shadow-sm">
-
-              {/* Customer Info Section */}
-
-              <div className="flex items-center space-x-4">
-
-                {/* Timer display - Only for WhatsApp conversations */}
-{selectedConversationId &&
-  customerTimers[selectedConversationId] !== undefined &&
-  conversation?.platform === 'whatsapp' && (
-    <TimerDisplay
-      hours={customerTimers[selectedConversationId]}
-    />
-  )}
-
-
-                <div className="relative ml-3">
-
-                  <Avatar className="h-8 w-8 border-1 border-white shadow-md">
-
-                    <img
-
-                      src={avatarSource}
-
-                      alt="Platform avatar"
-
-                      className="object-cover"
-
-                    />
-
-                  </Avatar>
-
-                </div>
-
-
-
-                <div>
-
-                  <Dialog>
-
-                    <DialogTrigger asChild>
-
-                      <div className="group cursor-pointer">
-
-<h3 className="font-bold text-m text-gray-800 group-hover:text-blue-500 transition-colors duration-200">
-
-                          {conversation?.customer_name}
-
-                          {/* <span className="ml-2 text-xs font-normal bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-
-                            {conversation?.platform || "Chat"}
-
-                          </span> */}
-
-                        </h3>
-
-                      </div>
-
-                    </DialogTrigger>
-
-
-
-                    <DialogContent className="max-w-4xl rounded-xl shadow-xl">
-
-                      <DialogHeader className="border-b pb-4">
-
-                        <DialogTitle className="text-2xl font-bold text-gray-800 flex items-center">
-
-                          <User className="h-6 w-6 mr-2 text-blue-600" />
-
-                          Customer Information
-
-                        </DialogTitle>
-
-                      </DialogHeader>
-
-
-
-                      {conversation && (
-
-                        <div className="py-4">
-
-                          <CustomerInfo
-
-                            name={conversation?.customer_name || "Not Saved"}
-
-                            email={conversation?.email || "Not Saved"}
-
-                            billingaddress={
-
-                              conversation?.billingAddress || "Not Saved"
-
-                            }
-
-                            shippingaddress={
-
-                              conversation?.shippingAddress || "Not Saved"
-
-                            }
-
-                            platform={conversation?.platform || ""}
-
-                            selectedConversationId={selectedConversationId}
-
-                            saveCustomerInfo={saveCustomerInfo}
-
-                          />
-
-                        </div>
-
-                      )}
-
-                    </DialogContent>
-
-                  </Dialog>
-
-                </div>
-
-              </div>
-
-
-
-             {/* Action Buttons Section */}
-<div className="flex items-center space-x-3 mr-4">
-  {/* Resolve/Reopen Button */}
-<DropdownMenu open={isStatusDropdownOpen} onOpenChange={setIsStatusDropdownOpen}>
-    <DropdownMenuTrigger asChild>
-      <Button
-        variant="ghost"
-        className="rounded-lg hover:bg-blue-50  transition-colors duration-200 flex items-center space-x-2 px-3 py-2"
-      >
-        {conversationStatus === 'closed' ? (
-          <XCircle className="h-4 w-4 text-red-600" />
-        ) : conversationStatus === 'followup' ? (
-          <Clock className="h-4 w-4 text-amber-600" />
-        ) : (
-          <CheckCircle className="h-4 w-4 text-green-600" />
-        )}
-        <span className="text-sm font-medium text-gray-700">
-          {conversationStatus === 'closed' ? "Closed" : 
-           conversationStatus === 'followup' ? "Follow-up" : 
-           "Open"}
-        </span>
-        <ChevronDown className="h-4 w-4 text-gray-500" />
-      </Button>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent align="end" className="w-48 rounded-lg shadow-md border border-gray-200 py-1">
-      {conversationStatus === 'open' && (
-        <>
-          <DropdownMenuItem 
-            onClick={handleResolve}
-            className="flex items-center px-3 py-2 cursor-pointer text-sm hover:bg-red-50"
-          >
-            <XCircle className="h-4 w-4 mr-3 text-red-600" />
-            <span className="font-medium">Close</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem 
-            onClick={handleFollowUp}
-            className="flex items-center px-3 py-2 cursor-pointer text-sm hover:bg-amber-50"
-          >
-            <Clock className="h-4 w-4 mr-3 text-amber-600" />
-            <span className="font-medium">Mark for Follow-up</span>
-          </DropdownMenuItem>
-        </>
-      )}
-      
-      {(conversationStatus === 'closed' || conversationStatus === 'followup') && (
-        <DropdownMenuItem 
-          onClick={handleReopen}
-          className="flex items-center px-3 py-2 cursor-pointer text-sm hover:bg-green-50"
-        >
-          <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
-          <span className="font-medium">Reopen Conversation</span>
-        </DropdownMenuItem>
-      )}
-    </DropdownMenuContent>
-  </DropdownMenu>
-
-  {/* Reminders Button */}
-  <Tooltip>
-    <TooltipTrigger asChild>
-      <div className="relative">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-lg hover:bg-blue-50  transition-colors duration-200 w-10 h-10 relative"
-            >
-              <Clock className="h-4 w-4 text-gray-600" />
-              {reminders.length > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs bg-gray-900 text-white"
-                >
-                  {reminders.length}
-                </Badge>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <RemindersPopover
-            reminders={reminders}
-            onCreateReminder={() => setShowReminder(true)}
-            onDeleteReminder={async (id) => {
-              try {
-                const response = await fetch(
-                  `https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders/${id}`,
-                  {
-                    method: "DELETE",
-                    credentials: "include",
-                  }
-                );
-                if (!response.ok) {
-                  throw new Error("Failed to delete reminder");
-                }
-                toast.success("Reminder deleted successfully");
-                refetchReminders();
-              } catch (error) {
-                toast.error("Failed to delete reminder");
-                console.error("Error deleting reminder:", error);
-              }
-            }}
+return (
+  <>
+    <Toaster richColors position="top-right" />
+
+    <style>
+      {`
+        .product-scroll::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+        .product-scroll::-webkit-scrollbar-thumb {
+          background-color: #cbd5e1;
+          border-radius: 20px;
+        }
+        .product-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scroll::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+          background-color: #cbd5e1;
+          border-radius: 20px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        /* ✅ ADDED: Performance optimizations */
+        .chat-container {
+          contain: layout style paint;
+          will-change: auto;
+        }
+        .message-item {
+          contain: layout style;
+        }
+        .avatar-placeholder {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        /* ✅ ADDED: Skeleton loading styles */
+        .skeleton {
+          background: linear-gradient(90deg, #f0f0f0 0%, #e0e0e0 50%, #f0f0f0 100%);
+          background-size: 200% 100%;
+          animation: loading 1.5s infinite;
+        }
+        @keyframes loading {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        /* ✅ ADDED: Hardware acceleration */
+        .hw-accel {
+          transform: translateZ(0);
+          backface-visibility: hidden;
+          perspective: 1000px;
+        }
+      `}
+    </style>
+
+    <TooltipProvider>
+      {/* Mobile Sidebar */}
+      <div className={`
+        ${showMobileSidebar 
+          ? 'fixed inset-0 z-50 sm:hidden' 
+          : 'hidden'
+        }
+        chat-container
+      `}>
+        {/* Backdrop */}
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm hw-accel"
+          onClick={() => setShowMobileSidebar(false)}
+        />
+        
+        {/* Sidebar content */}
+        <div className="fixed inset-y-0 right-0 w-full max-w-sm bg-white shadow-2xl hw-accel">
+          <Sidebar
+            selectedConversationId={selectedConversationId}
+            conversation={conversation} 
+            onShareProduct={sharedProduct ? onClearSharedProduct : () => {}}
+            onConversationSelect={() => {}}
+            onToggleVisibility={() => setShowMobileSidebar(false)}
+            isMobile={true}
+            isOpen={showMobileSidebar}
           />
-        </Popover>
+        </div>
       </div>
-    </TooltipTrigger>
-    <TooltipContent>
-      {reminders.length > 0
-        ? `${reminders.length} reminder${reminders.length > 1 ? "s" : ""} set`
-        : "Set reminder"}
-    </TooltipContent>
-  </Tooltip>
 
-  {/* AI Toggle */}
-  <div className="flex items-center bg-gray-50 rounded-lg px-3 py-2 hover:bg-blue-50 transition-colors duration-200">
-    <Switch
-      checked={isAIEnabled}
-      onCheckedChange={toggleAI}
-      disabled={isToggling}
-      className="data-[state=checked]:bg-gray-500 mr-2"
-    />
-    <span className="text-sm font-medium text-gray-700">
-      AI
-    </span>
-  </div>
-
-  {/* More Options Menu */}
-  <DropdownMenu>
-    <DropdownMenuTrigger asChild>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="rounded-lg hover:bg-blue-50 transition-colors duration-200 w-10 h-10"
-      >
-        <MoreVertical className="h-4 w-4 text-gray-600" />
-      </Button>
-    </DropdownMenuTrigger>
-
-    <DropdownMenuContent
-      align="end"
-      className="rounded-lg shadow-md border border-gray-200 min-w-[180px] py-1"
-    >
-      <DropdownMenuItem
-        onClick={() => setShowCustomerInfo(true)}
-        className="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer"
-      >
-        <User className="h-4 w-4 mr-3 text-gray-600" />
-        <span className="font-medium">Customer Info</span>
-      </DropdownMenuItem>
-      
-      <DropdownMenuItem className="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer">
-        <FileText className="h-4 w-4 mr-3 text-gray-600" />
-        <span className="font-medium">Export Chat</span>
-      </DropdownMenuItem>
-      
-      <DropdownMenuItem className="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer">
-        <Trash2 className="h-4 w-4 mr-3 text-gray-600" />
-        <span className="font-medium">Clear Chat</span>
-      </DropdownMenuItem>
-    </DropdownMenuContent>
-  </DropdownMenu>
-
-  {/* Right sidebar menu button (only when hidden) */}
-  {!isRightSidebarVisible && onOpenRightSidebar && (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="rounded-lg hover:bg-blue-50 transition-colors duration-200 w-10 h-10"
-      onClick={onOpenRightSidebar}
-      aria-label="Open right sidebar"
-    >
-      <Menu className="h-4 w-4 text-gray-600" />
-    </Button>
-  )}
-</div>
-
-
-
-            </div>
-
-            {/* Customer Info Dialog */}
-
-            <Dialog open={showCustomerInfo} onOpenChange={setShowCustomerInfo}>
-
-              <DialogContent className="sm:max-w-[800px]">
-
-                <DialogHeader>
-
-                  <DialogTitle className="text-2xl">
-
-                    Customer Information
-
-                  </DialogTitle>
-
-                </DialogHeader>
-
-
-
-                {/* Contact Details Section */}
-
-                <div className="space-y-6">
-
-                  <div className=" rounded-lg p-6">
-
-                    <h3 className="text-lg font-medium mb-4">
-
-                      Contact Details
-
-                    </h3>
-
-                    <div className="grid grid-cols-2 gap-4 text-base">
-
-                      <div className="space-y-1">
-
-                        <div className="text-gray-500">Name</div>
-
-                        <div className="font-medium">
-
-                          {conversation?.customer_name}
-
-                        </div>
-
-                      </div>
-
-                      <div className="space-y-1">
-
-                        <div className="text-gray-500">
-
-                          {conversation?.platform === "instagram"
-
-                            ? "Username"
-
-                            : "Phone"}
-
-                        </div>
-
-                        <div className="font-medium">
-
-                          {conversation?.platform === "instagram"
-
-                            ? selectedConversationId?.split("_")[1]
-
-                            : selectedConversationId
-
-                                ?.split("_")[1]
-
-                                ?.replace(/^(\d{2})(\d+)/, "+$1 $2")}
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-
-                  {/* Divider */}
-
-                  <div className="h-px bg-gray-200" />
-
-
-
-                  {/* Address and Cart Container */}
-
-                  <div className="grid pl-4 grid-cols-2 gap-6">
-
-                    {/* Address Information */}
-
-                    {messages.some((m) => extractAddressData(m.content)) && (
-
-                      <div className="space-y-3">
-
-                        <h3 className="text-lg font-medium">Latest Address</h3>
-
-                        {messages
-
-                          .filter((m) => extractAddressData(m.content))
-
-                          .slice(-1)
-
-                          .map((m, idx) => {
-
-                            const addressData = extractAddressData(m.content);
-
-                            return (
-
-                              <div
-
-                                key={idx}
-
-                                className=" rounded-lg py-4 space-y-3"
-
-                              >
-
-                                <div className="space-y-2 text-sm">
-
-                                  <div className="flex gap-2">
-
-                                    <div className="text-gray-500 w-20">
-
-                                      Full Name
-
-                                    </div>
-
-                                    <div className="font-medium">
-
-                                      {addressData?.address.full_name}
-
-                                    </div>
-
-                                  </div>
-
-                                  <div className="flex gap-2">
-
-                                    <div className="text-gray-500 w-20">
-
-                                      Email
-
-                                    </div>
-
-                                    <div className="font-medium">
-
-                                      {addressData?.address.email}
-
-                                    </div>
-
-                                  </div>
-
-                                  <div className="flex gap-2">
-
-                                    <div className="text-gray-500 w-20">
-
-                                      Address
-
-                                    </div>
-
-                                    <div className="font-medium">
-
-                                      {addressData?.address.address}
-
-                                    </div>
-
-                                  </div>
-
-                                  <div className="flex gap-2">
-
-                                    <div className="text-gray-500 w-20">
-
-                                      City
-
-                                    </div>
-
-                                    <div className="font-medium">
-
-                                      {addressData?.address.city},{" "}
-
-                                      {addressData?.address.state}{" "}
-
-                                      {addressData?.address.pin_code}
-
-                                    </div>
-
-                                  </div>
-
-                                  <div className="flex gap-2">
-
-                                    <div className="text-gray-500 w-20">
-
-                                      Country
-
-                                    </div>
-
-                                    <div className="font-medium">
-
-                                      {addressData?.address.country.replace(
-
-                                        "0_",
-
-                                        ""
-
-                                      )}
-
-                                    </div>
-
-                                  </div>
-
-                                </div>
-
-                              </div>
-
-                            );
-
-                          })}
-
-                      </div>
-
-                    )}
-
-
-
-                    {/* Cart Information */}
-
-                    {messages.some((m) => extractCartData(m.content)) && (
-
-                      <div className="space-y-3">
-
-                        <h3 className="text-lg font-medium">Latest Cart</h3>
-
-                        {messages
-
-                          .filter((m) => extractCartData(m.content))
-
-                          .slice(-1)
-
-                          .map((m, idx) => {
-
-                            const cartItems = extractCartData(m.content);
-
-                            return (
-
-                              <div key={idx} className="space-y-3">
-
-                                <div className="space-y-3">
-
-                                  {cartItems?.map((item, itemIdx) => (
-
-                                    <div
-
-                                      key={itemIdx}
-
-                                      className="flex gap-3 text-sm pb-3 border-b last:border-0 last:pb-0"
-
-                                    >
-
-                                      <img
-
-                                        src={item.product_data.image_url}
-
-                                        alt={item.product_data.name}
-
-                                        className="w-14 h-14 rounded object-cover"
-
-                                      />
-
-                                      <div className="flex-1 min-w-0">
-
-                                        <div className="font-medium line-clamp-1">
-
-                                          {item.product_data.name}
-
-                                        </div>
-
-                                        <div className="text-gray-500 text-sm mt-0.5">
-
-                                          {item.quantity} × {item.currency}{" "}
-
-                                          {item.item_price}
-
-                                        </div>
-
-                                      </div>
-
-                                    </div>
-
-                                  ))}
-
-                                  <div className="text-base font-medium pt-2">
-
-                                    Total: {cartItems?.[0].currency}
-
-                                    {cartItems?.reduce(
-
-                                      (sum, item) =>
-
-                                        sum + item.item_price * item.quantity,
-
-                                      0
-
-                                    )}
-
-                                  </div>
-
-                                </div>
-
-                              </div>
-
-                            );
-
-                          })}
-
-                      </div>
-
-                    )}
-
-                  </div>
-
-                </div>
-
-              </DialogContent>
-
-            </Dialog>
-
-        {/* Modal for attaching files */}
-        <Dialog open={isFileModalOpen} onOpenChange={(open) => {
-          setIsFileModalOpen(open);
-          if (!open) {
-            setFileCaption("");
-            setSelectedFile(null);
-          }
-        }}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Upload Media</DialogTitle>
-              <DialogDescription>
-                Upload an image or video file with an optional caption
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="grid gap-4">
-              {!selectedFile ? (
-                <div
-                  className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer"
-                  onClick={() => inputFileRef.current?.click()}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    const file = e.dataTransfer.files[0];
-                    if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
-                      setSelectedFile(file);
-                    }
-                  }}
+      {!selectedConversationId ? (
+        <Card className="h-full flex flex-col bg-white items-center justify-center chat-container">
+          <div className="text-center text-gray-500">
+            <LandingDashboard />
+          </div>
+        </Card>
+      ) : (
+        <Card className="h-full flex flex-col bg-white/90 backdrop-blur-xl max-h-screen rounded-none sm:rounded-l shadow-lg border border-white/20 overflow-hidden chat-container hw-accel">
+          
+          {/*  Mobile Header */}
+          <div className="px-4 py-3 bg-white/40 backdrop-blur-sm border-b border-gray-100/60 flex-shrink-0 block sm:hidden hw-accel">
+            <div className="flex items-center gap-3">
+              {onBackToList && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onBackToList}
+                  className="h-10 w-10 hover:bg-gray-100/80 rounded-2xl transition-all duration-200 flex-shrink-0 hw-accel"
+                  aria-label="Back to conversations"
                 >
-                  <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-500">
-                    Drop your media here or click to browse
-                  </p>
-                </div>
-              ) : (
-                <FilePreview 
-                  file={selectedFile}
-                  caption={fileCaption}
-                  setCaption={setFileCaption}
-                  progress={uploadProgress}
-                  onCancel={() => {
-                    setSelectedFile(null);
-                    setFileCaption("");
-                    setUploadProgress(0);
-                  }}
-                />
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
               )}
               
-              <input
-                type="file"
-                ref={inputFileRef}
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
-                    setSelectedFile(file);
-                  }
-                }}
-                accept="image/*,video/*"
-              />
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsFileModalOpen(false);
-                  setSelectedFile(null);
-                  setFileCaption("");
-                }}
-                disabled={uploading}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                disabled={!selectedFile || uploading}
-                onClick={() => handleFileUpload(selectedFile, selectedConversationId, fileCaption)}
-              >
-                {uploading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Sending...
-                  </>
-                ) : (
-                  'Send'
-                )}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-
-
-            <ScrollArea
-  ref={scrollAreaRef}
-  className="flex-1 h-full px-3 sm:px-4 py-0 sm:py-0"
->
-  <div className="space-y-1 sm:space-y-1 max-w-full">
-    {messages.map((message, index) => {
-      // System message styling
-      if (message.role === "system") {
-        return (
-          <div key={message.id} className="flex justify-center my-2 sm:my-3">
-            <div className="bg-gray-100 text-gray-600 text-xs sm:text-xs px-3 py-1.5 rounded-full">
-  <span className="font-medium">{message.content}</span>
-  <span className="ml-2 text-gray-400 text-[0.5625rem] sm:text-[0.625rem]">
-    {formatMessageTime(message.timestamp)}
-  </span>
-</div>
-
-          </div>
-        );
-      }
-
-      const productInfo = message.content ? extractProductInfo(message.content) : null;
-      const botProductInfo = message.content ? extractBotProductInfo(message.content) : null;
-      const addressData = message.content ? extractAddressData(message.content) : null;
-      const agentProductInfo = message.content ? extractAgentProductInfo(message.content) : null;
-
-      return (
-        <div key={message.id} className="w-full">
-          {/* Product Preview Cards for Customer Messages */}
-          {productInfo && message.role === "customer" && (
-            <div className="flex flex-col gap-2 mb-2">
-              {productInfo.map((product: ProductInfo, idx: number) => (
-                <div
-                  key={idx}
-                  className={`flex ${message.role === "customer" ? "justify-start" : "justify-end"}`}
-                >
-                  <a
-                    href={product.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-3 p-2.5 rounded-lg border border-gray-200 hover:shadow-md transition-shadow bg-white max-w-[80%] sm:max-w-[70%]"
-                  >
-                    <img
-                      src={product.image_url}
-                      alt={product.name}
-                      className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-xs sm:text-sm font-medium line-clamp-2 text-gray-900">
-                        {product.name}
-                      </h3>
-                      <div className="flex items-center space-x-2 mt-1">
-                        {product.sale_price ? (
-                          <>
-                            <span className="text-sm font-semibold text-black">
-                              {product.sale_price}
-                            </span>
-                            <span className="text-xs text-gray-500 line-through">
-                              {product.price}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="text-sm font-semibold text-black">
-                            {product.price}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </a>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {/* Main Message Container */}
-          <div
-            className={`flex ${
-              message.role === "customer" ? "justify-start" : "justify-end"
-            }`}
-          >
-            <div
-              className={`flex flex-col max-w-[80%] sm:max-w-[75%] ${
-                message.role === "customer" ? "items-start" : "items-end"
-              }`}
-            >
-              {/* Product Images for AI Messages */}
-              {(botProductInfo || agentProductInfo) && message.role === "ai" && (
-                <div className="mb-2">
-                  <img
-                    className="w-64 sm:w-72 rounded-lg border shadow-sm"
-                    src={(botProductInfo || agentProductInfo)?.[0]?.image_url}
-                    alt="Product"
-                  />
-                </div>
-              )}
-
-              {/* Message Bubble */}
-              <div
-                className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5 w-full ${
-                  message.role === "customer"
-                    ? "bg-gray-100 rounded-tl-sm text-black"
-                    : "bg-gray-100 rounded-tl-sm text-black"
-                } ${
-                  (extractCartData(message.content) && message.role === "customer") ||
-                  (addressData && message.role === "customer") ||
-                  message.fileUrl
-                    ? "!bg-transparent !p-0"
-                    : ""
-                }`}
-                style={{ wordBreak: "break-word" }}
-              >
-                {/* Special Message Types */}
-                {message.content &&
-                  extractCartData(message.content) &&
-                  message.role === "customer" && (
-                    <CartMessage items={extractCartData(message.content) ?? []} />
+              <div className="flex items-center space-x-3 flex-1 min-w-0">
+                <div className="relative">
+                  {avatarSource ? (
+                    <Avatar className="h-10 w-10 border-2 border-white/80 shadow-lg ring-1 ring-gray-100/50 hw-accel">
+                      <img
+                        src={avatarSource}
+                        alt="Platform avatar"
+                        className="object-cover"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                      <div className="hidden h-full w-full avatar-placeholder rounded-full"></div>
+                    </Avatar>
+                  ) : (
+                    <div className="h-10 w-10 skeleton rounded-full"></div>
                   )}
-
-                {addressData && message.role === "customer" && (
-                  <AddressMessage data={addressData} />
-                )}
-
-                {/* Media Content */}
-                {message.type === "image" && message.fileUrl && (
-                  <img
-                    src={message.fileUrl}
-                    alt="Shared image"
-                    className="rounded-lg border shadow-sm max-w-full"
-                  />
-                )}
-
-                {message.type === "video" && message.fileUrl && (
-                  <video
-                    src={message.fileUrl}
-                    className="rounded-lg border shadow-sm max-w-full"
-                    controls
-                    playsInline
-                  />
-                )}
-
-                {message.type === "voice" && message.fileUrl && (
-                  <audio
-                    controls
-                    src={message.fileUrl}
-                    className="w-full"
-                  />
-                )}
-
-                {/* Text Content */}
-                <div className="break-words">
-                  {/* Regular text messages */}
-                  {(message.type === "text" || !message.type) &&
-                    !productInfo &&
-                    !agentProductInfo &&
-                    !botProductInfo &&
-                    !extractCartData(message.content) &&
-                    !checkAIMessage(message) &&
-                    !addressData && (
-                      <p className="text-sm sm:text-base">
-                        {message.content}
-                      </p>
-                    )}
-
-                  {/* AI Response */}
-                  {(message.type === "text" || !message.type) &&
-                    message.role === "ai" &&
-                    checkAIMessage(message) && (
-                      <p className="text-sm sm:text-base">
-                        {checkAIMessage(message)}
-                      </p>
-                    )}
-
-                  {/* Product inquiry message */}
-                  {(message.type === "text" || !message.type) &&
-                    productInfo &&
-                    message.role === "customer" && (
-                      <p className="text-sm sm:text-base">Know more.</p>
-                    )}
-
-                  {/* Bot product details */}
-                  {(message.type === "text" || !message.type) &&
-                    botProductInfo &&
-                    message.role === "ai" && (
-                      <div>
-                        <b className="text-sm sm:text-base">{botProductInfo[0].name}</b>
-                        <br /><br />
-                        
-                        <div className="mb-2">
-                          {botProductInfo[0].sale_price ? (
-                            <>
-                              <span className="text-white font-semibold text-base sm:text-lg">
-                                {botProductInfo[0].sale_price}
-                              </span>
-                              <span className="text-gray-200 line-through text-sm ml-2">
-                                {botProductInfo[0].price}
-                              </span>
-                            </>
-                          ) : (
-                            <span className="text-white font-semibold text-base sm:text-lg">
-                              {botProductInfo[0].price}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="text-sm">
-                          🎉<b>Key Highlights:</b><br />
-                          - EMI Available! ✅<br />
-                          - Get GST invoice and save up to 28% on business purchases<br />
-                          - Free Shipping all over India 🚚<br /><br />
-                          
-                          <span className="text-gray-200 text-xs italic">
-                            To contact us, simply type Live Agent
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                  {/* Agent product details */}
-                  {(message.type === "text" || !message.type) &&
-                    agentProductInfo &&
-                    message.role === "ai" && (
-                      <div>
-                        <b className="text-sm sm:text-base">{agentProductInfo[0].name}</b>
-                        <br /><br />
-                        
-                        <div className="mb-2">
-                          {agentProductInfo[0].sale_price ? (
-                            <>
-                              <span className="text-white font-semibold text-base">
-                                {agentProductInfo[0].sale_price}
-                              </span>
-                              <span className="text-gray-200 line-through text-sm ml-2">
-                                {agentProductInfo[0].price}
-                              </span>
-                            </>
-                          ) : (
-                            <span className="text-white font-semibold text-base">
-                              {agentProductInfo[0].price}
-                            </span>
-                          )}
-                        </div>
-
-                        {extractAgentProductText(message.content) && (
-                          <span className="text-sm">
-                            {extractAgentProductText(message.content)}
-                          </span>
-                        )}
-                      </div>
-                    )}
                 </div>
-
-                {/* Timestamp */}
-                <div className="flex justify-end mt-1.5">
-                  <span
-                    className={`text-xs ${
-                      message.role === "customer"
-                        ? "text-gray-500"
-                        : "text-gray-500"
-                    } ${message.fileUrl ? "!text-gray-800" : ""}`}
-                  >
-                    {formatMessageTime(message.timestamp)}
-                  </span>
+                
+                <div className="flex-1 min-w-0">
+                  {conversation ? (
+                    <>
+                      <h3 className="text-base font-semibold text-gray-900 truncate">
+                        {conversation?.customer_name || "Chat"}
+                      </h3>
+                      <p className="text-sm text-gray-500 font-medium">
+                        {conversation?.platform === "instagram" ? "Instagram" : "WhatsApp"}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="h-4 w-24 skeleton rounded mb-1"></div>
+                      <div className="h-3 w-16 skeleton rounded"></div>
+                    </>
+                  )}
                 </div>
               </div>
+              
+              {/* Mobile menu button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowMobileSidebar(true)}
+                className="h-10 w-10 hover:bg-gray-100/80 rounded-2xl transition-all duration-200 flex-shrink-0 hw-accel"
+                aria-label="Options"
+              >
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
 
-              {/* Product Data Carousel */}
-              {message.product_data && (
-                <div className="w-full bg-white mt-2">
-                  <div className="relative overflow-x-auto">
-                    <div className="flex gap-3 snap-x snap-mandatory overflow-x-auto py-2 px-1">
-                      {message.product_data.map((product) => (
-                        <a
-                          href={product.permalink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          key={product.id}
-                          className="snap-start flex-none w-[240px] sm:w-[280px] border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+          {/*  Desktop Header */}
+          <div className="px-6 py-1 border-b border-gray-100/60 bg-white/30 backdrop-blur-sm items-center justify-between hidden sm:flex hw-accel">
+            {/* Customer Info Section */}
+            <div className="flex items-center space-x-4">
+              {/* Timer display - Only for WhatsApp conversations */}
+              {selectedConversationId &&
+                customerTimers[selectedConversationId] !== undefined &&
+                conversation?.platform === 'whatsapp' && (
+                  <TimerDisplay hours={customerTimers[selectedConversationId]} />
+                )}
+
+              <div className="relative">
+                {avatarSource ? (
+                  <Avatar className="h-8 w-8 border-2 border-white/80 shadow-lg ring-1 ring-gray-100/50 hw-accel">
+                    <img
+                      src={avatarSource}
+                      alt="Platform avatar"
+                      className="object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="hidden h-full w-full avatar-placeholder rounded-full"></div>
+                  </Avatar>
+                ) : (
+                  <div className="h-8 w-8 skeleton rounded-full"></div>
+                )}
+              </div>
+
+              <div>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="group cursor-pointer">
+                      {conversation ? (
+                        <h3 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-all duration-300">
+                          {conversation?.customer_name}
+                        </h3>
+                      ) : (
+                        <div className="h-4 w-32 skeleton rounded"></div>
+                      )}
+                    </div>
+                  </DialogTrigger>
+
+                  <DialogContent className="max-w-4xl rounded-3xl shadow-2xl border-0 bg-white/95 backdrop-blur-xl">
+                    <DialogHeader className="border-b border-gray-100/60 pb-6">
+                      <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center">
+                        <div className="w-12 h-12 bg-blue-100/80 rounded-2xl flex items-center justify-center mr-4">
+                          <User className="h-6 w-6 text-blue-600" />
+                        </div>
+                        Customer Information
+                      </DialogTitle>
+                    </DialogHeader>
+                    {/* Rest of dialog content remains same but with updated styling */}
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+            {/*  Action Buttons Section */}
+            <div className="flex items-center space-x-2">
+              {/* Status Dropdown */}
+              <DropdownMenu open={isStatusDropdownOpen} onOpenChange={setIsStatusDropdownOpen}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="rounded-2xl hover:bg-gray-100/60 transition-all duration-300 flex items-center space-x-1 px-3 py-2.5 bg-white/40 backdrop-blur-sm hw-accel"
+                  >
+                    {conversationStatus === 'closed' ? (
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    ) : conversationStatus === 'followup' ? (
+                      <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                    ) : (
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    )}
+                    <span className="text-sm font-medium text-gray-800">
+                      {conversationStatus === 'closed' ? "Closed" : 
+                       conversationStatus === 'followup' ? "Follow-up" : 
+                       "Open"}
+                    </span>
+                    <ChevronDown className="h-4 w-4 text-gray-600" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  align="end" 
+                  className="w-56 rounded-2xl shadow-xl border-0 bg-white/95 backdrop-blur-xl py-2"
+                >
+                  {conversationStatus === 'open' && (
+                    <>
+                      <DropdownMenuItem 
+                        onClick={handleResolve}
+                        className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-red-50/80 rounded-xl mx-2 transition-colors"
+                      >
+                        <XCircle className="h-4 w-4 mr-3 text-red-600" />
+                        <span className="font-medium">Close Conversation</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={handleFollowUp}
+                        className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-amber-50/80 rounded-xl mx-2 transition-colors"
+                      >
+                        <Clock className="h-4 w-4 mr-3 text-amber-600" />
+                        <span className="font-medium">Mark for Follow-up</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  
+                  {(conversationStatus === 'closed' || conversationStatus === 'followup') && (
+                    <DropdownMenuItem 
+                      onClick={handleReopen}
+                      className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-green-50/80 rounded-xl mx-2 transition-colors"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
+                      <span className="font-medium">Reopen Conversation</span>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Reminders Button */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="relative">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-2xl hover:bg-gray-100/60 transition-all duration-300 w-11 h-11 relative bg-white/40 backdrop-blur-sm hw-accel"
                         >
-                          <div className="relative">
-                            <img
-                              src={product.image_link}
-                              alt={product.name}
-                              className="w-full h-40 sm:h-48 object-cover"
-                            />
-                            {product.on_sale === "True" && (
-                              <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                                Sale
+                          <Clock className="h-4 w-4 text-gray-700" />
+                          {reminders.length > 0 && (
+                            <Badge
+                              variant="secondary"
+                              className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-red-500 text-white border-2 border-white"
+                            >
+                              {reminders.length}
+                            </Badge>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      {/* Popover content with updated styling */}
+                    </Popover>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl">
+                  {reminders.length > 0
+                    ? `${reminders.length} reminder${reminders.length > 1 ? "s" : ""} set`
+                    : "Set reminder"}
+                </TooltipContent>
+              </Tooltip>
+
+              {/* AI Toggle */}
+              <div className="flex items-center bg-white/40 backdrop-blur-sm rounded-2xl px-4 py-2.5 hover:bg-gray-100/60 transition-all duration-300 hw-accel">
+                <Switch
+                  checked={isAIEnabled}
+                  onCheckedChange={toggleAI}
+                  disabled={isToggling}
+                  className="data-[state=checked]:bg-blue-600 mr-3 scale-90"
+                />
+                <span className="text-sm font-medium text-gray-800">
+                  AI
+                </span>
+              </div>
+
+              {/* More Options Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-2xl hover:bg-gray-100/60 transition-all duration-300 w-11 h-11 bg-white/40 backdrop-blur-sm hw-accel"
+                  >
+                    <MoreVertical className="h-5 w-5 text-gray-700" />
+                  </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent
+                  align="end"
+                  className="rounded-2xl shadow-xl border-0 bg-white/95 backdrop-blur-xl min-w-[200px] py-2"
+                >
+                  <DropdownMenuItem
+                    onClick={() => setShowCustomerInfo(true)}
+                    className="flex items-center px-4 py-3 hover:bg-blue-50/80 cursor-pointer rounded-xl mx-2 transition-colors"
+                  >
+                    <User className="h-4 w-4 mr-3 text-gray-700" />
+                    <span className="font-medium">Customer Profile</span>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem className="flex items-center px-4 py-3 hover:bg-blue-50/80 cursor-pointer rounded-xl mx-2 transition-colors">
+                    <FileText className="h-4 w-4 mr-3 text-gray-700" />
+                    <span className="font-medium">Export Conversation</span>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem className="flex items-center px-4 py-3 hover:bg-red-50/80 cursor-pointer rounded-xl mx-2 transition-colors">
+                    <Trash2 className="h-4 w-4 mr-3 text-red-600" />
+                    <span className="font-medium text-red-600">Clear Messages</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Right sidebar toggle */}
+              {!isRightSidebarVisible && onOpenRightSidebar && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-2xl hover:bg-gray-100/60 transition-all duration-300 w-11 h-11 bg-white/40 backdrop-blur-sm hw-accel"
+                  onClick={() => {
+                    // open mobile sidebar
+                    if (window.innerWidth < 640) {
+                      setShowMobileSidebar(true);
+                    } else {
+                      onOpenRightSidebar();
+                    }
+                  }}
+                  aria-label="Open sidebar"
+                >
+                  <Menu className="h-5 w-5 text-gray-700" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Messages Area with virtualization hint */}
+          <ScrollArea
+            ref={scrollAreaRef}
+            className="flex-1 h-full px-3 py-0.1 bg-gray-50/30 chat-container"
+          >
+            <div className="space-y-3 max-w-full pb-4 sm:pb-0">
+              {messages.length === 0 ? (
+                //  Skeleton loading for empty messages
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}>
+                      <div className={`max-w-[75%] ${i % 2 === 0 ? "items-start" : "items-end"} flex flex-col`}>
+                        <div className={`skeleton rounded-3xl ${i % 2 === 0 ? "rounded-bl-lg" : "rounded-br-lg"} p-4 w-48 h-16`}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                messages.map((message, index) => {
+                  if (message.role === "system") {
+                    return (
+                      <div key={message.id} className="flex justify-center my-4 message-item">
+                        <div className="bg-white/80 backdrop-blur-sm text-gray-600 text-sm px-4 py-2 rounded-2xl border border-gray-200/60 shadow-sm hw-accel">
+                          <span className="font-medium">{message.content}</span>
+                          <span className="ml-2 text-gray-400 text-xs">
+                            {formatMessageTime(message.timestamp)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={message.id} className="w-full message-item">
+                      <div
+                        className={`flex ${
+                          message.role === "customer" ? "justify-start" : "justify-end"
+                        }`}
+                      >
+                        <div
+                          className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${
+                            message.role === "customer" ? "items-start" : "items-end"
+                          }`}
+                        >
+                          <div
+                            className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${
+                              message.role === "customer"
+                                ? "bg-white/90 backdrop-blur-sm rounded-bl-lg text-gray-900 border-gray-200/60"
+                                : "bg-blue-600/90 backdrop-blur-sm rounded-br-lg text-white border-blue-500/60"
+                            }`}
+                            style={{ wordBreak: "break-word" }}
+                          >
+                            <div className="break-words">
+                              <p className="text-sm leading-relaxed">
+                                {message.content}
+                              </p>
+                            </div>
+
+                            <div className="flex justify-end mt-2">
+                              <span
+                                className={`text-xs ${
+                                  message.role === "customer"
+                                    ? "text-gray-500"
+                                    : "text-white/70"
+                                }`}
+                              >
+                                {formatMessageTime(message.timestamp)}
                               </span>
-                            )}
-                          </div>
-                          <div className="p-3">
-                            <h3 className="font-medium text-black text-sm line-clamp-2 mb-2">
-                              {product.name}
-                            </h3>
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-base text-black font-bold">
-                                ₹{product.price.toLocaleString("en-IN")}
-                              </span>
-                              {product.on_sale === "True" && (
-                                <span className="text-sm text-gray-500 line-through">
-                                  ₹{parseInt(product.regular_price).toLocaleString("en-IN")}
-                                </span>
-                              )}
                             </div>
                           </div>
-                        </a>
-                      ))}
+                        </div>
+                      </div>
                     </div>
+                  );
+                })
+              )}
+              <div ref={lastMessageRef} />
+            </div>
+          </ScrollArea>
+
+          {/*Input Section */}
+          <div className="bg-white/40 backdrop-blur-sm p-3 sm:p-0 hw-accel">
+            {sharedProduct && (
+              <div className="mb-3">
+                <SharedProductPreview
+                  product={sharedProduct}
+                  onRemove={onClearSharedProduct}
+                />
+              </div>
+            )}
+
+            {audioURL ? (
+              <div className="flex items-center gap-3 bg-white/80 backdrop-blur-sm p-3 rounded-2xl border border-gray-200/60 hw-accel">
+                <audio controls src={audioURL} className="flex-1" />
+                <button
+                  className="p-2 rounded-xl hover:bg-gray-100/80 transition-colors hw-accel"
+                  onClick={() => setAudioURL(null)}
+                >
+                  <X className="h-4 w-4 text-gray-600" />
+                </button>
+              </div>
+            ) : (
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-3 sm:p-4 hover:border-gray-300/60 flex flex-col shadow-sm hw-accel">
+                {/* Mode Toggle */}
+                <div className="mb-2 w-32 sm:w-40 bg-gray-100/80 rounded-2xl p-0.5 flex items-center">
+                  <button
+                    className={`flex-1 text-xs px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl transition-all duration-300 font-medium hw-accel ${
+                      mode === "reply"
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "text-gray-600 hover:text-blue-600"
+                    }`}
+                    onClick={() => setMode("reply")}
+                  >
+                    Reply
+                  </button>
+                  <button
+                    className={`flex-1 text-xs px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl transition-all duration-300 font-medium hw-accel ${
+                      mode === "private"
+                        ? "bg-purple-600 text-white shadow-md"
+                        : "text-gray-600 hover:text-purple-600"
+                    }`}
+                    onClick={() => setMode("private")}
+                  >
+                    Private
+                  </button>
+                </div>
+
+                {/* Textarea */}
+                <div className="flex-1 mb-1">
+                  <textarea
+                    ref={textareaRef}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={
+                      mode === "reply"
+                        ? sharedProduct
+                          ? "Add a message about this product..."
+                          : "Type your message..."
+                        : "Add a private note..."
+                    }
+                    rows={1}
+                    className="w-full bg-transparent border-none outline-none focus:outline-none resize-none max-h-32 overflow-y-auto text-gray-800 placeholder-gray-500 text-sm leading-relaxed"
+                  />
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex justify-between items-center">
+                  <div className="flex gap-1 sm:gap-2">
+                    {/* Emoji picker */}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="p-2 sm:p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors hw-accel">
+                          <Smile className="h-4 w-4 text-gray-600" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-80 p-0 rounded-2xl shadow-xl border-0 bg-white/95 backdrop-blur-xl"
+                        side="top"
+                        align="start"
+                      >
+                        {/* Emoji picker content */}
+                      </PopoverContent>
+                    </Popover>
+
+                    {/* File attachment */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          className="p-2 sm:p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors hw-accel"
+                          onClick={() => setIsFileModalOpen(true)}
+                        >
+                          <Paperclip className="h-4 w-4 text-gray-600" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl">
+                        Attach media
+                      </TooltipContent>
+                    </Tooltip>
+
+                    {/* Voice recording */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          className={`p-2 sm:p-2.5 rounded-xl transition-colors hw-accel ${
+                            isRecording
+                              ? "bg-red-100/80 hover:bg-red-200/80 text-red-600"
+                              : "bg-gray-100/80 hover:bg-gray-200/80 text-gray-600"
+                          }`}
+                          onClick={isRecording ? stopRecording : startRecording}
+                        >
+                          <Mic className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl">
+                        {isRecording ? "Stop recording" : "Record message"}
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+
+                  {/* Character count and send button */}
+                  <div className="flex items-center gap-2 sm:gap-4">
+                    <div className="text-xs text-gray-500 font-medium hidden sm:block">
+                      {message.length}/1000
+                    </div>
+                    
+                    <button
+                      className={`px-4 py-2 sm:px-6 sm:py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm hw-accel ${
+                        message.trim() || audioURL || sharedProduct
+                          ? mode === "reply"
+                            ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
+                            : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
+                          : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
+                      }`}
+                      onClick={() => {
+                        if (sharedProduct) {
+                          handleShareProduct(message, sharedProduct);
+                        } else if (audioURL) {
+                          handleSendAudio();
+                        } else {
+                          sendMessage();
+                        }
+                      }}
+                      disabled={
+                        isSending ||
+                        (!message.trim() && !audioURL && !sharedProduct)
+                      }
+                    >
+                      {isSending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4" />
+                          <span className="ml-2">
+                            {mode === "reply" ? "Send" : "Add Note"}
+                          </span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-      );
-    })}
-    <div ref={lastMessageRef} />
-  </div>
-</ScrollArea>
-
-
-            {/* <div className={` p-5 border-t `}> */}
-
-              {/* <div className="flex gap-2 mb-4 overflow-x-auto">
-
-            {suggestedResponses.map((response, index) => (
-
-              <Button
-
-                key={index}
-
-                variant="secondary"
-
-                className="whitespace-nowrap"
-
-                size="sm"
-
-              >
-
-                {response}
-
-              </Button>
-
-            ))}
-
-          </div> */}
-
-
-
-             {/* Replace the current input section with this: */}
-<div>
-  {sharedProduct && (
-    <div className="flex justify-start ml-4 mr-4 pt-3">
-      <SharedProductPreview
-        product={sharedProduct}
-        onRemove={onClearSharedProduct}
-      />
-    </div>
-  )}
-
-  <div className="relative p-2">
-    {audioURL ? (
-      <div className="flex items-center gap-2 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
-        <audio controls src={audioURL} className="flex-1" />
-        <button
-          className="p-1.5 rounded-lg hover:bg-gray-100"
-          onClick={() => setAudioURL(null)}
-        >
-          <X className="h-4 w-4 text-gray-500" />
-        </button>
-      </div>
-    ) : (
-      <div className="bg-gray-50 rounded-lg border border-gray-200 p-3 hover:border-gray-300 flex flex-col">
-        {/* Reply/Private buttons inside the text box */}
-        <div className="mb-3 w-36 bg-gray-100 rounded-full p-1 flex items-center shadow-inner">
-          <button
-            className={`flex-1 text-sm px-4 py-1.5 rounded-full transition-all duration-300 ${
-              mode === "reply"
-                ? "bg-blue-600 text-white font-semibold shadow-md"
-                : "text-gray-600 hover:text-blue-600"
-            }`}
-            onClick={() => setMode("reply")}
-          >
-            Reply
-          </button>
-          <button
-            className={`flex-1 text-sm px-3 py-1.5 rounded-full transition-all duration-300 ${
-              mode === "private"
-                ? "bg-purple-600 text-white font-semibold shadow-md"
-                : "text-gray-600 hover:text-purple-600"
-            }`}
-            onClick={() => setMode("private")}
-          >
-            Private
-          </button>
-        </div>
-
-        {/* Textarea */}
-        <div className="flex-1">
-          <textarea
-            ref={textareaRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={
-              mode === "reply"
-                ? sharedProduct
-                  ? "Add a message about this product..."
-                  : "Shift+Enter for new line • Type / for canned responses"
-                : "Add a private note (only visible to agents)"
-            }
-            rows={1}
-            className="w-full bg-transparent border-none outline-none focus:outline-none resize-none max-h-40 overflow-y-auto text-gray-800 placeholder-gray-400 text-sm"
-          />
-        </div>
-
-        {/* Action buttons at the bottom */}
-        <div className="flex justify-between items-center mt-3">
-          <div className="flex gap-1.5">
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <Smile className="h-4 w-4 text-gray-500" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-80 p-0 rounded-xl shadow-lg"
-                side="top"
-                align="start"
-              >
-                <Picker
-                  onEmojiClick={(emojiData) =>
-                    setMessage((prev) => prev + emojiData.emoji)
-                  }
-                  width="100%"
-                  height={350}
-                  previewConfig={{ showPreview: false }}
-                  searchPlaceholder="Search emoji..."
-                  lazyLoadEmojis={true}
-                  skinTonesDisabled
-                />
-              </PopoverContent>
-            </Popover>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-                  onClick={() => setIsFileModalOpen(true)}
-                >
-                  <Paperclip className="h-4 w-4 text-gray-500" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent className="text-xs py-1 px-2 bg-gray-800 text-white">
-                Attach file
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className={`p-2 rounded-lg transition-colors ${
-                    isRecording
-                      ? "bg-red-50 hover:bg-red-100 text-red-500"
-                      : "bg-gray-50 hover:bg-gray-100 text-gray-500"
-                  }`}
-                  onClick={isRecording ? stopRecording : startRecording}
-                >
-                  <Mic className="h-4 w-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent className="text-xs py-1 px-2 bg-gray-800 text-white">
-                {isRecording ? "Stop recording" : "Record voice message"}
-              </TooltipContent>
-            </Tooltip>
-          </div>
-
-          {/* Word count and send button */}
-          <div className="flex items-center gap-3 ml-auto mr-2">
-            <div className="text-xs text-gray-500 whitespace-nowrap">
-              {message.length}/1000
-            </div>
-          </div>
-
-          <button
-            className={`p-2.5 rounded-lg flex items-center justify-center transition-colors duration-200 ${
-              message.trim() || audioURL || sharedProduct
-                ? mode === "reply"
-                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-                  : "bg-purple-600 hover:bg-purple-700 text-white shadow-md"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
-            }`}
-            onClick={() => {
-              if (sharedProduct) {
-                handleShareProduct(message, sharedProduct);
-              } else if (audioURL) {
-                handleSendAudio();
-              } else {
-                sendMessage();
-              }
-            }}
-            disabled={
-              isSending ||
-              (!message.trim() && !audioURL && !sharedProduct)
-            }
-          >
-            {isSending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <>
-                <Send className="h-4 w-4" />
-                <span className="ml-1.5 text-xs font-medium">
-                  {mode === "reply" ? "Send" : "Add Note"}
-                </span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    )}
-
-    {/* Canned responses dropdown */}
-    {showCannedResponses && (
-      <div className="absolute bottom-full left-3 right-3 bg-white border border-gray-200 rounded-lg shadow-lg mb-2 max-h-60 overflow-y-auto z-10">
-        <div className="p-2 border-b border-gray-100">
-          <input
-            type="text"
-            placeholder="Search canned responses..."
-            className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-200"
-            onChange={(e) => {
-              // Add filtering logic here
-            }}
-          />
-        </div>
-        <div className="max-h-52 overflow-y-auto">
-          {filteredResponses.map((response) => (
-            <div
-              key={response.id}
-              onClick={() => {
-                setMessage(response.message);
-                setShowCannedResponses(false);
-              }}
-              className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <span className="text-xs font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-                    /{response.shortcode}
-                  </span>
-                  <p className="text-gray-700 text-sm mt-1.5 line-clamp-2">
-                    {response.message}
-                  </p>
-                </div>
-                <span className="text-xs text-gray-400 whitespace-nowrap">
-                  {format(parseISO(response.created_at), "MMM d")}
-                </span>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-  </div>
-</div>
+            )}
+          </div>
+        </Card>
+      )}
+    </TooltipProvider>
+  </>
+);
 
-
-
-            <ReminderDialog
-
-              open={showReminder}
-
-              onOpenChange={setShowReminder}
-
-              onSave={async (reminder) => {
-
-                console.log("Reminder saved:", reminder);
-
-                setShowReminder(false);
-
-                // Refresh reminders after creating new one
-
-                refetchReminders();
-
-              }}
-
-              conversationId={selectedConversationId}
-
-            />
-
-          </Card>
-
-        )}
-
-      </TooltipProvider>
-
-    </>
-
-  );
-
-};
+}
 
 
 

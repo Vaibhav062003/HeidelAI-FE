@@ -13,12 +13,13 @@ interface ConversationPreviewProps {
   customerName: string;
   lastMessage: string;
   timestamp: string;
-  unreadCount: number; // Keep in interface for future use
+  unreadCount: number; 
   avatarUrl: string;
   isSelected?: boolean;
   onClick?: () => void;
   isAiEnabled?: boolean;
   assignedAgentId?: string | null;
+  isMobile?: boolean; 
 }
 
 const ConversationPreview = ({
@@ -29,7 +30,7 @@ const ConversationPreview = ({
   customerName,
   lastMessage,
   timestamp,
-  unreadCount, // Keep parameter for future use
+  unreadCount, 
   avatarUrl,
   isSelected = false,
   onClick,
@@ -51,7 +52,7 @@ const ConversationPreview = ({
 
   return (
     <Card
-      className={`p-2 w-full rounded-none cursor-pointer transition-colors ${
+      className={`p-1.5 w-full rounded-none cursor-pointer transition-colors ${
         isSelected ? "bg-gray-100" : "hover:bg-gray-50"
       }`}
       onClick={onClick}

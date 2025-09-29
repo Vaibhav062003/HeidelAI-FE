@@ -52,6 +52,12 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'egeniestores.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'framerusercontent.com',
+        port: '',
+        pathname: '/**',
+      }
     ],
   }
   

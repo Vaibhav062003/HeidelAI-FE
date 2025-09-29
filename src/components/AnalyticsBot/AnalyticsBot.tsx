@@ -32,6 +32,7 @@ const REFINEMENT_ANIMATION_STEPS = [
   { message: "✨ Preparing final insights...", duration: 2000 }
 ];
 
+// no scroll issue
 const processingOverlayStyles = `
   .processing-overlay {
     position: fixed;
@@ -45,31 +46,29 @@ const processingOverlayStyles = `
     transform: translateY(20px);
     color: white;
     z-index: 50;
-  }
-
-  /* Mobile positioning */
-  @media (max-width: 640px) {
-    .processing-overlay {
-      left: 10px;
-      right: 10px;
-      bottom: 80px;
-      width: auto;
-      padding: 16px;
-      font-size: 0.875rem;
-    }
+    /* CSS-first responsive positioning */
+    left: 10px;
+    right: 10px;
+    bottom: 80px;
+    width: auto;
+    padding: 16px;
+    font-size: 0.875rem;
   }
 
   /* Tablet positioning */
-  @media (min-width: 641px) and (max-width: 1024px) {
+  @media (min-width: 640px) {
     .processing-overlay {
+      left: auto;
       right: 20px;
       bottom: 100px;
       width: 280px;
+      padding: 12px;
+      font-size: 1rem;
     }
   }
 
   /* Desktop positioning */
-  @media (min-width: 1025px) {
+  @media (min-width: 1024px) {
     .processing-overlay {
       right: 20px;
       bottom: 80px;
@@ -161,6 +160,7 @@ const PLATFORM_THINKING_MESSAGES = {
   ]
 };
 
+// Updated typing indicator CSS - CSS-first responsive
 const typingIndicatorStyles = `
   .typing-indicator {
     display: inline-flex;
@@ -219,7 +219,7 @@ type ConversationPhase =
   | 'awaiting-followup'
   | 'final-analysis';
 
-const DEFAULT_PLATFORMS = ["youtube", "reddit", "google", "instagram"]; // or let user select
+const DEFAULT_PLATFORMS = ["youtube", "reddit", "google", "instagram"];
 
 const AnalyticsBot = () => {
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
@@ -242,21 +242,10 @@ const AnalyticsBot = () => {
   const [pendingFollowupQuestion, setPendingFollowupQuestion] = useState<string | null>(null);
   const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
   const [followUpAnswers, setFollowUpAnswers] = useState<{ [q: string]: string }>({});
-  const [screenWidth, setScreenWidth] = useState(0);
+  
   const ws = useRef<WebSocket | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
-
-  // Screen size detection
-  useEffect(() => {
-    const handleResize = () => {
-      setScreenWidth(window.innerWidth);
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const scrollToBottom = () => {
     if (lastMessageRef.current) {
@@ -286,7 +275,6 @@ const AnalyticsBot = () => {
   }, [messages]);
 
   useEffect(() => {
-    // Use ws:// and correct path
     const wsUrl = 'ws://localhost:8000/ws/analyze';
     ws.current = new WebSocket(wsUrl);
     
@@ -365,12 +353,10 @@ const AnalyticsBot = () => {
           break;
 
         case "follow_up_questions":
-          // Backend sends a list of questions
           setFollowUpQuestions(data.questions || []);
           setConversationPhase('awaiting-followup');
           setIsWaitingForAnswer(true);
           setIsTyping(false);
-          // Show each question as a message
           (data.questions || []).forEach((q: string) => {
             setMessages(prev => [...prev, { type: 'incoming', content: `🤖 ${q}` }]);
           });
@@ -397,7 +383,7 @@ const AnalyticsBot = () => {
           };
           setMessages(prev => [...prev, readyMessage]);
           setIsAnalysisComplete(true);
-          setIsTyping(false); // Ensure typing indicator is off
+          setIsTyping(false);
           setConversationPhase('idle');
           break;
 
@@ -472,18 +458,15 @@ const AnalyticsBot = () => {
 
       if (ws.current?.readyState === WebSocket.OPEN) {
         if (conversationPhase === 'idle') {
-          // Initial user query: send {query, platforms}
           ws.current.send(JSON.stringify({
             query: inputMessage,
             platforms: DEFAULT_PLATFORMS
           }));
           setConversationPhase('platform-analysis');
         } else if (conversationPhase === 'awaiting-followup' && followUpQuestions.length > 0) {
-          // Collect answers for all follow-up questions
           const nextQuestion = followUpQuestions.find(q => !followUpAnswers[q]);
           if (nextQuestion) {
             setFollowUpAnswers(prev => ({ ...prev, [nextQuestion]: inputMessage }));
-            // If all answered, send context to backend
             const allAnswered = followUpQuestions.every(q => followUpAnswers[q] || (q === nextQuestion));
             if (allAnswered) {
               ws.current.send(JSON.stringify({
@@ -495,7 +478,6 @@ const AnalyticsBot = () => {
             }
           }
         }
-        // ...other phases as needed...
       }
 
       setInputMessage('');
@@ -505,19 +487,15 @@ const AnalyticsBot = () => {
     }
   };
 
-  // Determine layout type
-  const isMobile = screenWidth < 640;
-  const isTablet = screenWidth >= 640 && screenWidth < 1024;
-
   return (
-    <div className="h-screen w-full flex items-center justify-center p-2 sm:p-4 lg:p-6 bg-gray-50">
+    <div className="h-full w-full flex items-center justify-center p-2 sm:p-4 lg:p-6 bg-gray-50">
       <style>{typingIndicatorStyles}</style>
       <style>{processingOverlayStyles}</style>
       
       <Card className="h-full w-full max-w-full shadow-lg rounded-lg sm:rounded-xl overflow-hidden">
         <CardContent className="p-0 flex flex-col h-full">
           <div className="flex flex-col h-full w-full bg-white">
-            {/* Header - Responsive */}
+            {/* Header */}
             <div className="border-b p-3 sm:p-4 lg:p-6 bg-white flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -527,31 +505,27 @@ const AnalyticsBot = () => {
                   </h2>
                 </div>
                 
-                {/* Processing toggle - desktop only */}
-                {!isMobile && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowProcessing(prev => !prev)}
-                    className="h-8 w-8 sm:h-10 sm:w-10"
-                    title={showProcessing ? 'Hide processing' : 'Show processing'}
-                  >
-                    <Activity 
-                      size={isMobile ? 14 : 16} 
-                      className={showProcessing ? 'text-blue-500' : 'text-gray-500'} 
-                    />
-                  </Button>
-                )}
+                {/* Processing toggle */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowProcessing(prev => !prev)}
+                  className="h-8 w-8 sm:h-10 sm:w-10 hidden sm:flex"
+                  title={showProcessing ? 'Hide processing' : 'Show processing'}
+                >
+                  <Activity 
+                    className={`h-4 w-4 ${showProcessing ? 'text-blue-500' : 'text-gray-500'}`}
+                  />
+                </Button>
               </div>
               
-              {isMobile && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Multi-platform analytics insights
-                </p>
-              )}
+              {/* Mobile subtitlee */}
+              <p className="text-xs text-gray-500 mt-1 sm:hidden">
+                Multi-platform analytics insights
+              </p>
             </div>
 
-            {/* Messages Container - Responsive */}
+            {/* Messages Container */}
             <div className="flex-1 overflow-hidden relative">
               <ScrollArea
                 className="h-full w-full"
@@ -629,7 +603,7 @@ const AnalyticsBot = () => {
               </ScrollArea>
             </div>
 
-            {/* Input Area - Responsive */}
+            {/* Input Area */}
             <div className="border-t bg-white p-3 sm:p-4 lg:p-6 flex-shrink-0">
               <div className="flex gap-2 sm:gap-3 items-end">
                 <div className="flex-1">
@@ -642,10 +616,9 @@ const AnalyticsBot = () => {
                         handleSendMessage();
                       }
                     }}
-                    placeholder={isMobile ? "Ask about analytics..." : "Ask me about analytics across platforms..."}
-                    className="w-full resize-none rounded-lg sm:rounded-xl border border-gray-300 p-2.5 sm:p-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                    rows={isMobile ? 1 : isTablet ? 2 : 1}
-                    style={{ minHeight: isMobile ? '40px' : '44px' }}
+                    placeholder="Ask about analytics..."
+                    className="w-full resize-none rounded-lg sm:rounded-xl border border-gray-300 p-2.5 sm:p-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors min-h-[40px] sm:min-h-[44px]"
+                    rows={1}
                   />
                 </div>
                 
@@ -658,32 +631,27 @@ const AnalyticsBot = () => {
                 </Button>
                 
                 {/* Mobile processing toggle */}
-                {isMobile && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowProcessing(prev => !prev)}
-                    className="h-10 w-10 flex-shrink-0"
-                  >
-                    <Activity 
-                      size={16} 
-                      className={showProcessing ? 'text-blue-500' : 'text-gray-500'} 
-                    />
-                  </Button>
-                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowProcessing(prev => !prev)}
+                  className="h-10 w-10 flex-shrink-0 sm:hidden"
+                >
+                  <Activity 
+                    className={`h-4 w-4 ${showProcessing ? 'text-blue-500' : 'text-gray-500'}`}
+                  />
+                </Button>
               </div>
               
-              {/* Mobile helper text */}
-              {isMobile && (
-                <p className="text-xs text-gray-500 mt-2">
-                  Press Enter to send • Shift+Enter for new line
-                </p>
-              )}
+              {/* Mobile helper text  */}
+              <p className="text-xs text-gray-500 mt-2 sm:hidden">
+                Press Enter to send • Shift+Enter for new line
+              </p>
             </div>
           </div>
         </CardContent>
         
-        {/* Processing Overlay - Responsive positioning via CSS */}
+        {/* Processing Overlay */}
         {showProcessing && (
           <div 
             className={`processing-overlay ${processingState.isVisible ? 'visible' : ''}`}
@@ -697,7 +665,7 @@ const AnalyticsBot = () => {
                 onClick={() => setShowProcessing(false)}
                 className="text-gray-300 hover:text-white transition-colors"
               >
-                <X size={isMobile ? 14 : 16} />
+                <X className="h-4 w-4" />
               </button>
             </div>
             <div className="processing-steps">

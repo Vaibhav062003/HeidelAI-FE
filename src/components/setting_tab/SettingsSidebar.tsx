@@ -15,104 +15,38 @@ import {
   Clock, 
   UserCog, 
   Link,
-  Menu,
   X,
   Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import CannedResponses from './CannedResponsesContext';
 
 const SettingsSections = [
-  { 
-    icon: Users, 
-    name: 'Agents', 
-    component: AgentsSettings 
-  },
-  { 
-    icon: UserCog, 
-    name: 'Teams', 
-    component: TeamsConfiguration
-  },
-  { 
-    icon: Inbox, 
-    name: 'Inboxes', 
-    component: InboxSettings 
-  },
-  { 
-    icon: Tag, 
-    name: 'Labels', 
-    component: LabelsSettings 
-  },
-  { 
-    icon: Puzzle, 
-    name: 'Custom Attributes', 
-    component: CustomAttributesSettings 
-  },
-  { 
-    icon: Workflow, 
-    name: 'Automation', 
-    component: AutomationSettings 
-  },
-  { 
-    icon: FileText, 
-    name: 'Macros', 
-    component: MacrosSettings 
-  },
+  { icon: Users, name: 'Agents', component: AgentsSettings },
+  { icon: UserCog, name: 'Teams', component: TeamsConfiguration },
+  { icon: Inbox, name: 'Inboxes', component: InboxSettings },
+  { icon: Tag, name: 'Labels', component: LabelsSettings },
+  { icon: Puzzle, name: 'Custom Attributes', component: CustomAttributesSettings },
+  { icon: Workflow, name: 'Automation', component: AutomationSettings },
+  { icon: FileText, name: 'Macros', component: MacrosSettings },
   { 
     icon: List, 
     name: 'CannedResponses', 
     component: () => <CannedResponses onInsertResponse={(message: string) => {
-      // Handle the response insertion here
       console.log('Inserting response:', message);
     }} />
   },
-  { 
-    icon: Link, 
-    name: 'Integrations', 
-    component: IntegrationsSettings 
-  },
-  { 
-    icon: Shield, 
-    name: 'Audit Logs', 
-    component: AuditLogsSettings 
-  },
-  { 
-    icon: Users, 
-    name: 'Custom Roles', 
-    component: CustomRolesSettings,
-    badge: 'Beta'
-  },
-  { 
-    icon: Clock, 
-    name: 'SLA', 
-    component: SLASettings,
-    badge: 'Beta'
-  }
+  { icon: Link, name: 'Integrations', component: IntegrationsSettings },
+  { icon: Shield, name: 'Audit Logs', component: AuditLogsSettings },
+  { icon: Users, name: 'Custom Roles', component: CustomRolesSettings, badge: 'Beta' },
+  { icon: Clock, name: 'SLA', component: SLASettings, badge: 'Beta' }
 ];
 
 const SettingsDashboard = () => { 
   const router = useRouter();
   const [activeSection, setActiveSection] = useState(SettingsSections[0]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [screenWidth, setScreenWidth] = useState(0);
 
-  // Screen size detection
-  useEffect(() => {
-    const handleResize = () => {
-      setScreenWidth(window.innerWidth);
-      // Auto-close sidebar on larger screens
-      if (window.innerWidth >= 1024) {
-        setIsSidebarOpen(false);
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Handle navigation based on URL hash
   useEffect(() => {
     const hash = window.location.hash.replace('#', '');
     const section = SettingsSections.find((s) => s.name.toLowerCase() === hash.toLowerCase());
@@ -121,170 +55,144 @@ const SettingsDashboard = () => {
     }
   }, []);
 
+  // Listen for mobile header trigger
+  useEffect(() => {
+    const handleOpenSettingsSidebar = () => {
+      setIsSidebarOpen(true);
+    };
+
+    window.addEventListener('openSettingsSidebar', handleOpenSettingsSidebar);
+    return () => window.removeEventListener('openSettingsSidebar', handleOpenSettingsSidebar);
+  }, []);
+
   const handleSectionChange = (section: typeof SettingsSections[0]) => {
     setActiveSection(section);
     router.push(`#${section.name.toLowerCase()}`);
-    // Close sidebar on mobile after selection
-    if (screenWidth < 1024) {
-      setIsSidebarOpen(false);
-    }
+    setIsSidebarOpen(false);
   };
 
-  // Determine layout type
-  const isMobile = screenWidth < 640;
-  const isTablet = screenWidth >= 640 && screenWidth < 1024;
-  const isDesktop = screenWidth >= 1024;
-
   return (
-    <div className="h-screen w-full flex bg-gray-50">
-      <Card className="h-full w-full max-w-full shadow-lg rounded-none overflow-hidden">
-        <CardContent className="p-0 flex flex-col lg:flex-row h-full">
+    /* No conflicting mobile header */
+    <div className="h-full w-full bg-gray-50 overflow-hidden">
+      <div className="h-full w-full flex">
+        
+        {/* Navigation bar spacer for desktop */}
+        <div className="w-0 md:w-20 flex-shrink-0"></div>
+        
+        {/* Settings Sidebar - No mobile header conflict */}
+        <aside className={`
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          md:translate-x-0
+          fixed md:relative
+          top-0 md:top-auto
+          left-0 md:left-auto
+          h-full
+          w-80 md:w-80
+          bg-white
+          border-r border-gray-200
+          flex-shrink-0
+          transform transition-transform duration-300 ease-in-out
+          z-40 md:z-auto
+          shadow-xl md:shadow-none
+        `}>
           
-          {/* Mobile Header */}
-          {(isMobile || isTablet) && (
-            <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-white lg:hidden">
-              <div className="flex items-center gap-2">
-                <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
-                <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
-                  {isMobile ? 'Settings' : 'Account Settings'}
-                </h1>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="h-8 w-8 sm:h-10 sm:w-10"
-              >
-                {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </Button>
+          {/* Sidebar Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white">
+            <div className="flex items-center gap-3">
+              <Settings className="h-6 w-6 text-blue-600" />
+              <h2 className="text-xl font-semibold text-gray-900">Account Settings</h2>
             </div>
-          )}
-
-          {/* Current Section Title for Mobile */}
-          {isMobile && !isSidebarOpen && (
-            <div className="p-3 border-b bg-gray-50">
-              <div className="flex items-center gap-2">
-                <activeSection.icon className="h-4 w-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-900">{activeSection.name}</span>
-                {activeSection.badge && (
-                  <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">
-                    {activeSection.badge}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Sidebar */}
-          <div className={`
-            ${isSidebarOpen || isDesktop ? 'block' : 'hidden'}
-            ${isDesktop ? 'relative' : 'absolute inset-0 lg:relative'}
-            ${isDesktop ? 'w-64 xl:w-72' : 'w-full lg:w-64'}
-            ${isDesktop ? 'border-r' : ''}
-            bg-white z-30 lg:z-auto
-            flex flex-col h-full
-          `}>
-            
-            {/* Sidebar Header - Desktop only */}
-            {isDesktop && (
-              <div className="p-4 lg:p-6 border-b">
-                <div className="flex items-center gap-2">
-                  <Settings className="h-6 w-6 text-blue-600" />
-                  <h2 className="text-lg lg:text-xl font-semibold text-gray-900">
-                    Account Settings
-                  </h2>
-                </div>
-              </div>
-            )}
-
-            {/* Mobile/Tablet Sidebar Header */}
-            {!isDesktop && isSidebarOpen && (
-              <div className="flex items-center justify-between p-4 border-b bg-white">
-                <div className="flex items-center gap-2">
-                  <Settings className="h-6 w-6 text-blue-600" />
-                  <h2 className="text-xl font-semibold text-gray-900">Settings</h2>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsSidebarOpen(false)}
-                  className="h-8 w-8"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-            )}
-
-            {/* Settings Navigation */}
-            <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-4">
-              <div className="space-y-1">
-                {SettingsSections.map((section) => (
-                  <Button
-                    key={section.name}
-                    variant={activeSection.name === section.name ? 'secondary' : 'ghost'}
-                    className={`
-                      w-full justify-start text-left
-                      ${isMobile ? 'py-3 px-3' : 'py-2.5 px-3'}
-                      ${activeSection.name === section.name ? 'bg-blue-50 text-blue-700 border-blue-200' : 'hover:bg-gray-100'}
-                    `}
-                    onClick={() => handleSectionChange(section)}
-                  >
-                    <section.icon className={`mr-2 sm:mr-3 ${isMobile ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0`} />
-                    <span className={`${isMobile ? 'text-base' : 'text-sm'} truncate flex-1`}>
-                      {section.name}
-                    </span>
-                    {section.badge && (
-                      <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded flex-shrink-0">
-                        {section.badge}
-                      </span>
-                    )}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Overlay */}
-          {(isMobile || isTablet) && isSidebarOpen && (
-            <div 
-              className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+            {/* Close Button - Only visible on mobile */}
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsSidebarOpen(false)}
-            />
-          )}
-
-          {/* Main Content Area */}
-          <div className={`
-            flex-1 flex flex-col min-w-0 h-full
-            ${!isDesktop && isSidebarOpen ? 'hidden' : 'flex'}
-          `}>
-            {/* Desktop Header */}
-            {isDesktop && (
-              <div className="p-4 lg:p-6 border-b bg-white">
-                <div className="flex items-center gap-3">
-                  <activeSection.icon className="h-6 w-6 text-blue-600" />
-                  <div>
-                    <h1 className="text-xl lg:text-2xl font-semibold text-gray-900">
-                      {activeSection.name}
-                    </h1>
-                    {activeSection.badge && (
-                      <span className="inline-block mt-1 px-2 py-1 bg-green-100 text-green-800 text-sm rounded">
-                        {activeSection.badge}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Content Container - Only inner content scrolls */}
-            <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
-              <div className="max-w-none">
-                <activeSection.component />
-              </div>
-            </div>
+              className="h-8 w-8 md:hidden hover:bg-gray-100 rounded-lg"
+              aria-label="Close settings menu"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Navigation Menu */}
+          <nav className="flex-1 overflow-y-auto p-4">
+            <div className="space-y-2">
+              {SettingsSections.map((section) => (
+                <Button
+                  key={section.name}
+                  variant={activeSection.name === section.name ? 'secondary' : 'ghost'}
+                  className={`
+                    w-full justify-start text-left
+                    py-4 px-4 text-base md:text-sm md:py-3
+                    transition-all duration-200
+                    ${activeSection.name === section.name 
+                      ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 shadow-sm font-medium' 
+                      : 'hover:bg-gray-50 text-gray-700 hover:text-gray-900'
+                    }
+                    rounded-lg
+                  `}
+                  onClick={() => handleSectionChange(section)}
+                >
+                  <section.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                  <span className="truncate flex-1">{section.name}</span>
+                  {section.badge && (
+                    <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
+                      {section.badge}
+                    </span>
+                  )}
+                </Button>
+              ))}
+            </div>
+          </nav>
+        </aside>
+
+        {/* Mobile Overlay */}
+        <div 
+          className={`
+            fixed inset-0 bg-black/50 backdrop-blur-sm z-30
+            transition-opacity duration-300
+            md:hidden
+            ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+          `}
+          onClick={() => setIsSidebarOpen(false)}
+          aria-hidden="true"
+        />
+
+        {/* Main Content Area */}
+        <main className="
+          flex-1 
+          h-full
+          flex flex-col
+          min-w-0
+          overflow-hidden
+          bg-white
+        ">
+          
+          {/* Desktop Header - Only visible on desktop */}
+          <header className="
+            hidden md:flex
+            items-center gap-4 
+            p-6 border-b border-gray-200
+            bg-white
+            flex-shrink-0
+          ">
+            <activeSection.icon className="h-7 w-7 text-blue-600" />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">{activeSection.name}</h1>
+              {activeSection.badge && (
+                <span className="inline-block mt-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-lg font-medium">
+                  {activeSection.badge}
+                </span>
+              )}
+            </div>
+          </header>
+
+          {/* Content Container */}
+          <div className="flex-1 w-full overflow-hidden">
+            <activeSection.component />
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

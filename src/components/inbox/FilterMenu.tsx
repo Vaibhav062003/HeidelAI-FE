@@ -3,7 +3,7 @@ import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-} from "@/components/ui/popover"; // ensure this is the shadcn/radix wrapper
+} from "@/components/ui/popover";
 import { Filter } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { FaWhatsapp, FaInstagram, FaTelegram } from "react-icons/fa";
@@ -52,7 +52,7 @@ export const FilterMenu: React.FC<FilterMenuProps> = ({
           tabIndex={0}
           role="button"
           aria-haspopup="true"
-          className="h-5 lg:h-7 w-5 lg:w-7 flex items-center justify-center hover:bg-gray-50 cursor-pointer transition-colors"
+          className="h-5 lg:h-7 w-5 lg:w-7 flex items-center justify-center cursor-pointer transition-colors"
         >
           <Filter className="h-4 w-4 text-gray-600" />
         </div>
