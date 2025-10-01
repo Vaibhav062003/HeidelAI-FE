@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 
 const WS_URL = 'wss://egenie-whatsapp.koyeb.app/cs';
+// const WS_BASE_URL = `ws://127.0.0.1:8000/cs`;
 
 interface ConversationSummaryProps {
   selectedConversationId?: string;
