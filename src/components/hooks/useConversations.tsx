@@ -314,8 +314,6 @@ export const useConversations = () => {
           return sessionToken
         }
 
-      
-
       try {
         // Get or generate client ID
         const clientId = generateAndStoreClientId();

@@ -930,6 +930,12 @@ const ChatView = ({
     }
   };
 
+  useEffect(() => {
+    // Scroll to the bottom when new messages are added
+    if (lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [messages]);
 
   const toggleAI = async () => {
     if (!selectedConversationId || isToggling) return;
