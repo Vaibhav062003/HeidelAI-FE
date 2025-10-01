@@ -55,6 +55,12 @@ function InstagramCallbackContent() {
         redirect_uri: process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI!,
       });
 
+      if (response.status === 403) {
+        const errorData = response.data as ErrorResponse;
+        const errorMessage = errorData.message || "This Instagram account is already connected to another organization. If you think this is incorrect, please contact us at support@heidelai.com for further assistance.";
+        throw new Error(errorMessage);
+      }
+
       if (response.status !== 200 || (typeof response.data === "object" && response.data.status === "error")) {
         let errorMessage = "Failed to connect Instagram account";
         const errorData = response.data as ErrorResponse | { status?: string; message?: string } | string;
@@ -95,7 +101,7 @@ function InstagramCallbackContent() {
 
       const timer = setTimeout(() => {
         router.push("/dashboard#integrations");
-      }, 2000);
+      }, 3000);
 
     } catch (error: unknown) {
       console.error("Error exchanging Instagram code:", error);
@@ -123,7 +129,7 @@ function InstagramCallbackContent() {
       toast.error("Instagram connection failed: Missing parameters");
       const timer = setTimeout(() => {
         router.push("/dashboard#integrations");
-      }, 2000);
+      }, 3000);
       return;
     }
 
