@@ -103,14 +103,17 @@ function InstagramCallbackContent() {
         router.push("/dashboard#integrations");
       }, 3000);
 
-    } catch (error: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: AxiosError | any) {
       console.error("Error exchanging Instagram code:", error);
 
       let errMsg = "Unknown error occurred";
-      if (axios.isAxiosError(error) && error.response?.data?.detail) {
+      if(error.response.status === 403) {
+        errMsg = "This Instagram account is already connected to another organization. If you think this is incorrect, please contact us at support@heidelai.com for further assistance.";
+      } else if (axios.isAxiosError(error) && error.response?.data?.detail) {
         errMsg = error.response.data.detail;
-      } else if (error instanceof AxiosError) {
-        errMsg = error.response?.data?.detail;
+      } else if (error instanceof Error) {
+        errMsg = error.message;
       }
 
       setStatus("error");
