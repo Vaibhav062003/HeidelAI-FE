@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from "@/lib/session_api";
 import { storeData, DB_KEYS } from "@/lib/indexedDB";
-import axios from "axios";
+import axios, { Axios, AxiosError } from "axios";
 
 interface InstagramProfileResponse {
   status?: string;
@@ -109,8 +109,8 @@ function InstagramCallbackContent() {
       let errMsg = "Unknown error occurred";
       if (axios.isAxiosError(error) && error.response?.data?.detail) {
         errMsg = error.response.data.detail;
-      } else if (error instanceof Error) {
-        errMsg = error.message;
+      } else if (error instanceof AxiosError) {
+        errMsg = error.response?.data?.detail;
       }
 
       setStatus("error");
