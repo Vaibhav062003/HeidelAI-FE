@@ -9,6 +9,7 @@ import { storeData, DB_KEYS } from "@/lib/indexedDB";
 import axios from "axios";
 
 interface InstagramProfileResponse {
+  status?: string;
   id: string;
   username: string;
   profile_picture_url: string;
@@ -38,7 +39,7 @@ interface InstagramData {
 }
 
 interface ErrorResponse {
-  detail?: string;
+  message?: string;
 }
 
 function InstagramCallbackContent() {
@@ -54,17 +55,18 @@ function InstagramCallbackContent() {
         redirect_uri: process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI!,
       });
 
-      if (response.status !== 200) {
+      if (response.status !== 200 || (typeof response.data === "object" && response.data.status === "error")) {
         let errorMessage = "Failed to connect Instagram account";
-        const errorData = response.data as ErrorResponse | string;
+        const errorData = response.data as ErrorResponse | { status?: string; message?: string } | string;
 
-        if (typeof errorData === "object" && errorData.detail) {
-          errorMessage = errorData.detail;
-        } else if (typeof errorData === "string" && errorData.length < 100) {
+        if (typeof errorData === "object" && errorData.message) {
+          errorMessage = errorData.message;
+        } else if (typeof errorData === "string") {
           errorMessage = errorData;
         }
         throw new Error(errorMessage);
       }
+
 
       const profileData = response.data;
 
