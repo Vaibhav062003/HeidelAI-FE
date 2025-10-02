@@ -22,6 +22,8 @@ import { Plus } from "lucide-react";
 import { createClient } from '@supabase/supabase-js';
 import { conversationService, WhatsAppMessage } from "@/components/services/api";
 
+
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -69,6 +71,7 @@ import CustomerInfo from './CustomerInfo';
 import LandingDashboard from "./LandingDashboard";
 import api from "@/lib/session_api";
 import { useTypingIndicator } from "../hooks/typingIndicator";
+import Conversation_Status from "./Conversation_Status";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -779,6 +782,7 @@ const ChatView = ({
     }
   };
 
+
   const handleFileUpload = async (file: File | null, recipient: string, caption: string = "") => {
     if (!file || !selectedConversationId) return;
 
@@ -1035,6 +1039,7 @@ useEffect(() => {
       if (platform === 'instagram') {
         response = await api.get(`/api/instagram/conversations/${selectedConversationId}`);
         setConversation(response?.data);
+        console.log("Fetched Instagram conversation:", response?.data);
       } else if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
         if (!whatsappId) return;
@@ -1338,6 +1343,7 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
               <img src={avatarSource} alt="Platform avatar"/>
             </Avatar>
             <div>
+              
             <Dialog>
       <DialogTrigger asChild>
         <h3 className="font-semibold cursor-pointer">{conversation?.customer_name}</h3>
@@ -1357,6 +1363,8 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
       saveCustomerInfo={saveCustomerInfo} // Pass the save function
   />
   )}
+
+  
 </DialogContent>
     </Dialog>
                 {/* <DialogContent className="sm:max-w-[800px]">
@@ -1395,6 +1403,8 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
             </div>
           </div>
 
+          
+
           <div className="flex items-center gap-3">
             {/* <Tooltip>
               <TooltipTrigger asChild>
@@ -1413,6 +1423,10 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
               </TooltipTrigger>
               <TooltipContent>Start video call</TooltipContent>
             </Tooltip> */}
+            <Conversation_Status
+              conversationId={selectedConversationId}
+              status={conversation?.status ?? "open"}
+            />
 
             <Tooltip>
               <TooltipTrigger asChild>
