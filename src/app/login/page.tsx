@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useSignIn, useUser } from "@clerk/nextjs";
+import React, { useEffect, useState } from "react";
+import { useOrganization, useSignIn, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -37,6 +37,22 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [pendingMembershipCheck, setPendingMembershipCheck] = useState(false);
+  const { membership } = useOrganization();
+
+  // Membership check after sign-in and organization load
+  useEffect(() => {
+    if (pendingMembershipCheck) {
+      if (membership) {
+        toast.success("Signed in! Redirecting...");
+        router.push("/dashboard");
+      } else {
+        toast.info("Please Create or Join an Organization");
+        router.push("/login");
+      }
+      setPendingMembershipCheck(false);
+    }
+  }, [pendingMembershipCheck, membership, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,33 +66,14 @@ export default function LoginPage() {
         password,
       });
 
-      // ...existing code...
-      if (signInAttempt.status === "complete") {
+      if (signInAttempt.status === "complete" && signInAttempt.createdSessionId){
         await setActive({ session: signInAttempt.createdSessionId });
         if (signInAttempt.createdSessionId) {
           localStorage.setItem("sessionId", signInAttempt.createdSessionId);
         }
-        // Mark as just signed in to avoid double toast/redirect
         justSignedIn.current = true;
-
-        // Fetch organization data after session is active
-        const res = await fetch("/api/getorgdata");
-        const data = await res.json();
-
-        const membership = data?.data?.find(
-          (item: OrgDataItem) =>
-            item.public_user_data?.identifier === email
-        );
-
-        if (membership?.organization?.id && isLoaded) {
-          localStorage.setItem("org_id", membership.organization.id);
-          toast.success("Signed in! Redirecting...");
-          router.push("/dashboard");
-        } else {
-          toast.info("No organization found for this account. Redirecting to onboarding...");
-          router.push("/onboarding");
-        }
-      } else {
+        setPendingMembershipCheck(true);
+      }else{
         toast.error("Sign in not complete. Further steps required.");
       }
 

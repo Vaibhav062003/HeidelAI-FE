@@ -1,5 +1,5 @@
 import { Toaster } from 'sonner'
-import './dashboard.css'
+
 
 export default function DashboardLayout({
   children,
@@ -15,7 +15,7 @@ export default function DashboardLayout({
       </head>
       <body>
         <div className="min-h-screen bg-gray-100">
-          <Toaster position="top-right" richColors />
+          <Toaster position="top-center" richColors />
           {children}
         </div>
       </body>

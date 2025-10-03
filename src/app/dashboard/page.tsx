@@ -91,11 +91,11 @@ export default function DashboardPage() {
 
 
   const handleSignOut = async () => {
+  toast.success("Signing out successfully!");
   await signOut();
-  toast.success("Signed out successfully!");
+  router.push("/");
   if (typeof window !== "undefined") {
     localStorage.clear();
-    window.location.href = "/";
   }
 };
 
