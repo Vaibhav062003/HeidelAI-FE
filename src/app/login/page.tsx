@@ -48,7 +48,7 @@ export default function LoginPage() {
         router.push("/dashboard");
       } else {
         toast.info("Please Create or Join an Organization");
-        router.push("/login");
+        router.push("/");
       }
       setPendingMembershipCheck(false);
     }

@@ -103,7 +103,7 @@ export default function DashboardPage() {
   useEffect(() => {
     // console.log(user);
     if (isLoaded && !isSignedIn) {
-      router.push("/");
+      router.push("/login");
     }
   }, [isLoaded, isSignedIn, router, user]);
 
