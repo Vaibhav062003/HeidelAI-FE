@@ -42,6 +42,7 @@ import { connectWebSocket } from '../../lib/websocket';
 import WhatsAppLoginDialog from './WhatsappLoginDialog';
 import api from '@/lib/session_api';
 import { useUser, useOrganization } from '@clerk/nextjs';
+import { Dialog as ConfirmDialog, DialogContent as ConfirmDialogContent, DialogHeader as ConfirmDialogHeader, DialogTitle as ConfirmDialogTitle } from "@/components/ui/dialog"; 
 
 // Function to fetch catalog data from the backend
 interface CatalogProduct {
@@ -306,19 +307,18 @@ const InstagramDialog = () => {
   const { user } = useUser();
   const { organization } = useOrganization();
   const [isAdmin, setIsAdmin] = useState(false);
-
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
   useEffect(() => {
     const checkRole = async () => {
       if (organization && user) {
         // Fetch all memberships for this org
         const memberships = await organization.getMemberships();
-        console.log("Memberships:", memberships)
+
         // Find current user's membership
         const membership = memberships.data.find(
           (m) => m.publicUserData?.userId === user.id
         );
-        console.log("Current Membership:", membership)
         setIsAdmin(membership?.roleName === "Admin");
       }
     };
@@ -525,23 +525,49 @@ const InstagramDialog = () => {
                 </ul>
             </div>
             
-            <Button 
-              variant="destructive" 
-              className="w-full mt-4" 
-              onClick={disconnectInstagram}
-              disabled={isLoading || !isAdmin}
-              title={!isAdmin ? "Only admins can disconnect integrations" : ""}
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Processing...
-                </span>
-              ) : !isAdmin ? (
-                "Admin permission required"
-              ) : (
-                'Disconnect Account'
-              )}
-            </Button>
+              <Button 
+                variant="destructive" 
+                className="w-full mt-4" 
+                onClick={() => setShowDisconnectConfirm(true)}
+                disabled={isLoading || !isAdmin}
+                title={!isAdmin ? "Only admins can disconnect integrations" : ""}
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Processing...
+                  </span>
+                ) : !isAdmin ? (
+                  "Admin permission required"
+                ) : (
+                  'Disconnect Account'
+                )}
+              </Button>
+
+              <ConfirmDialog open={showDisconnectConfirm} onOpenChange={setShowDisconnectConfirm}>
+                <ConfirmDialogContent>
+                  <ConfirmDialogHeader>
+                    <ConfirmDialogTitle>Are you sure you want to disconnect Instagram?</ConfirmDialogTitle>
+                  </ConfirmDialogHeader>
+                  <div className="py-4 text-gray-700">
+                    This will archive all your currently stored messages and they will be deleted after 30 days automatically.
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button variant="outline" onClick={() => setShowDisconnectConfirm(false)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={async () => {
+                        setShowDisconnectConfirm(false);
+                        await disconnectInstagram();
+                      }}
+                    >
+                      Disconnect
+                    </Button>
+                  </div>
+                </ConfirmDialogContent>
+              </ConfirmDialog>
+
             
             {/* Show explanatory text for members */}
             {!isAdmin && connected && (
