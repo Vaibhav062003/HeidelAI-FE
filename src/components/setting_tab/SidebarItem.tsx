@@ -313,12 +313,12 @@ const InstagramDialog = () => {
       if (organization && user) {
         // Fetch all memberships for this org
         const memberships = await organization.getMemberships();
-        console.log(memberships)
+        console.log("Memberships:", memberships)
         // Find current user's membership
         const membership = memberships.data.find(
           (m) => m.publicUserData?.userId === user.id
         );
-        console.log(membership)
+        console.log("Current Membership:", membership)
         setIsAdmin(membership?.roleName === "Admin");
       }
     };
