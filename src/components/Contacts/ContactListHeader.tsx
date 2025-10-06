@@ -399,7 +399,7 @@ export const ContactListHeader = ({
 
       {/* Desktop Layout */}
       <div className="hidden lg:block">
-        <div className="px-8 py-6">
+        <div className="px-8 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div>
@@ -438,7 +438,7 @@ export const ContactListHeader = ({
               <div className="relative max-w-4xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl">
                 <button
                   onClick={() => setIsMessageComposerOpen(false)}
-                  className="absolute top-4 right-4 p-2 hover:bg-white/60 rounded-lg transition-colors z-10"
+                  className="absolute top-6 right-6 p-3 hover:bg-white/60 rounded-lg transition-colors z-10"
                   aria-label="Close message composer"
                 >
                   <X className="h-5 w-5 text-gray-500" />

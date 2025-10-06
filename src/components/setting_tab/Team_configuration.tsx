@@ -107,15 +107,14 @@ export const TeamsConfiguration = () => {
         .from('teams')
         .update({
           team_name: formData.team_name,
-          members: formData.members,  // No need to parse, it's already a number
+          members: formData.members, 
           team_leader: formData.team_leader
         })
-        .eq('id', currentTeam?.id)  // Add optional chaining
+        .eq('id', currentTeam?.id)  
         .select();
   
       if (error) throw error;
   
-      // Type assertion for the response data
       const updatedTeam = data[0] as Team;
       setTeams(teams.map(team => 
         team.id === currentTeam?.id ? updatedTeam : team
@@ -164,9 +163,9 @@ export const TeamsConfiguration = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Teams Configuration</h2>
-      <div className="border rounded-lg p-4">
+    <div className="space-y-5">
+      <h2 className="text-xl font-bold ml-5">Teams Configuration</h2>
+      <div className="border rounded-lg p-2">
         <Table>
           <TableHeader>
             <TableRow>

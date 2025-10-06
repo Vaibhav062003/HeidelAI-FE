@@ -360,7 +360,7 @@ const ContactsDashboard = () => {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden p-2 sm:p-4 lg:p-6 min-h-0">
+        <div className="flex-1 flex flex-col overflow-hidden p-1 sm:p-4 lg:p-0.5 min-h-0">
           {loading ? (
             <div className="flex-1 flex items-center justify-center">
               <Spinner />
@@ -386,7 +386,7 @@ const ContactsDashboard = () => {
                 </div>
               </div>
 
-              <div className="flex-none pt-3 sm:pt-4">
+              <div className="flex-none pt-1 sm:pt-2">
                 <PaginationFooter
                   currentPage={currentPage}
                   totalItems={filteredContacts.length}

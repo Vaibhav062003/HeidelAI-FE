@@ -184,7 +184,7 @@ const ProfileAvatar = ({ firstName, lastName }: { firstName: string; lastName?: 
   const bgColor = avatarColors[colorIndex];
   
   return (
-    <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full ${bgColor} text-white font-medium text-sm sm:text-lg flex-shrink-0`}>
+    <div className={`flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 rounded-full ${bgColor} text-white font-medium text-sm sm:text-lg flex-shrink-0`}>
       {initials}
     </div>
   );
@@ -203,7 +203,7 @@ export const ContactItem = ({ contact, onEdit, onDelete }: ContactItemProps) => 
   const hideEmail = shouldHideEmail(contact.email);
   
   return (
-    <div className="group bg-white rounded-xl shadow-sm p-3 sm:p-4 mb-2 sm:mb-3 transition-all border border-gray-100 hover:shadow-lg hover:border-indigo-50">
+    <div className="group bg-white rounded-xl shadow-sm p-2 sm:p-4 mb-2 sm:mb-0.5 transition-all border border-gray-100 hover:shadow-lg hover:border-indigo-50">
       <div className="flex items-center gap-3 sm:gap-4">
         <ProfileAvatar firstName={contact.firstName} lastName={contact.lastName} />
         
@@ -220,7 +220,7 @@ export const ContactItem = ({ contact, onEdit, onDelete }: ContactItemProps) => 
           
           {/* Details in horizontal flow */}
           <div className="flex-1 min-w-0 flex items-center gap-2 sm:gap-3 overflow-hidden">
-            {/* Email - only show if not a placeholder */}
+            {/* Email */}
             {!hideEmail && (
               <div className="flex items-center min-w-0">
                 <span className="text-xs sm:text-sm text-gray-600 truncate">

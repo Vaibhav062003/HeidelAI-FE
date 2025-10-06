@@ -214,16 +214,17 @@ const TagSidebar = ({
 
                 <div className="space-y-2">
                   <button
-                    onClick={() => {
-                      setShowCreateForm(true);
-                      setEditingTag(null);
-                    }}
-                    disabled={isOperationLoading}
-                    className="w-full group bg-gray-200 hover:bg-gray-300 text-black border-0 shadow-sm hover:shadow-md transition-all duration-200 text-sm py-2 sm:py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-200" />
-                    <span>Create Tag</span>
-                  </button>
+  onClick={() => {
+    setShowCreateForm(true);
+    setEditingTag(null);
+  }}
+  disabled={isOperationLoading}
+  className="w-full group bg-gray-200 hover:bg-gray-300 text-black border-0 shadow-sm hover:shadow-md transition-all duration-200 text-sm py-2 sm:py-2.5 rounded-lg font-medium flex items-center justify-start gap-2 pl-14 disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-200" />
+  <span>Create Tag</span>
+</button>
+
 
                   <button
                     onClick={() => handleTagSelect(null)}
@@ -234,7 +235,7 @@ const TagSidebar = ({
                         : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:border-gray-300"
                     }`}
                   >
-                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center ml-9 ${
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center ml-10 ${
                       selectedTag === null ? "bg-gray-200" : "bg-gray-100"
                     }`}>
                       <Users className="w-3.5 h-3.5" />

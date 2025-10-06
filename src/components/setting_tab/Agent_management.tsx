@@ -235,14 +235,14 @@ export const AgentsSettings = () => {
   return (
    <div className="h-full w-full overflow-y-auto bg-gray-50/30">
       <div className="
-        max-w-7xl mx-auto 
+        max-w-7xl mx-auto
         h-full
-        p-4 sm:p-6 lg:p-8
-        space-y-6
+        p-4 sm:p-6 lg:p-15
+        space-y-5
       ">
         
         {/* Header Section */}
-        <div className="border-b border-gray-200 pb-6">
+        {/* <div className="border-b border-gray-200 pb-6">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Agents Management
           </h2>
@@ -250,7 +250,7 @@ export const AgentsSettings = () => {
             Manage your organization&apos;s agents and invitations. Current usage: 
             <span className="font-semibold text-gray-900"> {totalAgents}/{AGENT_LIMIT} agents</span>.
           </p>
-        </div>
+        </div> */}
 
         {/* Alert Banner */}
         {limitReached && (
@@ -405,7 +405,6 @@ export const AgentsSettings = () => {
                                   )}
                                 </Button>
                               </AlertDialogTrigger>
-                              {/* ... keep your dialog content ... */}
                             </AlertDialog>
                           </TableCell>
                         </TableRow>
