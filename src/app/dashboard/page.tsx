@@ -10,7 +10,7 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/inbox_button";
 import { X } from "lucide-react";
 import { Conversation } from "@/components/types/conversation";
-import { ConversationProvider } from "@/components/hooks/useGlobalConversations";
+import { ConversationProvider } from "@/components/hooks/useConversations";
 import {
   MessageSquare,
   BarChart2,

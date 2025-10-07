@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, X } from "lucide-react";
 import ConversationPreview from "./ConversationPreview";
-import { useGlobalConversations } from '../hooks/useGlobalConversations';
+import { useConversations } from "../hooks/useConversations";
 import { Conversation } from '@/components/types/conversation';
 import { FilterMenu, FilterOptions } from './FilterMenu';
 import { format, isToday, isYesterday, subDays, startOfDay, subMonths } from 'date-fns';
@@ -153,7 +153,7 @@ const ConversationList = ({
   isVisible = true,
   onToggleVisibility,
 }: ConversationListProps) => {
-  const { conversations, loading, error, retry } = useGlobalConversations();
+  const { conversations, loading, error, retry } = useConversations();
   
   const [activeTab, setActiveTab] = useState<TabValue>('all');
   const [searchQuery, setSearchQuery] = useState('');
