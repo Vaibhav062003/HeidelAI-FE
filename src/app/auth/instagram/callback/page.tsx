@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import api from "@/lib/session_api";
 
 function InstagramCallbackContent() {
   const router = useRouter();
@@ -25,39 +26,29 @@ function InstagramCallbackContent() {
   
     const exchangeCodeForToken = async () => {
       try {
-        const response = await fetch('https://egenie-whatsapp.koyeb.app/instagram/auth', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+        const response = await api.post('/api/instagram/auth', {
             code,
-            redirect_uri: `${window.location.origin}/auth/instagram/callback`,
-            // redirect_uri: `https://development.heidelai.com/auth/instagram/callback`,
-          }),
-        });
+            // redirect_uri: `${window.location.origin}/auth/instagram/callback`,
+            redirect_uri: `https://development.heidelai.com/auth/instagram/callback`,
+          });
+
+          console.log('Instagram auth response:', response.data);
   
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('API error response:', errorText);
-  
-          let errorMessage = 'Failed to connect Instagram account';
-          try {
-            const errorJson = JSON.parse(errorText);
-            if (errorJson.detail) {
-              errorMessage = errorJson.detail;
+          if (response.status !== 200) {
+            let errorMessage = 'Failed to connect Instagram account';
+            const errorData = response.data;
+
+            if (errorData && typeof errorData === 'object' && errorData.detail) {
+              errorMessage = errorData.detail;
+            } else if (typeof errorData === 'string' && errorData.length < 100) {
+              errorMessage = errorData;
             }
-          } catch {
-            if (errorText && errorText.length < 100) {
-              errorMessage = errorText;
-            }
+
+            throw new Error(errorMessage);
           }
   
-          throw new Error(errorMessage);
-        }
-  
-        const data = await response.json();
-  
+        const data = response.data
+
         localStorage.setItem('instagram_connection', JSON.stringify({
           username: data.username,
           profileImage: data.profile_picture,

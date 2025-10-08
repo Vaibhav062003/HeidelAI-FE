@@ -22,6 +22,7 @@ import { useReminders } from "../hooks/useReminders";
 import { H1, H2, H3, Body, Small } from "@/components/typography";
 import { Trash2, User, Plus } from "lucide-react";
 import TimerDisplay from "./TimerDisplay";
+
 import { createClient } from '@supabase/supabase-js';
 import { conversationService, WhatsAppMessage } from "@/components/services/api";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
@@ -242,11 +243,11 @@ const SharedProductPreview = memo(({ product, onRemove }: { product: Product; on
 ));
 SharedProductPreview.displayName = "SharedProductPreview";
 
-const RemindersPopover = memo(({
-  reminders,
-  onCreateReminder,
-  onDeleteReminder,
-}: {
+const RemindersPopover = ({ 
+  reminders, 
+  onCreateReminder, 
+  onDeleteReminder 
+}: { 
   reminders: Reminder[];
   onCreateReminder: () => void;
   onDeleteReminder: (id: string) => void;
@@ -257,9 +258,9 @@ const RemindersPopover = memo(({
         <div className="flex items-center justify-between mb-2">
           <h4 className="font-medium">Reminders</h4>
           {reminders.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
+            <Button 
+              variant="ghost" 
+              size="sm" 
               onClick={onCreateReminder}
               className="h-8 px-2 text-blue-600 hover:text-blue-700"
             >
@@ -272,13 +273,18 @@ const RemindersPopover = memo(({
           {reminders.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-sm text-gray-500 mb-4">No reminders set</div>
-              <Button variant="outline" size="sm" onClick={onCreateReminder}>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={onCreateReminder}
+              >
                 <Plus className="h-4 w-4 mr-1" />
                 Add your first reminder
               </Button>
             </div>
           ) : (
             reminders.map((reminder) => (
+              console.log("reminder", reminder),
               <div
                 key={reminder.id}
                 className="flex items-start justify-between p-2 rounded-lg border bg-white group"
@@ -289,10 +295,11 @@ const RemindersPopover = memo(({
                     <p className="text-xs text-gray-500">{reminder.notes}</p>
                   )}
                   <p className="text-xs text-gray-500 mt-1">
-                    {format(
-                      new Date(new Date(reminder.dateTime).getTime() + 5.5 * 60 * 60 * 1000),
-                      "MMM d, yyyy 'at' h:mm a"
-                    )}
+                  {format(
+          // Add IST offset (UTC+5:30)
+          new Date(new Date(reminder.dateTime).getTime() + (5.5 * 60 * 60 * 1000)),
+          "MMM d, yyyy 'at' h:mm a"
+        )}
                   </p>
                 </div>
                 <Button
@@ -310,8 +317,8 @@ const RemindersPopover = memo(({
       </div>
     </PopoverContent>
   );
-});
-RemindersPopover.displayName = "RemindersPopover";
+};
+// RemindersPopover.displayName = "RemindersPopover";
 
 const CartMessage = memo(({ items }: { items: CartItem[] }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -835,6 +842,7 @@ const ChatView = ({
 
     setIsSending(true);
     try {
+
       let response;
       if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
@@ -1666,16 +1674,22 @@ return (
                     </div>
                   </DialogTrigger>
 
-                  <DialogContent className="max-w-4xl rounded-3xl shadow-2xl border-0 bg-white/95 backdrop-blur-xl">
-                    <DialogHeader className="border-b border-gray-100/60 pb-6">
-                      <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center">
-                        <div className="w-12 h-12 bg-blue-100/80 rounded-2xl flex items-center justify-center mr-4">
-                          <User className="h-6 w-6 text-blue-600" />
-                        </div>
-                        Customer Information
-                      </DialogTitle>
-                    </DialogHeader>
-                  </DialogContent>
+      <DialogContent className="sm:max-w-[900px] sm:max-h-[600px]">
+  <DialogHeader>
+    <DialogTitle className="text-2xl">{conversation?.customer_name} Information</DialogTitle>
+  </DialogHeader>
+  {conversation && (
+    <CustomerInfo
+      name={conversation?.customer_name || "Unknown"}
+      email={conversation?.email || "Unknown"}
+      billingaddress={conversation?.billingAddress || "Unknown"}
+      shippingaddress={conversation?.shippingAddress || "Unknown"}
+      platform={conversation?.platform || ""}
+      selectedConversationId={selectedConversationId}
+      saveCustomerInfo={saveCustomerInfo} // Pass the save function
+  />
+  )}
+</DialogContent>
                 </Dialog>
               </div>
             </div>
@@ -1740,37 +1754,62 @@ return (
               </DropdownMenu>
 
               {/* Reminders Button */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="relative">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="rounded-2xl hover:bg-gray-100/60 transition-all duration-300 w-11 h-11 relative bg-white/40 backdrop-blur-sm hw-accel"
-                        >
-                          <Clock className="h-4 w-4 text-gray-700" />
-                          {reminders.length > 0 && (
-                            <Badge
-                              variant="secondary"
-                              className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-red-500 text-white border-2 border-white"
-                            >
-                              {reminders.length}
-                            </Badge>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                    </Popover>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl">
-                  {reminders.length > 0
-                    ? `${reminders.length} reminder${reminders.length > 1 ? "s" : ""} set`
-                    : "Set reminder"}
-                </TooltipContent>
-              </Tooltip>
-
+<Tooltip>
+              <TooltipTrigger asChild>
+                <div className="relative">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="relative mr-2"
+                      >
+                        <Clock className="h-5 w-5" />
+                        {reminders.length > 0 && (
+                          <Badge 
+                            variant="secondary" 
+                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                          >
+                            {reminders.length}
+                          </Badge>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <RemindersPopover 
+                      reminders={reminders} 
+                      onCreateReminder={() => setShowReminder(true)}
+                      onDeleteReminder={async (id) => {
+                        try {
+                          const response = await fetch(`https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders/${id}`, {
+                            method: 'DELETE',
+                            credentials: 'include'
+                          });
+                          
+                          if (!response.ok) {
+                            throw new Error('Failed to delete reminder');
+                          }
+                          
+                          toast.success('Reminder deleted successfully');
+                          // Refresh reminders after deletion
+                          refetchReminders();
+                        } catch (error) {
+                          toast.error('Failed to delete reminder');
+                          console.error('Error deleting reminder:', error);
+                        }
+                      }}
+                    />
+                  </Popover>
+                  
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {reminders.length > 0 
+                  ? `${reminders.length} reminder${reminders.length > 1 ? 's' : ''} set`
+                  : 'Set reminder'
+                }
+              </TooltipContent>
+            </Tooltip>
+            
               {/* AI Toggle */}
               <div className="flex items-center bg-white/40 backdrop-blur-sm rounded-2xl px-4 py-2.5 hover:bg-gray-100/60 transition-all duration-300 hw-accel">
                 <Switch
@@ -2396,8 +2435,6 @@ const formatPrice = (price: string) => {
 
 };
 
-
-
 export const FileMessage = ({
 
   fileUrl,
@@ -2533,8 +2570,6 @@ export const FileMessage = ({
   );
 
 };
-
-
 
 export default ChatView;
 

@@ -26,17 +26,23 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { createClient } from '@supabase/supabase-js';
 import InstagramProfileView from './InstagramProfileView';
 import FacebookSDK, { FacebookLoginResponse } from '@/components/facebook/FacebookSDK';
+import { useIntegrations } from '@/components/hooks/useIntegrations';
+import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
 
-const INSTAGRAM_CLIENT_ID = '1197084761515978';
+
+// Instagram OAuth configuration
+const INSTAGRAM_CLIENT_ID = '1197084761515978'; // Replace with your Instagram app ID
 const INSTAGRAM_REDIRECT_URI = `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/instagram/callback`;
-const INSTAGRAM_SCOPE = 'user_profile,user_media,instagram_business_basic, instagram_business_manage_messages';
+const INSTAGRAM_SCOPE = 'user_profile,user_media,instagram_business_basic, instagram_business_manage_messages'; // Basic permissions
 
+
+// Function to fetch catalog data from the backend
 interface CatalogProduct {
   id: string;
   name: string;
   description?: string;
   price?: string;
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | undefined; // For any additional fields
 }
 
 interface CatalogResponse {
@@ -51,6 +57,23 @@ interface CatalogResponse {
   };
 }
 
+interface InstagramConnectionData {
+  status: boolean;          // Connection status
+    username: string;         // From API response
+    profileImage: string;     // From profile_picture_url in API
+    userId: string;           // From id in API
+    businessInfo: {
+        id?: string;
+        biography?: string;
+        followers_count?: number;
+        follows_count?: number;
+        media_count?: number;
+        name?: string;
+        website?: string;
+    };
+    lastUpdated?: number;
+}
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -62,10 +85,12 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
+// import { Shopify } from '@shopify/shopify-api';
 import { toast } from 'sonner';
 import { connectWebSocket } from '../../lib/websocket';
 import WhatsAppLoginDialog from './WhatsappLoginDialog';
 import api from '@/lib/session_api';
+import { useUser } from '@clerk/nextjs';
 
 const loginWithFacebook = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -80,6 +105,9 @@ const loginWithFacebook = async () => {
 
   if (error) console.error("Login error:", error.message);
 };
+
+
+
 
 const WooCommerceDialog = () => {
   const [credentials, setCredentials] = useState({
@@ -114,10 +142,12 @@ const WooCommerceDialog = () => {
         version: "wc/v3"
       });
       
+      // Test the connection by fetching products
       const response = await api.get("products", { per_page: 3 });
       console.log("Connection successful:", response.data);
       setSuccess(true);
       
+      // Store the credentials securely (you can implement your storage method here)
       localStorage.setItem('woocommerce_credentials', JSON.stringify({
         url: credentials.siteUrl,
         key: credentials.consumerKey,
@@ -138,17 +168,17 @@ const WooCommerceDialog = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="bg-[#96588A] hover:bg-[#804674] text-white text-sm px-4 py-2 flex-shrink-0">
+        <Button className="bg-[#96588A] hover:bg-[#804674] text-white">
           Connect
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md mx-4 sm:mx-auto rounded-lg">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">Connect WooCommerce Store</DialogTitle>
+          <DialogTitle>Connect WooCommerce Store</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <label htmlFor="siteUrl" className="text-sm font-medium">Site URL</label>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <label htmlFor="siteUrl">Site URL</label>
             <Input
               id="siteUrl"
               placeholder="https://your-store.com"
@@ -157,11 +187,10 @@ const WooCommerceDialog = () => {
                 ...prev,
                 siteUrl: e.target.value
               }))}
-              className="w-full"
             />
           </div>
-          <div className="space-y-2">
-            <label htmlFor="consumerKey" className="text-sm font-medium">Consumer Key</label>
+          <div className="grid gap-2">
+            <label htmlFor="consumerKey">Consumer Key</label>
             <Input
               id="consumerKey"
               type="password"
@@ -171,11 +200,10 @@ const WooCommerceDialog = () => {
                 ...prev,
                 consumerKey: e.target.value
               }))}
-              className="w-full"
             />
           </div>
-          <div className="space-y-2">
-            <label htmlFor="consumerSecret" className="text-sm font-medium">Consumer Secret</label>
+          <div className="grid gap-2">
+            <label htmlFor="consumerSecret">Consumer Secret</label>
             <Input
               id="consumerSecret"
               type="password"
@@ -185,22 +213,21 @@ const WooCommerceDialog = () => {
                 ...prev,
                 consumerSecret: e.target.value
               }))}
-              className="w-full"
             />
           </div>
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+            <div className="text-sm text-red-500 bg-red-50 p-2 rounded">
               {error}
             </div>
           )}
           {success && (
-            <div className="text-sm text-green-600 bg-green-50 p-3 rounded-lg">
+            <div className="text-sm text-green-500 bg-green-50 p-2 rounded">
               Successfully connected to WooCommerce store!
             </div>
           )}
           <Button 
             onClick={handleConnect} 
-            className="w-full bg-[#96588A] hover:bg-[#804674] text-white"
+            className="bg-[#96588A] hover:bg-[#804674] text-white"
             disabled={isLoading || !credentials.siteUrl || !credentials.consumerKey || !credentials.consumerSecret}
           >
             {isLoading ? "Connecting..." : "Authenticate"}
@@ -211,6 +238,8 @@ const WooCommerceDialog = () => {
   );
 };
 
+
+
 const ShopifyDialog = () => {
   const [credentials, setCredentials] = useState({
     shopName: '',
@@ -220,17 +249,17 @@ const ShopifyDialog = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="bg-[#96bf48] hover:bg-[#7da039] text-white text-sm px-4 py-2 flex-shrink-0">
+        <Button className="bg-[#96bf48] hover:bg-[#7da039] text-white">
           Connect
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md mx-4 sm:mx-auto rounded-lg">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">Connect Shopify Store</DialogTitle>
+          <DialogTitle>Connect Shopify Store</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <label htmlFor="shopName" className="text-sm font-medium">Shop Name</label>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <label htmlFor="shopName">Name</label>
             <Input
               id="shopName"
               placeholder="your-store.myshopify.com"
@@ -239,11 +268,10 @@ const ShopifyDialog = () => {
                 ...prev,
                 shopName: e.target.value
               }))}
-              className="w-full"
             />
           </div>
-          <div className="space-y-2">
-            <label htmlFor="accessToken" className="text-sm font-medium">Access Token</label>
+          <div className="grid gap-2">
+            <label htmlFor="accessToken">Access Token</label>
             <Input
               id="accessToken"
               type="password"
@@ -253,11 +281,10 @@ const ShopifyDialog = () => {
                 ...prev,
                 accessToken: e.target.value
               }))}
-              className="w-full"
             />
           </div>
           <Button 
-            className="w-full bg-[#96bf48] hover:bg-[#7da039] text-white"
+            className="bg-[#96bf48] hover:bg-[#7da039] text-white"
             onClick={() => console.log('Shopify connection clicked')}
           >
             Connect
@@ -280,102 +307,59 @@ const InstagramDialog = () => {
       username?: string;
     };
   } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [showProfileView, setShowProfileView] = useState(false);
+
+  const { user } = useUser();
+  const isAdmin = user?.publicMetadata?.role === 'admin';
   
+
+  const { integrations, loading: integrationsLoading, refreshIntegrations } = useIntegrations();
+  
+  // Check if user has already connected Instagram
   useEffect(() => {
-    const checkConnection = async () => {
-      setIsLoading(true);
-      
-      try {
-        const instagramConnection = localStorage.getItem('instagram_connection');
-        if (instagramConnection) {
-          try {
-            const parsedData = JSON.parse(instagramConnection);
-            setConnected(true);
-            setAccountInfo({
-              username: parsedData.username,
-              profileImage: parsedData.profileImage || '/default-avatar.png',
-              businessInfo: parsedData.businessInfo || {}
-            });
-            setIsLoading(false);
-            return;
-          } catch (error) {
-            console.error('Error parsing Instagram connection data:', error);
-          }
-        }
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const state = urlParams.get('state');
-        
-        if (code && state === localStorage.getItem('instagram_auth_state')) {
-          await handleInstagramCallback(code);
-          window.history.replaceState({}, document.title, window.location.pathname);
-          setIsLoading(false);
-          return;
-        }
-        
-        try {
-          const storedInstagramId = localStorage.getItem('instagram_user_id');
-          const appUserId = localStorage.getItem('user_id');
-          
-          let apiUrl = '/api/instagram/status';
-          if (storedInstagramId) {
-            apiUrl += `?instagram_id=${storedInstagramId}`;
-          } else if (appUserId) {
-            apiUrl += `?app_user_id=${appUserId}`;
-          } else {
-            setIsLoading(false);
-            return;
-          }
-          
-          const response = await api.get(apiUrl);
+  if (!integrationsLoading) {
+    if (integrations.instagram && integrations.instagram.status) {
+      setConnected(true);
+      setAccountInfo({
+        username: integrations.instagram.username,
+        profileImage: integrations.instagram.profileImage || '/default-avatar.png',
+        businessInfo: integrations.instagram.businessInfo || {}
+      });
+    } else {
+      setConnected(false);
+    }
+  }
+}, [integrations, integrationsLoading]);
 
-          if (response.status === 200) {
-            const data = await response.data();
 
-            if (data.instagram_connected) {
-              localStorage.setItem('instagram_connection', JSON.stringify({
-                username: data.instagram_data.username,
-                profileImage: data.instagram_data.profile_picture || '/default-avatar.png',
-                token: data.instagram_data.access_token,
-                userId: data.instagram_data.user_id,
-                businessInfo: data.instagram_data.business_info || {},
-                connected: true
-              }));
-              
-              localStorage.setItem('instagram_user_id', data.instagram_data.user_id);
-              
-              setConnected(true);
-              setAccountInfo({
-                username: data.instagram_data.username,
-                profileImage: data.instagram_data.profile_picture || '/default-avatar.png',
-                businessInfo: data.instagram_data.business_info || {}
-              });
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching Instagram status from backend:', error);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    checkConnection();
-  }, []);
+  const getInstagramUserId = async () => {
+    try {
+      const instagramData = await getData<InstagramConnectionData>(
+        'integrations', 
+        DB_KEYS.INTEGRATIONS.INSTAGRAM
+      );
+      return instagramData?.userId || null;
+    } catch (error) {
+      console.error('Error retrieving Instagram user ID:', error);
+      return null;
+    }
+  };
 
+  // Function to initiate Instagram OAuth login
   const handleInstagramLogin = () => {
     setIsLoading(true);
 
     try {
+      // Generate a random state to prevent CSRF attacks
       const state = Math.random().toString(36).substring(2, 15);
       localStorage.setItem('instagram_auth_state', state);
 
+      // Build Instagram authorization URL dynamically for the current subdomain
       const redirectUri = 'https://development.heidelai.com/auth/instagram/callback';
       const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages&state=${state}`;
 
+      // Redirect to Instagram authorization page
       window.location.href = authUrl;
     } catch (error) {
       console.error('Error initiating Instagram login:', error);
@@ -384,8 +368,10 @@ const InstagramDialog = () => {
     }
   };
   
+  // Handle Instagram OAuth callback (code exchange)
   const handleInstagramCallback = async (code: string) => {
     try {
+      // Use the same dynamic redirect_uri as above
       const redirectUri = `${window.location.origin}/auth/instagram/callback`;
       const response = await api.post('/api/instagram/auth', {
         data: JSON.stringify({ 
@@ -394,10 +380,12 @@ const InstagramDialog = () => {
         }),
       });
 
+
       if (response.status !== 200) {
         const errorText = await response.data();
         console.error('API error response:', errorText);
         
+        // Parse error as JSON to extract the detail message
         let errorMessage = 'Failed to connect Instagram account';
         try {
           const errorJson = JSON.parse(errorText);
@@ -405,6 +393,7 @@ const InstagramDialog = () => {
             errorMessage = errorJson.detail;
           }
         } catch {
+          // Otherwise, use the raw error text if it's not too long
           if (errorText && errorText.length < 100) {
             errorMessage = errorText;
           }
@@ -417,6 +406,7 @@ const InstagramDialog = () => {
       const data = await response.data();
       console.log('API success response:', data);
       
+      // Store data in localStorage
       localStorage.setItem('instagram_connection', JSON.stringify({
         username: data.username,
         profileImage: data.profile_picture,
@@ -425,6 +415,7 @@ const InstagramDialog = () => {
         connected: true
       }));
       
+      // Store Instagram ID separately for future quick lookups
       localStorage.setItem('instagram_user_id', data.user_id);
       
       setConnected(true);
@@ -438,6 +429,7 @@ const InstagramDialog = () => {
     } catch (error) {
       console.error('Error exchanging token:', error);
       
+      // Get error message
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast.error(`Instagram connection failed: ${errorMessage}`);
     } finally {
@@ -449,20 +441,41 @@ const InstagramDialog = () => {
     try {
       setIsLoading(true);
       
-      const user_id = localStorage.getItem('instagram_user_id');
-      const data = {
-        user_id: user_id
-      }
+      // Get the user ID from IndexedDB instead of localStorage
+      const user_id = await getInstagramUserId();
+      
       if (user_id) {
-        await api.post('/api/instagram/disconnect', {
-          data
-        });
+        const data = { user_id };
         
-        localStorage.removeItem('instagram_connection');
-        localStorage.removeItem('instagram_user_id');
+        // Disconnect using the dedicated Instagram API
+        await api.post('/api/instagram/disconnect', { data });
+        
+        // Update IndexedDB - set connected to false but keep other data
+        try {
+          const existingData = await getData<InstagramConnectionData>(
+            'integrations', 
+            DB_KEYS.INTEGRATIONS.INSTAGRAM
+          );
+          
+          if (existingData) {
+            await storeData('integrations', DB_KEYS.INTEGRATIONS.INSTAGRAM, {
+              ...existingData,
+              connected: false,
+              lastUpdated: Date.now()
+            });
+          }
+        } catch (dbError) {
+          console.error("Error updating IndexedDB on disconnect:", dbError);
+        }
+        
+        // For backward compatibility, also clear localStorage
         localStorage.removeItem('instagram_auth_state');
+        
         setConnected(false);
         setAccountInfo(null);
+        
+        // Update integrations status
+        refreshIntegrations();
         
         toast.success('Instagram account disconnected successfully');
       } else {
@@ -479,8 +492,8 @@ const InstagramDialog = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white text-sm px-4 py-2 flex-shrink-0">
-          {isLoading ? (
+        <Button className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white">
+          {isLoading || integrationsLoading ? (
             <span className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" /> Checking...
             </span>
@@ -491,9 +504,9 @@ const InstagramDialog = () => {
           )}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md mx-4 sm:mx-auto rounded-lg">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className='text-black text-lg font-semibold'>{connected ? 'Manage Instagram Connection' : 'Connect Instagram Account'}</DialogTitle>
+          <DialogTitle className='text-black'>{connected ? 'Manage Instagram Connection' : 'Connect Instagram Account'}</DialogTitle>
         </DialogHeader>
         
         {isLoading ? (
@@ -518,6 +531,7 @@ const InstagramDialog = () => {
                 </div>
               </div>
               
+              {/* View Profile button */}
               <Button 
                 variant="outline"
                 className="border border-gray-300 hover:border-purple-500 hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition-all flex items-center gap-1 px-3 py-1.5 rounded-md shadow-sm"
@@ -560,16 +574,26 @@ const InstagramDialog = () => {
               variant="destructive" 
               className="w-full mt-4" 
               onClick={disconnectInstagram}
-              disabled={isLoading}
+              disabled={isLoading || !isAdmin}
+              title={!isAdmin ? "Only admins can disconnect integrations" : ""}
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> Processing...
                 </span>
+              ) : !isAdmin ? (
+                "Admin permission required"
               ) : (
                 'Disconnect Account'
               )}
             </Button>
+            
+            {/* Show explanatory text for members */}
+            {!isAdmin && connected && (
+              <p className="text-sm text-amber-600">
+                Only administrators can disconnect integrations.
+              </p>
+            )}
           </div>
         ) : (
           <div className="py-4 space-y-4">
@@ -611,9 +635,8 @@ const InstagramDialog = () => {
         )}
       </DialogContent>
       
-      {connected && localStorage.getItem('instagram_user_id') && (
+      {connected && (
         <InstagramProfileView
-          instagramId={localStorage.getItem('instagram_user_id') || ''}
           isOpen={showProfileView}
           onClose={() => setShowProfileView(false)}
         />
@@ -622,7 +645,10 @@ const InstagramDialog = () => {
   );
 };
 
+
+
 const TokenTestBox =()=>{
+  // This function is just a placeholder for the token test box
   const getToken = async () => {
     try {
       const sessionID = localStorage.getItem("sessionId");
@@ -634,6 +660,8 @@ const TokenTestBox =()=>{
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId: sessionID }),
       });
+
+
 
       if (!res.ok) {
         const errorText = await res.text();
@@ -659,21 +687,28 @@ const TokenTestBox =()=>{
   );
 }
 
+ 
+
 export const FacebookCatalogIntegration = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  // Add state for dialog
   const [showDialog, setShowDialog] = useState(false);
 
+  // On mount: check if user is logged in and has a Facebook catalog connection
   useEffect(() => {
     const checkConnection = async () => {
       setIsLoading(true);
 
+      // Check if user has an active Supabase session (OAuth token present)
       const { data, error } = await supabase.auth.getSession();
       const session = data?.session;
 
       if (session) {
+        // Optional: Check if this session was from Facebook (provider_id = 'facebook')
         const provider = session?.user?.app_metadata?.provider;
 
+        // Check if previously marked as connected (persisted flag)
         const fbStored = localStorage.getItem("facebook_catalog_connection");
 
         if (provider === "facebook" || fbStored) {
@@ -716,6 +751,7 @@ export const FacebookCatalogIntegration = () => {
     };
     document.body.appendChild(script);
   } else {
+    // If script exists but FB not ready, wait for it
     const existingScript = document.getElementById('facebook-jssdk');
     if (existingScript) {
       existingScript.onload = () => {
@@ -731,6 +767,7 @@ export const FacebookCatalogIntegration = () => {
   }
 }
 
+
 const FACEBOOK_CATALOG_CONFIG_ID = "524055147308362";
 const FACEBOOK_APP_ID = "509681741462833"; 
 
@@ -742,6 +779,7 @@ const handleFacebookCatalogLogin = () => {
       window.FB.login(
         function (response: FacebookLoginResponse) {
           if (response.authResponse && response.status === 'connected') {
+            // Only store connection data if login was successful
             const accessToken = response.authResponse.accessToken;
             localStorage.setItem(
               "facebook_catalog_connection",
@@ -755,6 +793,7 @@ const handleFacebookCatalogLogin = () => {
             toast.success("Facebook catalog connected successfully.");
             window.location.hash = "#integrations";
           } else {
+            // If login was cancelled or failed, ensure we're disconnected
             setIsConnected(false);
             localStorage.removeItem("facebook_catalog_connection");
             toast.error("Facebook login was cancelled or failed.");
@@ -787,105 +826,118 @@ const handleDisconnect = async () => {
   }
 };
 
+// Move handleClick to the parent scope so it is accessible
+
+
   return (
-    <div className="border rounded-lg p-4 sm:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="bg-[#4267B2] rounded-lg p-2 flex-shrink-0">
-            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
-            </svg>
+    <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+      <div className="space-y-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-[#4267B2] rounded-lg p-2">
+              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Facebook Catalog</h3>
+              <p className="text-sm text-gray-600">Connect your Facebook product catalog</p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <h3 className="text-base font-semibold text-gray-900 truncate">Facebook Catalog</h3>
-            <p className="text-sm text-gray-600 truncate">Connect product catalog</p>
-          </div>
-        </div>
-        {isLoading ? (
-          <Button className="bg-gray-400 text-white text-sm px-4 py-2 flex-shrink-0" disabled>
-            Loading...
-          </Button>
-        ) : isConnected ? (
-          <Button
-            className="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 flex-shrink-0"
-            onClick={handleDisconnect}
-          >
-            Disconnect
-          </Button>
-        ) : (
-          <Dialog open={showDialog} onOpenChange={setShowDialog}>
-            <DialogTrigger asChild>
-              <Button className="bg-[#4267B2] hover:bg-[#365899] text-white text-sm px-4 py-2 flex-shrink-0">
-                Connect
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md mx-4 sm:mx-auto rounded-lg max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-lg font-semibold">Connect Facebook Catalog</DialogTitle>
-              </DialogHeader>
-              <div className="py-2 space-y-2">
-                  <p className="text-sm text-gray-600">
-Connect your Facebook account to manage your product catalog directly from this dashboard.
-</p>
-              </div>
-              <div className="p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm rounded">
-                      <p>
-  Your Facebook credentials are never stored on our servers. We use secure, industry-standard OAuth authentication directly with Facebook. You are always in control and can disconnect at any time.
-</p>
-              </div>
-              <div className="py-2 space-y-4">
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">This will allow HeidelAI to:</h4>
-                  <ul className="text-sm text-gray-600 space-y-2">
-                    <li className="flex items-center gap-2">
-                      <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Access products in your Meta Catalog
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Update existing products in the catalog
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Add new products to the catalog
-                    </li>
-                  </ul>
-                </div>
-                <Button 
-                  className="w-full bg-[#4267B2] hover:bg-[#365899] text-white mt-4"
-                  onClick={() => {
-                    setShowDialog(false);
-                    handleFacebookCatalogLogin();
-                  }}
-                >
-                  Continue with Facebook
+          {isLoading ? (
+            <Button className="bg-gray-400 text-white" disabled>
+              Loading...
+            </Button>
+          ) : isConnected ? (
+            <Button
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={handleDisconnect}
+            >
+              Disconnect
+            </Button>
+          ) : (
+            <Dialog open={showDialog} onOpenChange={setShowDialog}>
+              <DialogTrigger asChild>
+                <Button className="bg-[#4267B2] hover:bg-[#365899] text-white">
+                  Connect
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] h-[55vh]">
+                <DialogHeader>
+                  <DialogTitle>Connect Facebook Catalog</DialogTitle>
+                </DialogHeader>
+                <div className="py-2 space-y-2">
+                    <p>
+  Connect your Facebook account to manage your product catalog directly from this dashboard.
+</p>
+                </div>
+                <div className="p-1 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm rounded">
+                        <p>
+    Your Facebook credentials are never stored on our servers. We use secure, industry-standard OAuth authentication directly with Facebook. You are always in control and can disconnect at any time.
+  </p>
+                </div>
+                <div className="py-2 space-y-2">
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">This will allow HeidelAI to:</h4>
+                    <ul className="text-sm text-gray-600 space-y-2">
+                      <li className="flex items-center gap-2">
+                        <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Access products in your Meta Catalog
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Update existing products in the catalog
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Add new products to the catalog
+                      </li>
+                    </ul>
+                  </div>
+                  <Button 
+                    className="w-full bg-[#4267B2] hover:bg-[#365899] text-white mt-4"
+                    onClick={() => {
+                      setShowDialog(false);
+                      handleFacebookCatalogLogin();
+                    }}
+                  >
+                    Continue with Facebook
+                  </Button>
+                </div>
+              </DialogContent>
+
+            </Dialog>
+      
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
+
+
 export default function DashboardPage() {
   const handleInsertResponse = (message: string) => {
+    // Handle the canned response insertion
     console.log('Inserting canned response:', message);
+    // Add your implementation here
   };
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
       
+      {/* Add component */}
       <AgentsSettings />
       <TeamsConfiguration />
       <CannedResponses onInsertResponse={handleInsertResponse} />
+      {/* You can add other dashboard components here */}
     </div>
   );
 }
@@ -898,42 +950,37 @@ export const InboxSettings = () => {
   });
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Inbox Management</h2>
-          <p className="text-sm text-gray-600">Configure your inbox settings and routing preferences</p>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Inbox Management</h2>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between border p-4 rounded-lg">
+          <div>
+            <h3 className="font-semibold">Auto Assignment</h3>
+            <p className="text-sm text-muted-foreground">
+              Automatically route incoming messages to agents
+            </p>
+          </div>
+          <Switch 
+            checked={inboxConfig.autoAssign}
+            onCheckedChange={(checked) => setInboxConfig(prev => ({...prev, autoAssign: checked}))}
+          />
         </div>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-white border rounded-lg shadow-sm">
-            <div className="flex-1 min-w-0 mr-4">
-              <h3 className="text-base font-medium text-gray-900">Auto Assignment</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                Automatically route incoming messages to agents
-              </p>
-            </div>
-            <Switch 
-              checked={inboxConfig.autoAssign}
-              onCheckedChange={(checked) => setInboxConfig(prev => ({...prev, autoAssign: checked}))}
-            />
-          </div>
 
-          <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
-            <h3 className="text-base font-medium text-gray-900">Email Routing</h3>
-            <Select 
-              value={inboxConfig.emailRouting}
-              onValueChange={(value) => setInboxConfig(prev => ({...prev, emailRouting: value}))}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select routing method" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="intelligent">Intelligent Routing</SelectItem>
-                <SelectItem value="round-robin">Round Robin</SelectItem>
-                <SelectItem value="manual">Manual Assignment</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="border p-4 rounded-lg">
+          <h3 className="font-semibold mb-2">Email Routing</h3>
+          <Select 
+            value={inboxConfig.emailRouting}
+            onValueChange={(value) => setInboxConfig(prev => ({...prev, emailRouting: value}))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select routing method" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="intelligent">Intelligent Routing</SelectItem>
+              <SelectItem value="round-robin">Round Robin</SelectItem>
+              <SelectItem value="manual">Manual Assignment</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>
@@ -947,69 +994,57 @@ export const LabelsSettings = () => {
   ]);
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Labels Management</h2>
-          <p className="text-sm text-gray-600">Organize conversations with custom labels</p>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Labels Management</h2>
+      <div className="border rounded-lg p-4">
+        <div className="flex flex-wrap gap-2">
+          {labels.map((label) => (
+            <div 
+              key={label.id} 
+              className={`px-3 py-1 rounded-full text-white bg-${label.color}-500`}
+            >
+              {label.name}
+            </div>
+          ))}
         </div>
-        <div className="p-4 bg-white border rounded-lg shadow-sm">
-          <div className="flex flex-wrap gap-2 mb-4">
-            {labels.map((label) => (
-              <div 
-                key={label.id} 
-                className={`px-4 py-2 rounded-full text-white text-sm font-medium bg-${label.color}-500`}
-              >
-                {label.name}
-              </div>
-            ))}
-          </div>
-          <Button className="text-sm">Create Label</Button>
-        </div>
+        <Button className="mt-4">Create Label</Button>
       </div>
     </div>
   );
 };
 
+// Placeholder for the remaining components with similar structure
 export const CustomAttributesSettings = () => (
-  <div className="h-full overflow-y-auto">
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-4">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Custom Attributes</h2>
-        <p className="text-sm text-gray-600">Configure custom fields for contacts and conversations</p>
-      </div>
-    </div>
+  <div className="space-y-6">
+    <h2 className="text-2xl font-bold">Custom Attributes</h2>
+    <p>Configure custom fields for contacts and conversations</p>
   </div>
 );
 
 export const AutomationSettings = () => (
-  <div className="h-full overflow-y-auto">
-    <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Automation Rules</h2>
-        <p className="text-sm text-gray-600">Create and manage automated workflows</p>
-      </div>
+  <div className="space-y-6">
+    <h2 className="text-2xl font-bold">Automation Rules</h2>
+    <p>Create and manage automated workflows</p>
 
-      <div className="mt-6">
-        <AutomationPage />
-      </div>
+    <div className="mt-6">
+      <AutomationPage />
     </div>
   </div>
 );
 
 export const MacrosSettings = () => (
-  <div className="h-full overflow-y-auto flex items-center justify-center p-4">
-    <div className="max-w-lg text-center space-y-6">
-      <div className="mx-auto bg-orange-100 rounded-full p-6 w-fit">
-        <Construction className="h-10 w-10 text-orange-600" />
+  <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
+    <div className="max-w-md space-y-4">
+      <div className="mx-auto bg-orange-100 rounded-full p-4 w-fit">
+        <Construction className="h-8 w-8 text-orange-600" />
       </div>
-      <div className="space-y-3">
-        <h2 className="text-2xl font-bold text-gray-900">Coming Soon</h2>
-        <p className="text-base text-gray-600 leading-relaxed">
-          Our team is working hard to bring you this feature. Stay tuned for updates!
-        </p>
-      </div>
-      <div className="pt-6 border-t border-gray-200">
+      <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+        Coming Soon
+      </h2>
+      <p className="text-lg text-gray-600">
+        Our team is working hard to bring you this feature. Stay tuned for updates!
+      </p>
+      <div className="pt-4 border-t border-gray-200 mt-8">
         <p className="text-sm text-gray-500">
           Macros functionality will be available in our next release.
           Check back soon or follow us for updates!
@@ -1019,139 +1054,169 @@ export const MacrosSettings = () => (
   </div>
 );
 
+
+
 export const IntegrationsSettings = () => (
-  <div className="h-full overflow-y-auto">
-    <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Platform Integrations</h2>
-        <p className="text-sm text-gray-600 mb-6">Connect your favorite platforms to centralize your communications</p>
-      </div>
+  <div className="min-h-[300px] flex flex-col items-start p-8">
+    <h2 className="text-2xl font-bold mb-6">Platform Integrations</h2>
     
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-      <div className="border rounded-lg p-4 sm:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="bg-[#1877F2] rounded-lg p-2 flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
-              </svg>
+    <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Facebook Integration Card */}
+      <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+        <div className="space-y-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-[#1877F2] rounded-lg p-2">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Facebook</h3>
+                <p className="text-sm text-gray-600">Connect your Facebook pages</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h3 className="text-base font-semibold text-gray-900 truncate">Facebook</h3>
-              <p className="text-sm text-gray-600 truncate">Connect your Facebook pages</p>
-            </div>
+            <Button
+              onClick={loginWithFacebook}
+              className="bg-[#1877F2] hover:bg-[#0c5bdb] text-white"
+            >
+              Connect
+            </Button>
           </div>
-          <Button
-            onClick={loginWithFacebook}
-            className="bg-[#1877F2] hover:bg-[#0c5bdb] text-white text-sm px-4 py-2 flex-shrink-0"
-          >
-            Connect
-          </Button>
         </div>
       </div>
 
-      <FacebookCatalogIntegration />
-
-      <div className="border rounded-lg p-4 sm:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="bg-[#96588A] rounded-lg p-2 flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M19.2,6.2c-0.8-1.1-2.1-1.8-3.5-1.8c-0.8,0-1.6,0.2-2.2,0.6C12.9,4.4,12,4,11,4c-1.4,0-2.7,0.7-3.5,1.8C6.7,4.7,5.4,4,4,4C1.8,4,0,5.8,0,8c0,0.8,0.2,1.5,0.6,2.2C0.2,11.5,0,12.7,0,14c0,4.4,3.6,8,8,8h8c4.4,0,8-3.6,8-8c0-1.3-0.2-2.5-0.6-3.8C23.8,9.5,24,8.8,24,8C24,5.8,22.2,4,20,4C18.6,4,17.3,4.7,16.5,6.2z M11,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S11,15.6,11,15z M7,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S7,15.6,7,15z M15,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S15,15.6,15,15z"/>
-              </svg>
+      
+      {/* WooCommerce Integration Card */}
+      <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+        <div className="space-y-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-[#96588A] rounded-lg p-2">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19.2,6.2c-0.8-1.1-2.1-1.8-3.5-1.8c-0.8,0-1.6,0.2-2.2,0.6C12.9,4.4,12,4,11,4c-1.4,0-2.7,0.7-3.5,1.8C6.7,4.7,5.4,4,4,4C1.8,4,0,5.8,0,8c0,0.8,0.2,1.5,0.6,2.2C0.2,11.5,0,12.7,0,14c0,4.4,3.6,8,8,8h8c4.4,0,8-3.6,8-8c0-1.3-0.2-2.5-0.6-3.8C23.8,9.5,24,8.8,24,8C24,5.8,22.2,4,20,4C18.6,4,17.3,4.7,16.5,6.2z M11,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S11,15.6,11,15z M7,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S7,15.6,7,15z M15,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S15,15.6,15,15z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">WooCommerce</h3>
+                <p className="text-sm text-gray-600">Connect your WooCommerce store</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h3 className="text-base font-semibold text-gray-900 truncate">WooCommerce</h3>
-              <p className="text-sm text-gray-600 truncate">Connect your WooCommerce store</p>
-            </div>
+            <WooCommerceDialog />
           </div>
-          <WooCommerceDialog />
         </div>
       </div>
 
-      <div className="border rounded-lg p-4 sm:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <img
-              src='logos/shopify.svg'
-              alt="Shopify Logo"
-              className="w-10 h-10 flex-shrink-0"
-            />
-            <div className="min-w-0">
-              <h3 className="text-base font-semibold text-gray-900 truncate">Shopify</h3>
-              <p className="text-sm text-gray-600 truncate">Connect to your Shopify store</p>
-            </div>
-          </div>
-          <ShopifyDialog />
+
+      {/* Shopify Integration Card */}
+      <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+  <div className="space-y-4">
+    <div className="flex items-start justify-between">
+      <div className="flex items-center gap-3">
+    
+          <img
+          src='logos/shopify.svg'
+          alt="Shopify Logo"
+          className="w-10 h-10 text-white"
+          />
+      
+        <div>
+          <h3 className="text-lg font-semibold">Shopify</h3>
+          <p className="text-sm text-gray-600">Connect to your Shopify store</p>
         </div>
       </div>
-
-      <div className="border rounded-lg p-4 sm:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-lg p-2 flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <h3 className="text-base font-semibold text-gray-900 truncate">Instagram</h3>
-              <p className="text-sm text-gray-600 truncate">Connect your Instagram business account</p>
-            </div>
-          </div>
-          <InstagramDialog />
-        </div>
-      </div>
-
-      <div className="border rounded-lg p-4 sm:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="bg-[#25D366] rounded-lg p-2 flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20.52 3.48A11.94 11.94 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 6.01L0 24l6.15-1.58A11.94 11.94 0 0012 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.2-3.48-8.52zM12 22.05c-1.85 0-3.67-.5-5.26-1.45l-.38-.22-3.65.94.97-3.55-.25-.37A9.94 9.94 0 012.05 12c0-5.47 4.48-9.95 9.95-9.95 2.66 0 5.17 1.04 7.05 2.93a9.94 9.94 0 012.93 7.05c0 5.47-4.48 9.95-9.95 9.95zm5.6-7.88c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.2.31-.82 1.02-1.01 1.23-.18.2-.37.22-.68.07-.31-.16-1.3-.48-2.47-1.54-.91-.81-1.52-1.81-1.7-2.12-.18-.31-.02-.48.14-.63.14-.14.31-.37.47-.56.16-.18.2-.31.31-.52.1-.2.05-.38-.02-.54-.07-.16-.71-1.7-.97-2.33-.26-.63-.52-.54-.71-.55h-.6c-.2 0-.52.07-.79.38-.27.31-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.22 3.07.16.2 2.1 3.2 5.1 4.49.71.31 1.26.5 1.69.64.71.23 1.36.2 1.87.12.57-.08 1.85-.76 2.11-1.5.26-.74.26-1.38.18-1.5-.07-.12-.29-.2-.6-.36z" />
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <h3 className="text-base font-semibold text-gray-900 truncate">WhatsApp</h3>
-              <p className="text-sm text-gray-600 truncate">Connect WhatsApp account</p>
-            </div>
-          </div>
-          <WhatsAppLoginDialog />
-        </div>
-      </div>
-
-      <div>
-        <TokenTestBox />
-      </div>
+      <ShopifyDialog />
     </div>
   </div>
+</div>
+
+{/* // Instagram Integration Card */}
+<div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+  <div className="space-y-4">
+    <div className="flex items-start justify-between">
+      <div className="flex items-center gap-3">
+        <div className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-lg p-2">
+          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold">Instagram</h3>
+          <p className="text-sm text-gray-600">Connect your Instagram business account</p>
+        </div>
+      </div>
+      <InstagramDialog />
+    </div>
+  </div>
+</div>
+
+
+{/* Facebook Catalog Integration Card */}
+<FacebookCatalogIntegration />
+
+{/* WhatsAPP Integration Card */}
+  {/* WhatsApp Integration Card */}
+<div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+  <div className="space-y-4">
+    <div className="flex items-start justify-between">
+      <div className="flex items-center gap-3">
+        <div className="bg-[#25D366] rounded-lg p-2">
+          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20.52 3.48A11.94 11.94 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 6.01L0 24l6.15-1.58A11.94 11.94 0 0012 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.2-3.48-8.52zM12 22.05c-1.85 0-3.67-.5-5.26-1.45l-.38-.22-3.65.94.97-3.55-.25-.37A9.94 9.94 0 012.05 12c0-5.47 4.48-9.95 9.95-9.95 2.66 0 5.17 1.04 7.05 2.93a9.94 9.94 0 012.93 7.05c0 5.47-4.48 9.95-9.95 9.95zm5.6-7.88c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.2.31-.82 1.02-1.01 1.23-.18.2-.37.22-.68.07-.31-.16-1.3-.48-2.47-1.54-.91-.81-1.52-1.81-1.7-2.12-.18-.31-.02-.48.14-.63.14-.14.31-.37.47-.56.16-.18.2-.31.31-.52.1-.2.05-.38-.02-.54-.07-.16-.71-1.7-.97-2.33-.26-.63-.52-.54-.71-.55h-.6c-.2 0-.52.07-.79.38-.27.31-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.22 3.07.16.2 2.1 3.2 5.1 4.49.71.31 1.26.5 1.69.64.71.23 1.36.2 1.87.12.57-.08 1.85-.76 2.11-1.5.26-.74.26-1.38.18-1.5-.07-.12-.29-.2-.6-.36z" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold">WhatsApp</h3>
+          <p className="text-sm text-gray-600">Connect WhatsApp account</p>
+        </div>
+      </div>
+      <WhatsAppLoginDialog />
+    </div>
+  </div>
+</div>
+
+<div>
+  <TokenTestBox />
+</div>
+
+      {/* More Integrations Coming Soon Card */}
+        {/* <div className="border rounded-lg p-4 bg-gray-50">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="bg-orange-100 rounded-full p-4">
+              <Construction className="h-6 w-6 text-orange-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">More Platforms Coming Soon</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                We&apos;re working on adding more platform integrations
+              </p>
+            </div>
+          </div>  
+        </div> */}
+    </div>
   </div>
 );
 
 export const AuditLogsSettings = () => (
-  <div className="h-full overflow-y-auto">
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-4">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Audit Logs</h2>
-        <p className="text-sm text-gray-600">Track and review system activities</p>
-      </div>
-    </div>
+  <div className="space-y-6">
+    <h2 className="text-2xl font-bold">Audit Logs</h2>
+    <p>Track and review system activities</p>
   </div>
 );
 
 export const CustomRolesSettings = () => (
-  <div className="h-full overflow-y-auto flex items-center justify-center p-4">
-    <div className="max-w-lg text-center space-y-6">
-      <div className="mx-auto bg-orange-100 rounded-full p-6 w-fit">
-        <Construction className="h-10 w-10 text-orange-600" />
+  <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
+    <div className="max-w-md space-y-4">
+      <div className="mx-auto bg-orange-100 rounded-full p-4 w-fit">
+        <Construction className="h-8 w-8 text-orange-600" />
       </div>
-      <div className="space-y-3">
-        <h2 className="text-2xl font-bold text-gray-900">Coming Soon</h2>
-        <p className="text-base text-gray-600 leading-relaxed">
-          Our team is working hard to bring you this feature. Stay tuned for updates!
-        </p>
-      </div>
-      <div className="pt-6 border-t border-gray-200">
+      <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+        Coming Soon
+      </h2>
+      <p className="text-lg text-gray-600">
+        Our team is working hard to bring you this feature. Stay tuned for updates!
+      </p>
+      <div className="pt-4 border-t border-gray-200 mt-8">
         <p className="text-sm text-gray-500">
           Custom Role functionality will be available in our next release.
           Check back soon or follow us for updates!
@@ -1162,18 +1227,18 @@ export const CustomRolesSettings = () => (
 );
 
 export const SLASettings = () => (
-  <div className="h-full overflow-y-auto flex items-center justify-center p-4">
-    <div className="max-w-lg text-center space-y-6">
-      <div className="mx-auto bg-orange-100 rounded-full p-6 w-fit">
-        <Construction className="h-10 w-10 text-orange-600" />
+  <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
+    <div className="max-w-md space-y-4">
+      <div className="mx-auto bg-orange-100 rounded-full p-4 w-fit">
+        <Construction className="h-8 w-8 text-orange-600" />
       </div>
-      <div className="space-y-3">
-        <h2 className="text-2xl font-bold text-gray-900">Coming Soon</h2>
-        <p className="text-base text-gray-600 leading-relaxed">
-          Our team is working hard to bring you this feature. Stay tuned for updates!
-        </p>
-      </div>
-      <div className="pt-6 border-t border-gray-200">
+      <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+        Coming Soon
+      </h2>
+      <p className="text-lg text-gray-600">
+        Our team is working hard to bring you this feature. Stay tuned for updates!
+      </p>
+      <div className="pt-4 border-t border-gray-200 mt-8">
         <p className="text-sm text-gray-500">
         Service Level Agreements functionality will be available in our next release.
           Check back soon or follow us for updates!
@@ -1182,3 +1247,4 @@ export const SLASettings = () => (
     </div>
   </div>
 );
+

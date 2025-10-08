@@ -400,7 +400,8 @@ export default function DashboardPage() {
   const [isConversationListVisible, setIsConversationListVisible] = useState(true);
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
   const [isNavigationVisible, setIsNavigationVisible] = useState(false);
-  const { isSignedIn, isLoaded } = useUser();
+  const { isSignedIn, isLoaded,  user } = useUser();
+
   const [showMobileConversationList, setShowMobileConversationList] = useState(true);
 
   const [isPending, startTransition] = useTransition();
