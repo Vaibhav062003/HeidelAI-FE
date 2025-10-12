@@ -108,7 +108,7 @@ function InstagramCallbackContent() {
       console.error("Error exchanging Instagram code:", error);
 
       let errMsg = "Unknown error occurred";
-      if(error.response.status === 403) {
+      if (error.response && error.response.status === 403) {
         errMsg = "This Instagram account is already connected to another organization. If you think this is incorrect, please contact us at support@heidelai.com for further assistance.";
       } else if (axios.isAxiosError(error) && error.response?.data?.detail) {
         errMsg = error.response.data.detail;

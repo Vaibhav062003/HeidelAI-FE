@@ -371,7 +371,7 @@ const InstagramDialog = () => {
 
       // Configurable values
       const redirectUri = process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI!;
-      const clientId = process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID;
+      const clientId = process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID!;
 
       const scopes = [
         "instagram_business_basic",
