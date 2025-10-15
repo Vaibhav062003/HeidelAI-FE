@@ -50,66 +50,62 @@ const ConversationPreview = ({
     }
   };
 
-  return (
-    <Card
-      className={`p-1.5 w-full rounded-none cursor-pointer transition-colors ${
-        isSelected ? "bg-gray-100" : "hover:bg-gray-50"
-      }`}
-      onClick={onClick}
-    >
-      <div className="flex items-start gap-2.5">
-        <Avatar className="relative top-[-3px] left-1 w-8 h-8 flex-shrink-0">
-          {channelType === "whatsapp" && (
-            <img src="/features/whatsapp.png" alt="" />
-          )}
-          {channelType === "telegram" && (
-            <img src="/features/telegram.png" alt="" />
-          )}
-          {channelType === "instagram" && (
-            <img src="/features/instagram.png" alt="" />
-          )}
-        </Avatar>
-        
-        <div className="flex-1 min-w-0">
-          {/* Header row with name and timestamp */}
-          <div className="flex items-center justify-between">
-            <span className="font-[Inter] font-semibold text-black text-sm truncate mt-[0.5px] ml-[5px]">
-              {customerName}
-            </span>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <span className="text-xs text-gray-500">
-                {getRelativeTime(timestamp)}
-              </span>
-              {/* TODO: Implement unread count display in future
-              {unreadCount > 0 && (
-                <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center min-w-[16px]">
-                  <span className="text-xs text-white font-medium leading-none">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                </div>
-              )}
-              */}
-            </div>
-          </div>
-          
-          {/* Message row with priority badge */}
-          <div className="flex items-center justify-between mt-1 ml-[5px] gap-2">
-            <p className="text-sm text-gray-600 truncate flex-1">
-              {lastMessage}
-            </p>
-            <div className="min-w-[60px] flex justify-end flex-shrink-0">
-              <Badge
-                variant="outline"
-                className={`${getPriorityBadgeStyles(priority)} text-xs px-2 py-0 rounded-sm h-auto leading-tight min-h-0 capitalize font-medium`}
-              >
-                {priority}
-              </Badge>
-            </div>
-          </div>
-        </div>
+return (
+  <div
+    className={`py-0.5 px-2.5 w-full cursor-pointer border-b border-gray-100 ${
+      isSelected ? "bg-gray-100" : ""
+    }`}
+    onClick={onClick}
+  >
+    <div className="flex items-start gap-2">
+      {/* Avatar */}
+      <div className="w-7 h-7 flex-shrink-0 rounded-full overflow-hidden bg-gray-200">
+        <img 
+          src={
+            channelType === "whatsapp" ? "/features/whatsapp.png" :
+            channelType === "telegram" ? "/features/telegram.png" :
+            "/features/instagram.png"
+          }
+          alt="" 
+          className="w-full h-full object-cover" 
+          loading="lazy"
+        />
       </div>
-    </Card>
-  );
-};
+      
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-1.5">
+          <h3 className="font-semibold text-gray-900 text-[13px] truncate">
+            {customerName}
+          </h3>
+          <span className="text-[9px] text-gray-500 flex-shrink-0">
+            {getRelativeTime(timestamp)}
+          </span>
+        </div>
+        
+        <div className="flex items-center justify-between gap-1.5">
+          <p className="text-[11px] text-gray-600 truncate flex-1">
+            {lastMessage}
+          </p>
+          
+          {unreadCount > 0 && (
+            <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-[8px] text-white font-semibold">
+                {unreadCount > 9 ? '9' : unreadCount}
+              </span>
+            </div>
+          )}
+        </div>
 
+        {priority && (
+          <span
+            className={`${getPriorityBadgeStyles(priority)} text-[8px] px-1 rounded-sm capitalize font-medium inline-block border mt-0.5`}
+          >
+            {priority}
+          </span>
+        )}
+      </div>
+    </div>
+  </div>
+);
+}
 export default ConversationPreview;

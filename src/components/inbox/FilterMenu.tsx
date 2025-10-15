@@ -4,7 +4,6 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { Filter } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { FaWhatsapp, FaInstagram, FaTelegram } from "react-icons/fa";
 import { Globe } from "lucide-react";
@@ -46,15 +45,26 @@ export const FilterMenu: React.FC<FilterMenuProps> = ({
 
   return (
     <Popover>
-      {/* Updated trigger with tight spacing and proper centering */}
+      {/* Updated trigger with horizontal filter lines icon */}
       <PopoverTrigger asChild>
         <div
           tabIndex={0}
           role="button"
           aria-haspopup="true"
-          className="h-5 lg:h-7 w-5 lg:w-7 flex items-center justify-center cursor-pointer transition-colors"
+          className="h-9 w-9 flex items-center justify-center cursor-pointer rounded-xl hover:bg-gray-100"
         >
-          <Filter className="h-4 w-4 text-gray-600" />
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="text-gray-600"
+          >
+            <line x1="2" y1="4" x2="14" y2="4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="4" y1="8" x2="12" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="6" y1="12" x2="10" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
         </div>
       </PopoverTrigger>
 

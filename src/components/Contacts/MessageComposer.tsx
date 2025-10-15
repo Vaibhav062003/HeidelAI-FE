@@ -19,9 +19,10 @@ interface MessageData {
 interface MessageComposerProps {
   onMessageSend: (data: MessageData) => void;
   directMode?: boolean;
+  preSelectedTag?: string;
 }
 
-export const MessageComposer = ({ onMessageSend, directMode = false }: MessageComposerProps) => {
+export const MessageComposer = ({ onMessageSend, directMode = false, preSelectedTag = "" }: MessageComposerProps) => {
   const [isMessageMenuOpen, setIsMessageMenuOpen] = useState(directMode); 
   const [tags, setTags] = useState<string[]>([]);
   const [selectedTag, setSelectedTag] = useState<string>("");
@@ -117,6 +118,12 @@ export const MessageComposer = ({ onMessageSend, directMode = false }: MessageCo
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isMessageMenuOpen, directMode]);
+
+    useEffect(() => {
+    if (preSelectedTag) {
+      setSelectedTag(preSelectedTag);
+    }
+  }, [preSelectedTag]);
 
   const handleSendMessage = () => {
     if (!templateSearch) return;

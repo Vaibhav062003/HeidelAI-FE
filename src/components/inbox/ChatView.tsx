@@ -1505,23 +1505,18 @@ if (!abortController.signal.aborted) {
 return (
     <>
       <Toaster richColors position="top-right" />
-
-      <style>
-        {`
-          .product-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-          .product-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
-          .product-scroll::-webkit-scrollbar-track { background: transparent; }
-          .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-          .custom-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
-          .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-          .chat-container { contain: layout style paint; will-change: auto; }
-          .message-item { contain: layout style; }
-          .avatar-placeholder { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-          .skeleton { background: linear-gradient(90deg, #f0f0f0 0%, #e0e0e0 50%, #f0f0f0 100%); background-size: 200% 100%; animation: loading 1.5s infinite; }
-          @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-          .hw-accel { transform: translateZ(0); backface-visibility: hidden; perspective: 1000px; }
-        `}
-      </style>
+<style>
+  {`
+    .product-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .product-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+    .product-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .skeleton { background: linear-gradient(90deg, #f0f0f0 0%, #e0e0e0 50%, #f0f0f0 100%); background-size: 200% 100%; animation: loading 1.5s infinite; }
+    @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  `}
+</style>
 
       <TooltipProvider>
       {/* Mobile Sidebar */}
@@ -1552,363 +1547,348 @@ return (
         </div>
       </div>
 
-       {!selectedConversationId ? (
-          <Card className="h-full flex flex-col bg-white items-center justify-center chat-container">
-            <div className="text-center text-gray-500">
-              <LandingDashboard />
-            </div>
-          </Card>
-        ) : (
-        <Card className="h-full flex flex-col bg-white/90 backdrop-blur-xl max-h-screen rounded-none sm:rounded-l shadow-lg border border-white/20 overflow-hidden chat-container hw-accel">
-          
-          {/*  Mobile Header */}
-          <div className="px-4 py-3 bg-white/40 backdrop-blur-sm border-b border-gray-100/60 flex-shrink-0 block sm:hidden hw-accel">
-            <div className="flex items-center gap-3">
-              {onBackToList && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onBackToList}
-                  className="h-10 w-10 hover:bg-gray-100/80 rounded-2xl transition-all duration-200 flex-shrink-0 hw-accel"
-                  aria-label="Back to conversations"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-              )}
-              
-              <div className="flex items-center space-x-3 flex-1 min-w-0">
-                <div className="relative">
-                  {avatarSource ? (
-                    <Avatar className="h-10 w-10 border-2 border-white/80 shadow-lg ring-1 ring-gray-100/50 hw-accel">
-                      <img
-                        src={avatarSource}
-                        alt="Platform avatar"
-                        className="object-cover"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                        }}
-                      />
-                      <div className="hidden h-full w-full avatar-placeholder rounded-full"></div>
-                    </Avatar>
-                  ) : (
-                    <div className="h-10 w-10 skeleton rounded-full"></div>
-                  )}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  {conversation ? (
-                    <>
-                      <h3 className="text-base font-semibold text-gray-900 truncate">
-                        {conversation?.customer_name || "Chat"}
-                      </h3>
-                      <p className="text-sm text-gray-500 font-medium">
-                        {conversation?.platform === "instagram" ? "Instagram" : "WhatsApp"}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="h-4 w-24 skeleton rounded mb-1"></div>
-                      <div className="h-3 w-16 skeleton rounded"></div>
-                    </>
-                  )}
-                </div>
-              </div>
-              
-              {/* Mobile menu button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowMobileSidebar(true)}
-                className="h-10 w-10 hover:bg-gray-100/80 rounded-2xl transition-all duration-200 flex-shrink-0 hw-accel"
-                aria-label="Options"
-              >
-                <MoreVertical className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-
-          {/*  Desktop Header */}
-          <div className="px-6 py-1 border-b border-gray-100/60 bg-white/30 backdrop-blur-sm items-center justify-between hidden sm:flex hw-accel">
-            {/* Customer Info Section */}
-            <div className="flex items-center space-x-4">
-              {/* Timer display - Only for WhatsApp conversations */}
-              {selectedConversationId &&
-                customerTimers[selectedConversationId] !== undefined &&
-                conversation?.platform === 'whatsapp' && (
-                  <TimerDisplay hours={customerTimers[selectedConversationId]} />
-                )}
-
-              <div className="relative">
-                {avatarSource ? (
-                  <Avatar className="h-8 w-8 border-2 border-white/80 shadow-lg ring-1 ring-gray-100/50 hw-accel">
-                    <img
-                      src={avatarSource}
-                      alt="Platform avatar"
-                      className="object-cover"
-                      loading="lazy"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
-                    <div className="hidden h-full w-full avatar-placeholder rounded-full"></div>
-                  </Avatar>
-                ) : (
-                  <div className="h-8 w-8 skeleton rounded-full"></div>
-                )}
-              </div>
-
-              <div>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="group cursor-pointer">
-                      {conversation ? (
-                        <h3 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-all duration-300">
-                          {conversation?.customer_name}
-                        </h3>
-                      ) : (
-                        <div className="h-4 w-32 skeleton rounded"></div>
-                      )}
-                    </div>
-                  </DialogTrigger>
-
-      <DialogContent className="sm:max-w-[900px] sm:max-h-[600px]">
-  <DialogHeader>
-    <DialogTitle className="text-2xl">{conversation?.customer_name} Information</DialogTitle>
-  </DialogHeader>
-  {conversation && (
-    <CustomerInfo
-      name={conversation?.customer_name || "Unknown"}
-      email={conversation?.email || "Unknown"}
-      billingaddress={conversation?.billingAddress || "Unknown"}
-      shippingaddress={conversation?.shippingAddress || "Unknown"}
-      platform={conversation?.platform || ""}
-      selectedConversationId={selectedConversationId}
-      saveCustomerInfo={saveCustomerInfo} // Pass the save function
-  />
-  )}
-</DialogContent>
-                </Dialog>
-              </div>
-            </div>
-
-            {/*  Action Buttons Section */}
-            <div className="flex items-center space-x-2">
-              {/* Status Dropdown */}
-              <DropdownMenu open={isStatusDropdownOpen} onOpenChange={setIsStatusDropdownOpen}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="rounded-2xl hover:bg-gray-100/60 transition-all duration-300 flex items-center space-x-1 px-3 py-2.5 bg-white/40 backdrop-blur-sm hw-accel"
-                  >
-                    {conversationStatus === 'closed' ? (
-                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    ) : conversationStatus === 'followup' ? (
-                      <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
-                    ) : (
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    )}
-                    <span className="text-sm font-medium text-gray-800">
-                      {conversationStatus === 'closed' ? "Closed" : 
-                       conversationStatus === 'followup' ? "Follow-up" : 
-                       "Open"}
-                    </span>
-                    <ChevronDown className="h-4 w-4 text-gray-600" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  align="end" 
-                  className="w-56 rounded-2xl shadow-xl border-0 bg-white/95 backdrop-blur-xl py-2"
-                >
-                  {conversationStatus === 'open' && (
-                    <>
-                      <DropdownMenuItem 
-                        onClick={handleResolve}
-                        className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-red-50/80 rounded-xl mx-2 transition-colors"
-                      >
-                        <XCircle className="h-4 w-4 mr-3 text-red-600" />
-                        <span className="font-medium">Close Conversation</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={handleFollowUp}
-                        className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-amber-50/80 rounded-xl mx-2 transition-colors"
-                      >
-                        <Clock className="h-4 w-4 mr-3 text-amber-600" />
-                        <span className="font-medium">Mark for Follow-up</span>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  
-                  {(conversationStatus === 'closed' || conversationStatus === 'followup') && (
-                    <DropdownMenuItem 
-                      onClick={handleReopen}
-                      className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-green-50/80 rounded-xl mx-2 transition-colors"
-                    >
-                      <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
-                      <span className="font-medium">Reopen Conversation</span>
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Reminders Button */}
-<Tooltip>
-              <TooltipTrigger asChild>
-                <div className="relative">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="relative mr-2"
-                      >
-                        <Clock className="h-5 w-5" />
-                        {reminders.length > 0 && (
-                          <Badge 
-                            variant="secondary" 
-                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-                          >
-                            {reminders.length}
-                          </Badge>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <RemindersPopover 
-                      reminders={reminders} 
-                      onCreateReminder={() => setShowReminder(true)}
-                      onDeleteReminder={async (id) => {
-                        try {
-                          const response = await fetch(`https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders/${id}`, {
-                            method: 'DELETE',
-                            credentials: 'include'
-                          });
-                          
-                          if (!response.ok) {
-                            throw new Error('Failed to delete reminder');
-                          }
-                          
-                          toast.success('Reminder deleted successfully');
-                          // Refresh reminders after deletion
-                          refetchReminders();
-                        } catch (error) {
-                          toast.error('Failed to delete reminder');
-                          console.error('Error deleting reminder:', error);
-                        }
-                      }}
-                    />
-                  </Popover>
-                  
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                {reminders.length > 0 
-                  ? `${reminders.length} reminder${reminders.length > 1 ? 's' : ''} set`
-                  : 'Set reminder'
-                }
-              </TooltipContent>
-            </Tooltip>
-            
-              {/* AI Toggle */}
-              <div className="flex items-center bg-white/40 backdrop-blur-sm rounded-2xl px-4 py-2.5 hover:bg-gray-100/60 transition-all duration-300 hw-accel">
-                <Switch
-                  checked={isAIEnabled}
-                  onCheckedChange={toggleAI}
-                  disabled={isToggling}
-                  className="data-[state=checked]:bg-blue-600 mr-3 scale-90"
+{!selectedConversationId ? (
+  <div className="h-full flex flex-col bg-white">
+    <LandingDashboard />
+  </div>
+) : (
+  <Card className="h-full flex flex-col bg-white max-h-screen rounded-none sm:rounded-l border border-gray-200 overflow-hidden">
+    
+    {/* Mobile Header */}
+    <div className="px-4 py-3 bg-white border-b border-gray-100 flex-shrink-0 block sm:hidden">
+      <div className="flex items-center gap-3">
+        {onBackToList && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBackToList}
+            className="h-10 w-10 hover:bg-gray-100 rounded-2xl flex-shrink-0"
+            aria-label="Back to conversations"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+        )}
+        
+        <div className="flex items-center space-x-3 flex-1 min-w-0">
+          <div className="relative">
+            {avatarSource ? (
+              <Avatar className="h-10 w-10 border-2 border-white shadow-sm ring-1 ring-gray-100">
+                <img
+                  src={avatarSource}
+                  alt="Platform avatar"
+                  className="object-cover"
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
                 />
-                <span className="text-sm font-medium text-gray-800">
-                  AI
-                </span>
-              </div>
+                <div className="hidden h-full w-full avatar-placeholder rounded-full"></div>
+              </Avatar>
+            ) : (
+              <div className="h-10 w-10 skeleton rounded-full"></div>
+            )}
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            {conversation ? (
+              <>
+                <h3 className="text-base font-semibold text-gray-900 truncate">
+                  {conversation?.customer_name || "Chat"}
+                </h3>
+                <p className="text-sm text-gray-500 font-medium">
+                  {conversation?.platform === "instagram" ? "Instagram" : "WhatsApp"}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="h-4 w-24 skeleton rounded mb-1"></div>
+                <div className="h-3 w-16 skeleton rounded"></div>
+              </>
+            )}
+          </div>
+        </div>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowMobileSidebar(true)}
+          className="h-10 w-10 hover:bg-gray-100 rounded-2xl flex-shrink-0"
+          aria-label="Options"
+        >
+          <MoreVertical className="h-5 w-5" />
+        </Button>
+      </div>
+    </div>
 
-              {/* More Options Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+    {/* Desktop Header */}
+    <div className="px-6 py-1 border-b border-gray-100 bg-white items-center justify-between hidden sm:flex">
+      {/* Customer Info Section */}
+      <div className="flex items-center space-x-4">
+        {selectedConversationId &&
+          customerTimers[selectedConversationId] !== undefined &&
+          conversation?.platform === 'whatsapp' && (
+            <TimerDisplay hours={customerTimers[selectedConversationId]} />
+          )}
+
+        <div className="relative">
+          {avatarSource ? (
+            <Avatar className="h-8 w-8 border-2 border-white shadow-sm ring-1 ring-gray-100">
+              <img
+                src={avatarSource}
+                alt="Platform avatar"
+                className="object-cover"
+                loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <div className="hidden h-full w-full avatar-placeholder rounded-full"></div>
+            </Avatar>
+          ) : (
+            <div className="h-8 w-8 skeleton rounded-full"></div>
+          )}
+        </div>
+
+        <div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <div className="group cursor-pointer">
+                {conversation ? (
+                  <h3 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600">
+                    {conversation?.customer_name}
+                  </h3>
+                ) : (
+                  <div className="h-4 w-32 skeleton rounded"></div>
+                )}
+              </div>
+            </DialogTrigger>
+
+            <DialogContent className="sm:max-w-[900px] sm:max-h-[600px]">
+              <DialogHeader>
+                <DialogTitle className="text-2xl">{conversation?.customer_name} Information</DialogTitle>
+              </DialogHeader>
+              {conversation && (
+                <CustomerInfo
+                  name={conversation?.customer_name || "Unknown"}
+                  email={conversation?.email || "Unknown"}
+                  billingaddress={conversation?.billingAddress || "Unknown"}
+                  shippingaddress={conversation?.shippingAddress || "Unknown"}
+                  platform={conversation?.platform || ""}
+                  selectedConversationId={selectedConversationId}
+                  saveCustomerInfo={saveCustomerInfo}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      {/* Action Buttons Section */}
+      <div className="flex items-center space-x-2">
+        {/* Status Dropdown */}
+        <DropdownMenu open={isStatusDropdownOpen} onOpenChange={setIsStatusDropdownOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="rounded-2xl hover:bg-gray-100 flex items-center space-x-1 px-3 py-2.5 bg-white"
+            >
+              {conversationStatus === 'closed' ? (
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+              ) : conversationStatus === 'followup' ? (
+                <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+              ) : (
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              )}
+              <span className="text-sm font-medium text-gray-800">
+                {conversationStatus === 'closed' ? "Closed" : 
+                 conversationStatus === 'followup' ? "Follow-up" : 
+                 "Open"}
+              </span>
+              <ChevronDown className="h-4 w-4 text-gray-600" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent 
+            align="end" 
+            className="w-56 rounded-2xl shadow-xl border bg-white py-2"
+          >
+            {conversationStatus === 'open' && (
+              <>
+                <DropdownMenuItem 
+                  onClick={handleResolve}
+                  className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-red-50 rounded-xl mx-2"
+                >
+                  <XCircle className="h-4 w-4 mr-3 text-red-600" />
+                  <span className="font-medium">Close Conversation</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={handleFollowUp}
+                  className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-amber-50 rounded-xl mx-2"
+                >
+                  <Clock className="h-4 w-4 mr-3 text-amber-600" />
+                  <span className="font-medium">Mark for Follow-up</span>
+                </DropdownMenuItem>
+              </>
+            )}
+            
+            {(conversationStatus === 'closed' || conversationStatus === 'followup') && (
+              <DropdownMenuItem 
+                onClick={handleReopen}
+                className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-green-50 rounded-xl mx-2"
+              >
+                <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
+                <span className="font-medium">Reopen Conversation</span>
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Reminders Button */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="relative">
+              <Popover>
+                <PopoverTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="rounded-2xl hover:bg-gray-100/60 transition-all duration-300 w-11 h-11 bg-white/40 backdrop-blur-sm hw-accel"
+                    className="relative mr-2 rounded-2xl"
                   >
-                    <MoreVertical className="h-5 w-5 text-gray-700" />
+                    <Clock className="h-5 w-5" />
+                    {reminders.length > 0 && (
+                      <Badge 
+                        variant="secondary" 
+                        className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                      >
+                        {reminders.length}
+                      </Badge>
+                    )}
                   </Button>
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent
-                  align="end"
-                  className="rounded-2xl shadow-xl border-0 bg-white/95 backdrop-blur-xl min-w-[200px] py-2"
-                >
-                  <DropdownMenuItem
-                    onClick={() => setShowCustomerInfo(true)}
-                    className="flex items-center px-4 py-3 hover:bg-blue-50/80 cursor-pointer rounded-xl mx-2 transition-colors"
-                  >
-                    <User className="h-4 w-4 mr-3 text-gray-700" />
-                    <span className="font-medium">Customer Profile</span>
-                  </DropdownMenuItem>
-                  
-                  <DropdownMenuItem className="flex items-center px-4 py-3 hover:bg-blue-50/80 cursor-pointer rounded-xl mx-2 transition-colors">
-                    <FileText className="h-4 w-4 mr-3 text-gray-700" />
-                    <span className="font-medium">Export Conversation</span>
-                  </DropdownMenuItem>
-                  
-                  <DropdownMenuItem className="flex items-center px-4 py-3 hover:bg-red-50/80 cursor-pointer rounded-xl mx-2 transition-colors">
-                    <Trash2 className="h-4 w-4 mr-3 text-red-600" />
-                    <span className="font-medium text-red-600">Clear Messages</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Right sidebar toggle */}
-              {!isRightSidebarVisible && onOpenRightSidebar && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-2xl hover:bg-gray-100/60 transition-all duration-300 w-11 h-11 bg-white/40 backdrop-blur-sm hw-accel"
-                  onClick={() => {
-                    // open mobile sidebar
-                    if (window.innerWidth < 640) {
-                      setShowMobileSidebar(true);
-                    } else {
-                      onOpenRightSidebar();
+                </PopoverTrigger>
+                <RemindersPopover 
+                  reminders={reminders} 
+                  onCreateReminder={() => setShowReminder(true)}
+                  onDeleteReminder={async (id) => {
+                    try {
+                      const response = await fetch(`https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders/${id}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                      });
+                      
+                      if (!response.ok) {
+                        throw new Error('Failed to delete reminder');
+                      }
+                      
+                      toast.success('Reminder deleted successfully');
+                      refetchReminders();
+                    } catch (error) {
+                      toast.error('Failed to delete reminder');
+                      console.error('Error deleting reminder:', error);
                     }
                   }}
-                  aria-label="Open sidebar"
-                >
-                  <Menu className="h-5 w-5 text-gray-700" />
-                </Button>
-              )}
+                />
+              </Popover>
             </div>
-          </div>
+          </TooltipTrigger>
+        </Tooltip>
+        
+        {/* AI Toggle */}
+        <div className="flex items-center bg-white rounded-2xl px-4 py-2.5 hover:bg-gray-100">
+          <Switch
+            checked={isAIEnabled}
+            onCheckedChange={toggleAI}
+            disabled={isToggling}
+            className="data-[state=checked]:bg-blue-600 mr-3 scale-90"
+          />
+          <span className="text-sm font-medium text-gray-800">AI</span>
+        </div>
 
-          {/* Messages Area with virtualization hint */}
-          <ScrollArea
-              ref={scrollAreaRef}
-              className="flex-1 h-full px-3 py-0.1 bg-gray-50/30 chat-container"
+        {/* More Options Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-2xl hover:bg-gray-100 w-11 h-11 bg-white"
             >
-              <div className="space-y-3 max-w-full pb-4 sm:pb-0">
-                {messages.length === 0 ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}>
-                        <div className={`max-w-[75%] ${i % 2 === 0 ? "items-start" : "items-end"} flex flex-col`}>
-                          <div className={`skeleton rounded-3xl ${i % 2 === 0 ? "rounded-bl-lg" : "rounded-br-lg"} p-4 w-48 h-16`}></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  messages.map((message, index) => (
-                    <MessageItem 
-                      key={message.id} 
-                      message={message} 
-                      isLast={index === messages.length - 1}
-                    />
-                  ))
-                )}
-                <div ref={lastMessageRef} />
+              <MoreVertical className="h-5 w-5 text-gray-700" />
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent
+            align="end"
+            className="rounded-2xl shadow-xl border bg-white min-w-[200px] py-2"
+          >
+            <DropdownMenuItem
+              onClick={() => setShowCustomerInfo(true)}
+              className="flex items-center px-4 py-3 hover:bg-blue-50 cursor-pointer rounded-xl mx-2"
+            >
+              <User className="h-4 w-4 mr-3 text-gray-700" />
+              <span className="font-medium">Customer Profile</span>
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem className="flex items-center px-4 py-3 hover:bg-blue-50 cursor-pointer rounded-xl mx-2">
+              <FileText className="h-4 w-4 mr-3 text-gray-700" />
+              <span className="font-medium">Export Conversation</span>
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem className="flex items-center px-4 py-3 hover:bg-red-50 cursor-pointer rounded-xl mx-2">
+              <Trash2 className="h-4 w-4 mr-3 text-red-600" />
+              <span className="font-medium text-red-600">Clear Messages</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Right sidebar toggle */}
+        {!isRightSidebarVisible && onOpenRightSidebar && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-2xl hover:bg-gray-100 w-11 h-11 bg-white"
+            onClick={() => {
+              if (window.innerWidth < 640) {
+                setShowMobileSidebar(true);
+              } else {
+                onOpenRightSidebar();
+              }
+            }}
+            aria-label="Open sidebar"
+          >
+            <Menu className="h-5 w-5 text-gray-700" />
+          </Button>
+        )}
+      </div>
+    </div>
+
+    {/* Messages Area */}
+    <ScrollArea
+      ref={scrollAreaRef}
+      className="flex-1 h-full px-3 py-0.1 bg-gray-50"
+    >
+      <div className="space-y-3 max-w-full pb-4 sm:pb-0">
+        {messages.length === 0 ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}>
+                <div className={`max-w-[75%] ${i % 2 === 0 ? "items-start" : "items-end"} flex flex-col`}>
+                  <div className={`skeleton rounded-3xl ${i % 2 === 0 ? "rounded-bl-lg" : "rounded-br-lg"} p-4 w-48 h-16`}></div>
+                </div>
               </div>
-            </ScrollArea>
+            ))}
+          </div>
+        ) : (
+          messages.map((message, index) => (
+            <MessageItem 
+              key={message.id} 
+              message={message} 
+              isLast={index === messages.length - 1}
+            />
+          ))
+        )}
+        <div ref={lastMessageRef} />
+      </div>
+    </ScrollArea>
 
           {/*Input Section */}
           <div className="bg-white/40 backdrop-blur-sm p-3 sm:p-0 hw-accel">

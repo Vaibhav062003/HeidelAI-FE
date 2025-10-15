@@ -14,6 +14,13 @@ interface ContactListHeaderProps {
   }) => void;
 }
 
+interface MessageData {
+  tag?: string;
+  platform: "whatsapp" | "instagram";
+  template: string;
+}
+
+
 interface ActionButtonProps {
   onClick: () => void;
   icon: React.ComponentType<{ className?: string }>;
@@ -36,6 +43,11 @@ export const ContactListHeader = ({
   const kebabMenuRef = useRef<HTMLDivElement>(null);
   const kebabTriggerRef = useRef<HTMLButtonElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+const handleMessageSend = (data: MessageData) => {
+  console.log("Message sent:", data);
+  setIsMessageComposerOpen(false);
+};
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -433,27 +445,23 @@ export const ContactListHeader = ({
             </div>
           </div>
 
-          {isMessageComposerOpen && (
-            <div className="mt-6 animate-in slide-in-from-top duration-200">
-              <div className="relative max-w-4xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl">
-                <button
-                  onClick={() => setIsMessageComposerOpen(false)}
-                  className="absolute top-6 right-6 p-3 hover:bg-white/60 rounded-lg transition-colors z-10"
-                  aria-label="Close message composer"
-                >
-                  <X className="h-5 w-5 text-gray-500" />
-                </button>
+         {isMessageComposerOpen && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="relative w-full max-w-6xl">
+      <button
+        onClick={() => setIsMessageComposerOpen(false)}
+        className="absolute -top-10 right-0 p-2 text-white hover:text-gray-300 transition-colors"
+      >
+        <X className="h-6 w-6" />
+      </button>
+      <MessageComposer
+        onMessageSend={handleMessageSend}
+        directMode={true}  // Set this to true
+      />
+    </div>
+  </div>
+)}
 
-                <MessageComposer 
-                  directMode={true}
-                  onMessageSend={(data) => {
-                    onMessageSend(data);
-                    setIsMessageComposerOpen(false);
-                  }} 
-                />
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
