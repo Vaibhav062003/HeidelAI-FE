@@ -22,7 +22,7 @@ import { useReminders } from "../hooks/useReminders";
 import { H1, H2, H3, Body, Small } from "@/components/typography";
 import { Trash2, User, Plus } from "lucide-react";
 import TimerDisplay from "./TimerDisplay";
-
+import { useTypingIndicator } from "../hooks/typingIndicator";
 import { createClient } from '@supabase/supabase-js';
 import { conversationService, WhatsAppMessage } from "@/components/services/api";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
@@ -599,7 +599,11 @@ const ChatView = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
+  const wsRef = useRef<WebSocket | null>(null);
+  const [typingUsers, setTypingUsers] = useState<Map<string, {
+    agent_name: string;
+    timestamp: number;
+  }>>(new Map());
   const { reminders = [], refetchReminders } = useReminders(selectedConversationId);
   const [renderedCount, setRenderedCount] = useState(30);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -1023,24 +1027,24 @@ const ChatView = ({
     }, 100);
   }, [selectedConversationId]);
 
-  const avatarSource = useMemo(() => {
-    if (conversation?.platform === "whatsapp") return "/features/whatsapp.png";
-    if (conversation?.platform === "telegram") return "/features/telegram.png";
-    if (conversation?.platform === "instagram") return "/features/instagram.png";
-    return "";
-  }, [conversation?.platform]);
+  // const avatarSource = useMemo(() => {
+  //   if (conversation?.platform === "whatsapp") return "/features/whatsapp.png";
+  //   if (conversation?.platform === "telegram") return "/features/telegram.png";
+  //   if (conversation?.platform === "instagram") return "/features/instagram.png";
+  //   return "";
+  // }, [conversation?.platform]);
 
-  const { lastCustomerMessage, isWindowExpired } = useMemo(() => {
-    const lastMsg = messages
-      .filter((m) => m.role === "customer")
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+  // const { lastCustomerMessage, isWindowExpired } = useMemo(() => {
+  //   const lastMsg = messages
+  //     .filter((m) => m.role === "customer")
+  //     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
 
-    const expired = lastMsg
-      ? new Date().getTime() - new Date(lastMsg.timestamp).getTime() > 24 * 60 * 60 * 1000
-      : true;
+  //   const expired = lastMsg
+  //     ? new Date().getTime() - new Date(lastMsg.timestamp).getTime() > 24 * 60 * 60 * 1000
+  //     : true;
 
-    return { lastCustomerMessage: lastMsg, isWindowExpired: expired };
-  }, [messages]);
+  //   return { lastCustomerMessage: lastMsg, isWindowExpired: expired };
+  // }, [messages]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -1111,251 +1115,350 @@ const ChatView = ({
     }
   }, [message, cannedResponses]);
 
-  useEffect(() => {
-  if (!selectedConversationId) return;
+  let ws: WebSocket | null = null;
 
-  const cachedMessages = sessionStorage.getItem(`messages_${selectedConversationId}`);
-  if (cachedMessages) {
-    try {
-      const parsed = JSON.parse(cachedMessages);
-      setOptimisticMessages(parsed);
-      setMessages(parsed); // Show immediately
-    } catch (error) {
-      console.error("Error parsing cached messages:", error);
-    }
-  }
-}, [selectedConversationId]);
-
-
-// MAIN DATA FETCHING
 useEffect(() => {
   if (!selectedConversationId) return () => {};
 
-  const abortController = new AbortController();
-  let ws: WebSocket | null = null;
-
-  const initializeChat = async () => {
+  const setUnreadCount = async () => {
     try {
       const platform = selectedConversationId.split('_')[0];
-      const whatsappId = localStorage.getItem('whatsapp_user_id');
-
-      // Show loading immediately
-      setLoading(true);
-
-      const [conversationResult, aiStatusResult, messagesResult] = await Promise.all([
-        // Fetch conversation data
-        (async () => {
-          try {
-            if (platform === 'instagram') {
-              const response = await api.get(
-                `/api/instagram/conversations/${selectedConversationId}`,
-                { signal: abortController.signal }
-              );
-              return { type: 'conversation', data: response?.data, platform };
-            } else if (platform === 'whatsapp' && whatsappId) {
-              const response = await conversationService.getWhatsAppConversations();
-              if (response.status === "success") {
-                const dataArray = Array.isArray(response.data) ? response.data : [];
-                const found = dataArray.find((c: Conversation) => c.id === selectedConversationId);
-                return { type: 'conversation', data: found || null, platform };
-              }
-            }
-            return { type: 'conversation', data: null, platform };
-          } catch (error) {
-            console.error("Error fetching conversation:", error);
-            return { type: 'conversation', data: null, platform };
-          }
-        })(),
-
-        // Fetch AI status
-        (async () => {
-          try {
-            if (platform === 'instagram') {
-              const response = await api.get(
-                `/api/instagram/conversations/${selectedConversationId}/ai`,
-                { signal: abortController.signal }
-              );
-              return { type: 'ai', enabled: !!response?.data };
-            } else if (platform === 'whatsapp' && whatsappId) {
-              const response = await conversationService.getWhatsAppAiStatus(
-                whatsappId, 
-                selectedConversationId
-              );
-              return { type: 'ai', enabled: !!response.data };
-            }
-            return { type: 'ai', enabled: true };
-          } catch (error) {
-            console.error("Error fetching AI status:", error);
-            return { type: 'ai', enabled: true };
-          }
-        })(),
-
-        // Fetch messages
-        (async () => {
-          try {
-            if (platform === 'instagram') {
-              const response = await api.get(
-                `/api/instagram/conversations/${selectedConversationId}/messages`,
-                { signal: abortController.signal }
-              );
-              return { type: 'messages', data: response?.data || [] };
-            } else if (platform === 'whatsapp' && whatsappId) {
-              const response = await conversationService.getWhatsAppMessages(
-                whatsappId, 
-                selectedConversationId
-              );
-              return { type: 'messages', data: Array.isArray(response.data) ? response.data : [] };
-            }
-            return { type: 'messages', data: [] };
-          } catch (error) {
-            console.error("Error fetching messages:", error);
-            toast.error('Failed to load messages');
-            return { type: 'messages', data: [] };
-          }
-        })(),
-      ]);
-
-if (!abortController.signal.aborted) {
-  setConversation(conversationResult.data);
-  setIsAIEnabled(aiStatusResult.enabled);
-  setMessages(messagesResult.data);
-  
-  try {
-    sessionStorage.setItem(
-      `messages_${selectedConversationId}`, 
-      JSON.stringify(messagesResult.data)
-    );
-  } catch (error) {
-    sessionStorage.clear();
-  }
-  
-  setLoading(false);
-}
-
-      (async () => {
-        try {
-          if (platform === 'instagram') {
-            await api.get(`/api/instagram/conversations/${selectedConversationId}/read`);
-          } else if (platform === 'whatsapp' && whatsappId) {
-            await api.get(`/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/read`);
-          }
-        } catch (error) {
-        }
-      })();
-
+      let url;
+      if (platform === 'instagram') { 
+        url = `/api/instagram/conversations/${selectedConversationId}/read`;
+        await api.get(url);
+      } else if (platform === 'whatsapp') {
+        const whatsappId = localStorage.getItem('whatsapp_user_id');
+        if (!whatsappId) return;
+        url = `/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/read`;
+        await api.get(url);
+      }
     } catch (error) {
-      console.error("Error initializing chat:", error);
-      setLoading(false);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Error setting unread count:", error);
+      }
+    }
+  };
+
+  const fetchConversation = async () => {
+    try {
+      setLoading(true);
+      const platform = selectedConversationId.split('_')[0];
+      let response;
+      if (platform === 'instagram') {
+        response = await api.get(`/api/instagram/conversations/${selectedConversationId}`);
+        setConversation(response?.data);
+      } else if (platform === 'whatsapp') {
+        const whatsappId = localStorage.getItem('whatsapp_user_id');
+        if (!whatsappId) return;
+        response = await conversationService.getWhatsAppConversations();
+        if (response.status === "success") {
+          const dataArray = Array.isArray(response.data) ? response.data : [];
+          const found = dataArray.find((c: Conversation) => c.id === selectedConversationId);
+          setConversation(found || null);
+        }
+      }
+    } catch (error) {
       toast.error("Failed to load conversation");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const setupWebSocket = async () => {
-    const WS_BASE_URL = "wss://egenie-whatsapp.koyeb.app";
-    const platform = selectedConversationId.split('_')[0];
-    const chatClientId = `chat-view-${Date.now()}`;
-    localStorage.setItem('chat_client_id', chatClientId);
-
-    if (platform === 'instagram') {
-      try {
-        const sessionToken = await token();
-        const clientId = localStorage.getItem('chat_client_id') || chatClientId;
-        ws = new WebSocket(`${WS_BASE_URL}/ws2/instagram/${clientId}`, [sessionToken]);
-
-        ws.onopen = () => {
-          console.log(`ChatView: Connected to Instagram WebSocket with ID ${clientId}`);
-        };
-
-        ws.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-
-          if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
-            setMessages(prev => {
-              const messageExists = prev.some(msg =>
-                msg.id === data.message.id ||
-                (msg.content === data.message.content &&
-                  msg.timestamp === data.message.timestamp &&
-                  msg.sender_id === data.message.sender_id)
-              );
-
-              if (!messageExists) {
-                return [...prev, data.message];
-              }
-              return prev;
-            });
-          } else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
-            setMessages(prev => prev.filter(msg => msg.id !== data.message_id));
-          }
-        };
-
-        ws.onerror = (error) => {
-          console.error("ChatView: WebSocket error: ", error);
-        };
-
-        ws.onclose = (event) => {
-          console.log(`ChatView: WebSocket closed with code ${event.code}`);
-        };
-      } catch (error) {
-        console.error("Failed to setup Instagram WebSocket:", error);
+  const fetchAIStatus = async () => {
+    try {
+      setLoading(true);
+      const platform = selectedConversationId.split('_')[0];
+      let response;
+      if (platform === 'instagram') {
+        response = await api.get(`/api/instagram/conversations/${selectedConversationId}/ai`);
+        setIsAIEnabled(!!response?.data);
+      } else if (platform === 'whatsapp') {
+        const whatsappId = localStorage.getItem('whatsapp_user_id');
+        if (!whatsappId) return;
+        response = await conversationService.getWhatsAppAiStatus(whatsappId, selectedConversationId);
+        setIsAIEnabled(!!response.data);
       }
+    } catch (error) {
+      setIsAIEnabled(true);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (platform === 'whatsapp') {
-      const whatsappId = localStorage.getItem('whatsapp_user_id');
-      const clientId = `client-${Date.now()}-wa`;
-
-      if (whatsappId) {
-        ws = new WebSocket(`${WS_BASE_URL}/ws2/whatsapp/${clientId}/${whatsappId}`);
-
-        ws.onopen = () => {
-          console.log(`ChatView: Connected to WhatsApp WebSocket with ID ${clientId}`);
-        };
-
-        ws.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-
-          if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
-            setMessages(prev => {
-              const messageExists = prev.some(msg =>
-                msg.id === data.message.id ||
-                (msg.content === data.message.content &&
-                  msg.timestamp === data.message.timestamp &&
-                  msg.sender_id === data.message.sender_id)
-              );
-
-              if (!messageExists) {
-                return [...prev, data.message];
-              }
-              return prev;
-            });
-          } else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
-            setMessages(prev => prev.filter(msg => msg.id !== data.message_id));
-          }
-        };
-
-        ws.onerror = (error) => {
-          console.error("ChatView: WebSocket error: ", error);
-        };
-
-        ws.onclose = (event) => {
-          console.log(`ChatView: WebSocket closed with code ${event.code}`);
-        };
+  const fetchMessages = async () => {
+    try {
+      setLoading(true);
+      const platform = selectedConversationId.split('_')[0];
+      let response;
+      if (platform === 'instagram') {
+        response = await api.get(`/api/instagram/conversations/${selectedConversationId}/messages`);
+        setMessages(response?.data || []);
+      } else if (platform === 'whatsapp') {
+        const whatsappId = localStorage.getItem('whatsapp_user_id');
+        if (!whatsappId) return;
+        response = await conversationService.getWhatsAppMessages(whatsappId, selectedConversationId);
+        setMessages(Array.isArray(response.data) ? response.data : []);
       }
+    } catch (error) {
+      toast.error('Failed to load messages');
+    } finally {
+      setLoading(false);
     }
   };
+  
+  
+  // WebSocket setup
+  const WS_BASE_URL = "wss://egenie-whatsapp.koyeb.app";
+  // const WS_BASE_URL = `ws://127.0.0.1:8000`;
+  const platform = selectedConversationId.split('_')[0];
+  
+  // Create a unique clientId for this chat view instance
+  function getOrCreateChatClientId() {
+  let id = localStorage.getItem('chat_client_id');
+  if (!id) {
+    id = `chat-view-${Date.now()}`;
+    localStorage.setItem('chat_client_id', id);
+  }
+  return id;
+}
+  const chatClientId = getOrCreateChatClientId();
 
-  initializeChat();
-  setupWebSocket();
+  if (platform === 'instagram') {
+    token().then(sessionToken => {
+      // Use the unique clientId here instead of reusing the one from localStorage
+      const clientId = localStorage.getItem('chat_client_id') || chatClientId;
+      const ws = new WebSocket(`${WS_BASE_URL}/ws2/${platform}/${clientId}`, [sessionToken]);
+      wsRef.current = ws;
 
-  return () => {
-    abortController.abort();
-    if (ws) ws.close();
-  };
-}, [selectedConversationId, token]);
+
+      ws.onopen = () => {
+        console.log(`ChatView: Connected to Instagram WebSocket with ID ${clientId}`);
+      };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("ChatView: Instagram WebSocket received message: ", data);
+
+        // Handle typing indicators
+         
+          if (data.type === 'typing_indicator') {
+            const myClientId = localStorage.getItem('chat_client_id');
+            // Only show typing if it's for this conversation
+            if (
+              data.agent_id !== myClientId &&
+              data.conversation_id === selectedConversationId
+            ) {
+              if (data.is_typing) {
+                setTypingUsers(prev => {
+                  const next = new Map(prev);
+                  next.set(data.agent_id, { agent_name: data.user, timestamp: Date.now() });
+                  return next;
+                });
+              } else {
+                setTypingUsers(prev => {
+                  const next = new Map(prev);
+                  next.delete(data.agent_id);
+                  return next;
+                });
+              }
+            }
+          }
+
+
+        if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
+          console.log("ChatView: new_message event type ✅ && data conv_id: ", data.message.conversation_id);
+  
+          // Check if this message already exists in the messages array to avoid duplicates
+          const messageExists = messages.some(msg => 
+            msg.id === data.message.id || 
+            (msg.content === data.message.content && 
+            msg.timestamp === data.message.timestamp && 
+            msg.sender_id === data.message.sender_id)
+          );
+          
+          // Only add the message if it's not already in the messages array
+          if (!messageExists) {
+            setMessages(prev => [...prev, data.message]);
+          }
+        }
+
+        else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
+          setMessages(prev => 
+            prev.filter(msg => msg.id !== data.message_id)
+          );
+          
+          console.log(`ChatView: Message with ID ${data.message_id} was deleted`);
+        }
+      };
+      
+      // Also add error and close handlers
+      ws.onerror = (error) => {
+        console.error("ChatView: WebSocket error: ", error);
+      };
+      
+      ws.onclose = (event) => {
+        console.log(`ChatView: WebSocket closed with code ${event.code}: ${event.reason}`);
+      };
+
+    }).catch(error => {
+      console.error("Failed to get session token:", error);
+    });
+    
+    } 
+  if (platform === 'whatsapp') {
+    const whatsappId = localStorage.getItem('whatsapp_user_id');
+    const clientId = `client-${Date.now()}-wa`;
+    
+    if (whatsappId) {
+      ws = new WebSocket(`${WS_BASE_URL}/ws2/whatsapp/${clientId}/${whatsappId}`);
+      console.log("Connected to WhatsApp WebSocket");
+
+      ws.onopen = () => {
+        console.log(`ChatView: Connected to WhatsApp WebSocket with ID ${clientId}`);
+      };
+      
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("ChatView: WhatsApp WebSocket received message: ", data);
+        
+        if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
+          console.log("ChatView: new_message event type ✅ && data conv_id: ", data.message.conversation_id);
+          setMessages(prev => [...prev, data.message]);
+        }
+        else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
+          setMessages(prev => 
+            prev.filter(msg => msg.id !== data.message_id)
+          );
+          console.log(`ChatView: Message with ID ${data.message_id} was deleted`);
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.error("ChatView: WebSocket error: ", error);
+      };
+      
+      ws.onclose = (event) => {
+        console.log(`ChatView: WebSocket closed with code ${event.code}: ${event.reason}`);
+      };
+    } 
+  } 
+  // else {
+  //   // Regular WebSocket for other conversations
+  //   ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/client-${Date.now()}`);
+  // }
+  
+
+  
+  fetchConversation();
+  setUnreadCount();
+  fetchAIStatus();
+  fetchMessages();
+  setTypingUsers(new Map());
+    
+
+  return () => {if (ws) ws.close();};
+}, [selectedConversationId]);
+
+  // Get this from your auth context
+
+   const sendFn = (payload:  Record<string, unknown>) => {
+      console.log("🚀 Trying to send:", payload, wsRef.current?.readyState)
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        const msg = JSON.stringify(payload);
+        wsRef.current.send(msg);
+        // console.log("📤 Sent to backend:", msg);
+      } else {
+        // console.warn("⚠️ WS not open:", wsRef.current?.readyState);
+      }
+    };
+
+
+const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
+
+  // Decide on avatar source
+
+  let avatarSource = "";
+
+  if (conversation?.platform === "whatsapp") {
+
+    avatarSource = "/features/whatsapp.png";
+
+  } else if (conversation?.platform === "telegram") {
+
+    avatarSource = "/features/telegram.png";
+
+  } else if (conversation?.platform === "instagram") {
+
+    avatarSource = "/features/instagram.png";
+
+  }
+
+
 
   if (loading) {
+
     return <LoadingState />;
+
   }
+
+
+
+  const lastCustomerMessage = messages
+
+    .filter((m) => m.role === "customer")
+
+    .sort(
+
+      (a, b) =>
+
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+
+    )[0];
+
+
+
+  const isWindowExpired = lastCustomerMessage
+
+    ? new Date().getTime() - new Date(lastCustomerMessage.timestamp).getTime() >
+
+      24 * 60 * 60 * 1000
+
+    : true;
+
+
+
+  // const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+
+  //   if (e.key === "Enter" && !e.shiftKey) {
+
+  //     e.preventDefault();
+
+  //     if (sharedProduct) {
+
+  //       handleShareProduct(message, sharedProduct);
+
+  //     } else if (audioURL) {
+
+  //       handleSendAudio();
+
+  //     } else {
+
+  //       sendMessage();
+
+  //     }
+
+  //   }
+
+
+
+  //   if (e.key === "/" && message === "") {
+
+  //     setShowCannedResponses(true);
+
+  //   }
+
+  // };
 
 //   const lastCustomerMessage = messages
 
