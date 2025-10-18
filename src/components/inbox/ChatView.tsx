@@ -34,6 +34,7 @@ import Image from "next/image";
 import CustomerInfo from "./CustomerInfo";
 import LandingDashboard from "./LandingDashboard";
 import api from "@/lib/session_api";
+import { useConversations } from "../hooks/useConversations";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -607,6 +608,7 @@ const ChatView = ({
   const { reminders = [], refetchReminders } = useReminders(selectedConversationId);
   const [renderedCount, setRenderedCount] = useState(30);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { setCurrentConversation } = useConversations();
 
 
   const token = useCallback(async () => {
@@ -1046,6 +1048,14 @@ const ChatView = ({
   //   return { lastCustomerMessage: lastMsg, isWindowExpired: expired };
   // }, [messages]);
 
+// Store conversation in localStorage so desktop Sidebar can access it
+// useEffect(() => {
+//   if (conversation) {
+//     localStorage.setItem(`conversation_${selectedConversationId}`, JSON.stringify(conversation));
+//     window.dispatchEvent(new Event('conversationUpdated'));
+//   }
+// }, [conversation, selectedConversationId]);
+
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -1140,30 +1150,38 @@ useEffect(() => {
     }
   };
 
-  const fetchConversation = async () => {
-    try {
-      setLoading(true);
-      const platform = selectedConversationId.split('_')[0];
-      let response;
-      if (platform === 'instagram') {
-        response = await api.get(`/api/instagram/conversations/${selectedConversationId}`);
-        setConversation(response?.data);
-      } else if (platform === 'whatsapp') {
-        const whatsappId = localStorage.getItem('whatsapp_user_id');
-        if (!whatsappId) return;
-        response = await conversationService.getWhatsAppConversations();
-        if (response.status === "success") {
-          const dataArray = Array.isArray(response.data) ? response.data : [];
-          const found = dataArray.find((c: Conversation) => c.id === selectedConversationId);
-          setConversation(found || null);
-        }
+const fetchConversation = async () => {
+  try {
+    setLoading(true);
+    const platform = selectedConversationId.split('_')[0];
+    let response;
+    let conversationData = null;
+    
+    if (platform === 'instagram') {
+      response = await api.get(`/api/instagram/conversations/${selectedConversationId}`);
+      conversationData = response?.data; 
+      setConversation(conversationData); 
+    } else if (platform === 'whatsapp') {
+      const whatsappId = localStorage.getItem('whatsapp_user_id');
+      if (!whatsappId) return;
+      response = await conversationService.getWhatsAppConversations();
+      if (response.status === "success") {
+        const dataArray = Array.isArray(response.data) ? response.data : [];
+        conversationData = dataArray.find((c: Conversation) => c.id === selectedConversationId) || null;
+        setConversation(conversationData); 
       }
-    } catch (error) {
-      toast.error("Failed to load conversation");
-    } finally {
-      setLoading(false);
     }
-  };
+    
+    if (conversationData) {
+      setCurrentConversation(conversationData);
+    }
+    
+  } catch (error) {
+    toast.error("Failed to load conversation");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const fetchAIStatus = async () => {
     try {
@@ -1638,16 +1656,17 @@ return (
         
         {/* Sidebar content */}
         <div className="fixed inset-y-0 right-0 w-full max-w-sm bg-white shadow-2xl hw-accel">
-          <Sidebar
-            selectedConversationId={selectedConversationId}
-            conversation={conversation} 
-            onShareProduct={sharedProduct ? onClearSharedProduct : () => {}}
-            onConversationSelect={() => {}}
-            onToggleVisibility={() => setShowMobileSidebar(false)}
-            isMobile={true}
-            isOpen={showMobileSidebar}
-          />
-        </div>
+  <Sidebar
+    selectedConversationId={selectedConversationId}
+    conversation={conversation} 
+    onShareProduct={sharedProduct ? onClearSharedProduct : () => {}}
+    onConversationSelect={() => {}}
+    onToggleVisibility={() => setShowMobileSidebar(false)}
+    isMobile={true}
+    isOpen={showMobileSidebar}
+  />
+</div>
+
       </div>
 
 {!selectedConversationId ? (

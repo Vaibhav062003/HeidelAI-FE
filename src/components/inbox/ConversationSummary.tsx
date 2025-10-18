@@ -6,12 +6,15 @@ import { Brain, Tag, AlertTriangle, Clock, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
+import api from "@/lib/session_api";
 
 const WS_URL = 'wss://egenie-whatsapp.koyeb.app/cs';
+
 
 interface ConversationSummaryProps {
   selectedConversationId?: string;
 }
+
 
 interface ConversationData {
   id: string;
@@ -24,6 +27,7 @@ interface ConversationData {
   timestamp: string;
 }
 
+
 const LoadingState = () => (
   <Card className="p-4 bg-white">
       <div className="space-y-4">
@@ -35,10 +39,12 @@ const LoadingState = () => (
           <Skeleton className="h-6 w-20" />
         </div>
 
+
         <div className="flex flex-wrap gap-2">
           <Skeleton className="h-6 w-24" />
           <Skeleton className="h-6 w-32" />
         </div>
+
 
         <div>
         <h4 className="text-base font-medium mb-2">Summary Points</h4>
@@ -52,6 +58,7 @@ const LoadingState = () => (
           </div>
         </div>
 
+
         <div>
         <h4 className="text-base font-medium mb-2">AI suggestions</h4>
           <div className="space-y-2">
@@ -64,6 +71,7 @@ const LoadingState = () => (
           </div>
         </div>
 
+
         <div className="flex items-center gap-2">
           <Skeleton className="h-6 w-32" />
           <Skeleton className="h-6 w-24" />
@@ -72,58 +80,64 @@ const LoadingState = () => (
     </Card>
 );
 
+
 const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProps) => {
 
-  console.log('convwesationsummary',selectedConversationId);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [conversation, setConversation] = useState<ConversationData | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [retries, setRetries] = useState(0);
 
-  const maxRetries = 5; // Maximum number of retries before giving up
-  const retryDelay = 3000; // Delay in milliseconds between retries (3 seconds)
 
-  // Add fetch conversation function outside useEffect so it can be reused
-  const fetchConversation = async (conversationId: string) => {
-    if (!conversationId) return;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await fetch(`https://egenie-whatsapp.koyeb.app/conversations/${conversationId}`, {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch conversation');
-      }
-      
-      const data = await response.json();
-      setConversation(data);
-    } catch (err) {
-      setError(err instanceof Error ? new Error(err.message) : new Error('Failed to load conversation'));
-      console.error('Error fetching conversation:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const maxRetries = 5;
+  const retryDelay = 3000;
 
-  // Add WebSocket listener for summary updates
+
+  // Updated fetch function with new endpoint
+const fetchConversation = async (conversationId: string) => {
+  if (!conversationId) return;
+  
+  setLoading(true);
+  setError(null);
+  
+  try {
+    
+    const response = await api.get(`/ai/chat-analysis/${conversationId}`);
+    
+    console.log('✅ API Response:', response.data);
+    console.log('📊 Response status:', response.status);
+    
+    setConversation(response.data);
+  } catch (err: any) {
+    console.error('❌ Error details:', {
+      message: err.message,
+      response: err.response?.data,
+      status: err.response?.status,
+      fullError: err
+    });
+    
+    setError(err instanceof Error ? new Error(err.message) : new Error('Failed to load conversation'));
+  } finally {
+    setLoading(false);
+  }
+};
+
+
   useEffect(() => {
     if (!selectedConversationId) return;
 
-    // Initial fetch
+
     fetchConversation(selectedConversationId);
 
-    // Listen for summary updates
+
     const connectWebSocket = () => {
       const wsConnection = new WebSocket(`${WS_URL}/client-${Date.now()}`);
       
       wsConnection.onopen = () => {
-        setError(null); // Reset any previous error when WebSocket successfully opens
-        setRetries(0); // Reset retries on successful connection
+        setError(null);
+        setRetries(0);
       };
       
       wsConnection.onmessage = (event) => {
@@ -132,42 +146,51 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
           data.type === 'summary_updated' && 
           data.conversation_id === selectedConversationId
         ) {
-          // Refetch conversation summary when update received
           fetchConversation(selectedConversationId);
         }
       };
 
+
       wsConnection.onerror = (error) => {
         console.error('WebSocket error:', error);
         setError(new Error('WebSocket connection failed'));
-        // Retry mechanism
         if (retries < maxRetries) {
           setRetries(prevRetries => prevRetries + 1);
           setTimeout(() => {
-            connectWebSocket(); // Attempt to reconnect
+            connectWebSocket();
           }, retryDelay);
         } else {
           setError(new Error('WebSocket connection failed after multiple retries'));
         }
       };
 
+
       wsConnection.onclose = () => {
         if (retries < maxRetries) {
           setRetries(prevRetries => prevRetries + 1);
           setTimeout(() => {
-            connectWebSocket(); // Attempt to reconnect if closed
+            connectWebSocket();
           }, retryDelay);
         } else {
           setError(new Error('WebSocket connection closed after multiple retries'));
         }
       };
 
-      setWs(wsConnection); // Set the WebSocket instance in the state
+
+      setWs(wsConnection);
     };
+
 
     connectWebSocket();
     
+    // ✅ ADDED: Cleanup WebSocket on unmount
+    return () => {
+      if (ws) {
+        ws.close();
+      }
+    };
   }, [selectedConversationId]);
+
 
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
@@ -180,6 +203,7 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
     }
   };
 
+
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
       case "high":
@@ -191,11 +215,11 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
     }
   };
 
+
   if (loading) {
-    return (
-     <LoadingState />
-    );
+    return <LoadingState />;
   }
+
 
   if (error) {
     return (
@@ -208,6 +232,7 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
     );
   }
 
+
   if(!conversation?.summary) return(
     <Card className="p-4 bg-white">
         <div className="flex items-center gap-2 text-red-500">
@@ -217,7 +242,9 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
       </Card>
   );
 
+
   if (!conversation) return null;
+
 
   return (
     <Card className="p-4 bg-white h-full">
@@ -235,13 +262,14 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
           </Badge>
         </div>
 
+
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline" className={getUrgencyColor(conversation.priority)}>
             {conversation.priority.toUpperCase()} Priority
           </Badge>
           <Badge variant="outline">{conversation.query}</Badge>
-          
         </div>
+
 
         <div>
           <h4 className="text-base font-medium mb-2">Summary Points</h4>
@@ -254,6 +282,7 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
           </ul>
         </div>
 
+
         <div>
           <h4 className="text-base font-medium mb-2">AI Suggestions</h4>
           <ul className="space-y-1">
@@ -264,11 +293,10 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
             ))}
           </ul>
         </div>
-
-        
       </div>
     </Card>
   );
 };
+
 
 export default ConversationSummary;
