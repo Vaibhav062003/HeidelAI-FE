@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import Onboarding from './Onboarding';
+
 
 export default function Navbar() {
   const router = useRouter();
@@ -21,9 +21,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-   if (isOpen) {
-    return <Onboarding isOpen={isOpen} onClose={() => setIsOpen(false)} />;
-  }
+
 
     return(
       <motion.div
