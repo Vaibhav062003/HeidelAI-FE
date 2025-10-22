@@ -53,6 +53,23 @@ interface CatalogProduct {
   [key: string]: string | number | boolean | undefined; // For any additional fields
 }
 
+interface AgentMember {
+  id: string | number;
+  identifier: string;
+  role_name: string;
+  user_id: string; 
+  public_user_data?: {
+    identifier?: string;
+    user_id?: string;
+  };
+}
+
+interface InvitedAgent {
+  id: string | number;
+  email_address: string;
+  status: string;
+}
+
 interface CatalogResponse {
   data: CatalogProduct[];
   paging?: {
@@ -916,6 +933,11 @@ const handleDisconnect = async () => {
 
 
 export default function DashboardPage() {
+  const members: AgentMember[] = [];
+  const invited: InvitedAgent[] = [];
+  const initialLoading = false;
+  const refresh = () => {};
+  const agentLimit = 0;
   const handleInsertResponse = (message: string) => {
     // Handle the canned response insertion
     console.log('Inserting canned response:', message);
@@ -926,7 +948,13 @@ export default function DashboardPage() {
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
       
       {/* Add component */}
-      <AgentsSettings />
+      <AgentsSettings
+        members={members}
+        invited={invited}
+        initialLoading={initialLoading}
+        refresh={refresh}
+        agentLimit={agentLimit}
+      />
       <TeamsConfiguration />
       <CannedResponses onInsertResponse={handleInsertResponse} />
       {/* You can add other dashboard components here */}

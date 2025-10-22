@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
-import { useSignIn, useUser } from "@clerk/nextjs";
+import React, { useEffect, useState } from "react";
+import { useOrganization, useSignIn, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Toaster, toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Session } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js'
+import { useClerk } from '@clerk/nextjs';
 interface OrgDataItem {
   public_user_data?: {
     identifier?: string;
@@ -20,25 +21,78 @@ interface OrgDataItem {
 export default function LoginPage() {
   const { isLoaded, signIn, setActive } = useSignIn();
   const { isSignedIn, user } = useUser();
+  const { membership } = useOrganization();
+  const { signOut } = useClerk() 
+  const [pendingMembershipCheck, setPendingMembershipCheck] = useState(false);
   const router = useRouter();
+    const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Add a ref to track if just signed in
+  const justSignedIn = React.useRef(false);
+
+  // Temp holder for a session id returned by sign-in attempt — do NOT persist immediately
+  const sessionCandidateRef = React.useRef<string | null>(null);
 
   // Redirect if already signed in
   React.useEffect(() => {
-    if (isLoaded && isSignedIn) {
+    if (isLoaded && isSignedIn && membership && !pendingMembershipCheck && !justSignedIn.current) {
       toast.success("Already signed in! Redirecting...");
       router.push("/dashboard");
     }
-  }, [isLoaded, isSignedIn, router]);
+  }, [isLoaded, isSignedIn, router, membership, pendingMembershipCheck]);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+
+
+  // Membership check after sign-in and organization load
+  useEffect(() => {
+    if (pendingMembershipCheck) {
+      // If user has membership, persist the session candidate and proceed
+      if (membership) {
+        const sess = sessionCandidateRef.current;
+        if (sess) {
+          localStorage.setItem("sessionId", sess);
+          justSignedIn.current = true;
+          sessionCandidateRef.current = null;
+        }
+        toast.success("Signed in! Redirecting...");
+        router.push("/dashboard");
+      } else {
+        // Do not persist session if no membership
+        if (sessionCandidateRef.current) {
+          sessionCandidateRef.current = null;
+          localStorage.removeItem("sessionId");
+        }
+        toast.info("Please Create or Join an Organization");
+        router.push("/onboarding");
+      }
+      setPendingMembershipCheck(false);
+    }
+  }, [pendingMembershipCheck, membership, router]);
+
+  // If user is signed in BUT has no org membership, force sign-out
+  useEffect(() => {
+    if (isLoaded && isSignedIn && !membership) {
+      // clear any stored session candidate
+      sessionCandidateRef.current = null;
+      localStorage.removeItem("sessionId");
+      
+      // sign out so the user can login with another account
+      signOut();
+    }
+  }, [isLoaded, isSignedIn, membership, signOut]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLoaded) return;
 
     setIsLoggingIn(true);
+    justSignedIn.current = false;
+    // Track any session id returned by the attempt so we can avoid persisting it on failure
+    let attemptedSessionId: string | null = null;
 
     try {
       const signInAttempt = await signIn.create({
@@ -46,42 +100,40 @@ export default function LoginPage() {
         password,
       });
 
-      if (signInAttempt.status === "complete") {
-        await setActive({ session: signInAttempt.createdSessionId });
-        if (signInAttempt.createdSessionId) {
-          localStorage.setItem("sessionId", signInAttempt.createdSessionId);
-        }
-        // Fetch organization data after session is active
-        const res = await fetch("/api/getorgdata");
-        const data = await res.json();
+      attemptedSessionId = signInAttempt.createdSessionId || null;
 
-        const membership = data?.data?.find(
-          (item: OrgDataItem) =>
-            item.public_user_data?.identifier === email
-        );
-
-        if (membership?.organization?.id && isLoaded) {
-          localStorage.setItem("org_id", membership.organization.id);
-          toast.success("Signed in! Redirecting...");
-          router.push("/dashboard");
-        } else {
-          toast.info("No organization found for this account.");
-        }
+      if (signInAttempt.status === "complete" && attemptedSessionId) {
+        // Activate the session now but do NOT persist it until we confirm membership
+        await setActive({ session: attemptedSessionId });
+        sessionCandidateRef.current = attemptedSessionId;
+        setPendingMembershipCheck(true);
       } else {
+        // do not persist anything if sign in not complete
+        if (attemptedSessionId) {
+          localStorage.removeItem("sessionId");
+          attemptedSessionId = null;
+          sessionCandidateRef.current = null;
+        }
         toast.error("Sign in not complete. Further steps required.");
       }
+
     } catch (err) {
+      // ensure nothing from this failed attempt remains persisted
+      if (attemptedSessionId) {
+        localStorage.removeItem("sessionId");
+        attemptedSessionId = null;
+        sessionCandidateRef.current = null;
+      }
+
       let message = "Invalid email or password.";
       if (err && typeof err === "object" && "errors" in err && Array.isArray(err.errors)) {
-        message = err.errors[0]?.message || message;
+        message = (err).errors[0]?.message || message;
       }
       toast.error(message);
     } finally {
       setIsLoggingIn(false);
     }
   };
-
-
 
   return (
     <section className="h-screen  bg-black text-white px-6 flex items-center justify-center">
