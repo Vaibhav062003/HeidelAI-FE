@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Activity, Send, X, Instagram } from 'lucide-react';
+import { Activity, Send, X, Instagram, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,18 +20,46 @@ const WELCOME_SHOWN_KEY = 'influencerBot_welcomeShown';
 const processingOverlayStyles = `
   .processing-overlay {
     position: fixed;
-    right: 20px;
-    bottom: 80px;
     background: rgba(0, 0, 0, 0.75);
     backdrop-filter: blur(4px);
     border-radius: 12px;
-    padding: 16px;
-    width: 320px;
+    padding: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
     opacity: 0;
     transform: translateY(20px);
     color: white;
+    z-index: 50;
+  }
+
+  /* Mobile positioning */
+  @media (max-width: 640px) {
+    .processing-overlay {
+      left: 10px;
+      right: 10px;
+      bottom: 80px;
+      width: auto;
+      padding: 16px;
+      font-size: 0.875rem;
+    }
+  }
+
+  /* Tablet positioning */
+  @media (min-width: 641px) and (max-width: 1024px) {
+    .processing-overlay {
+      right: 20px;
+      bottom: 100px;
+      width: 280px;
+    }
+  }
+
+  /* Desktop positioning */
+  @media (min-width: 1025px) {
+    .processing-overlay {
+      right: 20px;
+      bottom: 80px;
+      width: 320px;
+    }
   }
 
   .processing-overlay.visible {
@@ -49,16 +77,23 @@ const processingOverlayStyles = `
   }
 
   .processing-steps {
-    font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.7);
   }
 
   .processing-step {
-    margin: 8px 0;
+    margin: 6px 0;
     transition: all 0.3s ease;
     opacity: 0.5;
     padding: 4px 8px;
     border-radius: 4px;
+    font-size: 0.85rem;
+  }
+
+  @media (min-width: 640px) {
+    .processing-step {
+      font-size: 0.9rem;
+      margin: 8px 0;
+    }
   }
 
   .processing-step.active {
@@ -104,9 +139,21 @@ const InfluencerBot = () => {
     currentStep: ''
   });
   const [showProcessing, setShowProcessing] = useState(true);
+  const [screenWidth, setScreenWidth] = useState(0);
   const ws = useRef<WebSocket | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
+
+  // Screen size detection
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     if (lastMessageRef.current) {
@@ -131,7 +178,7 @@ const InfluencerBot = () => {
             type: 'incoming',
             content: '👋 Hello! I can analyze Instagram profiles. Enter usernames (comma-separated) to begin analysis.\n\nExample: username1, username2'
           };
-          setMessages([welcomeMessage]); // Replace existing messages with welcome message
+          setMessages([welcomeMessage]);
           localStorage.setItem(WELCOME_SHOWN_KEY, 'true');
         }
       };
@@ -148,13 +195,11 @@ const InfluencerBot = () => {
 
       ws.current.onclose = () => {
         console.log('WebSocket closed. Attempting to reconnect...');
-        // Clear the welcome shown flag when connection is lost
         localStorage.removeItem(WELCOME_SHOWN_KEY);
         setTimeout(connectWebSocket, 3000);
       };
     };
 
-    // Clear welcome flag on component mount to ensure it shows after reconnection
     localStorage.removeItem(WELCOME_SHOWN_KEY);
     connectWebSocket();
 
@@ -274,7 +319,6 @@ const InfluencerBot = () => {
     try {
       localStorage.removeItem(STORAGE_KEY);
       setMessages([]);
-      // Show welcome message again after clearing
       const welcomeMessage: ChatMessage = {
         type: 'incoming',
         content: '👋 Hello! I can analyze Instagram profiles. Enter usernames (comma-separated) to begin analysis.\n\nExample: username1, username2'
@@ -285,96 +329,203 @@ const InfluencerBot = () => {
     }
   }, []);
 
-  return (
-      <Card className="h-[98vh] w-[1350px] translate-x-[-40px] mx-auto my-2 shadow-lg rounded-xl">
-      <style>{processingOverlayStyles}</style>
-      <CardContent className="p-9 flex h-full">
-        <div className="flex flex-col h-full w-full">
-          <div className="border-b pb-4 mb-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Instagram Influencer Analysis</h2>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={clearChat}
-                className="text-gray-500 hover:text-pink-500"
-              >
-                Clear Chat
-              </Button>
-            </div>
-            {showProcessing && processingState.isVisible && (
-              <div className="text-sm text-gray-500">
-                {processingState.currentStep}
-              </div>
-            )}
-          </div>
+  // Determine layout type
+  const isMobile = screenWidth < 640;
+  const isTablet = screenWidth >= 640 && screenWidth < 1024;
 
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4" ref={scrollContainerRef}>
-              {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex ${message.type === 'outgoing' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                      message.type === 'outgoing'
-                        ? 'bg-pink-600 text-white'
-                        : 'bg-gray-100'
-                    }`}
-                  >
-                    <pre className="whitespace-pre-wrap font-sans">
-                      {message.content}
-                    </pre>
-                  </div>
+  return (
+    <div className="h-screen w-full flex items-center justify-center p-2 sm:p-4 lg:p-6 bg-gray-50">
+      <style>{processingOverlayStyles}</style>
+      
+      <Card className="h-full w-full max-w-full shadow-lg rounded-lg sm:rounded-xl overflow-hidden">
+        <CardContent className="p-0 flex flex-col h-full">
+          <div className="flex flex-col h-full w-full bg-white">
+            {/* Header - Responsive */}
+            <div className="border-b p-3 sm:p-4 lg:p-6 bg-white flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Instagram className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600" />
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">
+                    {isMobile ? 'InfluIndex' : 'Instagram Influencer Analysis'}
+                  </h2>
                 </div>
-              ))}
-              {isTyping && (
-                <div className="flex gap-2 px-4 py-2">
-                  <span className="animate-bounce">●</span>
-                  <span className="animate-bounce delay-100">●</span>
-                  <span className="animate-bounce delay-200">●</span>
+                
+                <div className="flex items-center gap-2">
+                  {/* Clear chat button */}
+                  <Button 
+                    variant="ghost" 
+                    size={isMobile ? "sm" : "default"}
+                    onClick={clearChat}
+                    className="text-gray-500 hover:text-pink-500"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    {!isMobile && "Clear"}
+                  </Button>
+                  
+                  {/* Processing toggle - desktop only */}
+                  {!isMobile && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowProcessing(prev => !prev)}
+                      className="h-8 w-8 sm:h-10 sm:w-10"
+                      title={showProcessing ? 'Hide processing' : 'Show processing'}
+                    >
+                      <Activity 
+                        size={16} 
+                        className={showProcessing ? 'text-pink-500' : 'text-gray-500'} 
+                      />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
+              {/* Status indicator for mobile */}
+              {isMobile && showProcessing && processingState.isVisible && (
+                <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded-lg">
+                  {processingState.currentStep}
                 </div>
               )}
-              <div ref={lastMessageRef} />
+              
+              {isMobile && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Analyze Instagram influencer profiles
+                </p>
+              )}
             </div>
-          </ScrollArea>
 
-          <div className="border-t p-4">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Enter Instagram usernames (comma-separated)..."
-                className="flex-1 rounded-lg border p-2 focus:outline-none focus:ring-2 focus:ring-pink-500"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-              />
-              <Button 
-                onClick={handleSendMessage}
-                className="bg-pink-600 hover:bg-pink-700"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowProcessing(prev => !prev)}
-                className="ml-2"
-              >
-                <Activity 
-                  size={16} 
-                  className={showProcessing ? 'text-pink-500' : 'text-gray-500'} 
-                />
-              </Button>
+            {/* Messages Container - Responsive */}
+            <div className="flex-1 overflow-hidden relative">
+              <ScrollArea className="h-full w-full" ref={scrollContainerRef}>
+                <div className="p-3 sm:p-4 lg:p-6">
+                  {messages.length === 0 && (
+                    <div className="flex flex-col items-center justify-center h-full text-center py-12 sm:py-16">
+                      <Instagram className="h-12 w-12 sm:h-16 sm:w-16 text-pink-400 mb-4" />
+                      <h3 className="text-lg sm:text-xl font-medium text-gray-900 mb-2">
+                        Instagram Influencer Analyzer
+                      </h3>
+                      <p className="text-sm sm:text-base text-gray-600 max-w-md mb-6">
+                        Enter Instagram usernames to get detailed influencer analysis 
+                        including engagement rates, audience insights, and performance metrics.
+                      </p>
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        <button
+                          onClick={() => setInputMessage("cristiano")}
+                          className="px-3 py-2 text-xs sm:text-sm bg-pink-50 text-pink-600 rounded-full hover:bg-pink-100 transition-colors"
+                        >
+                          Analyze @cristiano
+                        </button>
+                        <button
+                          onClick={() => setInputMessage("arianagrande")}
+                          className="px-3 py-2 text-xs sm:text-sm bg-pink-50 text-pink-600 rounded-full hover:bg-pink-100 transition-colors"
+                        >
+                          Analyze @arianagrande
+                        </button>
+                        <button
+                          onClick={() => setInputMessage("therock, kyliejenner")}
+                          className="px-3 py-2 text-xs sm:text-sm bg-pink-50 text-pink-600 rounded-full hover:bg-pink-100 transition-colors"
+                        >
+                          Compare profiles
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="space-y-3 sm:space-y-4">
+                    {messages.map((message, index) => (
+                      <div
+                        key={index}
+                        className={`flex ${
+                          message.type === 'outgoing' ? 'justify-end' : 'justify-start'
+                        }`}
+                      >
+                        <div
+                          className={`rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 sm:py-3 max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${
+                            message.type === 'outgoing'
+                              ? 'bg-pink-600 text-white'
+                              : 'bg-gray-100 text-gray-900'
+                          }`}
+                        >
+                          <pre className="whitespace-pre-wrap font-sans text-sm sm:text-base leading-relaxed">
+                            {message.content}
+                          </pre>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {isTyping && (
+                      <div className="flex justify-start">
+                        <div className="flex gap-1 px-3 py-2 sm:px-4 sm:py-3 bg-gray-100 rounded-lg sm:rounded-xl">
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></span>
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></span>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={lastMessageRef} />
+                  </div>
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* Input Area - Responsive */}
+            <div className="border-t bg-white p-3 sm:p-4 lg:p-6 flex-shrink-0">
+              <div className="flex gap-2 sm:gap-3 items-end">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    placeholder={
+                      isMobile 
+                        ? "Enter usernames..." 
+                        : "Enter Instagram usernames (comma-separated)..."
+                    }
+                    className="w-full rounded-lg sm:rounded-xl border border-gray-300 p-2.5 sm:p-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                  />
+                </div>
+                
+                <Button 
+                  onClick={handleSendMessage}
+                  disabled={!inputMessage.trim() || isTyping}
+                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl bg-pink-600 hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                >
+                  <Send className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+                
+                {/* Mobile processing toggle */}
+                {isMobile && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowProcessing(prev => !prev)}
+                    className="h-10 w-10 flex-shrink-0"
+                  >
+                    <Activity 
+                      size={16} 
+                      className={showProcessing ? 'text-pink-500' : 'text-gray-500'} 
+                    />
+                  </Button>
+                )}
+              </div>
+              
+              {/* Mobile helper text */}
+              {isMobile && (
+                <p className="text-xs text-gray-500 mt-2">
+                  Separate multiple usernames with commas
+                </p>
+              )}
             </div>
           </div>
-        </div>
+        </CardContent>
+        
+        {/* Processing Overlay - Responsive positioning via CSS */}
         {showProcessing && (
           <div 
             className={`processing-overlay ${processingState.isVisible ? 'visible' : ''}`}
@@ -383,12 +534,12 @@ const InfluencerBot = () => {
             }}
           >
             <div className="processing-header">
-              <span className="font-medium">Processing Analysis</span>
+              <span className="font-medium text-sm sm:text-base">Processing Analysis</span>
               <button
                 onClick={() => setShowProcessing(false)}
                 className="text-gray-300 hover:text-white transition-colors"
               >
-                <X size={16} />
+                <X size={isMobile ? 14 : 16} />
               </button>
             </div>
             <div className="processing-steps">
@@ -398,10 +549,9 @@ const InfluencerBot = () => {
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 };
 
 export default InfluencerBot;
-
