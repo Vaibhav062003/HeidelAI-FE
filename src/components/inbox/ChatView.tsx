@@ -72,6 +72,7 @@ import LandingDashboard from "./LandingDashboard";
 import api from "@/lib/session_api";
 import { useTypingIndicator } from "../hooks/typingIndicator";
 import Conversation_Status from "./Conversation_Status";
+import InstagramPost from "../instagram/messaging/InstagramPost";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -134,7 +135,9 @@ interface Message {
   sender_id: string;
   conversation_id: string;
   status?: "sent" | "delivered" | "read";
-  type?: "text" | "image" | "file" | "voice" | "video";
+  type?: "text" | "image" | "file" | "voice" | "video" | "share" | "ig_story" | "ig_reel";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload?: any;
   product_data?: ProductData[];
   fileUrl?: string;
   fileName?: string;
@@ -1857,7 +1860,13 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
                     <audio controls src={message.fileUrl} className="w-full" />
                   )}
 
-                  
+                  {/* {message.type === "share" && message.payload && (
+                    <InstagramPost 
+                      username="Instagram User"
+                      caption="Shared a post"
+                      mediaUrl={message.payload.url}
+                    />
+                  )} */}
 
                   
                   {(message.type === "text" || !message.type) && !productInfo && !agentProductInfo  && !botProductInfo && !extractCartData(message.content) && !checkAIMessage(message) && !addressData &&(
