@@ -43,6 +43,7 @@ import { WhatsAppTemplateDialog } from "./WhatsAppTemplateDialog";
 import { WhatsAppTemplate } from "../types/template";
 import WhatsAppAnalyticsContent from "@/components/inbox/WhatsAppAnalyticsContent";
 import { Conversation } from '../types/conversation';
+import { useConversations } from "../hooks/useConversations";
 
 interface Product {
   id: string;
@@ -240,8 +241,8 @@ const Sidebar = ({
   const [showCustomerInfo, setShowCustomerInfo] = useState(false);
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
-  
-  const conversation = passedConversation;
+  const { currentConversation } = useConversations();
+  const conversation = passedConversation || currentConversation;
 
   useEffect(() => {
     const loadTemplates = async () => {
@@ -523,7 +524,7 @@ const Sidebar = ({
             {/* Customer Profile Section */}
             <div className={`bg-white/30 ios-backdrop border-b border-gray-100/60 ${isMobile ? 'p-4' : 'p-3'}`}>
               <div className="flex items-center justify-between gap-2 mb-3">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
+ <div className="flex items-center gap-2 flex-1 min-w-0">
                   <div className={`
                     bg-gradient-to-br from-gray-500 to-gray-400 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0
                     ${isMobile ? 'w-12 h-12' : 'w-6 h-6'}
@@ -543,6 +544,7 @@ const Sidebar = ({
                     )}
                   </div>
                 </div>
+
                 
                 <Tooltip>
                   <TooltipTrigger asChild>

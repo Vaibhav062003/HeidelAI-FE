@@ -130,6 +130,28 @@ const ChatViewSkeleton = memo(() => (
 ));
 ChatViewSkeleton.displayName = "ChatViewSkeleton";
 
+const SidebarSkeleton = memo(() => (
+  <div className="h-full bg-white border-l border-gray-200">
+    <div className="px-4 py-4 border-b">
+      <div className="h-5 w-20 skeleton rounded mb-3" />
+      <div className="flex gap-3">
+        <div className="w-10 h-10 skeleton rounded-xl" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 w-24 skeleton rounded" />
+          <div className="h-3 w-32 skeleton rounded" />
+        </div>
+      </div>
+    </div>
+    <div className="p-4 space-y-2">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="h-12 skeleton rounded-lg" />
+      ))}
+    </div>
+  </div>
+));
+SidebarSkeleton.displayName = "SidebarSkeleton";
+
+
 const TabLoadingSkeleton = memo(() => (
   <div className="h-full w-full flex items-center justify-center bg-gray-50">
     <div className="text-center space-y-4">
@@ -799,7 +821,9 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Desktop View */}
+{/* Desktop View - REPLACE THIS ENTIRE SECTION */}
 <div className="hidden md:flex h-full bg-white">
+  {/* Conversation List */}
   <section 
     className={`
       ${isConversationListVisible ? 'w-64 lg:w-72 xl:w-80' : 'w-0'} 
@@ -820,26 +844,34 @@ export default function DashboardPage() {
     />
   </section>
 
+  {/* ChatView - ADD SUSPENSE HERE */}
   <section className="flex-1 min-w-0 h-full border-r border-gray-200">
-    <ChatView
-      selectedConversationId={selectedConversationId}
-      sharedProduct={sharedProduct}
-      onClearSharedProduct={handleClearSharedProduct}
-      isRightSidebarVisible={isRightSidebarVisible}
-      onOpenRightSidebar={handleToggleRightSidebar}
-      onBackToList={() => {}}
-    />
+    <Suspense fallback={<ChatViewSkeleton />}>
+      <ChatView
+        key={selectedConversationId} // Force re-render on conversation change
+        selectedConversationId={selectedConversationId}
+        sharedProduct={sharedProduct}
+        onClearSharedProduct={handleClearSharedProduct}
+        isRightSidebarVisible={isRightSidebarVisible}
+        onOpenRightSidebar={handleToggleRightSidebar}
+        onBackToList={() => {}}
+      />
+    </Suspense>
   </section>
 
+  {/* Sidebar - ADD SUSPENSE HERE */}
   {isRightSidebarVisible && (
     <aside className="relative w-[280px] xl:w-[320px] flex-shrink-0 hidden xl:block">
       {selectedConversationId ? (
-        <Sidebar
-          selectedConversationId={selectedConversationId}
-          onConversationSelect={handleConversationSelect}
-          onShareProduct={handleShareProduct}
-          onToggleVisibility={handleToggleRightSidebar}
-        />
+        <Suspense fallback={<SidebarSkeleton />}>
+          <Sidebar
+            key={selectedConversationId} // Force re-render on conversation change
+            selectedConversationId={selectedConversationId}
+            onConversationSelect={handleConversationSelect}
+            onShareProduct={handleShareProduct}
+            onToggleVisibility={handleToggleRightSidebar}
+          />
+        </Suspense>
       ) : (
         <RemainderSideBar 
           onToggleVisibility={handleToggleRightSidebar}

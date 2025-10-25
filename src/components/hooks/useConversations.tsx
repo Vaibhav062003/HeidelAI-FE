@@ -59,6 +59,9 @@ interface ConversationContextType extends ConversationCache {
   retry: () => Promise<void>;
   updateConversation: (id: string, updates: Partial<Conversation>) => void;
   addConversation: (conversation: Conversation) => void;
+  currentConversation: Conversation | null;
+  setCurrentConversation: (conversation: Conversation | null) => void;
+
 }
 const ConversationContext = createContext<ConversationContextType | null>(null);
 
@@ -96,6 +99,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const isConnectingRef = useRef(false);
+  const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
 
   useEffect(() => {
     if (!hasInitialized) {
@@ -433,6 +437,9 @@ const retry = useCallback(async () => {
       retry,
       updateConversation,
       addConversation,
+      currentConversation,
+      setCurrentConversation,
+
     }}>
       {children}
     </ConversationContext.Provider>
