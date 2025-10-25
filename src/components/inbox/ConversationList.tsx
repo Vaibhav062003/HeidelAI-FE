@@ -18,7 +18,7 @@ interface ConversationListProps {
   onToggleVisibility?: () => void;
 }
 
-type TabValue = 'all' | 'live_agent' | 'AI';
+type TabValue = 'all' | 'open' | 'closed';
 
 const SkeletonConversationItem = React.memo(() => (
   <div className="border-b border-gray-100/60 bg-white/80 p-2">
@@ -95,15 +95,21 @@ const ConversationItem = memo(({
 });
 ConversationItem.displayName = "ConversationItem";
 
+const tabToStatus: Record<TabValue, "open" | "closed" | undefined> = {
+  all: undefined,      // No status param for "all"
+  open: "open",
+  closed: "closed",
+};
+
+
 const ConversationList = ({
   selectedConversationId,
   onConversationSelect,
   isVisible = true,
   onToggleVisibility,
 }: ConversationListProps) => {
-  const { conversations, loading, error } = useConversations();
-  
   const [activeTab, setActiveTab] = useState<TabValue>('all');
+const { conversations, loading, error } = useConversations();
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({
     platform: [],
@@ -143,9 +149,9 @@ const ConversationList = ({
       filtered = filtered.filter(c => sentimentSet.has(c.sentiment));
     }
 
-    if (activeTab === 'AI') {
+    if (activeTab === 'all') {
       filtered = filtered.filter(c => c.is_ai_enabled);
-    } else if (activeTab === 'live_agent') {
+    } else if (activeTab === 'open') {
       filtered = filtered.filter(c => !c.is_ai_enabled);
     }
 
@@ -262,16 +268,16 @@ const ConversationList = ({
           All
         </TabsTrigger>
         <TabsTrigger 
-          value="live_agent" 
+          value="open" 
           className="flex-1 text-xs rounded-xl font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-gray-600 px-3 py-1.5"
         >
-          Agent
+          Open
         </TabsTrigger>
         <TabsTrigger 
-          value="AI" 
+          value="closed" 
           className="flex-1 text-xs rounded-xl font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-gray-600 px-3 py-1.5"
         >
-          AI
+          Closed
         </TabsTrigger>
       </TabsList>
     </Tabs>
@@ -305,10 +311,10 @@ const ConversationList = ({
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No conversations</h3>
               <p className="text-sm text-gray-600 max-w-xs">
-                {activeTab === "live_agent"
-                  ? "No conversations have Live Agent enabled"
-                  : activeTab === "AI"
-                  ? "No conversations have AI enabled"
+                {activeTab === "open"
+                  ? "No open conversations found"
+                  : activeTab === "closed"
+                  ? "No closed conversations found"
                   : "No conversations found"}
               </p>
             </div>
@@ -329,6 +335,9 @@ const ConversationList = ({
       </div>
     </div>
   );
+};
+const formatLastMessage = (message: string) => {
+  return message.includes("know_more_request_from_sender") ? "Know more." : message;
 };
 
 export default React.memo(ConversationList);

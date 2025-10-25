@@ -1,4 +1,5 @@
 import api from "@/lib/session_api";
+import { NextResponse } from 'next/server';
 
 export interface WhatsAppMessage {
   conversation_id: string;
@@ -37,18 +38,35 @@ export const conversationService = {
     }
   },
 
-  async getAllConversations(): Promise<ApiResponse> {
+  // async getAllConversations(): Promise<ApiResponse> {
+  //   try{
+  //     const response = await api.get("/api/conversations");
+  //     // console.log("[ConversationService] Fetched all conversations:", response.data);
+  //     return { status: "success", data: response.data };
+  //   }
+  //   catch (error) {
+  //     handleApiError(error, "Fetching all conversations");
+  //     return { status: "error", message: "Failed to fetch all conversations" };
+  //   }
+  // },
+  /**
+    * Fetch conversations by status (open or closed)
+   */
+
+  async getConversationByStatus(status?: "open" | "closed"): Promise<ApiResponse>{
     try{
-      const response = await api.get("/api/conversations");
-      // console.log("[ConversationService] Fetched all conversations:", response.data);
+      const url = status
+      ? `api/conversations?status=${status}`
+      : "api/conversations";
+
+      const response = await api.get(url);
       return { status: "success", data: response.data };
     }
-    catch (error) {
-      handleApiError(error, "Fetching all conversations");
-      return { status: "error", message: "Failed to fetch all conversations" };
+    catch (error){
+      handleApiError(error, "Fetching conversations by status");
+      return { status: "error", message: "Failed to fetch conversations by status" };
     }
   },
-
   /**
    * Fetch Instagram conversations
    */

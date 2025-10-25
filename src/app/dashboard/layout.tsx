@@ -1,5 +1,5 @@
 import { Toaster } from 'sonner'
-import './dashboard.css'
+
 
 export default function DashboardLayout({
   children,
@@ -9,7 +9,7 @@ export default function DashboardLayout({
   // Route segment layouts should not re-declare <html>/<body>. Use wrappers only.
   return (
     <div className="min-h-screen bg-gray-100">
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-center" richColors />
       {children}
     </div>
   )

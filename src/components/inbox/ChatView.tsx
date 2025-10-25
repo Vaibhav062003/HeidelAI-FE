@@ -35,15 +35,59 @@ import CustomerInfo from "./CustomerInfo";
 import LandingDashboard from "./LandingDashboard";
 import api from "@/lib/session_api";
 
+
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const Picker = dynamic(() => import("emoji-picker-react"), { 
-  ssr: false,
-  loading: () => <div className="h-[350px] w-full skeleton rounded-2xl"></div>
-});
+
+
+const Picker = dynamic(
+  () => {
+    return import('emoji-picker-react');
+  },
+  { ssr: false }
+);
+
+// import {
+//   Tooltip,
+//   TooltipContent,
+//   TooltipTrigger,
+//   TooltipProvider,
+// } from "@/components/ui/tooltip";
+// import {
+//   Send,
+//   Paperclip,
+//   // Globe,
+//   // Bot,
+//   MoreVertical,
+//   // Phone,
+//   // Video,
+//   // UserPlus,
+//   Smile,
+//   Mic,
+//   Clock,
+// } from "lucide-react";
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuTrigger,
+// } from "@/components/ui/dropdown-menu";
+// import ReminderDialog from "./ReminderDialog";
+
+// // import '../../app/dashboard/dashboard.css';
+// import Image from "next/image";
+// import CustomerInfo from './CustomerInfo';
+// import LandingDashboard from "./LandingDashboard";
+// import api from "@/lib/session_api";
+// import { useTypingIndicator } from "../hooks/typingIndicator";
+import Conversation_Status from "./Conversation_Status";
+// import Image from "next/image";
+// import { IconShoppingCartFilled } from "@tabler/icons-react";
+// import { Progress } from "@radix-ui/react-progress";
 
 interface CustomerInfo {
   name: string;
@@ -599,16 +643,21 @@ const ChatView = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const wsRef = useRef<WebSocket | null>(null);
-  const [typingUsers, setTypingUsers] = useState<Map<string, {
-    agent_name: string;
-    timestamp: number;
-  }>>(new Map());
+  // const wsRef = useRef<WebSocket | null>(null);
+  // const [typingUsers, setTypingUsers] = useState<Map<string, {
+  //   agent_name: string;
+  //   timestamp: number;
+  // }>>(new Map());
   const { reminders = [], refetchReminders } = useReminders(selectedConversationId);
   const [renderedCount, setRenderedCount] = useState(30);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-
+  const [typing, isTyping] = useState(false)
+  const [typingUsers, setTypingUsers] = useState<Map<string, {
+    agent_name: string;
+    timestamp: number;
+  }>>(new Map());
+  const wsRef = useRef<WebSocket | null>(null);
   const token = useCallback(async () => {
     const sessionId = localStorage.getItem("sessionId");
     if (!sessionId) throw new Error("Session ID not found in localStorage");
@@ -719,6 +768,7 @@ const ChatView = ({
       setIsSending(false);
     }
   }, [audioURL, selectedConversationId]);
+
 
   const handleFileUpload = useCallback(async (file: File | null, recipient: string, caption: string = "") => {
     if (!file || !selectedConversationId) return;
@@ -876,7 +926,14 @@ const ChatView = ({
     }
   }, [message, selectedConversationId, isSending, cannedResponses]);
 
-  const toggleAI = useCallback(async () => {
+  useEffect(() => {
+    // Scroll to the bottom when new messages are added
+    if (lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [messages]);
+
+  const toggleAI = async () => {
     if (!selectedConversationId || isToggling) return;
 
     setIsToggling(true);
@@ -901,7 +958,7 @@ const ChatView = ({
     } finally {
       setIsToggling(false);
     }
-  }, [selectedConversationId, isToggling, isAIEnabled]);
+  };
 
   const saveCustomerInfo = useCallback(async (updatedData: {
     name: string;
@@ -1148,6 +1205,7 @@ useEffect(() => {
       if (platform === 'instagram') {
         response = await api.get(`/api/instagram/conversations/${selectedConversationId}`);
         setConversation(response?.data);
+        console.log("Fetched Instagram conversation:", response?.data);
       } else if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
         if (!whatsappId) return;

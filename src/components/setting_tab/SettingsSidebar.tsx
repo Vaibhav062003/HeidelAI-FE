@@ -21,6 +21,27 @@ import {
 import { Button } from '@/components/ui/button';
 import CannedResponses from './CannedResponsesContext';
 
+interface AgentMember {
+  id: string | number;
+  identifier: string;
+  role_name: string;
+  user_id: string; 
+  public_user_data?: {
+    identifier?: string;
+    user_id?: string;
+  };
+}
+
+interface InvitedAgent {
+  id: string | number;
+  email_address: string;
+  status: string;
+}
+
+
+const AGENT_LIMIT = 5;
+
+
 const SettingsSections = [
   { icon: Users, name: 'Agents', component: AgentsSettings },
   { icon: UserCog, name: 'Teams', component: TeamsConfiguration },
@@ -45,6 +66,44 @@ const SettingsSections = [
 const SettingsDashboard = () => { 
   const router = useRouter();
   const [activeSection, setActiveSection] = useState(SettingsSections[0]);
+
+   const [members, setMembers] = useState<AgentMember[]>([]);
+  const [invited, setInvited] = useState<InvitedAgent[]>([]);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  const fetchMembers = async () => {
+    setInitialLoading(true);
+    const orgId = localStorage.getItem('org_id');
+    try {
+      const res = await fetch(`/api/Agents?org_id=${orgId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const mappedMembers = (data.members || []).map((member: AgentMember) => ({
+          ...member,
+          user_id: member.public_user_data?.user_id || '',
+        }));
+        setMembers(mappedMembers);
+
+        const pendingInvited = (data.invited || []).filter(
+          (invite: InvitedAgent) => invite.status === 'pending'
+        );
+        setInvited(pendingInvited);
+      }
+    } catch (err) {
+      // handle error
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMembers();
+    const interval = setInterval(fetchMembers, 5 * 60 * 1000); // every 5 min
+    return () => clearInterval(interval);
+  }, []);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {

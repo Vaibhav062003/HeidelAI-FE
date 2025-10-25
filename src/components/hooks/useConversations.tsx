@@ -8,7 +8,21 @@ const STORAGE_KEY = 'conversation_cache_v2';
 const RETRY_DELAY = 2000;
 const MAX_RETRIES = 3;
 
+<<<<<<< ours
 const WS_BASE_URL = 'wss://heidelai-backend2.koyeb.app';
+=======
+// <<<<<<< HEAD
+// // const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss' : 'ws';
+// // const WS_BASE_URL = `ws://127.0.0.1:8000`;
+// // const WS_WHATSAPP_ENDPOINT = `${WS_BASE_URL}/ws2/whatsapp`;
+// // const WS_INSTAGRAM_ENDPOINT = `${WS_BASE_URL}/ws2/instagram`;
+// =======
+// >>>>>>> 46af3aa4b10e3dc3eb7d0949fafa717556636c2d
+
+// WebSocket base URLs
+const WS_BASE_URL = 'wss://egenie-whatsapp.koyeb.app';
+const WS_WHATSAPP_ENDPOINT = `${WS_BASE_URL}/ws2/whatsapp`;
+>>>>>>> theirs
 const WS_INSTAGRAM_ENDPOINT = `${WS_BASE_URL}/ws2/instagram`;
 
 function normalizeConversation(conv: any): Conversation {
@@ -100,6 +114,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
     }
   }, [cache.conversations, cache.lastFetched, cache.error]);
 
+<<<<<<< ours
   // Setup WebSocket when loaded
   useEffect(() => {
     if (cache.conversations.length > 0) setupWebSocket();
@@ -141,6 +156,32 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
       const allres = await conversationService.getAllConversations();
       if (allres.status === "success" && Array.isArray(allres.data)) {
         allConversations = allres.data.map((conv: any) => normalizeConversation(conv));
+=======
+export const useConversations = (status?: "open" | "closed") => {
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  // console.log("status in useConv::::", status)
+
+  // console.log("con::::", conversations)
+  // Fetch conversations from both platforms
+  const fetchConversations = useCallback(async () => {
+    setLoading(true);
+    try {
+      let allConversations: Conversation[] = [];
+      //all conversations
+      try{
+        const allres = await conversationService.getConversationByStatus(status);
+        // Example: in useConversations or API service
+        // console.log("Fetching conversations with status:", status);
+        if (allres.status === "success" && Array.isArray(allres.data)) {
+          allConversations = [
+            ...allConversations,
+            ...allres.data.map((conv: any) => normalizeConversation({ ...conv }))
+          ];
+        }
+>>>>>>> theirs
       }
       setCache({
         conversations: allConversations,
@@ -165,6 +206,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
         }, delay);
       }
     }
+<<<<<<< ours
   }, [cache.conversations.length, retryCount]);
 
   // single fetch
@@ -183,6 +225,9 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
       }
     } catch (error){ }
   }, []);
+=======
+  }, [status]);
+>>>>>>> theirs
 
 // web socket
   const setupWebSocket = useCallback(async () => {
@@ -252,6 +297,14 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
             )
           };
         });
+<<<<<<< ours
+=======
+      } else if (data.type === 'typing_indicator') {
+        console.log("Typing indicator received:", data);
+      } else {
+        // Log any other message types for debugging
+        console.log("Unhandled WebSocket message type:", data.type, data);
+>>>>>>> theirs
       }
     } catch {}
   }, []);
@@ -270,6 +323,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
     setRetryCount(0);
     fetchConversations(true);
   }, []);
+<<<<<<< ours
   const updateConversation = useCallback((id: string, updates: Partial<Conversation>) => {
     setCache(prev => ({
       ...prev,
@@ -288,6 +342,76 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
       }
     });
   }, []);
+=======
+
+  // Setup WebSockets
+  useEffect(() => {
+    // Connect to Instagram WebSocket
+    const connectInstagramWebSocket = async() => {
+      const sessionId = localStorage.getItem('sessionId');
+      if (!sessionId) {
+        console.log('No session ID found, skipping Instagram WebSocket connection');
+        return;
+      }
+      const token = async()=>{
+          const sessionId = localStorage.getItem("sessionId");
+          if (!sessionId) throw new Error("Session ID not found in localStorage");
+      
+          const res = await fetch("api/session-token",{
+            method: "POST",
+            headers: {
+              "content-type": "application/json"
+            },
+            body: JSON.stringify({sessionId})
+          })
+          const { token: sessionToken } = await res.json();
+          return sessionToken
+        }
+
+      try {
+        // Get or generate client ID
+        const clientId = generateAndStoreClientId();
+        
+        // Create WebSocket connection with proper URL structure
+        const wsUrl = `${WS_INSTAGRAM_ENDPOINT}/${clientId}`;
+        console.log(`Connecting to Instagram WebSocket: ${wsUrl}`);
+
+        const sessionToken = await token();
+        console.log("token is passed")
+        const ws = new WebSocket(wsUrl, [sessionToken]);
+
+        ws.onopen = () => {
+          console.log(`Instagram WebSocket connected from useConvversations hook`);
+        };
+
+        ws.onmessage = (event) => {
+          console.log("message received:", event.data);
+          handleWebSocketMessage(event);
+        };
+
+        ws.onerror = (error) => {
+          console.error('Instagram WebSocket error:', error);
+        };
+
+        ws.onclose = () => {
+          console.log('Instagram WebSocket closed');
+        };
+      } catch (error) {
+        console.error('Error establishing Instagram WebSocket:', error);
+      }
+    };
+
+    // Initial fetch of conversations
+    fetchConversations();
+
+    // Connect to WebSockets if appropriate IDs are available
+    // connectWhatsAppWebSocket();
+    connectInstagramWebSocket();
+  }, [handleWebSocketMessage, fetchConversations]);
+
+  return { conversations, loading, error };
+};
+>>>>>>> theirs
 
   function cleanup() {
     if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);

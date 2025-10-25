@@ -51,15 +51,29 @@ interface InvitedAgent {
   status: string;
 }
 
-export const AgentsSettings = () => {
+interface AgentsSettingsProps {
+  members: AgentMember[];
+  invited: InvitedAgent[];
+  initialLoading: boolean;
+  refresh: () => void;
+  agentLimit: number;
+}
+
+export const AgentsSettings = ({
+  members,
+  invited,
+  initialLoading,
+  refresh,
+  agentLimit,
+}: AgentsSettingsProps) => {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [inviting, setInviting] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [members, setMembers] = useState<AgentMember[]>([]);
-  const [invited, setInvited] = useState<InvitedAgent[]>([]);
-  const [initialLoading, setInitialLoading] = useState(true);
+  // const [members, setMembers] = useState<AgentMember[]>([]);
+  // const [invited, setInvited] = useState<InvitedAgent[]>([]);
+  // const [initialLoading, setInitialLoading] = useState(true);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [revokingInviteId, setRevokingInviteId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -68,39 +82,39 @@ export const AgentsSettings = () => {
   const totalAgents = members.length + invited.length;
   const limitReached = totalAgents >= AGENT_LIMIT;
 
-  const fetchMembers = async () => {
-    setInitialLoading(true);
-    const orgId = localStorage.getItem('org_id');
-    try {
-      const res = await fetch(`/api/Agents?org_id=${orgId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const data = await res.json();
-      if (res.ok) {
-        const mappedMembers = (data.members || []).map((member: AgentMember) => ({
-          ...member,
-          user_id: member.public_user_data?.user_id || '',
-        }));
-        setMembers(mappedMembers);
+  // const fetchMembers = async () => {
+  //   setInitialLoading(true);
+  //   const orgId = localStorage.getItem('org_id');
+  //   try {
+  //     const res = await fetch(`/api/Agents?org_id=${orgId}`, {
+  //       method: 'GET',
+  //       headers: { 'Content-Type': 'application/json' },
+  //     });
+  //     const data = await res.json();
+  //     if (res.ok) {
+  //       const mappedMembers = (data.members || []).map((member: AgentMember) => ({
+  //         ...member,
+  //         user_id: member.public_user_data?.user_id || '',
+  //       }));
+  //       setMembers(mappedMembers);
 
-        const pendingInvited = (data.invited || []).filter(
-          (invite: InvitedAgent) => invite.status === 'pending'
-        );
-        setInvited(pendingInvited);
-      } else {
-        toast.error(data?.error || 'Failed to fetch members.');
-      }
-    } catch (err) {
-      toast.error('Network error. Please try again.');
-    } finally {
-      setInitialLoading(false);
-    }
-  };
+  //       const pendingInvited = (data.invited || []).filter(
+  //         (invite: InvitedAgent) => invite.status === 'pending'
+  //       );
+  //       setInvited(pendingInvited);
+  //     } else {
+  //       toast.error(data?.error || 'Failed to fetch members.');
+  //     }
+  //   } catch (err) {
+  //     toast.error('Network error. Please try again.');
+  //   } finally {
+  //     setInitialLoading(false);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchMembers();
-  }, []);
+  // useEffect(() => {
+  //   fetchMembers();
+  // }, []);
 
   const handleInviteAgent = async () => {
     if (!email || !role) {
@@ -122,17 +136,12 @@ export const AgentsSettings = () => {
       });
       const data = await res.json();
 
-      if (res.ok){
-        const mapInviteId = data.id || data.invitation_id || data.data?.id;
-        setInvited((prev) => [
-          ...prev,
-          { id: mapInviteId, email_address: email, status: 'pending' },
-        ]);
+        if (res.ok){
         toast.success('Invitation sent successfully!');
         setIsOpen(false);
         setEmail('');
         setRole('');
-        await fetchMembers();
+        refresh();
       } else {
         toast.error(data?.error || 'Failed to invite agent.');
       }
@@ -161,7 +170,7 @@ export const AgentsSettings = () => {
         toast.error(data?.error || 'Failed to delete member.');
       } else {
         toast.success('Member deleted successfully!');
-        await fetchMembers();
+        await refresh();
       }
     } catch (err) {
       toast.error('Network error. Please try again.');
@@ -193,12 +202,10 @@ export const AgentsSettings = () => {
       const data = await res.json();
       if (res.ok) {
         toast.success("Invitation revoked successfully.");
-        setInvited((prev) => prev.filter(invite => invite.id !== invitationId));
-        await fetchMembers();
+        await refresh();
       } else if (res.status === 404) {
         toast.info("Invitation already revoked or not found.");
-        setInvited((prev) => prev.filter(invite => invite.id !== invitationId));
-        await fetchMembers();
+        await refresh();
       } else {
         toast.error(data?.error || "Failed to revoke invitation.");
       }

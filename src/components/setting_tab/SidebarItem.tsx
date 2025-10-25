@@ -29,12 +29,23 @@ import FacebookSDK, { FacebookLoginResponse } from '@/components/facebook/Facebo
 import { useIntegrations } from '@/components/hooks/useIntegrations';
 import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
 
-
-// Instagram OAuth configuration
-const INSTAGRAM_CLIENT_ID = '1197084761515978'; // Replace with your Instagram app ID
-const INSTAGRAM_REDIRECT_URI = `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/instagram/callback`;
-const INSTAGRAM_SCOPE = 'user_profile,user_media,instagram_business_basic, instagram_business_manage_messages'; // Basic permissions
-
+// import { useIntegrations } from '@/components/hooks/useIntegrations';
+// import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
+import { 
+  Table, 
+  TableBody, 
+  TableCell,  
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+// import { Shopify } from '@shopify/shopify-api';
+import { toast } from 'sonner';
+import { connectWebSocket } from '../../lib/websocket';
+import WhatsAppLoginDialog from './WhatsappLoginDialog';
+import api from '@/lib/session_api';
+import { useUser, useOrganization } from '@clerk/nextjs';
+import { Dialog as ConfirmDialog, DialogContent as ConfirmDialogContent, DialogHeader as ConfirmDialogHeader, DialogTitle as ConfirmDialogTitle } from "@/components/ui/dialog"; 
 
 // Function to fetch catalog data from the backend
 interface CatalogProduct {
@@ -43,6 +54,23 @@ interface CatalogProduct {
   description?: string;
   price?: string;
   [key: string]: string | number | boolean | undefined; // For any additional fields
+}
+
+interface AgentMember {
+  id: string | number;
+  identifier: string;
+  role_name: string;
+  user_id: string; 
+  public_user_data?: {
+    identifier?: string;
+    user_id?: string;
+  };
+}
+
+interface InvitedAgent {
+  id: string | number;
+  email_address: string;
+  status: string;
 }
 
 interface CatalogResponse {
@@ -77,20 +105,8 @@ interface InstagramConnectionData {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
-import { 
-  Table, 
-  TableBody, 
-  TableCell,  
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-// import { Shopify } from '@shopify/shopify-api';
-import { toast } from 'sonner';
-import { connectWebSocket } from '../../lib/websocket';
-import WhatsAppLoginDialog from './WhatsappLoginDialog';
-import api from '@/lib/session_api';
-import { useUser } from '@clerk/nextjs';
+
+// import { useUser } from '@clerk/nextjs';
 
 const loginWithFacebook = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -311,7 +327,32 @@ const InstagramDialog = () => {
   const [showProfileView, setShowProfileView] = useState(false);
 
   const { user } = useUser();
-  const isAdmin = user?.publicMetadata?.role === 'admin';
+  // const isAdmin = user?.publicMetadata?.role === 'admin';
+  
+
+  // const { integrations, loading: integrationsLoading, refreshIntegrations } = useIntegrations();
+  // const { user } = useUser();
+  const { organization } = useOrganization();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+
+  useEffect(() => {
+    const checkRole = async () => {
+      if (organization && user) {
+        // Fetch all memberships for this org
+        const memberships = await organization.getMemberships();
+
+        // Find current user's membership
+        const membership = memberships.data.find(
+          (m) => m.publicUserData?.userId === user.id
+        );
+        setIsAdmin(membership?.roleName === "Admin");
+      }
+    };
+
+    checkRole();
+  }, [organization, user]);
+
   
 
   const { integrations, loading: integrationsLoading, refreshIntegrations } = useIntegrations();
@@ -351,87 +392,28 @@ const InstagramDialog = () => {
     setIsLoading(true);
 
     try {
-      // Generate a random state to prevent CSRF attacks
-      const state = Math.random().toString(36).substring(2, 15);
-      localStorage.setItem('instagram_auth_state', state);
+      // Generate cryptographically secure state
+      const state = window.crypto.getRandomValues(new Uint32Array(1))[0].toString(36);
+      localStorage.setItem("instagram_auth_state", state);
 
-      // Build Instagram authorization URL dynamically for the current subdomain
-      const redirectUri = 'https://development.heidelai.com/auth/instagram/callback';
-      const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1197084761515978&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages&state=${state}`;
+      // Configurable values
+      const redirectUri = process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI!;
+      const clientId = process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID!;
 
-      // Redirect to Instagram authorization page
-      window.location.href = authUrl;
+      const scopes = [
+        "instagram_business_basic",
+        "instagram_business_manage_messages",
+      ].join("%2C");
+
+      // Build auth URL
+      const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=${clientId}&redirect_uri=${encodeURIComponent(
+        redirectUri
+      )}&response_type=code&scope=${scopes}&state=${state}`;
+
+      window.location.assign(authUrl);
     } catch (error) {
-      console.error('Error initiating Instagram login:', error);
-      setIsLoading(false);
-      toast.error('Could not initiate Instagram login. Please try again later.');
-    }
-  };
-  
-  // Handle Instagram OAuth callback (code exchange)
-  const handleInstagramCallback = async (code: string) => {
-    try {
-      // Use the same dynamic redirect_uri as above
-      const redirectUri = `${window.location.origin}/auth/instagram/callback`;
-      const response = await api.post('/api/instagram/auth', {
-        data: JSON.stringify({ 
-          code: code,
-          redirect_uri: redirectUri
-        }),
-      });
-
-
-      if (response.status !== 200) {
-        const errorText = await response.data();
-        console.error('API error response:', errorText);
-        
-        // Parse error as JSON to extract the detail message
-        let errorMessage = 'Failed to connect Instagram account';
-        try {
-          const errorJson = JSON.parse(errorText);
-          if (errorJson.detail) {
-            errorMessage = errorJson.detail;
-          }
-        } catch {
-          // Otherwise, use the raw error text if it's not too long
-          if (errorText && errorText.length < 100) {
-            errorMessage = errorText;
-          }
-        }
-        
-        toast.error(`Instagram connection failed: ${errorMessage}`);
-        throw new Error(`Authentication failed: ${errorMessage}`);
-      }
-      
-      const data = await response.data();
-      console.log('API success response:', data);
-      
-      // Store data in localStorage
-      localStorage.setItem('instagram_connection', JSON.stringify({
-        username: data.username,
-        profileImage: data.profile_picture,
-        token: data.access_token,
-        userId: data.user_id,
-        connected: true
-      }));
-      
-      // Store Instagram ID separately for future quick lookups
-      localStorage.setItem('instagram_user_id', data.user_id);
-      
-      setConnected(true);
-      setAccountInfo({
-        username: data.username,
-        profileImage: data.profile_picture || '/default-avatar.png',
-        businessInfo: data.business_info || {}
-      });
-      
-      toast.success('Instagram connected successfully!');
-    } catch (error) {
-      console.error('Error exchanging token:', error);
-      
-      // Get error message
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      toast.error(`Instagram connection failed: ${errorMessage}`);
+      console.error("Error initiating Instagram login:", error);
+      toast.error("Could not initiate Instagram login. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -570,23 +552,49 @@ const InstagramDialog = () => {
                 </ul>
             </div>
             
-            <Button 
-              variant="destructive" 
-              className="w-full mt-4" 
-              onClick={disconnectInstagram}
-              disabled={isLoading || !isAdmin}
-              title={!isAdmin ? "Only admins can disconnect integrations" : ""}
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Processing...
-                </span>
-              ) : !isAdmin ? (
-                "Admin permission required"
-              ) : (
-                'Disconnect Account'
-              )}
-            </Button>
+              <Button 
+                variant="destructive" 
+                className="w-full mt-4" 
+                onClick={() => setShowDisconnectConfirm(true)}
+                disabled={isLoading || !isAdmin}
+                title={!isAdmin ? "Only admins can disconnect integrations" : ""}
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Processing...
+                  </span>
+                ) : !isAdmin ? (
+                  "Admin permission required"
+                ) : (
+                  'Disconnect Account'
+                )}
+              </Button>
+
+              <ConfirmDialog open={showDisconnectConfirm} onOpenChange={setShowDisconnectConfirm}>
+                <ConfirmDialogContent>
+                  <ConfirmDialogHeader>
+                    <ConfirmDialogTitle>Are you sure you want to disconnect Instagram?</ConfirmDialogTitle>
+                  </ConfirmDialogHeader>
+                  <div className="py-4 text-gray-700">
+                    This will archive all your currently stored messages and they will be deleted after 30 days automatically.
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button variant="outline" onClick={() => setShowDisconnectConfirm(false)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={async () => {
+                        setShowDisconnectConfirm(false);
+                        await disconnectInstagram();
+                      }}
+                    >
+                      Disconnect
+                    </Button>
+                  </div>
+                </ConfirmDialogContent>
+              </ConfirmDialog>
+
             
             {/* Show explanatory text for members */}
             {!isAdmin && connected && (
@@ -617,20 +625,32 @@ const InstagramDialog = () => {
             </div>
             
             <Button 
-              className="w-full mt-4 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white" 
+              className={`w-full mt-4 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white `} 
               onClick={handleInstagramLogin}
-              disabled={isLoading}
+              disabled={isLoading || !isAdmin}
+              title={!isAdmin ? "Only admins can connect integrations" : ""}
             >
+              <span className="flex items-center gap-2">
               {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Processing...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Instagram className="h-4 w-4" /> Login with Instagram
-                </span>
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Processing...
+                  </>
+                ) : !isAdmin ? (
+                  "Admin permission required"
+                ) : (
+                  <>
+                    <Instagram className="h-4 w-4" /> Login with Instagram
+                  </>
               )}
+              </span>
             </Button>
+
+             {/* Show explanatory text for members */}
+            {!isAdmin && !connected && (
+              <p className="text-sm text-amber-600">
+                Only administrators can connect integrations.
+              </p>
+            )}
           </div>
         )}
       </DialogContent>
@@ -645,10 +665,7 @@ const InstagramDialog = () => {
   );
 };
 
-
-
-const TokenTestBox =()=>{
-  // This function is just a placeholder for the token test box
+const TokenTestBox = () => {
   const getToken = async () => {
     try {
       const sessionID = localStorage.getItem("sessionId");
@@ -661,20 +678,22 @@ const TokenTestBox =()=>{
         body: JSON.stringify({ sessionId: sessionID }),
       });
 
-
-
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(`Failed to get session token: ${errorText}`);
       }
 
       const { token: sessionToken } = await res.json();
-      console.log("Session Token:", sessionToken);
       if (!sessionToken) {
         throw new Error("Failed to retrieve session token");
       }
+
+      // Copy token to clipboard
+      await navigator.clipboard.writeText(sessionToken);
+      toast.success("Token copied");
     } catch (error) {
       console.error("Error in token_testDialog:", error);
+      toast.error("Failed to copy token");
     }
   };
 
@@ -685,7 +704,7 @@ const TokenTestBox =()=>{
       </button>
     </div>
   );
-}
+};
 
  
 
@@ -924,6 +943,11 @@ const handleDisconnect = async () => {
 
 
 export default function DashboardPage() {
+  const members: AgentMember[] = [];
+  const invited: InvitedAgent[] = [];
+  const initialLoading = false;
+  const refresh = () => {};
+  const agentLimit = 0;
   const handleInsertResponse = (message: string) => {
     // Handle the canned response insertion
     console.log('Inserting canned response:', message);
@@ -934,7 +958,13 @@ export default function DashboardPage() {
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
       
       {/* Add component */}
-      <AgentsSettings />
+      <AgentsSettings
+        members={members}
+        invited={invited}
+        initialLoading={initialLoading}
+        refresh={refresh}
+        agentLimit={agentLimit}
+      />
       <TeamsConfiguration />
       <CannedResponses onInsertResponse={handleInsertResponse} />
       {/* You can add other dashboard components here */}
