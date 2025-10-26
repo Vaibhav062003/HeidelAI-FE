@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { useState } from "react";
-import { Heart, MessageCircle, Send, Bookmark } from "lucide-react";
 
 interface InstagramPostProps {
   username: string;
@@ -12,18 +11,17 @@ interface InstagramPostProps {
 
 export default function InstagramPost({
   username,
-  profileImage = "/default-avatar.png",
+  profileImage = "/icons/ig_no_pfp.jpg",
   caption,
   mediaUrl,
+  timestamp,
 }: InstagramPostProps) {
-  const [liked, setLiked] = useState(false);
-
   return (
     <div className="max-w-md mx-auto bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
       {/* Header */}
       <div className="flex items-center p-3">
         <Image
-          src={profileImage}
+          src={profileImage || "/icons/ig_no_pfp.jpg"}
           alt={username}
           width={40}
           height={40}
@@ -35,7 +33,7 @@ export default function InstagramPost({
       </div>
 
       {/* Image */}
-      <div className="relative w-full h-[400px] bg-gray-100">
+      <div className="relative w-[400px] h-[400px] bg-gray-100">
         <Image
           src={mediaUrl}
           alt="Instagram media"
@@ -44,24 +42,14 @@ export default function InstagramPost({
         />
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex space-x-4">
-          <Heart
-            className={`cursor-pointer ${liked ? "fill-red-500 text-red-500" : ""}`}
-            onClick={() => setLiked(!liked)}
-          />
-          <MessageCircle className="cursor-pointer" />
-          <Send className="cursor-pointer" />
-        </div>
-        <Bookmark className="cursor-pointer" />
-      </div>
-
       {/* Caption */}
-      <div className="px-4 pb-3">
+      <div className="px-4 py-3">
         <p className="text-sm">
           <span className="font-semibold mr-2">{username}</span>
           {caption}
+        </p>
+        <p className="text-xs text-gray-500 mt-2 uppercase tracking-wide">
+          {timestamp}
         </p>
       </div>
     </div>

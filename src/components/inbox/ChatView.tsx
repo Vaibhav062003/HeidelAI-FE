@@ -1727,6 +1727,8 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
         <ScrollArea ref={scrollAreaRef} className="flex-1 h-full p-4">
           <div className="space-y-4">
             {messages.map((message, index) => {
+              console.log("Rendering messages:", messages);
+              console.log("Rendering message:", message);
             const productInfo = message.content ? extractProductInfo(message.content) : null;
             const botProductInfo = message.content ? extractBotProductInfo(message.content) : null;
             const addressData = message.content ? extractAddressData(message.content) : null;
@@ -1736,6 +1738,7 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
             
             return (
               <div key={message.id}>
+                
                 {productInfo && message.role === "customer" && (
                   <div className="flex flex-col w-fit mb-4">
                     {productInfo.map((product: ProductInfo, idx: number) => (
@@ -1777,10 +1780,19 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
                   message.role === "customer" ? "justify-start" : "justify-end pr-10"
                 }`}
               >
-                
                 <div
                   className={`max-w-[41%] flex flex-col items-end sticky right-0 `}
-                >
+                  >
+
+                  {/* Render IG Posts */}
+                  {message.type === "share" && message.payload && (
+                      <InstagramPost 
+                        username="Instagram User"
+                        caption="Shared a post"
+                        mediaUrl={message.payload.url}
+                        timestamp={formatMessageTime(message.timestamp)}
+                      />
+                    )}
                   
                   {/* {botProductInfo && message.role === "ai" && (
                     <div className="flex flex-col max-w-[40%] overflow-hidden justify-end mb-4">
@@ -1818,8 +1830,11 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
 
 
                   
-
-                  <div className={` rounded-lg p-3 w-fit  ${
+                  {/* Render message body only if Payload is not there */}
+                  {/* Because if payload is there in message i.e. it is a IG Post, or Story, or Reel, etc and no need for message body*/}
+                  {/* It has it's own component to display */}
+                  {!message.payload && (
+                    <div className={` rounded-lg p-3 w-fit  ${
                     message.role === "customer"
                       ? "bg-gray-100 text-black"
                       : "bg-blue-500 text-white"
@@ -1860,13 +1875,7 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
                     <audio controls src={message.fileUrl} className="w-full" />
                   )}
 
-                  {/* {message.type === "share" && message.payload && (
-                    <InstagramPost 
-                      username="Instagram User"
-                      caption="Shared a post"
-                      mediaUrl={message.payload.url}
-                    />
-                  )} */}
+                  
 
                   
                   {(message.type === "text" || !message.type) && !productInfo && !agentProductInfo  && !botProductInfo && !extractCartData(message.content) && !checkAIMessage(message) && !addressData &&(
@@ -1933,8 +1942,9 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
                   </>
                   )}
 
-                  {/* Render timestamp */}
-                  <div className="flex w-fit items-center gap-2 mt-1">
+                  {/* Render timestamp only if no payload in message*/}
+                  {!message.payload && (
+                    <div className="flex w-fit items-center gap-2 mt-1">
                     <span
                       className={`text-xs ${
                         message.role === "customer" ? "text-gray-500" : "text-blue-100"
@@ -1945,8 +1955,8 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
                     >
                       {formatMessageTime(message.timestamp)}
                     </span>
-                  </div>
-                  </div>
+                  </div>)}
+                  </div>)}
                   {/* Render product data below the message */}
                   {message.product_data && (
                     <div className=" w-full bg-white mt-4">

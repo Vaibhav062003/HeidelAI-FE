@@ -52,6 +52,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'egeniestores.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'lookaside.fbsbx.com',
+      }
     ],
   }
   
