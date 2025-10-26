@@ -947,7 +947,7 @@ export default function DashboardPage() {
   const invited: InvitedAgent[] = [];
   const initialLoading = false;
   const refresh = () => {};
-  const agentLimit = 0;
+  const agentlimit = 0;
   const handleInsertResponse = (message: string) => {
     // Handle the canned response insertion
     console.log('Inserting canned response:', message);
@@ -963,7 +963,7 @@ export default function DashboardPage() {
         invited={invited}
         initialLoading={initialLoading}
         refresh={refresh}
-        agentLimit={agentLimit}
+        agentlimit={agentlimit}
       />
       <TeamsConfiguration />
       <CannedResponses onInsertResponse={handleInsertResponse} />

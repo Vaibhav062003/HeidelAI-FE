@@ -35,15 +35,12 @@ import CustomerInfo from "./CustomerInfo";
 import LandingDashboard from "./LandingDashboard";
 import api from "@/lib/session_api";
 import { useConversations } from "../hooks/useConversations";
-
-
+import { storeData, getData, getAllKeys, deleteData } from '@/lib/indexedDB';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
-
-
 
 const Picker = dynamic(
   () => {
@@ -644,23 +641,13 @@ const ChatView = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  // const wsRef = useRef<WebSocket | null>(null);
-  // const [typingUsers, setTypingUsers] = useState<Map<string, {
-  //   agent_name: string;
-  //   timestamp: number;
-  // }>>(new Map());
+  const wsRef = useRef<WebSocket | null>(null);
   const { reminders = [], refetchReminders } = useReminders(selectedConversationId);
-  const [renderedCount, setRenderedCount] = useState(30);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { setCurrentConversation } = useConversations();
-
-  const [typing, isTyping] = useState(false)
   const [typingUsers, setTypingUsers] = useState<Map<string, {
     agent_name: string;
     timestamp: number;
   }>>(new Map());
-  const wsRef = useRef<WebSocket | null>(null);
-  const token = useCallback(async () => {
+  const token = async()=>{
     const sessionId = localStorage.getItem("sessionId");
     if (!sessionId) throw new Error("Session ID not found in localStorage");
     
@@ -671,7 +658,25 @@ const ChatView = ({
     });
     const { token: sessionToken } = await res.json();
     return sessionToken;
-  }, []);
+  };
+  const MAX_CACHED_CONVERSATIONS = 5;
+  
+  const cleanupOldConversations = async (currentConversationId: string) => {
+  try {
+    const allKeys = await getAllKeys('conversations');
+    
+    if (allKeys.length >= MAX_CACHED_CONVERSATIONS) {
+      const keysToRemove = allKeys
+        .filter(key => key !== currentConversationId)
+        .slice(0, allKeys.length - MAX_CACHED_CONVERSATIONS + 1);
+      
+      await Promise.all(keysToRemove.map(key => deleteData('conversations', key)));
+      console.log(`Cleaned up ${keysToRemove.length} old conversations`);
+    }
+  } catch (error) {
+    console.error('Cleanup error:', error);
+  }
+};
 
   const startRecording = useCallback(async () => {
     try {
@@ -960,7 +965,7 @@ const ChatView = ({
     } finally {
       setIsToggling(false);
     }
-  };
+  }
 
   const saveCustomerInfo = useCallback(async (updatedData: {
     name: string;
@@ -1086,6 +1091,64 @@ const ChatView = ({
     }, 100);
   }, [selectedConversationId]);
 
+const fetchConversation = useCallback(async () => {
+  try {
+    setLoading(true);
+    const platform = selectedConversationId.split('_')[0];
+    let response;
+    
+    if (platform === 'instagram') {
+      response = await api.get(`/api/instagram/conversations/${selectedConversationId}`);
+      setConversation(response?.data);
+      
+      if (response?.data) {
+        await storeData('conversations', selectedConversationId, response.data);
+      }
+      
+      console.log("Fetched Instagram conversation:", response?.data);
+    } else if (platform === 'whatsapp') {
+      const whatsappId = localStorage.getItem('whatsapp_user_id');
+      if (!whatsappId) return;
+      
+      response = await conversationService.getWhatsAppConversations();
+      if (response.status === "success") {
+        const dataArray = Array.isArray(response.data) ? response.data : [];
+        const found = dataArray.find((c: Conversation) => c.id === selectedConversationId);
+        setConversation(found || null);
+        
+        if (found) {
+          await storeData('conversations', selectedConversationId, found);
+        }
+      }
+    }
+  } catch (error) {
+    toast.error("Failed to load conversation");
+  } finally {
+    setLoading(false);
+  }
+}, [selectedConversationId]);
+
+
+    const loadConversationWithCache = useCallback(async () => {
+    if (!selectedConversationId) return;
+    
+    try {
+      const cachedConversation = await getData<Conversation>('conversations', selectedConversationId);
+      
+      if (cachedConversation) {
+        setConversation(cachedConversation);
+        cleanupOldConversations(selectedConversationId);
+        return;
+      }
+      
+      await fetchConversation();
+      await cleanupOldConversations(selectedConversationId);
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+    }
+  }, [selectedConversationId]);
+
+
   // const avatarSource = useMemo(() => {
   //   if (conversation?.platform === "whatsapp") return "/features/whatsapp.png";
   //   if (conversation?.platform === "telegram") return "/features/telegram.png";
@@ -1184,6 +1247,7 @@ const ChatView = ({
 
   let ws: WebSocket | null = null;
 
+
 useEffect(() => {
   if (!selectedConversationId) return () => {};
 
@@ -1206,60 +1270,6 @@ useEffect(() => {
       }
     }
   };
-
-<<<<<<< HEAD
-  const fetchConversation = async () => {
-    try {
-      setLoading(true);
-      const platform = selectedConversationId.split('_')[0];
-      let response;
-      if (platform === 'instagram') {
-        response = await api.get(`/api/instagram/conversations/${selectedConversationId}`);
-        setConversation(response?.data);
-        console.log("Fetched Instagram conversation:", response?.data);
-      } else if (platform === 'whatsapp') {
-        const whatsappId = localStorage.getItem('whatsapp_user_id');
-        if (!whatsappId) return;
-        response = await conversationService.getWhatsAppConversations();
-        if (response.status === "success") {
-          const dataArray = Array.isArray(response.data) ? response.data : [];
-          const found = dataArray.find((c: Conversation) => c.id === selectedConversationId);
-          setConversation(found || null);
-        }
-=======
-const fetchConversation = async () => {
-  try {
-    setLoading(true);
-    const platform = selectedConversationId.split('_')[0];
-    let response;
-    let conversationData = null;
-    
-    if (platform === 'instagram') {
-      response = await api.get(`/api/instagram/conversations/${selectedConversationId}`);
-      conversationData = response?.data; 
-      setConversation(conversationData); 
-    } else if (platform === 'whatsapp') {
-      const whatsappId = localStorage.getItem('whatsapp_user_id');
-      if (!whatsappId) return;
-      response = await conversationService.getWhatsAppConversations();
-      if (response.status === "success") {
-        const dataArray = Array.isArray(response.data) ? response.data : [];
-        conversationData = dataArray.find((c: Conversation) => c.id === selectedConversationId) || null;
-        setConversation(conversationData); 
->>>>>>> 8d68c1a6cc0b4b82d1a9446dda21d9daae003bff
-      }
-    }
-    
-    if (conversationData) {
-      setCurrentConversation(conversationData);
-    }
-    
-  } catch (error) {
-    toast.error("Failed to load conversation");
-  } finally {
-    setLoading(false);
-  }
-};
 
   const fetchAIStatus = async () => {
     try {
@@ -1445,7 +1455,7 @@ const fetchConversation = async () => {
   // }
   
 
-  
+  loadConversationWithCache();
   fetchConversation();
   setUnreadCount();
   fetchAIStatus();
@@ -1454,7 +1464,24 @@ const fetchConversation = async () => {
     
 
   return () => {if (ws) ws.close();};
-}, [selectedConversationId]);
+}, [selectedConversationId, loadConversationWithCache]);
+
+useEffect(() => {
+  return () => {
+    (async () => {
+      try {
+        const allKeys = await getAllKeys('conversations');
+        if (allKeys.length > MAX_CACHED_CONVERSATIONS) {
+          const excess = allKeys.slice(0, -MAX_CACHED_CONVERSATIONS);
+          await Promise.all(excess.map(key => deleteData('conversations', key)));
+        }
+      } catch (error) {
+        console.error('Unmount cleanup error:', error);
+      }
+    })();
+  };
+}, []);
+
 
   // Get this from your auth context
 
@@ -1521,7 +1548,7 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
       24 * 60 * 60 * 1000
 
     : true;
-
+    
 
 
   // const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1945,53 +1972,61 @@ return (
         </DropdownMenu>
 
         {/* Reminders Button */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="relative">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="relative mr-2 rounded-2xl"
-                  >
-                    <Clock className="h-5 w-5" />
-                    {reminders.length > 0 && (
-                      <Badge 
-                        variant="secondary" 
-                        className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+         <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="relative">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="relative mr-2"
                       >
-                        {reminders.length}
-                      </Badge>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <RemindersPopover 
-                  reminders={reminders} 
-                  onCreateReminder={() => setShowReminder(true)}
-                  onDeleteReminder={async (id) => {
-                    try {
-                      const response = await fetch(`https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders/${id}`, {
-                        method: 'DELETE',
-                        credentials: 'include'
-                      });
-                      
-                      if (!response.ok) {
-                        throw new Error('Failed to delete reminder');
-                      }
-                      
-                      toast.success('Reminder deleted successfully');
-                      refetchReminders();
-                    } catch (error) {
-                      toast.error('Failed to delete reminder');
-                      console.error('Error deleting reminder:', error);
-                    }
-                  }}
-                />
-              </Popover>
-            </div>
-          </TooltipTrigger>
-        </Tooltip>
+                        <Clock className="h-5 w-5" />
+                        {reminders.length > 0 && (
+                          <Badge 
+                            variant="secondary" 
+                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                          >
+                            {reminders.length}
+                          </Badge>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <RemindersPopover 
+                      reminders={reminders} 
+                      onCreateReminder={() => setShowReminder(true)}
+                      onDeleteReminder={async (id) => {
+                        try {
+                          const response = await fetch(`https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders/${id}`, {
+                            method: 'DELETE',
+                            credentials: 'include'
+                          });
+                          
+                          if (!response.ok) {
+                            throw new Error('Failed to delete reminder');
+                          }
+                          
+                          toast.success('Reminder deleted successfully');
+                          // Refresh reminders after deletion
+                          refetchReminders();
+                        } catch (error) {
+                          toast.error('Failed to delete reminder');
+                          console.error('Error deleting reminder:', error);
+                        }
+                      }}
+                    />
+                  </Popover>
+                  
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {reminders.length > 0 
+                  ? `${reminders.length} reminder${reminders.length > 1 ? 's' : ''} set`
+                  : 'Set reminder'
+                }
+              </TooltipContent>
+            </Tooltip>
         
         {/* AI Toggle */}
         <div className="flex items-center bg-white rounded-2xl px-4 py-2.5 hover:bg-gray-100">

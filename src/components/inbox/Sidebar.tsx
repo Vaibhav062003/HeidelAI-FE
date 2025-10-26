@@ -241,9 +241,14 @@ const Sidebar = ({
   const [showCustomerInfo, setShowCustomerInfo] = useState(false);
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
-  const { currentConversation } = useConversations();
-  const conversation = passedConversation || currentConversation;
+  const [conversation, setConversation] = useState<Conversation | null>(null);
 
+   useEffect(() => {
+    if (passedConversation) {
+      setConversation(passedConversation);
+    }
+  }, [passedConversation]);
+  
   useEffect(() => {
     const loadTemplates = async () => {
       // Check cache first

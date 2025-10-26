@@ -56,7 +56,7 @@ interface AgentsSettingsProps {
   invited: InvitedAgent[];
   initialLoading: boolean;
   refresh: () => void;
-  agentLimit: number;
+  agentlimit: number;
 }
 
 export const AgentsSettings = ({
@@ -64,7 +64,7 @@ export const AgentsSettings = ({
   invited,
   initialLoading,
   refresh,
-  agentLimit,
+  agentlimit,
 }: AgentsSettingsProps) => {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');

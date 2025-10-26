@@ -6,11 +6,12 @@ import dynamic from "next/dynamic";
 import TopNavigation from "@/components/inbox/TopNavigation";
 import ConversationList from "@/components/inbox/ConversationList";
 import SettingsSidebar from "@/components/setting_tab/SettingsSidebar";
+import { useConversations } from '@/components/hooks/useConversations';
 import { Menu, ChevronDown, ChevronRight,  } from "lucide-react";
 import { Button } from "@/components/ui/inbox_button";
 import { X } from "lucide-react";
 import { Conversation } from "@/components/types/conversation";
-import { ConversationProvider } from "@/components/hooks/useConversations";
+// import { ConversationProvider } from "@/components/hooks/useConversations";
 import {
   MessageSquare,
   BarChart2,
@@ -18,6 +19,7 @@ import {
   Settings,
   ContactRoundIcon,
   BotMessageSquare,
+  LogOut,
   ChevronLeft,
   Tag,
   Headphones,
@@ -29,20 +31,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { InstagramLogoIcon } from "@radix-ui/react-icons";
 import RemainderSideBar from "@/components/inbox/ReminderSideBar";
-<<<<<<< HEAD
-import { UserButton, useUser } from '@clerk/nextjs';
-=======
-import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
-import InfluencerBot from "@/components/influencerBot/influencerbot";
-import { UserButton, UserProfile, useUser, SignedIn, OrganizationSwitcher, SignOutButton, useClerk } from '@clerk/nextjs';
->>>>>>> b735ebe53dc82b65fe26307792927e322aeb68c6
+// import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
+// import InfluencerBot from "@/components/influencerBot/influencerbot";
+import { UserProfile, useUser, SignedIn, OrganizationSwitcher, useClerk } from '@clerk/nextjs';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip";
-<<<<<<< HEAD
+import { toast } from "sonner";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -86,9 +85,6 @@ const BillingPlans = dynamic(() => import("@/components/inbox/BillingPlans"), {
   ssr: false,
   loading: () => <TabLoadingSkeleton />
 });
-=======
-import { toast } from "sonner";
->>>>>>> b735ebe53dc82b65fe26307792927e322aeb68c6
 
 interface Product {
   id: string;
@@ -313,7 +309,7 @@ const SidebarNavigation = memo(({
   isPending: boolean;
 }) => {
   const { user } = useUser();
-
+  const { isSignedIn, isLoaded } = useUser();
   const mainNavigationItems = useMemo(() => [
     { value: "inbox", icon: Home, label: "Inbox" },
     { value: "analyticsbot", icon: BarChart2, label: "Analytics" },
@@ -325,6 +321,24 @@ const SidebarNavigation = memo(({
     { value: "talktodata", icon: BotMessageSquare, label: "Talk to Data" },
     { value: "influencerbot", icon: InstagramLogoIcon, label: "InfluIndex" },
   ], []);
+  const { signOut } = useClerk();
+  const router = useRouter();
+    useEffect(() => {
+    // console.log(user);
+    if (isLoaded && !isSignedIn) {
+      router.push("/login");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  const handleSignOut = async () => {
+  toast.success("Signing out successfully!");
+  await signOut();
+  router.push("/");
+  if (typeof window !== "undefined") {
+    localStorage.clear();
+  }
+};
+
 
   return (
     <aside className={`
@@ -346,23 +360,15 @@ const SidebarNavigation = memo(({
   <div className="space-y-4 mb-6">
     <div className="flex items-center gap-2 w-full px-2">
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        <div className="w-9 h-9 rounded-lg bg-gradient-to-br flex items-center justify-center flex-shrink-0 relative">
-          <Image
-            src="/logo.png"
-            alt="Company Logo"
-            width={24}
-            height={24}
-            className="rounded absolute inset-0 m-auto"
-          />
-          <UserButton
-            appearance={{
-              elements: {
-                userButtonAvatarBox: "w-full h-full opacity-0",
-                userButtonPopoverCard: "!opacity-100",
-              },
-            }}
-          />
-        </div>
+        <div className="w-full flex justify-center items-center mb-4">
+                          <button
+                            onClick={handleSignOut}
+                            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-600 hover:bg-red-700 transition shadow-lg"
+                            title="Logout"
+                          >
+                            <LogOut className="h-5 w-5 text-white" />
+                          </button>
+                        </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-gray-900 truncate">
             {user?.fullName || "Profile"}
@@ -403,23 +409,15 @@ const SidebarNavigation = memo(({
 
 {!isExpanded && (
   <div className="mb-6 flex flex-col items-center gap-2">
-    <div className="w-9 h-9 rounded-lg bg-gradient-to-br flex items-center justify-center relative">
-      <Image
-        src="/logo.png"
-        alt="Company Logo"
-        width={24}
-        height={24}
-        className="rounded absolute inset-0 m-auto"
-      />
-      <UserButton
-        appearance={{
-          elements: {
-            userButtonAvatarBox: "w-full h-full opacity-0",
-            userButtonPopoverCard: "!opacity-100",
-          },
-        }}
-      />
-    </div>
+    <div className="w-full flex justify-center items-center mb-4">
+                          <button
+                            onClick={handleSignOut}
+                            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-600 hover:bg-red-700 transition shadow-lg"
+                            title="Logout"
+                          >
+                            <LogOut className="h-5 w-5 text-white" />
+                          </button>
+                        </div>
     
     {/* Show Conversation List Button when collapsed */}
     {!isConversationListVisible && activeView === "inbox" && (
@@ -598,7 +596,6 @@ const SidebarNavigation = memo(({
 SidebarNavigation.displayName = "SidebarNavigation";
 
 export default function DashboardPage() {
-  const router = useRouter();
   const [activeView, setActiveView] = useState<
     | "inbox"
     | "billing"
@@ -617,38 +614,27 @@ export default function DashboardPage() {
   const [sharedProduct, setSharedProduct] = useState<Product | null>(null);
   const [isConversationListVisible, setIsConversationListVisible] = useState(true);
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
-<<<<<<< HEAD
   const [isNavigationVisible, setIsNavigationVisible] = useState(false);
-  const { isSignedIn, isLoaded } = useUser();
-
   const [showMobileConversationList, setShowMobileConversationList] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [isNavExpanded, setIsNavExpanded] = useState(true);
+  const { conversations } = useConversations();
 
-  useEffect(() => {
-=======
-  const { isSignedIn, isLoaded, user } = useUser();
-  const { signOut } = useClerk();
+  const conversation = useMemo(() => {
+    if (!selectedConversationId) return null;
+    
+    const conv = conversations.find(c => c.id === selectedConversationId);
+    if (!conv) return null;
+    
+    return {
+      id: conv.id,
+      customer_name: conv.customer_name,
+      platform: conv.platform,
+      email: conv.email || '',
+    } as Conversation;
+  }, [conversations, selectedConversationId]);
 
 
-
-  const handleSignOut = async () => {
-  toast.success("Signing out successfully!");
-  await signOut();
-  router.push("/");
-  if (typeof window !== "undefined") {
-    localStorage.clear();
-  }
-};
-
-
-  useEffect(() => {
-    // console.log(user);
->>>>>>> b735ebe53dc82b65fe26307792927e322aeb68c6
-    if (isLoaded && !isSignedIn) {
-      router.push("/login");
-    }
-  }, [isLoaded, isSignedIn, router]);
 
   const handleMobileConversationSelect = useCallback((id: string) => {
     startTransition(() => {
@@ -720,9 +706,7 @@ export default function DashboardPage() {
   }, [activeView]);
 
   return (
-<<<<<<< HEAD
-    <ConversationProvider>
-      <TooltipProvider>
+<TooltipProvider>
         <style jsx global>{`
           .skeleton {
             background: linear-gradient(90deg, #f0f0f0 0%, #e0e0e0 50%, #f0f0f0 100%);
@@ -786,27 +770,6 @@ export default function DashboardPage() {
                     onConversationSelect={handleConversationSelect}
                     isVisible={true}
                   />
-=======
-    <>
-      <div className="bg-black text-white h-screen flex justify-center items-center text-center font-semibold px-4 md:flex lg:hidden">
-        Dashboard is currently supported only on desktop screens.
-      </div>
-      <div className="hidden lg:flex min-h-screen bg-gray-100">
-        <Tabs
-          value={activeView}
-          onValueChange={(value) => setActiveView(value as typeof activeView)}
-          className="flex-1 flex overflow-hidden"
-        >
-          {/* Left Sidebar */}
-          <div className="w-36 fixed left-0 h-full z-20">
-            <TabsList className="h-full flex flex-col items-start justify-between pt-6 bg-white/90 backdrop-blur-sm border-r">
-              {/* Top section: Logo and Profile */}
-              <div className="w-full">
-                <div className="w-full flex justify-center items-center mb-6">
-                  <Link href="/">
-                    <Image src="/heidelai.png" alt="logo" width={30} height={30} />
-                  </Link>
->>>>>>> b735ebe53dc82b65fe26307792927e322aeb68c6
                 </div>
 
                 <div className={`h-full block md:hidden ${showMobileConversationList ? 'hidden' : ''}`}>
@@ -859,30 +822,32 @@ export default function DashboardPage() {
     </Suspense>
   </section>
 
-  {/* Sidebar - ADD SUSPENSE HERE */}
-  {isRightSidebarVisible && (
-    <aside className="relative w-[280px] xl:w-[320px] flex-shrink-0 hidden xl:block">
-      {selectedConversationId ? (
-        <Suspense fallback={<SidebarSkeleton />}>
-          <Sidebar
-            key={selectedConversationId} // Force re-render on conversation change
-            selectedConversationId={selectedConversationId}
-            onConversationSelect={handleConversationSelect}
-            onShareProduct={handleShareProduct}
-            onToggleVisibility={handleToggleRightSidebar}
-          />
-        </Suspense>
-      ) : (
-        <RemainderSideBar 
+  {/* Sidebar */}
+{/* Desktop Sidebar */}
+{isRightSidebarVisible && (
+  <aside className="relative w-[280px] xl:w-[320px] flex-shrink-0 hidden xl:block">
+    {selectedConversationId ? (
+      <Suspense fallback={<SidebarSkeleton />}>
+        <Sidebar
+          key={selectedConversationId}
+          selectedConversationId={selectedConversationId}
+          conversation={conversation}
+          onConversationSelect={handleConversationSelect}
+          onShareProduct={handleShareProduct}
           onToggleVisibility={handleToggleRightSidebar}
+          isMobile={false} 
         />
-      )}
-    </aside>
-  )}
+      </Suspense>
+    ) : (
+      <RemainderSideBar 
+        onToggleVisibility={handleToggleRightSidebar}
+      />
+    )}
+  </aside>
+)}
 </div>
               </div>
 
-<<<<<<< HEAD
               {activeView === "Contacts" && (
                 <Suspense fallback={<TabLoadingSkeleton />}>
                   <div className="h-full w-full bg-gray-50/50 overflow-hidden">
@@ -926,22 +891,6 @@ export default function DashboardPage() {
                   <div className="h-full w-full overflow-y-auto bg-white">
                     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
                       <BillingPlans />
-=======
-              {/* Bottom section: User controls */}
-              <div className="w-full pb-4">
-                {isSignedIn && (
-                  <>
-                    <div className="w-full flex justify-center items-center mb-4">
-                      <div className="w-full flex justify-center items-center mb-4">
-                          <button
-                            onClick={handleSignOut}
-                            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-600 hover:bg-red-700 transition shadow-lg"
-                            title="Logout"
-                          >
-                            <LogOut className="h-5 w-5 text-white" />
-                          </button>
-                        </div>
->>>>>>> b735ebe53dc82b65fe26307792927e322aeb68c6
                     </div>
                   </div>
                 </Suspense>
@@ -950,6 +899,5 @@ export default function DashboardPage() {
           </main>
         </div>
       </TooltipProvider>
-    </ConversationProvider>
   );
 }

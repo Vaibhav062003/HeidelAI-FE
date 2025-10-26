@@ -20,7 +20,7 @@ interface ConversationListProps {
 
 type TabValue = 'all' | 'open' | 'closed';
 
-const SkeletonConversationItem = React.memo(() => (
+const SkeletonConversationItem = memo(() => (
   <div className="border-b border-gray-100/60 bg-white/80 p-2">
     <div className="flex items-start space-x-3">
       <div className="w-10 h-10 bg-gray-200/80 rounded-xl flex-shrink-0 skeleton" />
@@ -37,9 +37,11 @@ const SkeletonConversationItem = React.memo(() => (
 ));
 SkeletonConversationItem.displayName = "SkeletonConversationItem";
 
-const OptimisticSkeletonLayout = React.memo(() => (
+const SKELETON_ITEMS = Array.from({ length: 12 }, (_, i) => i);
+
+const OptimisticSkeletonLayout = memo(() => (
   <div>
-    {Array.from({ length: 12 }, (_, i) => (
+    {SKELETON_ITEMS.map((i) => (
       <SkeletonConversationItem key={i} />
     ))}
   </div>
@@ -50,16 +52,28 @@ const ConversationItem = memo(({
   conversation, 
   isSelected,
   onSelect,
-  formatTimestamp
 }: {
   conversation: Conversation;
   isSelected: boolean;
   onSelect: (id: string) => void;
-  formatTimestamp: (timestamp: string) => string;
 }) => {
   const handleClick = useCallback(() => {
     onSelect(conversation.id);
   }, [conversation.id, onSelect]);
+
+  const formattedTime = useMemo(() => {
+    const date = new Date(conversation.timestamp);
+    
+    if (isToday(date)) {
+      return format(date, "h:mm a");
+    } else if (isYesterday(date)) {
+      return format(date, "h:mm a");
+    } else if (date >= subDays(startOfDay(new Date()), 7)) {
+      return format(date, "EEE h:mm a");
+    } else {
+      return format(date, "MMM d");
+    }
+  }, [conversation.timestamp]);
 
   const lastMessage = useMemo(() => 
     conversation.last_message.includes("know_more_request_from_sender") 
@@ -80,7 +94,7 @@ const ConversationItem = memo(({
         channelType={conversation.platform as "telegram" | "whatsapp" | "instagram" | "web"}
         customerName={conversation.customer_name}
         lastMessage={lastMessage}
-        timestamp={formatTimestamp(conversation.timestamp)}
+        timestamp={formattedTime}
         unreadCount={conversation.unread_count}
         avatarUrl={conversation.avatar_url}
         isAiEnabled={conversation.is_ai_enabled}
@@ -92,15 +106,16 @@ const ConversationItem = memo(({
       />
     </div>
   );
+}, (prev, next) => {
+  return (
+    prev.conversation.id === next.conversation.id &&
+    prev.isSelected === next.isSelected &&
+    prev.conversation.last_message === next.conversation.last_message &&
+    prev.conversation.unread_count === next.conversation.unread_count &&
+    prev.conversation.timestamp === next.conversation.timestamp
+  );
 });
 ConversationItem.displayName = "ConversationItem";
-
-const tabToStatus: Record<TabValue, "open" | "closed" | undefined> = {
-  all: undefined,      // No status param for "all"
-  open: "open",
-  closed: "closed",
-};
-
 
 const ConversationList = ({
   selectedConversationId,
@@ -109,7 +124,7 @@ const ConversationList = ({
   onToggleVisibility,
 }: ConversationListProps) => {
   const [activeTab, setActiveTab] = useState<TabValue>('all');
-const { conversations, loading, error } = useConversations();
+  const { conversations, loading, error } = useConversations();
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({
     platform: [],
@@ -124,8 +139,20 @@ const { conversations, loading, error } = useConversations();
   const filteredConversations = useMemo(() => {
     if (!conversations.length) return [];
 
-    let filtered = conversations;
+    let filtered = [...conversations]; // Create shallow copy
 
+    // Early return if no filters
+    const hasFilters = filters.unreadOnly || filters.hasQuery || 
+                       filters.platform.length || filters.priority.length || 
+                       filters.sentiment.length || searchQuery;
+
+    if (!hasFilters && activeTab === 'all') {
+      return filtered.sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+    }
+
+    // Apply filters
     if (filters.unreadOnly) {
       filtered = filtered.filter(c => c.unread_count > 0);
     }
@@ -149,12 +176,14 @@ const { conversations, loading, error } = useConversations();
       filtered = filtered.filter(c => sentimentSet.has(c.sentiment));
     }
 
+    // Tab filtering
     if (activeTab === 'all') {
       filtered = filtered.filter(c => c.is_ai_enabled);
     } else if (activeTab === 'open') {
       filtered = filtered.filter(c => !c.is_ai_enabled);
     }
 
+    // Search filtering
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(c => 
@@ -163,11 +192,13 @@ const { conversations, loading, error } = useConversations();
       );
     }
 
+    // Sort once at the end
     return filtered.sort((a, b) => 
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
   }, [conversations, filters, searchQuery, activeTab]);
 
+  // Stable callback references
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   }, []);
@@ -188,22 +219,8 @@ const { conversations, loading, error } = useConversations();
     onConversationSelect?.(id);
   }, [onConversationSelect]);
 
-  const formatTimestampWithoutYear = useCallback((timestamp: string) => {
-    const date = new Date(timestamp);
-    
-    if (isToday(date)) {
-      return format(date, "h:mm a");
-    } else if (isYesterday(date)) {
-      return format(date, "h:mm a");
-    } else if (date >= subDays(startOfDay(new Date()), 7)) {
-      return format(date, "EEE h:mm a");
-    } else {
-      return format(date, "MMM d");
-    }
-  }, []);
-
   return (
-<div className="w-full h-full max-h-screen bg-white/95 flex flex-col overflow-hidden border-r border-gray-200/60">
+    <div className="w-full h-full max-h-screen bg-white/95 flex flex-col overflow-hidden border-r border-gray-200/60">
       <style jsx>{`
         .ios-scrollbar::-webkit-scrollbar { width: 3px; }
         .ios-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -223,71 +240,70 @@ const { conversations, loading, error } = useConversations();
       `}</style>
 
       {/* Header */}
-<div className="px-3 py-2.5 bg-white/40 border-b border-gray-100/60 flex-shrink-0">
-  <div className="flex items-center gap-2.5">
-    <div className="relative flex-1 min-w-0">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500 z-10 pointer-events-none" />
-      <Input
-        placeholder="Search conversations..."
-        className="h-9 pl-9 pr-9 bg-gray-100/80 border-0 rounded-xl text-sm placeholder-gray-500 focus:bg-white/80 focus:ring-1 focus:ring-blue-500/30"
-        value={searchQuery}
-        onChange={handleSearchChange}
-      />
-      {searchQuery && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={clearSearch}
-          className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 p-0 hover:bg-gray-200/80 rounded-lg"
-        >
-          <X className="h-3 w-3" />
-        </Button>
-      )}
-    </div>
+      <div className="px-3 py-2.5 bg-white/40 border-b border-gray-100/60 flex-shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500 z-10 pointer-events-none" />
+            <Input
+              placeholder="Search conversations..."
+              className="h-9 pl-9 pr-9 bg-gray-100/80 border-0 rounded-xl text-sm placeholder-gray-500 focus:bg-white/80 focus:ring-1 focus:ring-blue-500/30"
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearSearch}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 p-0 hover:bg-gray-200/80 rounded-lg"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
 
-    {onToggleVisibility && (
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onToggleVisibility}
-        className="h-9 w-9 rounded-xl hover:bg-gray-100/60 hidden lg:flex flex-shrink-0 bg-white/40"
-        title="Hide conversation list"
-      >
-        <X className="h-3.5 w-3.5 text-gray-600" />
-      </Button>
-    )}
-  </div>
+          {onToggleVisibility && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleVisibility}
+              className="h-9 w-9 rounded-xl hover:bg-gray-100/60 hidden lg:flex flex-shrink-0 bg-white/40"
+              title="Hide conversation list"
+            >
+              <X className="h-3.5 w-3.5 text-gray-600" />
+            </Button>
+          )}
+        </div>
 
-  <div className="flex items-center gap-2 mt-2.5">
-    <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 min-w-0">
-      <TabsList className="bg-gray-100/80 rounded-xl p-0.5 h-auto w-full">
-        <TabsTrigger 
-          value="all" 
-          className="flex-1 text-xs rounded-xl font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-gray-600 px-3 py-1.5"
-        >
-          All
-        </TabsTrigger>
-        <TabsTrigger 
-          value="open" 
-          className="flex-1 text-xs rounded-xl font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-gray-600 px-3 py-1.5"
-        >
-          Open
-        </TabsTrigger>
-        <TabsTrigger 
-          value="closed" 
-          className="flex-1 text-xs rounded-xl font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-gray-600 px-3 py-1.5"
-        >
-          Closed
-        </TabsTrigger>
-      </TabsList>
-    </Tabs>
+        <div className="flex items-center gap-2 mt-2.5">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 min-w-0">
+            <TabsList className="bg-gray-100/80 rounded-xl p-0.5 h-auto w-full">
+              <TabsTrigger 
+                value="all" 
+                className="flex-1 text-xs rounded-xl font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-gray-600 px-3 py-1.5"
+              >
+                All
+              </TabsTrigger>
+              <TabsTrigger 
+                value="open" 
+                className="flex-1 text-xs rounded-xl font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-gray-600 px-3 py-1.5"
+              >
+                Open
+              </TabsTrigger>
+              <TabsTrigger 
+                value="closed" 
+                className="flex-1 text-xs rounded-xl font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-gray-600 px-3 py-1.5"
+              >
+                Closed
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-    <div className="flex-shrink-0">
-      <FilterMenu filters={filters} onFilterChange={handleFilterChange} />
-    </div>
-  </div>
-</div>
-
+          <div className="flex-shrink-0">
+            <FilterMenu filters={filters} onFilterChange={handleFilterChange} />
+          </div>
+        </div>
+      </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto ios-scrollbar">
@@ -327,7 +343,6 @@ const { conversations, loading, error } = useConversations();
                 conversation={conversation}
                 isSelected={selectedConversationId === conversation.id}
                 onSelect={handleConversationSelect}
-                formatTimestamp={formatTimestampWithoutYear}
               />
             ))}
           </div>
@@ -336,8 +351,5 @@ const { conversations, loading, error } = useConversations();
     </div>
   );
 };
-const formatLastMessage = (message: string) => {
-  return message.includes("know_more_request_from_sender") ? "Know more." : message;
-};
 
-export default React.memo(ConversationList);
+export default memo(ConversationList);

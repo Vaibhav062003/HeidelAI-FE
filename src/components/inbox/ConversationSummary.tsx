@@ -111,6 +111,7 @@ const fetchConversation = async (conversationId: string) => {
     console.log('📊 Response status:', response.status);
     
     setConversation(response.data);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     console.error('❌ Error details:', {
       message: err.message,
