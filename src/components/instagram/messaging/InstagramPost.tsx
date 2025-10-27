@@ -21,7 +21,7 @@ export default function InstagramPost({
       {/* Header */}
       <div className="flex items-center p-3">
         <Image
-          src={profileImage || "/icons/ig_no_pfp.jpg"}
+          src={profileImage}
           alt={username}
           width={40}
           height={40}
