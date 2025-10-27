@@ -1727,8 +1727,6 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
         <ScrollArea ref={scrollAreaRef} className="flex-1 h-full p-4">
           <div className="space-y-4">
             {messages.map((message, index) => {
-              console.log("Rendering messages:", messages);
-              console.log("Rendering message:", message);
             const productInfo = message.content ? extractProductInfo(message.content) : null;
             const botProductInfo = message.content ? extractBotProductInfo(message.content) : null;
             const addressData = message.content ? extractAddressData(message.content) : null;
