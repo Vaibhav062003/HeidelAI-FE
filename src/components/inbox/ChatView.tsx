@@ -547,7 +547,7 @@ const MessageItem = memo(({
       <div className="flex justify-center my-4 message-item">
         <div className="bg-white/80 backdrop-blur-sm text-gray-600 text-sm px-4 py-2 rounded-2xl border border-gray-200/60 shadow-sm hw-accel">
           <span className="font-medium">{message.content}</span>
-          <span className="ml-2 text-gray-400 text-xs">
+          <span className="ml-0.5 text-gray-400 text-xs">
             {formatMessageTime(message.timestamp)}
           </span>
         </div>
@@ -2126,169 +2126,170 @@ return (
     </ScrollArea>
 
           {/*Input Section */}
-          <div className="bg-white/40 backdrop-blur-sm p-3 sm:p-0 hw-accel">
-            {sharedProduct && (
-              <div className="mb-3">
-                <SharedProductPreview
-                  product={sharedProduct}
-                  onRemove={onClearSharedProduct}
-                />
-              </div>
-            )}
+<div className="bg-white/40 backdrop-blur-sm sm:p-0 hw-accel">
+  {sharedProduct && (
+    <div className="mb-3 px-3 sm:px-0">
+      <SharedProductPreview
+        product={sharedProduct}
+        onRemove={onClearSharedProduct}
+      />
+    </div>
+  )}
 
-            {audioURL ? (
-              <div className="flex items-center gap-3 bg-white/80 backdrop-blur-sm p-3 rounded-2xl border border-gray-200/60 hw-accel">
-                <audio controls src={audioURL} className="flex-1" />
-                <button
-                  className="p-2 rounded-xl hover:bg-gray-100/80 transition-colors hw-accel"
-                  onClick={() => setAudioURL(null)}
-                >
-                  <X className="h-4 w-4 text-gray-600" />
-                </button>
-              </div>
-            ) : (
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-3 sm:p-4 hover:border-gray-300/60 flex flex-col shadow-sm hw-accel">
-                {/* Mode Toggle */}
-                <div className="mb-2 w-32 sm:w-40 bg-gray-100/80 rounded-2xl p-0.5 flex items-center">
-                  <button
-                    className={`flex-1 text-xs px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl transition-all duration-300 font-medium hw-accel ${
-                      mode === "reply"
-                        ? "bg-blue-600 text-white shadow-md"
-                        : "text-gray-600 hover:text-blue-600"
-                    }`}
-                    onClick={() => setMode("reply")}
-                  >
-                    Reply
-                  </button>
-                  <button
-                    className={`flex-1 text-xs px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl transition-all duration-300 font-medium hw-accel ${
-                      mode === "private"
-                        ? "bg-purple-600 text-white shadow-md"
-                        : "text-gray-600 hover:text-purple-600"
-                    }`}
-                    onClick={() => setMode("private")}
-                  >
-                    Private
-                  </button>
-                </div>
+  {audioURL ? (
+    <div className="flex items-center gap-3 bg-white/80 backdrop-blur-sm p-3 rounded-2xl border border-gray-200/60 hw-accel mx-3 sm:mx-0">
+      <audio controls src={audioURL} className="flex-1" />
+      <button
+        className="p-2 rounded-xl hover:bg-gray-100/80 transition-colors hw-accel"
+        onClick={() => setAudioURL(null)}
+      >
+        <X className="h-4 w-4 text-gray-600" />
+      </button>
+    </div>
+  ) : (
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-2.5 sm:p-3 hover:border-gray-300/60 flex flex-col shadow-sm hw-accel mx-3 sm:mx-0">
+      {/* Mode Toggle */}
+      <div className="mb-2 w-32 sm:w-40 bg-gray-100/80 rounded-2xl p-0.5 flex items-center">
+        <button
+          className={`flex-1 text-xs px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl transition-all duration-300 font-medium hw-accel ${
+            mode === "reply"
+              ? "bg-blue-600 text-white shadow-md"
+              : "text-gray-600 hover:text-blue-600"
+          }`}
+          onClick={() => setMode("reply")}
+        >
+          Reply
+        </button>
+        <button
+          className={`flex-1 text-xs px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl transition-all duration-300 font-medium hw-accel ${
+            mode === "private"
+              ? "bg-purple-600 text-white shadow-md"
+              : "text-gray-600 hover:text-purple-600"
+          }`}
+          onClick={() => setMode("private")}
+        >
+          Private
+        </button>
+      </div>
 
-                {/* Textarea */}
-                <div className="flex-1 mb-1">
-                  <textarea
-                    ref={textareaRef}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder={
-                      mode === "reply"
-                        ? sharedProduct
-                          ? "Add a message about this product..."
-                          : "Type your message..."
-                        : "Add a private note..."
-                    }
-                    rows={1}
-                    className="w-full bg-transparent border-none outline-none focus:outline-none resize-none max-h-32 overflow-y-auto text-gray-800 placeholder-gray-500 text-sm leading-relaxed"
-                  />
-                </div>
+      {/* Textarea */}
+      <div className="flex-1 mb-1.5">
+        <textarea
+          ref={textareaRef}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={
+            mode === "reply"
+              ? sharedProduct
+                ? "Add a message about this product..."
+                : "Type your message..."
+              : "Add a private note..."
+          }
+          rows={1}
+          className="w-full bg-transparent border-none outline-none focus:outline-none resize-none max-h-32 overflow-y-auto text-gray-800 placeholder-gray-500 text-sm leading-relaxed p-0"
+        />
+      </div>
 
-                {/* Action buttons */}
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-1 sm:gap-2">
-                    {/* Emoji picker */}
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button className="p-2 sm:p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors hw-accel">
-                          <Smile className="h-4 w-4 text-gray-600" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        className="w-80 p-0 rounded-2xl shadow-xl border-0 bg-white/95 backdrop-blur-xl"
-                        side="top"
-                        align="start"
-                      >
-                        {/* Emoji picker content */}
-                      </PopoverContent>
-                    </Popover>
+      {/* Action buttons */}
+      <div className="flex justify-between items-center">
+        <div className="flex gap-1 sm:gap-2">
+          {/* Emoji picker */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="p-2 sm:p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors hw-accel">
+                <Smile className="h-4 w-4 text-gray-600" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-80 p-0 rounded-2xl shadow-xl border-0 bg-white/95 backdrop-blur-xl"
+              side="top"
+              align="start"
+            >
+              {/* Emoji picker content */}
+            </PopoverContent>
+          </Popover>
 
-                    {/* File attachment */}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          className="p-2 sm:p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors hw-accel"
-                          onClick={() => setIsFileModalOpen(true)}
-                        >
-                          <Paperclip className="h-4 w-4 text-gray-600" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl">
-                        Attach media
-                      </TooltipContent>
-                    </Tooltip>
+          {/* File attachment */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="p-2 sm:p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors hw-accel"
+                onClick={() => setIsFileModalOpen(true)}
+              >
+                <Paperclip className="h-4 w-4 text-gray-600" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl">
+              Attach media
+            </TooltipContent>
+          </Tooltip>
 
-                    {/* Voice recording */}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          className={`p-2 sm:p-2.5 rounded-xl transition-colors hw-accel ${
-                            isRecording
-                              ? "bg-red-100/80 hover:bg-red-200/80 text-red-600"
-                              : "bg-gray-100/80 hover:bg-gray-200/80 text-gray-600"
-                          }`}
-                          onClick={isRecording ? stopRecording : startRecording}
-                        >
-                          <Mic className="h-4 w-4" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl">
-                        {isRecording ? "Stop recording" : "Record message"}
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
+          {/* Voice recording */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className={`p-2 sm:p-2.5 rounded-xl transition-colors hw-accel ${
+                  isRecording
+                    ? "bg-red-100/80 hover:bg-red-200/80 text-red-600"
+                    : "bg-gray-100/80 hover:bg-gray-200/80 text-gray-600"
+                }`}
+                onClick={isRecording ? stopRecording : startRecording}
+              >
+                <Mic className="h-4 w-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl">
+              {isRecording ? "Stop recording" : "Record message"}
+            </TooltipContent>
+          </Tooltip>
+        </div>
 
-                  {/* Character count and send button */}
-                  <div className="flex items-center gap-2 sm:gap-4">
-                    <div className="text-xs text-gray-500 font-medium hidden sm:block">
-                      {message.length}/1000
-                    </div>
-                    
-                    <button
-                      className={`px-4 py-2 sm:px-6 sm:py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm hw-accel ${
-                        message.trim() || audioURL || sharedProduct
-                          ? mode === "reply"
-                            ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
-                            : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
-                          : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
-                      }`}
-                      onClick={() => {
-                        if (sharedProduct) {
-                          handleShareProduct(message, sharedProduct);
-                        } else if (audioURL) {
-                          handleSendAudio();
-                        } else {
-                          sendMessage();
-                        }
-                      }}
-                      disabled={
-                        isSending ||
-                        (!message.trim() && !audioURL && !sharedProduct)
-                      }
-                    >
-                      {isSending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4" />
-                          <span className="ml-2">
-                            {mode === "reply" ? "Send" : "Add Note"}
-                          </span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+        {/* Character count and send button */}
+        <div className="flex items-center gap-2 sm:gap-4">
+          <div className="text-xs text-gray-500 font-medium hidden sm:block">
+            {message.length}/1000
           </div>
+          
+          <button
+            className={`px-4 py-2 sm:px-6 sm:py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm hw-accel ${
+              message.trim() || audioURL || sharedProduct
+                ? mode === "reply"
+                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
+                  : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
+                : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
+            }`}
+            onClick={() => {
+              if (sharedProduct) {
+                handleShareProduct(message, sharedProduct);
+              } else if (audioURL) {
+                handleSendAudio();
+              } else {
+                sendMessage();
+              }
+            }}
+            disabled={
+              isSending ||
+              (!message.trim() && !audioURL && !sharedProduct)
+            }
+          >
+            {isSending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                <span className="ml-2">
+                  {mode === "reply" ? "Send" : "Add Note"}
+                </span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+</div>
+
         </Card>
       )}
     </TooltipProvider>

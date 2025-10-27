@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import ProductPreview from "./PreviewProduct";
 import ProductsTab from "./Product";
 import CustomerInfo from "./CustomerInfo";
-import { User, Mail, Users, TrendingUp, Clock, Phone, Fingerprint, IdCard, MapPin } from "lucide-react";
+import { User, Mail, Users, TrendingUp, Clock, Phone, Fingerprint, IdCard, MapPin, ChevronDown } from "lucide-react";
 import { 
   Accordion, 
   AccordionContent, 
@@ -72,24 +72,34 @@ interface SidebarProps {
   conversation?: Conversation | null;   
 }
 
+// Fluid spacing system
+const fluidStyles = `
+  :root {
+    --sidebar-padding: clamp(0.625rem, 1.5vw, 0.875rem);
+    --sidebar-gap: clamp(0.375rem, 0.75vw, 0.5rem);
+    --sidebar-text-sm: clamp(0.6875rem, 1.25vw, 0.8125rem);
+    --sidebar-text-xs: clamp(0.5625rem, 0.9vw, 0.6875rem);
+    --avatar-size: clamp(2rem, 3.5vw, 2.5rem);
+    --icon-size: clamp(0.875rem, 1.5vw, 1rem);
+  }
+`;
+
 const ContactDetail = memo(({ 
   icon: Icon, 
-  text, 
-  isMobile 
+  label,
+  text,
 }: { 
   icon: React.ComponentType<{ className?: string }>; 
-  text: string; 
-  isMobile: boolean;
+  label: string;
+  text: string;
 }) => (
-  <div className="bg-white/80 ios-backdrop rounded-lg p-3 border border-gray-100/60">
-    <div className="flex items-center gap-2">
-      <div className={`
-        bg-gray-100/80 rounded-md flex items-center justify-center flex-shrink-0
-        ${isMobile ? 'w-6 h-6' : 'w-5 h-5'}
-      `}>
-        <Icon className={`text-black-600 ${isMobile ? 'h-3.5 w-3.5' : 'h-2.5 w-2.5'}`} />
-      </div>
-      <p className={`font-medium text-gray-900 truncate ${isMobile ? 'text-sm' : 'text-xs'}`}>
+  <div className="flex items-start border-gray-100 last:border-0 gap-[calc(var(--sidebar-gap)*0.95)] py-[calc(var(--sidebar-gap)*1)]">
+    <Icon className="text-gray-400 flex-shrink-0 mt-0.5 w-[calc(var(--icon-size)*0.85)] h-[calc(var(--icon-size)*0.85)]" />
+    <div className="flex-1 min-w-0">
+      {/* <p className="text-gray-500 font-medium mb-0.5 text-[calc(var(--sidebar-text-xs)*0.85)]">
+        {label}
+      </p> */}
+      <p className="text-gray-900 font-medium truncate text-[calc(var(--sidebar-text-xs)*0.95)]">
         {text}
       </p>
     </div>
@@ -103,36 +113,54 @@ const AnalyticsCard = memo(({
   subtitle, 
   value, 
   color, 
-  isMobile 
 }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   subtitle: string;
   value: string;
   color: string;
-  isMobile: boolean;
 }) => (
-  <Card className={`
-    bg-white/80 ios-backdrop border border-gray-100/60 rounded-lg hover:shadow-sm transition-all duration-300
-    ${isMobile ? 'p-4' : 'p-3'}
-  `}>
-    <div className="flex items-center gap-2 mb-1">
-      <div className={`
-        bg-${color}-100/80 rounded-lg flex items-center justify-center
-        ${isMobile ? 'w-8 h-8' : 'w-6 h-6'}
-      `}>
-        <Icon className={`text-${color}-600 ${isMobile ? 'h-4 w-4' : 'h-3 w-3'}`} />
+  <Card 
+    className="bg-white/80 backdrop-blur-sm border border-gray-100/60 rounded-xl hover:shadow-sm transition-all duration-300" 
+    style={{ padding: 'var(--sidebar-padding)' }}
+  >
+    <div 
+      className="flex items-center mb-1.5" 
+      style={{ gap: 'var(--sidebar-gap)' }}
+    >
+      <div 
+        className={`bg-${color}-100/80 rounded-lg flex items-center justify-center`}
+        style={{ 
+          width: 'calc(var(--avatar-size) * 0.7)', 
+          height: 'calc(var(--avatar-size) * 0.7)' 
+        }}
+      >
+<Icon 
+  className={`text-${color}-600 w-[var(--icon-size)] h-[var(--icon-size)]`}
+/>
       </div>
-      <div>
-        <h3 className={`font-semibold text-gray-900 ${isMobile ? 'text-sm' : 'text-xs'}`}>
+      <div className="flex-1 min-w-0">
+        <h3 
+          className="font-semibold text-gray-900 truncate" 
+          style={{ fontSize: 'var(--sidebar-text-sm)' }}
+        >
           {title}
         </h3>
-        <p className={`text-gray-500 ${isMobile ? 'text-sm' : 'text-xs'}`}>
+        <p 
+          className="text-gray-500 truncate" 
+          style={{ fontSize: 'var(--sidebar-text-xs)' }}
+        >
           {subtitle}
         </p>
       </div>
     </div>
-    <p className={`font-bold text-gray-900 ${isMobile ? 'text-xl' : 'text-lg'}`}>
+    <p 
+      className="font-bold text-gray-900" 
+      style={{ 
+        fontSize: 'clamp(1rem, 2.5vw, 1.25rem)',
+        marginLeft: 'calc(var(--avatar-size) * 0.7 + var(--sidebar-gap))'
+      }}
+    >
       {value}
     </p>
   </Card>
@@ -142,27 +170,22 @@ AnalyticsCard.displayName = "AnalyticsCard";
 const TemplateCard = memo(({ 
   template, 
   onClick, 
-  isMobile 
 }: { 
   template: WhatsAppTemplate; 
   onClick: () => void; 
-  isMobile: boolean;
 }) => (
   <Card
     onClick={onClick}
-    className={`
-      cursor-pointer hover:shadow-sm transition-all duration-300 bg-white/80 ios-backdrop 
-      border border-gray-100/60 hover:border-gray-200/80 rounded-lg
-      ${isMobile ? 'p-3' : 'p-2'}
-    `}
+    className="cursor-pointer hover:shadow-sm transition-all duration-300 bg-white/80 backdrop-blur-sm border border-gray-100/60 hover:border-gray-200/80 rounded-xl"
+    style={{ padding: 'calc(var(--sidebar-padding) * 0.65)' }}
   >
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between min-w-0 gap-2">
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={`
-            font-medium text-gray-900 truncate block
-            ${isMobile ? 'text-sm max-w-[180px]' : 'text-xs max-w-[120px]'}
-          `}>
+          <span 
+            className="font-medium text-gray-900 truncate block" 
+            style={{ fontSize: 'var(--sidebar-text-xs)' }}
+          >
             {template.name}
           </span>
         </TooltipTrigger>
@@ -170,7 +193,10 @@ const TemplateCard = memo(({
           {template.name}
         </TooltipContent>
       </Tooltip>
-      <ChevronRight className={`text-gray-400 ${isMobile ? 'h-4 w-4' : 'h-3 w-3'}`} />
+      <ChevronRight 
+        className="text-gray-400 flex-shrink-0" 
+        style={{ width: 'calc(var(--icon-size) * 0.75)', height: 'calc(var(--icon-size) * 0.75)' }}
+      />
     </div>
   </Card>
 ));
@@ -182,7 +208,6 @@ const AccordionSection = memo(({
   title, 
   subtitle, 
   color, 
-  isMobile, 
   children 
 }: {
   value: string;
@@ -190,33 +215,26 @@ const AccordionSection = memo(({
   title: string;
   subtitle: string;
   color: string;
-  isMobile: boolean;
   children: React.ReactNode;
 }) => (
-  <AccordionItem value={value} className="border-0 bg-white/60 ios-backdrop overflow-hidden">
-    <AccordionTrigger className={`
-      hover:no-underline hover:bg-gray-50/60 transition-all duration-300
-      ${isMobile ? 'px-4 py-3' : 'px-3 py-2'}
-    `}>
-      <div className="flex items-center">
-        <div className={`
-          bg-${color}-100/80 rounded-lg flex items-center justify-center mr-2
-          ${isMobile ? 'w-6 h-6' : 'w-5 h-5'}
-        `}>
-          <Icon className={`text-${color}-600 ${isMobile ? 'h-4 w-4' : 'h-3.5 w-3.5'}`} />
+  <AccordionItem value={value} className="border-0 bg-white/60 backdrop-blur-sm overflow-hidden">
+    <AccordionTrigger className="hover:no-underline hover:bg-gray-50/60 transition-all duration-300 px-[var(--sidebar-padding)] py-[calc(var(--sidebar-padding)*0.5)]">
+      <div className="flex items-center gap-[calc(var(--sidebar-gap)*0.75)]">
+        <div className={`bg-${color}-100/80 rounded-lg flex items-center justify-center flex-shrink-0 w-[calc(var(--icon-size)*1.15)] h-[calc(var(--icon-size)*1.15)]`}>
+          <Icon className={`text-${color}-600 w-[calc(var(--icon-size)*0.85)] h-[calc(var(--icon-size)*0.85)]`} />
         </div>
-        <div className="text-left">
-          <span className={`font-semibold text-gray-900 ${isMobile ? 'text-base' : 'text-sm'}`}>
+        <div className="text-left min-w-0 flex-1">
+          <span className="font-semibold text-gray-900 block truncate text-[calc(var(--sidebar-text-sm)*0.9)]">
             {title}
           </span>
-          <p className={`text-gray-500 ${isMobile ? 'text-sm' : 'text-xs'}`}>
+          <p className="text-gray-500 truncate text-[calc(var(--sidebar-text-xs)*0.95)]">
             {subtitle}
           </p>
         </div>
       </div>
     </AccordionTrigger>
     <AccordionContent className="p-0 bg-gray-50/30">
-      <div className={isMobile ? 'p-4' : 'p-3'}>
+      <div className="p-[var(--sidebar-padding)]">
         {children}
       </div>
     </AccordionContent>
@@ -243,7 +261,7 @@ const Sidebar = ({
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
   const [conversation, setConversation] = useState<Conversation | null>(null);
 
-   useEffect(() => {
+  useEffect(() => {
     if (passedConversation) {
       setConversation(passedConversation);
     }
@@ -251,13 +269,12 @@ const Sidebar = ({
   
   useEffect(() => {
     const loadTemplates = async () => {
-      // Check cache first
       const cached = sessionStorage.getItem('whatsapp_templates');
       if (cached) {
         try {
           const parsedTemplates = JSON.parse(cached);
           setTemplates(parsedTemplates);
-          return; // Use cache, skip API call
+          return;
         } catch (e) {
           console.error("Cache parse error:", e);
         }
@@ -399,7 +416,6 @@ const Sidebar = ({
     [conversation?.platform]
   );
 
-  // Mobile overlay component
   const MobileOverlay = useCallback(({ children }: { children: React.ReactNode }) => {
     if (!isMobile) return <>{children}</>;
     
@@ -425,6 +441,7 @@ const Sidebar = ({
     <TooltipProvider>
       <style>
         {`
+          ${fluidStyles}
           .ios-scrollbar::-webkit-scrollbar { width: 3px; }
           .ios-scrollbar::-webkit-scrollbar-track { background: transparent; }
           .ios-scrollbar::-webkit-scrollbar-thumb { 
@@ -433,14 +450,13 @@ const Sidebar = ({
             transition: all 0.3s ease;
           }
           .ios-scrollbar:hover::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); }
-          .ios-backdrop {
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
+          * {
+            min-width: 0;
+            min-height: 0;
           }
         `}
       </style>
 
-      {/* Template Builder Modal */}
       {showTemplateBuilder && (
         <TemplateBuilders
           isOpen={showTemplateBuilder}
@@ -489,109 +505,90 @@ const Sidebar = ({
         </DialogContent>
       </Dialog>
 
-      {/* Main Card */}
-      <Card className={`
-        h-full max-h-screen bg-white/95 ios-backdrop overflow-hidden flex flex-col relative
-        ${isMobile 
-          ? 'rounded-l-3xl border-l border-gray-200/60 shadow-2xl' 
-          : 'border-l border-gray-200/60 shadow-lg'
-        }
-      `}>
+      <Card className="h-full max-h-screen bg-white/95 backdrop-blur-sm overflow-hidden flex flex-col relative rounded-l-3xl border-l border-gray-200/60 shadow-lg">
         {/* Header */}
-        <div className={`
-          bg-white/40 ios-backdrop border-b border-gray-100/60 flex-shrink-0 flex items-center justify-between
-          ${isMobile ? 'px-4 py-4' : 'px-3 py-3'}
-        `}>
-          <h2 className={`font-semibold text-gray-900 ${isMobile ? 'text-lg' : 'text-base'}`}>
-            Contact
-          </h2>
+        <div className="bg-white/40 backdrop-blur-sm border-b border-gray-100/60 flex-shrink-0 flex items-center justify-between px-[var(--sidebar-padding)] py-[var(--sidebar-padding)]">
+          <h2 className="font-semibold text-gray-900 text-[clamp(1rem,2.5vw,1.125rem)]">Contact</h2>
           
           {onToggleVisibility && (
             <Button
               onClick={onToggleVisibility}
               variant="ghost"
               size="icon"
-              className={`
-                bg-white/60 hover:bg-white/90 rounded-xl transition-all duration-200 hover:scale-105
-                flex items-center justify-center
-                ${isMobile ? 'h-10 w-10' : 'h-7 w-7'}
-              `}
+              className="bg-white/60 hover:bg-white/90 rounded-xl transition-all duration-200 hover:scale-105 flex items-center justify-center h-[clamp(2rem,4vw,2.5rem)] w-[clamp(2rem,4vw,2.5rem)]"
               aria-label="Hide details sidebar"
             >
-              <X className={`text-gray-600 ${isMobile ? 'h-5 w-5' : 'h-3.5 w-3.5'}`} />
+              <X className="text-gray-600 h-[calc(var(--icon-size)*0.9)] w-[calc(var(--icon-size)*0.9)]" />
             </Button>
           )}
         </div>
 
         {/* Scrollable Content */}
-        <ScrollArea className="flex-1 ios-scrollbar">
+        <ScrollArea className="flex-1 ios-scrollbar min-h-0">
           <div>
             {/* Customer Profile Section */}
-            <div className={`bg-white/30 ios-backdrop border-b border-gray-100/60 ${isMobile ? 'p-4' : 'p-3'}`}>
-              <div className="flex items-center justify-between gap-2 mb-3">
- <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <div className={`
-                    bg-gradient-to-br from-gray-500 to-gray-400 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0
-                    ${isMobile ? 'w-12 h-12' : 'w-6 h-6'}
-                  `}>
-                    <span className={`text-white font-medium ${isMobile ? 'text-sm' : 'text-xs'}`}>
-                      {customerInitial}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className={`font-semibold text-gray-900 truncate ${isMobile ? 'text-base' : 'text-sm'}`}>
-                      {conversation?.customer_name || "Unknown"}
-                    </h3>
-                    {isMobile && (
-                      <p className="text-sm text-gray-500 font-medium">
-                        {platformName}
-                      </p>
-                    )}
-                  </div>
-                </div>
+<div className="bg-white  border-gray-100/60 p-[var(--sidebar-padding)]">
+  <div className="flex items-start gap-[var(--sidebar-gap)]">
+  <div 
+    className="bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 w-[calc(var(--avatar-size)*0.95)] h-[calc(var(--avatar-size)*0.95)]"
+  >
+    <span className="text-white font-semibold text-[calc(var(--sidebar-text-sm)*0.85)]">
+      {customerInitial}
+    </span>
+  </div>
 
-                
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className={`
-                        bg-blue-50/80 hover:bg-blue-100/80 text-blue-700 rounded-lg transition-all duration-300 font-medium flex-shrink-0
-                        ${isMobile ? 'px-3 py-2 text-sm' : 'px-2 py-1 text-xs'}
-                      `}
-                      onClick={handleShowCustomerInfo}
-                    >
-                      <User className={`mr-1 ${isMobile ? 'h-4 w-4' : 'h-3 w-3'}`} />
-                      View
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-gray-900/90 ios-backdrop text-white rounded-xl text-xs">
-                    View detailed information
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+  <div className="flex-1 min-w-0">
+    <h3 
+      className="font-bold text-gray-900 truncate mb-1" 
+      style={{ fontSize: 'var(--sidebar-text-sm)' }}
+    >
+      {conversation?.customer_name || "Unknown"}
+    </h3>
+    
+    {/* View Details Button */}
+    <button 
+      onClick={handleShowCustomerInfo}
+      className="text-blue-600 hover:text-blue-700 font-medium transition-colors text-left flex items-center gap-1"
+      style={{ fontSize: 'calc(var(--sidebar-text-xs) * 1.05)' }}
+    >
+      <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        fill="none" 
+        viewBox="0 0 24 24" 
+        strokeWidth={2.5} 
+        stroke="currentColor" 
+        className="w-[calc(var(--icon-size)*0.85)] h-[calc(var(--icon-size)*0.85)]"
+      >
+        <path 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" 
+        />
+      </svg>
+      View details
+    </button>
+  </div>
+</div>
 
-              {/* Contact Details */}
-              <div className="space-y-0.5">
-                <ContactDetail 
-                  icon={conversation?.platform === "whatsapp" ? Phone : IdCard}
-                  text={contactPhone}
-                  isMobile={isMobile}
-                />
-                <ContactDetail 
-                  icon={Mail}
-                  text={contactEmail}
-                  isMobile={isMobile}
-                />
-                <ContactDetail 
-                  icon={MapPin}
-                  text="Not Available"
-                  isMobile={isMobile}
-                />
-              </div>
-            </div>
-
+  {/* Contact Details */}
+  <div className="space-y-0 border-t border-gray-100 mt-[var(--sidebar-gap)] pt-[var(--sidebar-gap)]">
+    <ContactDetail 
+      icon={conversation?.platform === "whatsapp" ? Phone : IdCard}
+      label="Phone"
+      text={contactPhone}
+    />
+    <ContactDetail 
+      icon={Mail}
+      label="Email"
+      text={contactEmail}
+    />
+    <ContactDetail 
+      icon={MapPin}
+      label="Location"
+      text="Not Available"
+    />
+  </div>
+</div>
             {/* Accordion */}
             <div>
               <Accordion
@@ -601,41 +598,31 @@ const Sidebar = ({
                 onValueChange={setAccordionValue}
                 className="w-full"
               >
-                {/* Summary Section */}
                 <AccordionSection
                   value="summary"
                   icon={FileText}
                   title="Summary"
                   subtitle="Insights"
                   color="orange"
-                  isMobile={isMobile}
                 >
                   <ConversationSummary selectedConversationId={selectedConversationId} />
                 </AccordionSection>
 
-                {/* Templates Section */}
                 <AccordionSection
                   value="templates"
                   icon={FileText}
                   title="Templates"
                   subtitle="Messages"
                   color="blue"
-                  isMobile={isMobile}
                 >
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="relative flex-1">
-                      <Search className={`
-                        absolute left-2 top-1/2 -translate-y-1/2 text-gray-500
-                        ${isMobile ? 'h-4 w-4' : 'h-3 w-3'}
-                      `} />
+                  <div className="flex items-center gap-[var(--sidebar-gap)] mb-[var(--sidebar-gap)]">
+                    <div className="relative flex-1 min-w-0">
+                      <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-[calc(var(--icon-size)*0.8)] w-[calc(var(--icon-size)*0.8)]" />
                       <Input
                         placeholder="Search templates..."
                         value={searchTemplate}
                         onChange={handleSearchChange}
-                        className={`
-                          bg-white/80 border-gray-200/60 rounded-lg focus:ring-2 focus:ring-blue-500/30 transition-all duration-300
-                          ${isMobile ? 'h-10 pl-8 text-sm' : 'h-7 pl-7 text-xs'}
-                        `}
+                        className="bg-white/80 border-gray-200/60 rounded-lg focus:ring-2 focus:ring-blue-500/30 transition-all duration-300 h-[clamp(2rem,4vw,2.5rem)] pl-8 text-[var(--sidebar-text-sm)]"
                       />
                     </div>
                     <Tooltip>
@@ -644,12 +631,9 @@ const Sidebar = ({
                           size="icon"
                           variant="outline"
                           onClick={handleShowTemplateBuilder}
-                          className={`
-                            rounded-lg border-gray-200/60 hover:bg-blue-50/80 hover:border-blue-300/60 transition-all duration-300
-                            ${isMobile ? 'h-10 w-10' : 'h-7 w-7'}
-                          `}
+                          className="rounded-lg border-gray-200/60 hover:bg-blue-50/80 hover:border-blue-300/60 transition-all duration-300 h-[clamp(2rem,4vw,2.5rem)] w-[clamp(2rem,4vw,2.5rem)] flex-shrink-0"
                         >
-                          <Plus className={isMobile ? 'h-4 w-4' : 'h-3 w-3'} />
+                          <Plus className="h-[calc(var(--icon-size)*0.8)] w-[calc(var(--icon-size)*0.8)]" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl text-xs">
@@ -658,46 +642,32 @@ const Sidebar = ({
                     </Tooltip>
                   </div>
                   
-                  <ScrollArea className={isMobile ? 'h-48 ios-scrollbar' : 'h-40 ios-scrollbar'}>
+                  <ScrollArea className="h-[clamp(10rem,30vh,15rem)] ios-scrollbar">
                     {loading ? (
                       <div className="flex items-center justify-center h-32 w-full">
                         <div className="flex flex-col items-center gap-2">
-                          <div className={`
-                            bg-blue-100/80 rounded-lg flex items-center justify-center
-                            ${isMobile ? 'w-8 h-8' : 'w-6 h-6'}
-                          `}>
-                            <div className={`
-                              animate-spin rounded-full border border-blue-600 border-t-transparent
-                              ${isMobile ? 'h-4 w-4' : 'h-3 w-3'}
-                            `}></div>
+                          <div className="bg-blue-100/80 rounded-lg flex items-center justify-center w-[calc(var(--avatar-size)*0.8)] h-[calc(var(--avatar-size)*0.8)]">
+                            <div className="animate-spin rounded-full border-2 border-blue-600 border-t-transparent h-[calc(var(--icon-size)*1.2)] w-[calc(var(--icon-size)*1.2)]"></div>
                           </div>
-                          <p className={`text-gray-600 ${isMobile ? 'text-sm' : 'text-xs'}`}>
-                            Loading...
-                          </p>
+                          <p className="text-gray-600 text-[var(--sidebar-text-sm)]">Loading...</p>
                         </div>
                       </div>
                     ) : error ? (
                       <div className="flex items-center justify-center h-32">
                         <div className="flex flex-col items-center gap-2">
-                          <div className={`
-                            bg-red-100/80 rounded-lg flex items-center justify-center
-                            ${isMobile ? 'w-8 h-8' : 'w-6 h-6'}
-                          `}>
-                            <X className={`text-red-600 ${isMobile ? 'h-4 w-4' : 'h-3 w-3'}`} />
+                          <div className="bg-red-100/80 rounded-lg flex items-center justify-center w-[calc(var(--avatar-size)*0.8)] h-[calc(var(--avatar-size)*0.8)]">
+                            <X className="text-red-600 h-[var(--icon-size)] w-[var(--icon-size)]" />
                           </div>
-                          <p className={`text-red-600 ${isMobile ? 'text-sm' : 'text-xs'}`}>
-                            {error}
-                          </p>
+                          <p className="text-red-600 text-[var(--sidebar-text-sm)]">{error}</p>
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-1">
+                      <div className="space-y-[calc(var(--sidebar-gap)*0.5)]">
                         {filteredTemplates.map((template) => (
                           <TemplateCard
                             key={template.id}
                             template={template}
                             onClick={() => handleTemplateSelect(template)}
-                            isMobile={isMobile}
                           />
                         ))}
                       </div>
@@ -705,14 +675,12 @@ const Sidebar = ({
                   </ScrollArea>
                 </AccordionSection>
 
-                {/* Products Section */}
                 <AccordionSection
                   value="products"
                   icon={Package}
                   title="Products"
                   subtitle="Catalog"
                   color="purple"
-                  isMobile={isMobile}
                 >
                   <ProductsTab
                     selectedConversationId={selectedConversationId}
@@ -721,26 +689,23 @@ const Sidebar = ({
                   />
                 </AccordionSection>
 
-                {/* Analytics Section */}
                 <AccordionSection
                   value="analytics"
                   icon={BarChart3}
                   title="Analytics"
                   subtitle="Metrics"
                   color="green"
-                  isMobile={isMobile}
                 >
                   {selectedConversationId ? (
                     <WhatsAppAnalyticsContent selectedConversationId={selectedConversationId} />
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-[var(--sidebar-gap)]">
                       <AnalyticsCard
                         icon={Clock}
                         title="Response Time"
                         subtitle="Average"
                         value={analytics.responseTime}
                         color="blue"
-                        isMobile={isMobile}
                       />
                       <AnalyticsCard
                         icon={TrendingUp}
@@ -748,7 +713,6 @@ const Sidebar = ({
                         subtitle="Success rate"
                         value={analytics.resolutionRate}
                         color="green"
-                        isMobile={isMobile}
                       />
                       <AnalyticsCard
                         icon={Users}
@@ -756,17 +720,13 @@ const Sidebar = ({
                         subtitle="Customer rating"
                         value={analytics.customerSatisfaction}
                         color="purple"
-                        isMobile={isMobile}
                       />
 
-                      <div className="text-center mt-4 p-3">
-                        <div className={`
-                          bg-gray-100/80 rounded-2xl flex items-center justify-center mx-auto mb-2
-                          ${isMobile ? 'w-12 h-12' : 'w-10 h-10'}
-                        `}>
-                          <MessageSquare className={`text-gray-500 ${isMobile ? 'h-6 w-6' : 'h-5 w-5'}`} />
+                      <div className="text-center mt-4 p-[var(--sidebar-padding)]">
+                        <div className="bg-gray-100/80 rounded-2xl flex items-center justify-center mx-auto mb-2 w-[calc(var(--avatar-size)*1.2)] h-[calc(var(--avatar-size)*1.2)]">
+                          <MessageSquare className="text-gray-500 h-[calc(var(--icon-size)*1.5)] w-[calc(var(--icon-size)*1.5)]" />
                         </div>
-                        <p className={`text-gray-600 leading-relaxed ${isMobile ? 'text-sm' : 'text-xs'}`}>
+                        <p className="text-gray-600 leading-relaxed text-[var(--sidebar-text-sm)]">
                           Select a conversation to view detailed analytics
                         </p>
                       </div>
@@ -778,7 +738,6 @@ const Sidebar = ({
           </div>
         </ScrollArea>
 
-        {/* Product Preview Modal */}
         {selectedProduct && (
           <ProductPreview
             product={selectedProduct}
@@ -802,7 +761,6 @@ const Sidebar = ({
     conversation,
     contactEmail,
     saveCustomerInfo,
-    isMobile,
     onToggleVisibility,
     customerInitial,
     platformName,
