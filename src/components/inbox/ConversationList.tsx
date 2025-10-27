@@ -139,20 +139,18 @@ const ConversationList = ({
   const filteredConversations = useMemo(() => {
     if (!conversations.length) return [];
 
-    let filtered = [...conversations]; // Create shallow copy
-
-    // Early return if no filters
     const hasFilters = filters.unreadOnly || filters.hasQuery || 
                        filters.platform.length || filters.priority.length || 
                        filters.sentiment.length || searchQuery;
 
     if (!hasFilters && activeTab === 'all') {
-      return filtered.sort((a, b) => 
+      return [...conversations].sort((a, b) => 
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
     }
 
-    // Apply filters
+    let filtered = conversations;  
+
     if (filters.unreadOnly) {
       filtered = filtered.filter(c => c.unread_count > 0);
     }
@@ -176,14 +174,12 @@ const ConversationList = ({
       filtered = filtered.filter(c => sentimentSet.has(c.sentiment));
     }
 
-    // Tab filtering
     if (activeTab === 'all') {
       filtered = filtered.filter(c => c.is_ai_enabled);
     } else if (activeTab === 'open') {
       filtered = filtered.filter(c => !c.is_ai_enabled);
     }
 
-    // Search filtering
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(c => 
@@ -192,13 +188,11 @@ const ConversationList = ({
       );
     }
 
-    // Sort once at the end
-    return filtered.sort((a, b) => 
+    return [...filtered].sort((a, b) => 
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
   }, [conversations, filters, searchQuery, activeTab]);
 
-  // Stable callback references
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   }, []);
@@ -239,7 +233,6 @@ const ConversationList = ({
         }
       `}</style>
 
-      {/* Header */}
       <div className="px-3 py-2.5 bg-white/40 border-b border-gray-100/60 flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="relative flex-1 min-w-0">
@@ -305,7 +298,6 @@ const ConversationList = ({
         </div>
       </div>
 
-      {/* Content */}
       <div className="flex-1 overflow-y-auto ios-scrollbar">
         {showSkeleton ? (
           <OptimisticSkeletonLayout />
@@ -352,4 +344,11 @@ const ConversationList = ({
   );
 };
 
-export default memo(ConversationList);
+export default memo(ConversationList, (prevProps, nextProps) => {
+  return (
+    prevProps.selectedConversationId === nextProps.selectedConversationId &&
+    prevProps.isVisible === nextProps.isVisible &&
+    prevProps.onConversationSelect === nextProps.onConversationSelect &&
+    prevProps.onToggleVisibility === nextProps.onToggleVisibility
+  );
+});

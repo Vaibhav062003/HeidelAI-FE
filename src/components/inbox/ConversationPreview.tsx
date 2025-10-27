@@ -74,16 +74,16 @@ return (
       
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-1.5">
-          <h3 className="font-semibold text-gray-900 text-[13px] truncate">
+          <h3 className="font-semibold text-gray-900 text-[14px] truncate">
             {customerName}
           </h3>
-          <span className="text-[9px] text-gray-500 flex-shrink-0">
+          <span className="text-[11px] text-gray-500 flex-shrink-0">
             {getRelativeTime(timestamp)}
           </span>
         </div>
         
         <div className="flex items-center justify-between gap-1.5">
-          <p className="text-[11px] text-gray-600 truncate flex-1">
+          <p className="text-[14px] text-gray-600 truncate flex-1">
             {lastMessage}
           </p>
           
