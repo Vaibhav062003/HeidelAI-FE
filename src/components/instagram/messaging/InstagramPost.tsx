@@ -1,17 +1,13 @@
 import Image from "next/image";
 
 interface InstagramPostProps {
-  username: string;
   profileImage?: string;
-  caption: string;
   mediaUrl: string;
   timestamp: string;
 }
 
 export default function InstagramPost({
-  username,
   profileImage = "/icons/ig_no_pfp.jpg",
-  caption,
   mediaUrl,
   timestamp,
 }: InstagramPostProps) {
@@ -21,13 +17,13 @@ export default function InstagramPost({
       <div className="flex items-center p-3">
         <Image
           src={profileImage}
-          alt={username}
+          alt={"Profile"}
           width={40}
           height={40}
           className="rounded-full object-cover"
         />
         <div className="ml-3">
-          <p className="font-semibold text-sm">{username}</p>
+          <p className="font-semibold text-sm">Instagram User</p>
         </div>
       </div>
 
@@ -44,8 +40,8 @@ export default function InstagramPost({
       {/* Caption */}
       <div className="px-4 py-3">
         <p className="text-sm">
-          <span className="font-semibold mr-2">{username}</span>
-          {caption}
+          <span className="font-semibold mr-2">Instagram User</span>
+          Shared a post.
         </p>
         <p className="text-xs text-gray-500 mt-2 uppercase tracking-wide">
           {timestamp}

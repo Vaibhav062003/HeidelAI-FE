@@ -1785,8 +1785,6 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
                   {/* Render IG Posts */}
                   {message.type === "share" && message.payload && (
                       <InstagramPost 
-                        username="Instagram User"
-                        caption="Shared a post"
                         mediaUrl={message.payload.url}
                         timestamp={formatMessageTime(message.timestamp)}
                       />
