@@ -1224,28 +1224,30 @@ export const MacrosSettings = () => (
 
 
 export const IntegrationsSettings = () => (
-  <div className="min-h-[300px] flex flex-col items-start p-8">
-    <h2 className="text-2xl font-bold mb-6">Platform Integrations</h2>
+  <div className="min-h-[300px] flex flex-col items-start p-4 md:p-8">
+    <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Platform Integrations</h2>
     
-    <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+    {/* Responsive Grid - 1 column mobile, 2 columns desktop */}
+    <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+      
       {/* Facebook Integration Card */}
-      <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+      <div className="border rounded-lg p-4 md:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
         <div className="space-y-4">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-[#1877F2] rounded-lg p-2">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="bg-[#1877F2] rounded-lg p-2 flex-shrink-0">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
                 </svg>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold">Facebook</h3>
-                <p className="text-sm text-gray-600">Connect your Facebook pages</p>
+              <div className="min-w-0">
+                <h3 className="text-base md:text-lg font-semibold truncate">Facebook</h3>
+                <p className="text-xs md:text-sm text-gray-600 truncate">Connect your Facebook pages</p>
               </div>
             </div>
             <Button
               onClick={loginWithFacebook}
-              className="bg-[#1877F2] hover:bg-[#0c5bdb] text-white"
+              className="bg-[#1877F2] hover:bg-[#0c5bdb] text-white w-full sm:w-auto flex-shrink-0"
             >
               Connect
             </Button>
@@ -1253,113 +1255,100 @@ export const IntegrationsSettings = () => (
         </div>
       </div>
 
-      
       {/* WooCommerce Integration Card */}
-      <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+      <div className="border rounded-lg p-4 md:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
         <div className="space-y-4">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-[#96588A] rounded-lg p-2">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="bg-[#96588A] rounded-lg p-2 flex-shrink-0">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M19.2,6.2c-0.8-1.1-2.1-1.8-3.5-1.8c-0.8,0-1.6,0.2-2.2,0.6C12.9,4.4,12,4,11,4c-1.4,0-2.7,0.7-3.5,1.8C6.7,4.7,5.4,4,4,4C1.8,4,0,5.8,0,8c0,0.8,0.2,1.5,0.6,2.2C0.2,11.5,0,12.7,0,14c0,4.4,3.6,8,8,8h8c4.4,0,8-3.6,8-8c0-1.3-0.2-2.5-0.6-3.8C23.8,9.5,24,8.8,24,8C24,5.8,22.2,4,20,4C18.6,4,17.3,4.7,16.5,6.2z M11,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S11,15.6,11,15z M7,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S7,15.6,7,15z M15,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S15,15.6,15,15z"/>
                 </svg>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold">WooCommerce</h3>
-                <p className="text-sm text-gray-600">Connect your WooCommerce store</p>
+              <div className="min-w-0">
+                <h3 className="text-base md:text-lg font-semibold truncate">WooCommerce</h3>
+                <p className="text-xs md:text-sm text-gray-600 truncate">Connect your WooCommerce store</p>
               </div>
             </div>
-            <WooCommerceDialog />
+            <div className="w-full sm:w-auto flex-shrink-0">
+              <WooCommerceDialog />
+            </div>
           </div>
         </div>
       </div>
 
-
       {/* Shopify Integration Card */}
-      <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-  <div className="space-y-4">
-    <div className="flex items-start justify-between">
-      <div className="flex items-center gap-3">
-    
-          <img
-          src='logos/shopify.svg'
-          alt="Shopify Logo"
-          className="w-10 h-10 text-white"
-          />
-      
-        <div>
-          <h3 className="text-lg font-semibold">Shopify</h3>
-          <p className="text-sm text-gray-600">Connect to your Shopify store</p>
-        </div>
-      </div>
-      <ShopifyDialog />
-    </div>
-  </div>
-</div>
-
-{/* // Instagram Integration Card */}
-<div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-  <div className="space-y-4">
-    <div className="flex items-start justify-between">
-      <div className="flex items-center gap-3">
-        <div className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-lg p-2">
-          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-          </svg>
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold">Instagram</h3>
-          <p className="text-sm text-gray-600">Connect your Instagram business account</p>
-        </div>
-      </div>
-      <InstagramDialog />
-    </div>
-  </div>
-</div>
-
-
-{/* Facebook Catalog Integration Card */}
-<FacebookCatalogIntegration />
-
-{/* WhatsAPP Integration Card */}
-  {/* WhatsApp Integration Card */}
-<div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-  <div className="space-y-4">
-    <div className="flex items-start justify-between">
-      <div className="flex items-center gap-3">
-        <div className="bg-[#25D366] rounded-lg p-2">
-          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M20.52 3.48A11.94 11.94 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 6.01L0 24l6.15-1.58A11.94 11.94 0 0012 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.2-3.48-8.52zM12 22.05c-1.85 0-3.67-.5-5.26-1.45l-.38-.22-3.65.94.97-3.55-.25-.37A9.94 9.94 0 012.05 12c0-5.47 4.48-9.95 9.95-9.95 2.66 0 5.17 1.04 7.05 2.93a9.94 9.94 0 012.93 7.05c0 5.47-4.48 9.95-9.95 9.95zm5.6-7.88c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.2.31-.82 1.02-1.01 1.23-.18.2-.37.22-.68.07-.31-.16-1.3-.48-2.47-1.54-.91-.81-1.52-1.81-1.7-2.12-.18-.31-.02-.48.14-.63.14-.14.31-.37.47-.56.16-.18.2-.31.31-.52.1-.2.05-.38-.02-.54-.07-.16-.71-1.7-.97-2.33-.26-.63-.52-.54-.71-.55h-.6c-.2 0-.52.07-.79.38-.27.31-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.22 3.07.16.2 2.1 3.2 5.1 4.49.71.31 1.26.5 1.69.64.71.23 1.36.2 1.87.12.57-.08 1.85-.76 2.11-1.5.26-.74.26-1.38.18-1.5-.07-.12-.29-.2-.6-.36z" />
-          </svg>
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold">WhatsApp</h3>
-          <p className="text-sm text-gray-600">Connect WhatsApp account</p>
-        </div>
-      </div>
-      <WhatsAppLoginDialog />
-    </div>
-  </div>
-</div>
-
-<div>
-  <TokenTestBox />
-</div>
-
-      {/* More Integrations Coming Soon Card */}
-        {/* <div className="border rounded-lg p-4 bg-gray-50">
-          <div className="flex flex-col items-center text-center space-y-4">
-            <div className="bg-orange-100 rounded-full p-4">
-              <Construction className="h-6 w-6 text-orange-600" />
+      <div className="border rounded-lg p-4 md:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <img
+                src='/logos/shopify.svg'
+                alt="Shopify Logo"
+                className="w-10 h-10 text-white flex-shrink-0"
+              />
+              <div className="min-w-0">
+                <h3 className="text-base md:text-lg font-semibold truncate">Shopify</h3>
+                <p className="text-xs md:text-sm text-gray-600 truncate">Connect to your Shopify store</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold">More Platforms Coming Soon</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                We&apos;re working on adding more platform integrations
-              </p>
+            <div className="w-full sm:w-auto flex-shrink-0">
+              <ShopifyDialog />
             </div>
-          </div>  
-        </div> */}
+          </div>
+        </div>
+      </div>
+
+      {/* Instagram Integration Card */}
+      <div className="border rounded-lg p-4 md:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-lg p-2 flex-shrink-0">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-base md:text-lg font-semibold truncate">Instagram</h3>
+                <p className="text-xs md:text-sm text-gray-600 truncate">Connect your Instagram business account</p>
+              </div>
+            </div>
+            <div className="w-full sm:w-auto flex-shrink-0">
+              <InstagramDialog />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Facebook Catalog Integration Card */}
+      <FacebookCatalogIntegration />
+
+      {/* WhatsApp Integration Card */}
+      <div className="border rounded-lg p-4 md:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="bg-[#25D366] rounded-lg p-2 flex-shrink-0">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.52 3.48A11.94 11.94 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 6.01L0 24l6.15-1.58A11.94 11.94 0 0012 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.2-3.48-8.52zM12 22.05c-1.85 0-3.67-.5-5.26-1.45l-.38-.22-3.65.94.97-3.55-.25-.37A9.94 9.94 0 012.05 12c0-5.47 4.48-9.95 9.95-9.95 2.66 0 5.17 1.04 7.05 2.93a9.94 9.94 0 012.93 7.05c0 5.47-4.48 9.95-9.95 9.95zm5.6-7.88c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.2.31-.82 1.02-1.01 1.23-.18.2-.37.22-.68.07-.31-.16-1.3-.48-2.47-1.54-.91-.81-1.52-1.81-1.7-2.12-.18-.31-.02-.48.14-.63.14-.14.31-.37.47-.56.16-.18.2-.31.31-.52.1-.2.05-.38-.02-.54-.07-.16-.71-1.7-.97-2.33-.26-.63-.52-.54-.71-.55h-.6c-.2 0-.52.07-.79.38-.27.31-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.22 3.07.16.2 2.1 3.2 5.1 4.49.71.31 1.26.5 1.69.64.71.23 1.36.2 1.87.12.57-.08 1.85-.76 2.11-1.5.26-.74.26-1.38.18-1.5-.07-.12-.29-.2-.6-.36z" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-base md:text-lg font-semibold truncate">WhatsApp</h3>
+                <p className="text-xs md:text-sm text-gray-600 truncate">Connect WhatsApp account</p>
+              </div>
+            </div>
+            <div className="w-full sm:w-auto flex-shrink-0">
+              <WhatsAppLoginDialog />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="lg:col-span-2">
+        <TokenTestBox />
+      </div>
     </div>
   </div>
 );

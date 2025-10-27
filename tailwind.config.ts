@@ -18,6 +18,14 @@ export default {
         screens: { "2xl": "1400px" } 
     },
       extend: {
+        screens: {
+        'xs': '375px', 
+        'sm': '640px',
+        'md': '768px',
+        'lg': '1024px',
+        'xl': '1280px',
+        '2xl': '1536px',
+      },
         maxWidth: {
             container: "1280px",
         },
@@ -119,6 +127,17 @@ export default {
         'xxs': '0.625rem',  // 10px
         'xxxs': '0.5rem',   // 8px
     },
+     containers: {
+        'xs': '20rem',
+        'sm': '24rem',
+        'md': '28rem',
+        'lg': '32rem',
+        'xl': '36rem',
+        '2xl': '42rem',
+        '3xl': '48rem',
+        '4xl': '56rem',
+        '5xl': '64rem',
+      },
       }
   },
   plugins: [addVariablesForColors ,require("tailwindcss-animate")],

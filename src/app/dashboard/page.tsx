@@ -7,11 +7,10 @@ import TopNavigation from "@/components/inbox/TopNavigation";
 import ConversationList from "@/components/inbox/ConversationList";
 import SettingsSidebar from "@/components/setting_tab/SettingsSidebar";
 import { useConversations } from '@/components/hooks/useConversations';
-import { Menu, ChevronDown, ChevronRight,  } from "lucide-react";
+import { Menu, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/inbox_button";
 import { X } from "lucide-react";
 import { Conversation } from "@/components/types/conversation";
-// import { ConversationProvider } from "@/components/hooks/useConversations";
 import {
   MessageSquare,
   BarChart2,
@@ -31,8 +30,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { InstagramLogoIcon } from "@radix-ui/react-icons";
 import RemainderSideBar from "@/components/inbox/ReminderSideBar";
-// import AnalyticsBot from "@/components/AnalyticsBot/AnalyticsBot";
-// import InfluencerBot from "@/components/influencerBot/influencerbot";
 import { UserProfile, useUser, SignedIn, OrganizationSwitcher, useClerk } from '@clerk/nextjs';
 import {
   Tooltip,
@@ -50,6 +47,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { TagsPopup } from "@/components/Contacts/TagsPopup";
+import { createClient } from "@supabase/supabase-js";
 
 const ChatView = dynamic(() => import("@/components/inbox/ChatView"), {
   ssr: false,
@@ -103,16 +102,17 @@ interface Product {
   stock_quantity: number;
 }
 
+
 const ChatViewSkeleton = memo(() => (
   <div className="h-full flex flex-col bg-white">
     <div className="p-4 border-b flex items-center gap-3">
       <div className="w-10 h-10 skeleton rounded-full" />
-      <div className="space-y-2 flex-1">
+      <div className="space-y-2 flex-1 min-w-0">
         <div className="h-4 w-32 skeleton rounded" />
         <div className="h-3 w-24 skeleton rounded" />
       </div>
     </div>
-    <div className="flex-1 p-4 space-y-4">
+    <div className="flex-1 p-4 space-y-4 min-h-0 overflow-hidden">
       {[1, 2, 3].map((i) => (
         <div key={i} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
           <div className={`max-w-[70%] p-4 skeleton rounded-2xl h-16 ${i % 2 === 0 ? 'w-48' : 'w-56'}`}></div>
@@ -130,9 +130,9 @@ const SidebarSkeleton = memo(() => (
   <div className="h-full bg-white border-l border-gray-200">
     <div className="px-4 py-4 border-b">
       <div className="h-5 w-20 skeleton rounded mb-3" />
-      <div className="flex gap-3">
-        <div className="w-10 h-10 skeleton rounded-xl" />
-        <div className="flex-1 space-y-2">
+      <div className="flex gap-3 min-w-0">
+        <div className="w-10 h-10 skeleton rounded-xl flex-shrink-0" />
+        <div className="flex-1 space-y-2 min-w-0">
           <div className="h-4 w-24 skeleton rounded" />
           <div className="h-3 w-32 skeleton rounded" />
         </div>
@@ -146,7 +146,6 @@ const SidebarSkeleton = memo(() => (
   </div>
 ));
 SidebarSkeleton.displayName = "SidebarSkeleton";
-
 
 const TabLoadingSkeleton = memo(() => (
   <div className="h-full w-full flex items-center justify-center bg-gray-50">
@@ -184,13 +183,13 @@ const MobileHeader = memo(({
   }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200 md:hidden">
-      <div className="flex items-center gap-3">
+    <header className="mobile-header fixed top-0 left-0 right-0 z-50 bg-white px-3 xs:px-4 py-2.5 xs:py-3 flex items-center justify-between border-b border-gray-200 md:hidden">
+      <div className="flex items-center gap-2 xs:gap-3 min-w-0 flex-1">
         <Button
           variant="ghost"
           size="icon"
           onClick={onOpenNavigation}
-          className="h-10 w-10 hover:bg-gray-100 rounded-xl transition-all duration-200"
+          className="h-12 w-12 md:h-10 md:w-10 hover:bg-gray-100 rounded-xl transition-all duration-200 flex-shrink-0"
           aria-label="Open navigation"
         >
           <Menu className="h-5 w-5" />
@@ -201,7 +200,7 @@ const MobileHeader = memo(({
             variant="ghost"
             size="icon"
             onClick={handleSettingsClick}
-            className="h-10 w-10 hover:bg-gray-100 rounded-xl transition-all duration-200"
+            className="h-12 w-12 md:h-10 md:w-10 hover:bg-gray-100 rounded-xl transition-all duration-200 flex-shrink-0"
             aria-label="Open settings menu"
           >
             <Settings className="h-5 w-5" />
@@ -213,7 +212,7 @@ const MobileHeader = memo(({
             variant="ghost"
             size="icon"
             onClick={handleContactsTagsClick}
-            className="h-10 w-10 hover:bg-gray-100 rounded-xl transition-all duration-200"
+            className="h-12 w-12 md:h-10 md:w-10 hover:bg-gray-100 rounded-xl transition-all duration-200 flex-shrink-0"
             aria-label="Open tags menu"
           >
             <Tag className="h-5 w-5" />
@@ -225,14 +224,14 @@ const MobileHeader = memo(({
             variant="ghost"
             size="icon"
             onClick={onBackToList}
-            className="h-10 w-10 hover:bg-gray-100 rounded-xl transition-all duration-200"
+            className="h-12 w-12 md:h-10 md:w-10 hover:bg-gray-100 rounded-xl transition-all duration-200 flex-shrink-0"
             aria-label="Back to conversations"
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
         )}
         
-        <h1 className="text-lg font-semibold text-gray-900">
+        <h1 className="text-base xs:text-lg font-semibold text-gray-900 truncate overflow-hidden text-ellipsis">
           {activeView === "inbox" && !showMobileConversationList && selectedConversationId 
             ? "Chat" 
             : getTabTitle()
@@ -270,13 +269,13 @@ const NavigationItem = memo(({
         }
       `}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
         <Icon className="h-5 w-5 flex-shrink-0" />
-        <span className="text-sm font-medium">{label}</span>
+        <span className="text-sm font-medium truncate overflow-hidden text-ellipsis">{label}</span>
       </div>
       {badge && (
         <span className={`
-          px-2 py-0.5 rounded-full text-xs font-medium
+          px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0
           ${isActive ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}
         `}>
           {badge}
@@ -310,10 +309,15 @@ const SidebarNavigation = memo(({
 }) => {
   const { user } = useUser();
   const { isSignedIn, isLoaded } = useUser();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  // ✅ Only popup state - nothing else
+  const [isTagsPopupOpen, setIsTagsPopupOpen] = useState(false);
+
   const mainNavigationItems = useMemo(() => [
     { value: "inbox", icon: Home, label: "Inbox" },
     { value: "analyticsbot", icon: BarChart2, label: "Analytics" },
-    { value: "Contacts", icon: ContactRoundIcon, label: "Customers"},
+    { value: "Contacts", icon: ContactRoundIcon, label: "Customers", hasDropdown: true },
   ], []);
 
   const additionalItems = useMemo(() => [
@@ -321,278 +325,399 @@ const SidebarNavigation = memo(({
     { value: "talktodata", icon: BotMessageSquare, label: "Talk to Data" },
     { value: "influencerbot", icon: InstagramLogoIcon, label: "InfluIndex" },
   ], []);
+  
   const { signOut } = useClerk();
   const router = useRouter();
-    useEffect(() => {
-    // console.log(user);
+  
+  useEffect(() => {
     if (isLoaded && !isSignedIn) {
       router.push("/login");
     }
   }, [isLoaded, isSignedIn, router]);
 
   const handleSignOut = async () => {
-  toast.success("Signing out successfully!");
-  await signOut();
-  router.push("/");
-  if (typeof window !== "undefined") {
-    localStorage.clear();
-  }
-};
+    toast.success("Signing out successfully!");
+    await signOut();
+    router.push("/");
+    if (typeof window !== "undefined") {
+      localStorage.clear();
+    }
+  };
 
+  const handleOpenIntegrations = useCallback(() => {
+    onNavigate("settings");
+    setTimeout(() => {
+      const event = new CustomEvent('openIntegrationsSettings');
+      window.dispatchEvent(event);
+    }, 100);
+  }, [onNavigate]);
 
   return (
-    <aside className={`
-      ${isNavigationVisible 
-        ? 'fixed inset-y-0 left-0 z-40' 
-        : 'fixed inset-y-0 left-0 z-40 -translate-x-full md:translate-x-0'
-      }
-      md:static
-      ${isExpanded ? 'w-56' : 'w-16'}
-      bg-white
-      border-r border-gray-200
-      flex-shrink-0
-      transition-all duration-300
-      ${isPending ? 'pointer-events-none opacity-70' : ''}
-    `}>
-      <div className="h-full flex flex-col p-4">
-        {/* Header Section with UserButton */}
-        {isExpanded && (
-  <div className="space-y-4 mb-6">
-    <div className="flex items-center gap-2 w-full px-2">
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        <div className="w-full flex justify-center items-center mb-4">
-                          <button
-                            onClick={handleSignOut}
-                            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-600 hover:bg-red-700 transition shadow-lg"
-                            title="Logout"
-                          >
-                            <LogOut className="h-5 w-5 text-white" />
-                          </button>
-                        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">
-            {user?.fullName || "Profile"}
-          </p>
-          <p className="text-xs text-gray-500 truncate">
-            {user?.primaryEmailAddress?.emailAddress || "email@example.com"}
-          </p>
-        </div>
-      </div>
-      
-      {/* Show Conversation List Button */}
-      {!isConversationListVisible && activeView === "inbox" && (
-        <Tooltip delayDuration={300}>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onShowConversationList}
-              className="h-8 w-8 rounded-lg hover:bg-gray-100 flex-shrink-0"
-              aria-label="Show conversation list"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent 
-            side="right" 
-            className="bg-gray-800 text-white px-3 py-2 rounded-xl z-[60]"
-            sideOffset={8}
-          >
-            <span className="text-sm font-medium">Show conversations</span>
-          </TooltipContent>
-        </Tooltip>
-      )}
-    </div>
-    <div className="border-t border-gray-200" />
-  </div>
-)}
+    <>
+      <aside className={`
+        ${isNavigationVisible 
+          ? 'fixed inset-y-0 left-0 z-40' 
+          : 'fixed inset-y-0 left-0 z-40 -translate-x-full md:translate-x-0'
+        }
+        md:static
+        ${isExpanded ? 'w-48' : 'w-14'}
+        bg-white
+        border-r border-gray-200
+        flex-shrink-0
+        transition-all duration-300
+        ${isPending ? 'pointer-events-none opacity-70' : ''}
+      `}>
+        <div className="h-full flex flex-col p-3 min-h-0">
+          {/* Header Section with User Dropdown */}
+          {isExpanded && (
+            <div className="space-y-3 mb-4 flex-shrink-0">
+              <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+                <DropdownMenuTrigger asChild>
+                  <button className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors group">
+                    <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0">
+                      <img 
+                        src="/heidelai.png" 
+                        alt="HeidelAI Logo" 
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="text-xs font-semibold text-gray-900 truncate overflow-hidden text-ellipsis">
+                        {user?.fullName || user?.firstName || "User"}
+                      </p>
+                      <p className="text-[10px] text-gray-500 truncate overflow-hidden text-ellipsis">
+                        {user?.primaryEmailAddress?.emailAddress || "user@example.com"}
+                      </p>
+                    </div>
+                    <ChevronDown className={`h-3.5 w-3.5 text-gray-400 transition-transform flex-shrink-0 ${
+                      isDropdownOpen ? 'rotate-180' : ''
+                    }`} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  className="w-44 ml-3 bg-white border border-gray-200 rounded-xl shadow-lg"
+                  align="start"
+                  sideOffset={5}
+                >
+                  <DropdownMenuLabel className="px-3 py-2">
+                    <div className="flex flex-col space-y-0.5">
+                      <p className="text-xs font-semibold text-gray-900 truncate">
+                        {user?.fullName || user?.firstName || "User"}
+                      </p>
+                      <p className="text-[10px] text-gray-500 truncate">
+                        {user?.primaryEmailAddress?.emailAddress || "user@example.com"}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-gray-100" />
+                  <DropdownMenuItem 
+                    className="px-3 py-2 text-xs cursor-pointer focus:bg-red-50 focus:text-red-600 text-gray-700"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="h-3.5 w-3.5 mr-2" />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-{!isExpanded && (
-  <div className="mb-6 flex flex-col items-center gap-2">
-    <div className="w-full flex justify-center items-center mb-4">
-                          <button
-                            onClick={handleSignOut}
-                            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-600 hover:bg-red-700 transition shadow-lg"
-                            title="Logout"
-                          >
-                            <LogOut className="h-5 w-5 text-white" />
-                          </button>
-                        </div>
-    
-    {/* Show Conversation List Button when collapsed */}
-    {!isConversationListVisible && activeView === "inbox" && (
-      <Tooltip delayDuration={300}>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onShowConversationList}
-            className="h-8 w-8 rounded-lg hover:bg-gray-100"
-            aria-label="Show conversation list"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent 
-          side="right" 
-          className="bg-gray-800 text-white px-3 py-2 rounded-xl z-[60]"
-          sideOffset={8}
-        >
-          <span className="text-sm font-medium">Show conversations</span>
-        </TooltipContent>
-      </Tooltip>
-    )}
-  </div>
-)}
+              {/* Link Integrations Button */}
+              <button
+                onClick={handleOpenIntegrations}
+                className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border-gray-100"
+              >
+                <span className="text-[10px] font-medium text-gray-700">Link Integrations</span>
+                <div className="flex items-center gap-0.5">
+                  {/* WhatsApp Logo */}
+                  <div className="w-4 h-4 rounded-sm bg-[#25D366] flex items-center justify-center">
+                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20.52 3.48A11.94 11.94 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 6.01L0 24l6.15-1.58A11.94 11.94 0 0012 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.2-3.48-8.52zM12 22.05c-1.85 0-3.67-.5-5.26-1.45l-.38-.22-3.65.94.97-3.55-.25-.37A9.94 9.94 0 012.05 12c0-5.47 4.48-9.95 9.95-9.95 2.66 0 5.17 1.04 7.05 2.93a9.94 9.94 0 012.93 7.05c0 5.47-4.48 9.95-9.95 9.95zm5.6-7.88c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.2.31-.82 1.02-1.01 1.23-.18.2-.37.22-.68.07-.31-.16-1.3-.48-2.47-1.54-.91-.81-1.52-1.81-1.7-2.12-.18-.31-.02-.48.14-.63.14-.14.31-.37.47-.56.16-.18.2-.31.31-.52.1-.2.05-.38-.02-.54-.07-.16-.71-1.7-.97-2.33-.26-.63-.52-.54-.71-.55h-.6c-.2 0-.52.07-.79.38-.27.31-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.22 3.07.16.2 2.1 3.2 5.1 4.49.71.31 1.26.5 1.69.64.71.23 1.36.2 1.87.12.57-.08 1.85-.76 2.11-1.5.26-.74.26-1.38.18-1.5-.07-.12-.29-.2-.6-.36z" />
+                    </svg>
+                  </div>
+                  {/* Instagram Logo */}
+                  <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 flex items-center justify-center">
+                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                    </svg>
+                  </div>
+                  {/* Facebook Logo */}
+                  <div className="w-4 h-4 rounded-sm bg-[#1877F2] flex items-center justify-center">
+                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
+                    </svg>
+                  </div>
+                </div>
+              </button>
 
+              {!isConversationListVisible && activeView === "inbox" && (
+                <Tooltip delayDuration={300}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={onShowConversationList}
+                      className="h-8 w-8 rounded-lg hover:bg-gray-100 flex-shrink-0"
+                      aria-label="Show conversation list"
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent 
+                    side="right" 
+                    className="bg-gray-800 text-white px-2 py-1.5 rounded-xl z-[60]"
+                    sideOffset={8}
+                  >
+                    <span className="text-xs font-medium">Show conversations</span>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              
+              <div className="border-t border-gray-200" />
+            </div>
+          )}
 
-        {/* Main Navigation */}
-        <nav className="space-y-1 flex-1 overflow-y-auto">
+          {!isExpanded && (
+            <div className="mb-4 flex flex-col items-center gap-2 flex-shrink-0">
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <button 
+                    className="w-10 h-10 rounded flex items-center justify-center hover:bg-gray-100 transition-all p-1"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  >
+                    <img 
+                      src="/heidelai.png" 
+                      alt="HeidelAI Logo" 
+                      className="w-full h-full object-contain"
+                    />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="bg-gray-800 text-white px-2 py-1.5 rounded-xl z-[60]">
+                  <div className="text-xs">
+                    <p className="font-semibold">{user?.fullName || user?.firstName || "User"}</p>
+                    <p className="text-gray-300 text-[10px]">{user?.primaryEmailAddress?.emailAddress}</p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+
+              {/* Link Integrations Icon */}
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={handleOpenIntegrations}
+                    className="w-10 h-10 rounded-lg bg-gray-50 hover:bg-gray-100 flex items-center justify-center transition-colors border border-gray-200"
+                  >
+                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="bg-gray-800 text-white px-2 py-1.5 rounded-xl z-[60]">
+                  <span className="text-xs font-medium">Link Integrations</span>
+                </TooltipContent>
+              </Tooltip>
+              
+              {!isConversationListVisible && activeView === "inbox" && (
+                <Tooltip delayDuration={300}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={onShowConversationList}
+                      className="h-8 w-8 rounded-lg hover:bg-gray-100"
+                      aria-label="Show conversation list"
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent 
+                    side="right" 
+                    className="bg-gray-800 text-white px-2 py-1.5 rounded-xl z-[60]"
+                    sideOffset={8}
+                  >
+                    <span className="text-xs font-medium">Show conversations</span>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          )}
+
+          {/* Main Navigation */}
+          <nav className="space-y-1 flex-1 overflow-y-auto min-h-0">
           {isExpanded ? (
             <>
-              {mainNavigationItems.map(({ value, icon, label }) => (
-                <NavigationItem
-                  key={value}
-                  value={value}
-                  icon={icon}
-                  label={label}
-                  isActive={activeView === value}
-                  onClick={() => onNavigate(value)}
-                />
-              ))}
-
-              <div className="my-4 border-t border-gray-200" />
-
-              <div className="space-y-1">
-                {additionalItems.map(({ value, icon, label }) => (
-                  <NavigationItem
-                    key={value}
-                    value={value}
-                    icon={icon}
-                    label={label}
-                    isActive={activeView === value}
+              {mainNavigationItems.map(({ value, icon: Icon, label, hasDropdown }) => (
+                <div key={value} className="relative">
+                  <button
                     onClick={() => onNavigate(value)}
-                  />
+                    className={`
+                      w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200
+                      ${activeView === value 
+                        ? 'bg-gray-100 text-gray-900' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }
+                    `}
+                  >
+                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-xs font-medium truncate overflow-hidden text-ellipsis flex-1 text-left">
+                      {label}
+                    </span>
+                    {hasDropdown && (
+                      <ChevronDown
+                        className="h-3.5 w-3.5 flex-shrink-0 text-gray-400 hover:text-gray-600"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsTagsPopupOpen(true);
+                        }}
+                      />
+                    )}
+                  </button>
+                </div>
+              ))}
+
+
+                <div className="my-3 border-t border-gray-200" />
+
+                <div className="space-y-1">
+                  {additionalItems.map(({ value, icon: Icon, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => onNavigate(value)}
+                      className={`
+                        w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200
+                        ${activeView === value 
+                          ? 'bg-gray-100 text-gray-900' 
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }
+                      `}
+                    >
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-xs font-medium truncate overflow-hidden text-ellipsis">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                {mainNavigationItems.map(({ value, icon: Icon }) => (
+                  <Tooltip key={value} delayDuration={300}>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => onNavigate(value)}
+                        className={`w-full h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+                          activeView === value
+                            ? 'bg-gray-100 text-gray-900'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="bg-gray-800 text-white text-xs">
+                      {value === 'inbox' ? 'Inbox' : value === 'Contacts' ? 'Customers' : 'Analytics'}
+                    </TooltipContent>
+                  </Tooltip>
                 ))}
-              </div>
-            </>
-          ) : (
-            <>
-              {mainNavigationItems.map(({ value, icon: Icon }) => (
-                <Tooltip key={value} delayDuration={300}>
+
+                <div className="my-3 border-t border-gray-200" />
+
+                {additionalItems.map(({ value, icon: Icon }) => (
+                  <Tooltip key={value} delayDuration={300}>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => onNavigate(value)}
+                        className={`w-full h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+                          activeView === value
+                            ? 'bg-gray-100 text-gray-900'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="bg-gray-800 text-white text-xs">
+                      {value === 'billing' ? 'Billing' : value === 'talktodata' ? 'Talk to Data' : 'InfluIndex'}
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </>
+            )}
+          </nav>
+
+          {/* Bottom Section */}
+          <div className="space-y-1.5 mt-auto pt-3 border-t border-gray-200 flex-shrink-0">
+            <div className="hidden md:block">
+              {isExpanded ? (
+                <button
+                  onClick={onToggleExpanded}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200"
+                >
+                  <PanelLeftClose className="h-4 w-4 flex-shrink-0" />
+                  <span className="text-xs font-medium">Collapse</span>
+                </button>
+              ) : (
+                <Tooltip delayDuration={300}>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => onNavigate(value)}
-                      className={`w-full h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                        activeView === value
-                          ? 'bg-gray-100 text-gray-900'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
+                      onClick={onToggleExpanded}
+                      className="w-full h-10 flex items-center justify-center rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200"
                     >
-                      <Icon className="h-5 w-5" />
+                      <PanelLeft className="h-4 w-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="bg-gray-800 text-white">
-                    {value === 'inbox' ? 'Inbox' : value === 'Contacts' ? 'Customers' : 'Analytics'}
+                  <TooltipContent side="right" className="bg-gray-800 text-white text-xs">
+                    Expand
                   </TooltipContent>
                 </Tooltip>
-              ))}
+              )}
+            </div>
 
-              <div className="my-4 border-t border-gray-200" />
-
-              {additionalItems.map(({ value, icon: Icon }) => (
-                <Tooltip key={value} delayDuration={300}>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => onNavigate(value)}
-                      className={`w-full h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                        activeView === value
-                          ? 'bg-gray-100 text-gray-900'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="bg-gray-800 text-white">
-                    {value === 'billing' ? 'Billing' : value === 'talktodata' ? 'Talk to Data' : 'InfluIndex'}
-                  </TooltipContent>
-                </Tooltip>
-              ))}
-            </>
-          )}
-        </nav>
-
-        {/* Bottom Section */}
-        <div className="space-y-2 mt-auto pt-4 border-t border-gray-200">
-          {/* Collapse/Expand Button */}
-          <div className="hidden md:block">
             {isExpanded ? (
               <button
-                onClick={onToggleExpanded}
-                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200"
+                onClick={() => onNavigate("settings")}
+                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                  activeView === "settings"
+                    ? 'bg-gray-100 text-gray-900'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
               >
-                <PanelLeftClose className="h-5 w-5 flex-shrink-0" />
-                <span className="text-sm font-medium">Collapse</span>
+                <Settings className="h-4 w-4" />
+                <span className="text-xs font-medium">Settings</span>
               </button>
             ) : (
               <Tooltip delayDuration={300}>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={onToggleExpanded}
-                    className="w-full h-10 flex items-center justify-center rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200"
+                    onClick={() => onNavigate("settings")}
+                    className={`w-full h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+                      activeView === "settings"
+                        ? 'bg-gray-100 text-gray-900'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
                   >
-                    <PanelLeft className="h-5 w-5" />
+                    <Settings className="h-4 w-4" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="bg-gray-800 text-white">
-                  Expand
+                <TooltipContent side="right" className="bg-gray-800 text-white text-xs">
+                  Settings
                 </TooltipContent>
               </Tooltip>
             )}
           </div>
-
-          {/* Settings Button */}
-          {isExpanded ? (
-            <button
-              onClick={() => onNavigate("settings")}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                activeView === "settings"
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              <Settings className="h-5 w-5" />
-              <span className="text-sm font-medium">Settings</span>
-            </button>
-          ) : (
-            <Tooltip delayDuration={300}>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => onNavigate("settings")}
-                  className={`w-full h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                    activeView === "settings"
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <Settings className="h-5 w-5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="bg-gray-800 text-white">
-                Settings
-              </TooltipContent>
-            </Tooltip>
-          )}
         </div>
-      </div>
 
-      {isPending && (
-        <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600 animate-pulse"></div>
-      )}
-    </aside>
+        {isPending && (
+          <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600 animate-pulse"></div>
+        )}
+      </aside>
+
+      {/* Tags Popup Component */}
+     <TagsPopup
+        isOpen={isTagsPopupOpen}
+        onClose={() => setIsTagsPopupOpen(false)}
+      />
+    </>
   );
 });
+
 SidebarNavigation.displayName = "SidebarNavigation";
 
 export default function DashboardPage() {
@@ -606,7 +731,7 @@ export default function DashboardPage() {
     | "influencerbot"
   >("inbox");
   
-    const handleToggleNavExpanded = useCallback(() => {
+  const handleToggleNavExpanded = useCallback(() => {
     setIsNavExpanded(prev => !prev);
   }, []);
 
@@ -633,8 +758,6 @@ export default function DashboardPage() {
       email: conv.email || '',
     } as Conversation;
   }, [conversations, selectedConversationId]);
-
-
 
   const handleMobileConversationSelect = useCallback((id: string) => {
     startTransition(() => {
@@ -706,198 +829,213 @@ export default function DashboardPage() {
   }, [activeView]);
 
   return (
-<TooltipProvider>
-        <style jsx global>{`
-          .skeleton {
-            background: linear-gradient(90deg, #f0f0f0 0%, #e0e0e0 50%, #f0f0f0 100%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
+    <TooltipProvider>
+      <style jsx global>{`
+        .skeleton {
+          background: linear-gradient(90deg, #f0f0f0 0%, #e0e0e0 50%, #f0f0f0 100%);
+          background-size: 200% 100%;
+          animation: loading 1.5s infinite;
+        }
+        @keyframes loading {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+
+        @media (max-height: 500px) and (orientation: landscape) {
+          .mobile-header {
+            height: 48px !important;
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
           }
-          @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+          
+          .mobile-header h1 {
+            font-size: 0.875rem !important;
           }
-        `}</style>
+          
+          .mobile-header button {
+            height: 40px !important;
+            width: 40px !important;
+          }
+        }
 
-        <div className="h-screen bg-white flex overflow-hidden">
-          {/* Mobile Header */}
-          <MobileHeader
-            activeView={activeView}
-            showMobileConversationList={showMobileConversationList}
-            selectedConversationId={selectedConversationId}
-            onOpenNavigation={handleOpenNavigation}
-            onBackToList={handleMobileBackToList}
-            getTabTitle={getTabTitle}
-          />
+        * {
+          min-width: 0;
+          min-height: 0;
+        }
+      `}</style>
 
-          {/* Left Navigation Sidebar */}
-<SidebarNavigation
-  activeView={activeView}
-  isNavigationVisible={isNavigationVisible}
-  isConversationListVisible={isConversationListVisible}
-  isExpanded={isNavExpanded}
-  onCloseNavigation={handleCloseNavigation}
-  onShowConversationList={handleShowConversationList}
-  onNavigate={handleNavigation}
-  onToggleExpanded={handleToggleNavExpanded}
-  isPending={isPending}
-/>
+      <div className="h-screen bg-white flex overflow-hidden min-w-0 min-h-0">
+        {/* Mobile Header */}
+        <MobileHeader
+          activeView={activeView}
+          showMobileConversationList={showMobileConversationList}
+          selectedConversationId={selectedConversationId}
+          onOpenNavigation={handleOpenNavigation}
+          onBackToList={handleMobileBackToList}
+          getTabTitle={getTabTitle}
+        />
 
-          {/* Mobile Overlay */}
-          <div className={`
-            fixed inset-0 bg-black/50 backdrop-blur-sm z-30 md:hidden
-            ${isNavigationVisible ? 'block' : 'hidden'}
-          `}
-            onClick={handleCloseNavigation}
-            aria-hidden="true"
-          />
+        {/* Left Navigation Sidebar */}
+        <SidebarNavigation
+          activeView={activeView}
+          isNavigationVisible={isNavigationVisible}
+          isConversationListVisible={isConversationListVisible}
+          isExpanded={isNavExpanded}
+          onCloseNavigation={handleCloseNavigation}
+          onShowConversationList={handleShowConversationList}
+          onNavigate={handleNavigation}
+          onToggleExpanded={handleToggleNavExpanded}
+          isPending={isPending}
+        />
 
-          {/* Main Content Container */}
-          <main className="flex-1 flex flex-col h-full min-w-0 overflow-hidden pt-16 md:pt-0">
-            <div className="flex-1 h-full overflow-hidden relative">
-              
-              <div 
-                className={`absolute inset-0 ${activeView === 'inbox' ? 'block' : 'hidden'}`}
-                style={{ 
-                  visibility: activeView === 'inbox' ? 'visible' : 'hidden',
-                  pointerEvents: activeView === 'inbox' ? 'auto' : 'none'
-                }}
-              >
-                {/* Mobile View */}
-                <div className={`h-full block md:hidden ${showMobileConversationList ? '' : 'hidden'}`}>
+        {/* Mobile Overlay */}
+        <div className={`
+          fixed inset-0 bg-black/50 backdrop-blur-sm z-30 md:hidden
+          ${isNavigationVisible ? 'block' : 'hidden'}
+        `}
+          onClick={handleCloseNavigation}
+          aria-hidden="true"
+        />
+
+        {/* Main Content Container */}
+        <main className="flex-1 flex flex-col h-full min-w-0 overflow-hidden pt-16 md:pt-0">
+          <div className="flex-1 h-full overflow-hidden relative min-h-0">
+            
+            <div 
+              className={`absolute inset-0 ${activeView === 'inbox' ? 'block' : 'hidden'}`}
+              style={{ 
+                visibility: activeView === 'inbox' ? 'visible' : 'hidden',
+                pointerEvents: activeView === 'inbox' ? 'auto' : 'none'
+              }}
+            >
+              {/* Mobile View */}
+              <div className={`h-full block md:hidden ${showMobileConversationList ? '' : 'hidden'} min-h-0`}>
+                <ConversationList
+                  selectedConversationId={selectedConversationId}
+                  onConversationSelect={handleConversationSelect}
+                  isVisible={true}
+                />
+              </div>
+
+              <div className={`h-full block md:hidden ${showMobileConversationList ? 'hidden' : ''} min-h-0`}>
+                <ChatView
+                  selectedConversationId={selectedConversationId}
+                  sharedProduct={sharedProduct}
+                  onClearSharedProduct={handleClearSharedProduct}
+                  isRightSidebarVisible={false}
+                  onOpenRightSidebar={() => {}}
+                  onBackToList={handleMobileBackToList}
+                />
+              </div>
+
+              {/* Desktop View */}
+              <div className="hidden md:flex h-full bg-white min-w-0 min-h-0">
+                <section 
+                  className={`
+                    ${isConversationListVisible ? 'w-64 lg:w-72 xl:w-80' : 'w-0'} 
+                    flex-shrink-0 overflow-hidden border-r border-gray-200
+                    transition-all duration-200 ease-in-out
+                  `}
+                  style={{ 
+                    visibility: isConversationListVisible ? 'visible' : 'hidden',
+                    opacity: isConversationListVisible ? 1 : 0,
+                    pointerEvents: isConversationListVisible ? 'auto' : 'none'
+                  }}
+                >
                   <ConversationList
                     selectedConversationId={selectedConversationId}
                     onConversationSelect={handleConversationSelect}
-                    isVisible={true}
+                    isVisible={isConversationListVisible}
+                    onToggleVisibility={handleToggleConversationList}
                   />
-                </div>
+                </section>
 
-                <div className={`h-full block md:hidden ${showMobileConversationList ? 'hidden' : ''}`}>
-                  <ChatView
-                    selectedConversationId={selectedConversationId}
-                    sharedProduct={sharedProduct}
-                    onClearSharedProduct={handleClearSharedProduct}
-                    isRightSidebarVisible={false}
-                    onOpenRightSidebar={() => {}}
-                    onBackToList={handleMobileBackToList}
-                  />
-                </div>
+                <section className="flex-1 min-w-0 h-full border-r border-gray-200 min-h-0">
+                  <Suspense fallback={<ChatViewSkeleton />}>
+                    <ChatView
+                      selectedConversationId={selectedConversationId}
+                      sharedProduct={sharedProduct}
+                      onClearSharedProduct={handleClearSharedProduct}
+                      isRightSidebarVisible={isRightSidebarVisible}
+                      onOpenRightSidebar={handleToggleRightSidebar}
+                      onBackToList={() => {}}
+                    />
+                  </Suspense>
+                </section>
 
-                {/* Desktop View */}
-{/* Desktop View - REPLACE THIS ENTIRE SECTION */}
-<div className="hidden md:flex h-full bg-white">
-  {/* Conversation List */}
-  <section 
-    className={`
-      ${isConversationListVisible ? 'w-64 lg:w-72 xl:w-80' : 'w-0'} 
-      flex-shrink-0 overflow-hidden border-r border-gray-200
-      transition-all duration-200 ease-in-out
-    `}
-    style={{ 
-      visibility: isConversationListVisible ? 'visible' : 'hidden',
-      opacity: isConversationListVisible ? 1 : 0,
-      pointerEvents: isConversationListVisible ? 'auto' : 'none'
-    }}
-  >
-    <ConversationList
-      selectedConversationId={selectedConversationId}
-      onConversationSelect={handleConversationSelect}
-      isVisible={isConversationListVisible}
-      onToggleVisibility={handleToggleConversationList}
-    />
-  </section>
-
-  {/* ChatView - ADD SUSPENSE HERE */}
-  <section className="flex-1 min-w-0 h-full border-r border-gray-200">
-    <Suspense fallback={<ChatViewSkeleton />}>
-      <ChatView
-        key={selectedConversationId} // Force re-render on conversation change
-        selectedConversationId={selectedConversationId}
-        sharedProduct={sharedProduct}
-        onClearSharedProduct={handleClearSharedProduct}
-        isRightSidebarVisible={isRightSidebarVisible}
-        onOpenRightSidebar={handleToggleRightSidebar}
-        onBackToList={() => {}}
-      />
-    </Suspense>
-  </section>
-
-  {/* Sidebar */}
-{/* Desktop Sidebar */}
-{isRightSidebarVisible && (
-  <aside className="relative w-[280px] xl:w-[320px] flex-shrink-0 hidden xl:block">
-    {selectedConversationId ? (
-      <Suspense fallback={<SidebarSkeleton />}>
-        <Sidebar
-          key={selectedConversationId}
-          selectedConversationId={selectedConversationId}
-          conversation={conversation}
-          onConversationSelect={handleConversationSelect}
-          onShareProduct={handleShareProduct}
-          onToggleVisibility={handleToggleRightSidebar}
-          isMobile={false} 
-        />
-      </Suspense>
-    ) : (
-      <RemainderSideBar 
-        onToggleVisibility={handleToggleRightSidebar}
-      />
-    )}
-  </aside>
-)}
-</div>
+                {isRightSidebarVisible && (
+                  <aside className="relative w-[260px] xl:w-[300px] flex-shrink-0 hidden xl:block">
+                    {selectedConversationId ? (
+                      <Suspense fallback={<SidebarSkeleton />}>
+                        <Sidebar
+                          selectedConversationId={selectedConversationId}
+                          conversation={conversation}
+                          onConversationSelect={handleConversationSelect}
+                          onShareProduct={handleShareProduct}
+                          onToggleVisibility={handleToggleRightSidebar}
+                          isMobile={false} 
+                        />
+                      </Suspense>
+                    ) : (
+                      <RemainderSideBar 
+                        onToggleVisibility={handleToggleRightSidebar}
+                      />
+                    )}
+                  </aside>
+                )}
               </div>
-
-              {activeView === "Contacts" && (
-                <Suspense fallback={<TabLoadingSkeleton />}>
-                  <div className="h-full w-full bg-gray-50/50 overflow-hidden">
-                    <ContactsDashboard />
-                  </div>
-                </Suspense>
-              )}
-
-              {activeView === "talktodata" && (
-                <Suspense fallback={<TabLoadingSkeleton />}>
-                  <div className="h-full w-full bg-gray-50/50 overflow-hidden">
-                    <TalkToDataTab />
-                  </div>
-                </Suspense>
-              )}
-
-              {activeView === "analyticsbot" && (
-                <Suspense fallback={<TabLoadingSkeleton />}>
-                  <div className="h-full w-full bg-gray-50/50 overflow-hidden">
-                    <AnalyticsBot />
-                  </div>
-                </Suspense>
-              )}
-
-              {activeView === "influencerbot" && (
-                <Suspense fallback={<TabLoadingSkeleton />}>
-                  <div className="h-full w-full bg-gray-50/50 overflow-hidden">
-                    <InfluencerBot />
-                  </div>
-                </Suspense>
-              )}
-
-              {activeView === "settings" && (
-                <Suspense fallback={<TabLoadingSkeleton />}>
-                  <SettingsSidebar />
-                </Suspense>
-              )}
-
-              {activeView === "billing" && (
-                <Suspense fallback={<TabLoadingSkeleton />}>
-                  <div className="h-full w-full overflow-y-auto bg-white">
-                    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
-                      <BillingPlans />
-                    </div>
-                  </div>
-                </Suspense>
-              )}
             </div>
-          </main>
-        </div>
-      </TooltipProvider>
+
+            {activeView === "Contacts" && (
+              <Suspense fallback={<TabLoadingSkeleton />}>
+                <div className="h-full w-full bg-gray-50/50 overflow-hidden min-h-0 min-w-0">
+                  <ContactsDashboard />
+                </div>
+              </Suspense>
+            )}
+
+            {activeView === "talktodata" && (
+              <Suspense fallback={<TabLoadingSkeleton />}>
+                <div className="h-full w-full bg-gray-50/50 overflow-hidden min-h-0 min-w-0">
+                  <TalkToDataTab />
+                </div>
+              </Suspense>
+            )}
+
+            {activeView === "analyticsbot" && (
+              <Suspense fallback={<TabLoadingSkeleton />}>
+                <div className="h-full w-full bg-gray-50/50 overflow-hidden min-h-0 min-w-0">
+                  <AnalyticsBot />
+                </div>
+              </Suspense>
+            )}
+
+            {activeView === "influencerbot" && (
+              <Suspense fallback={<TabLoadingSkeleton />}>
+                <div className="h-full w-full bg-gray-50/50 overflow-hidden min-h-0 min-w-0">
+                  <InfluencerBot />
+                </div>
+              </Suspense>
+            )}
+
+            {activeView === "settings" && (
+              <Suspense fallback={<TabLoadingSkeleton />}>
+                <SettingsSidebar />
+              </Suspense>
+            )}
+
+            {activeView === "billing" && (
+              <Suspense fallback={<TabLoadingSkeleton />}>
+                <div className="h-full w-full overflow-y-auto bg-white min-h-0 min-w-0">
+                  <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+                    <BillingPlans />
+                  </div>
+                </div>
+              </Suspense>
+            )}
+          </div>
+        </main>
+      </div>
+    </TooltipProvider>
   );
 }
