@@ -28,7 +28,7 @@ export default function InstagramPost({
       </div>
 
       {/* Image */}
-      <div className="relative w-[400px] h-[400px] bg-gray-100">
+      <div className="relative w-[350px] h-[350px] bg-gray-100">
         <Image
           src={mediaUrl}
           alt="Instagram media"
