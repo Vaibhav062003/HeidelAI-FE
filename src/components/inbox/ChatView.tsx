@@ -73,6 +73,7 @@ import api from "@/lib/session_api";
 import { useTypingIndicator } from "../hooks/typingIndicator";
 import Conversation_Status from "./Conversation_Status";
 import InstagramPost from "../instagram/messaging/InstagramPost";
+import InstagramReel from "../instagram/messaging/InstagramReel";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -639,6 +640,14 @@ const ChatView = ({
     agent_name: string;
     timestamp: number;
   }>>(new Map());
+
+  const [activeReelId, setActiveReelId] = useState<string | null>(null);
+  const [globalMuted, setGlobalMuted] = useState(true);
+
+  const handleMuteToggle = (muted: boolean) => {
+    setGlobalMuted(muted);
+  };
+
   const wsRef = useRef<WebSocket | null>(null);
   const token = async()=>{
     const sessionId = localStorage.getItem("sessionId");
@@ -1733,7 +1742,13 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
             const agentProductInfo = message.content ? extractAgentProductInfo(message.content) : null;
             // console.log("productInfo", productInfo);
             // console.log("botProductInfo", botProductInfo);
-            
+            // reel related logic
+            const latestReelIndex = [...messages]
+            .reverse()
+            .findIndex((m) => m.type === "ig_reel");
+
+            const isLatest = index === messages.length - 1 - latestReelIndex;
+
             return (
               <div key={message.id}>
                 
@@ -1789,6 +1804,24 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
                         timestamp={formatMessageTime(message.timestamp)}
                       />
                     )}
+
+                  {/* Render IG Reels */}
+                  {message.type === "ig_reel" && message.payload && (
+                    <InstagramReel
+                      key={index}
+                      id={message.payload.reel_video_id}
+                      reelVideoUrl={message.payload.url}
+                      title={message.payload.caption}
+                      timestamp={formatMessageTime(message.timestamp)}
+                      viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
+                      isLatest={isLatest}
+                      isActive={activeReelId === message.payload.reel_video_id}
+                      onPlay={(id) => setActiveReelId(id)} // stops others
+                      isMuted={globalMuted}
+                      onMuteToggle={handleMuteToggle}
+                      isAgent={message.role.toLowerCase() === "agent"}
+                    />
+                  )}
                   
                   {/* {botProductInfo && message.role === "ai" && (
                     <div className="flex flex-col max-w-[40%] overflow-hidden justify-end mb-4">
