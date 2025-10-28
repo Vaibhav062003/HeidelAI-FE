@@ -12,7 +12,7 @@ interface InstagramReelProps {
     isLatest?: boolean;
     isActive?: boolean;
     onPlay?: (id: string) => void;
-    isMuted?: boolean;                // ✅ new
+    isMuted?: boolean;               
     onMuteToggle?: (muted: boolean) => void;
     isAgent?: boolean;
 }
@@ -38,7 +38,6 @@ export default function InstagramReel({
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [showWatchAgain, setShowWatchAgain] = useState(false);
 
-    // ✅ FIX 1 — Control autoplay logic globally
     useEffect(() => {
         const video = videoRef.current;
         if (!video) return;
@@ -59,7 +58,6 @@ export default function InstagramReel({
         }
     }, [isActive, isLatest]);
 
-    // ✅ FIX 2 — Ensure loop count + watch again logic consistent
     useEffect(() => {
         const video = videoRef.current;
         if (!video) return;
@@ -106,7 +104,6 @@ export default function InstagramReel({
         const newMuted = !isMuted;
         video.muted = newMuted;
 
-        // ✅ Inform parent to sync all reels
         onMuteToggle?.(newMuted);
     };
 
