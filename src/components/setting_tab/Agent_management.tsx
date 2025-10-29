@@ -45,7 +45,6 @@ export const TeamManagement = () => {
     if (!memberships?.data) return;
     if (!invitations?.data) return;
 
-    console.log('Memberships:', memberships.data);
 
     // Invitations mapping
     const inviteMapped: InvitedMember[] = invitations.data.map((inv) => ({
@@ -172,7 +171,7 @@ export const TeamManagement = () => {
     if (!deleteDialog.member) return;
 
     if (deleteDialog.type === 'member') {
-      console.log('Deleting member with user ID:', deleteDialog.member.userId);
+      
       try {
         const response = await fetch(`http://localhost:8000/delete-member?user_id=${deleteDialog.member.userId}`, {
           method: "DELETE",
