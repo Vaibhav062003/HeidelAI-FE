@@ -1,135 +1,195 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { useOrganization } from '@clerk/nextjs';
+import { useUser, useOrganization } from '@clerk/nextjs';
 import { Users, Mail, UserPlus, UserMinus, Trash2, X } from 'lucide-react';
 
 interface TeamMember {
-  id: string;
+  name: string;
+  email: string;
+  role: 'Admin' | 'Member';
+  userId?: string; 
+}
+
+interface InvitedMember {
+  id: string; // Invitation id
   name: string;
   email: string;
   role: 'Admin' | 'Member';
 }
 
 export const TeamManagement = () => {
-  const { memberships, invitations } = useOrganization({
+  const { user } = useUser();
+  const { organization, memberships, invitations } = useOrganization({
     memberships: {
       infinite: true,
       keepPreviousData: true,
     },
-     invitations: true,
+    invitations: true,
   });
   
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [members, setMembers] = useState<TeamMember[]>([]);
-  const [invitationsList, setInvitationsList] = useState<TeamMember[]>([]);
+  const [invitationsList, setInvitationsList] = useState<InvitedMember[]>([]);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; member: TeamMember | null; type: 'member' | 'invitation' }>({ 
     open: false, 
     member: null, 
     type: 'member' 
   });
   const [activeTab, setActiveTab] = useState<'members' | 'invitations'>('members');
+  const [isAdmin, setIsAdmin] = useState(false);
   
-
   React.useEffect(() => {
     if (!memberships?.data) return;
     if (!invitations?.data) return;
 
- 
+    console.log('Memberships:', memberships.data);
 
-    const inviteMapped: TeamMember[] = invitations.data.map((inv) => ({
+    // Invitations mapping
+    const inviteMapped: InvitedMember[] = invitations.data.map((inv) => ({
       id: inv.id,
+      invitationId: inv.id,
       name: inv.emailAddress || 'Invited User',
       email: inv.emailAddress || 'No Email',
       role: inv.roleName as 'Admin' | 'Member',
     }));
 
-    
-    
+    // Members mapping
     const mapped: TeamMember[] = memberships.data.map((m) => ({
-      id: m.id,
-      name: `${m.publicUserData?.firstName ?? ''} ${m.publicUserData?.lastName ?? ''}`.trim() || 
+  
+      name: `${m.publicUserData?.firstName ?? ''} ${m.publicUserData?.lastName ?? ''}`.trim() ||
             m.publicUserData?.identifier || 'Unknown',
       email: m.publicUserData?.identifier ?? 'Unknown',
       role: m.roleName as 'Admin' | 'Member',
+      userId: m.publicUserData?.userId,
     }));
 
     setMembers(mapped);
     setInvitationsList(inviteMapped);
-  }, [memberships?.data, invitations?.data]); 
 
-  const isAdmin = memberships?.data?.some(m => m.roleName === 'Admin') ?? false;
+    const checkRole = async () => {
+      if (organization && user) {
+        const memberships = await organization.getMemberships();
+        const membership = memberships.data.find(
+          (m) => m.publicUserData?.userId === user.id
+        );
+        setIsAdmin(membership?.roleName === "Admin");
+      }
+    };
 
+    checkRole();
+  }, [memberships?.data, invitations?.data, organization, user]);
 
-  const handleInvite = () => {
+  // Refresh memberships and invitations every 3-5 minutes
+  React.useEffect(() => {
+    const refreshInterval = setInterval(() => {
+      if (organization) {
+        organization.getMemberships().then((membershipsRes) => {
+          const mapped: TeamMember[] = membershipsRes.data.map((m) => ({
+            id: m.id,
+            name: `${m.publicUserData?.firstName ?? ''} ${m.publicUserData?.lastName ?? ''}`.trim() || 
+                  m.publicUserData?.identifier || 'Unknown',
+            email: m.publicUserData?.identifier ?? 'Unknown',
+            role: m.roleName as 'Admin' | 'Member',
+          }));
+          setMembers(mapped);
+        });
+        organization.getInvitations().then((invitationsRes) => {
+          const inviteMapped: InvitedMember[] = invitationsRes.data.map((inv) => ({
+            id: inv.id,
+            name: inv.emailAddress || 'Invited User',
+            email: inv.emailAddress || 'No Email',
+            role: inv.roleName as 'Admin' | 'Member',
+          }));
+          setInvitationsList(inviteMapped);
+        });
+      }
+    }, 180000 + Math.floor(Math.random() * 120000)); // 3-5 min
+
+    return () => clearInterval(refreshInterval);
+  }, [organization]);
+
+  const handleInvite = async () => {
     if (!email) {
       toast.error('Please fill in all fields');
       return;
     }
-
-    const newMember: TeamMember = {
-      id: (members.length + 1).toString(),
-      name: email.split('@')[0],
-      email,
-      role: 'Member',
-    };
-
-    setMembers((prev) => [...prev, newMember]);
-    toast.success('Team member invited successfully!');
-    setIsInviteOpen(false);
-    setEmail('');
+    try {
+      const response = await fetch("http://127.0.0.1:8000/invite-agent", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email_address: email,
+          role: "org:member",
+          redirect_url: "http://localhost:3000/login",
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || 'Failed to send invitation');
+      }
+      toast.success('Team member invited successfully!');
+      setIsInviteOpen(false);
+      setEmail('');
+    } catch (error) {
+      toast.error('Failed to send invitation. Please try again.');
+    }
   };
 
   const handleRemoveMember = (member: TeamMember) => {
     setDeleteDialog({ open: true, member, type: 'member' });
   };
 
-  const handleRevokeInvitation = (invitation: TeamMember) => {
-    setDeleteDialog({ open: true, member: invitation, type: 'invitation' });
+  const handleRevokeInvitation = async (invitation: InvitedMember) => {
+    try {
+      const response = await fetch("http://localhost:8000/revoke-invite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          requesting_user_id: invitation.id,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || 'Failed to revoke invitation');
+      }
+      toast.success('Invitation revoked successfully');
+      setInvitationsList((prev) => prev.filter(i => i.id !== invitation.id));
+    } catch (error) {
+      toast.error('Failed to revoke invitation. Please try again.');
+    }
+    setDeleteDialog({ open: false, member: null, type: 'invitation' });
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteDialog.member) return;
 
     if (deleteDialog.type === 'member') {
-      setMembers((prev) => prev.filter(m => m.id !== deleteDialog.member!.id));
-      toast.success('Member removed successfully');
+      console.log('Deleting member with user ID:', deleteDialog.member.userId);
+      try {
+        const response = await fetch(`http://localhost:8000/delete-member?user_id=${deleteDialog.member.userId}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data?.error || 'Failed to remove member');
+        }
+        setMembers((prev) => prev.filter(m => m.userId !== deleteDialog.member!.userId));
+        toast.success('Member removed successfully');
+      } catch (error) {
+        toast.error('Failed to remove member. Please try again.');
+      }
     } else {
-      setInvitationsList((prev) => prev.filter(i => i.id !== deleteDialog.member!.id));
+      setInvitationsList((prev) => prev.filter(i => i.id !== (deleteDialog.member as InvitedMember).id));
       toast.success('Invitation revoked successfully');
     }
 
@@ -162,15 +222,22 @@ export const TeamManagement = () => {
     <div className="w-full min-h-screen bg-white">
       <div className="w-full max-w-10xl mx-auto px-6 py-10">
         {/* Header */}
-        <div className="mb-10">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2.5 bg-blue-600 rounded-lg">
-              <Users className="w-5 h-5 text-white" />
-            </div>
-            <h1 className="text-3xl font-semibold text-gray-900">Team Management</h1>
+       <div className="mb-10">
+        <div className="flex items-start gap-3">
+          <div className="p-2.5 bg-blue-600 rounded-lg flex-shrink-0">
+            <Users className="w-6 h-6 text-white" />
           </div>
-          <p className="text-gray-600 ml-11 text-sm">Manage your team members and invite new collaborators</p>
+          <div>
+            <h1 className="text-3xl font-semibold text-gray-900">
+              Team Management
+            </h1>
+            <p className="text-gray-600 text-sm">
+              Manage your team members and invite new collaborators
+            </p>
+          </div>
         </div>
+      </div>
+
 
         {/* Stats Section */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
@@ -312,7 +379,7 @@ export const TeamManagement = () => {
                 <tbody>
                   {members.length > 0 ? (
                     members.map((member) => (
-                      <tr key={member.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <tr key={member.userId} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-full ${getAvatarColor(member.name)} text-white flex items-center justify-center text-sm font-semibold`}>
@@ -327,7 +394,7 @@ export const TeamManagement = () => {
                             <div className="flex justify-center">
                               <button
                                 onClick={() => handleRemoveMember(member)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-red-200 rounded-lg transition-colors"
                               >
                                 <UserMinus className="w-4 h-4" />
                                 Remove
