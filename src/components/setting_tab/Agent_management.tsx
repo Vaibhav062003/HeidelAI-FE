@@ -125,7 +125,7 @@ export const TeamManagement = () => {
         body: JSON.stringify({
           email_address: email,
           role: "org:member",
-          redirect_url: "http://localhost:3000/login",
+          redirect_url: "http://localhost:3000/accept_invitation",
         }),
       });
       const data = await response.json();
@@ -152,7 +152,8 @@ export const TeamManagement = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          requesting_user_id: invitation.id,
+          invitation_id: invitation.id,
+          requesting_user_id: user?.id,
         }),
       });
       const data = await response.json();
@@ -292,7 +293,7 @@ export const TeamManagement = () => {
                 </button>
                 <button
                   onClick={handleInvite}
-                  className="px-4 py-2 border border-gray-300 hover:bg-gray-800 rounded-lg font-medium transition-colors"
+                  className="px-4 py-2 border border-gray-300 hover:bg-gray-300 rounded-lg font-medium transition-colors"
                 >
                   Send Invite
                 </button>

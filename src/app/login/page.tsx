@@ -37,20 +37,27 @@ export default function LoginPage() {
 
   // Redirect if already signed in
   React.useEffect(() => {
-    if (isLoaded && isSignedIn && membership && !pendingMembershipCheck && !justSignedIn.current) {
-      toast.success("Already signed in! Redirecting...");
-      router.push("/dashboard");
+    if (isLoaded && isSignedIn) {
+      if (membership) {
+        // Save session if not already saved
+        if (!localStorage.getItem("sessionId") && user?.id) {
+          localStorage.setItem("sessionId", user.id);
+        }
+        toast.success("Already signed in! Redirecting...");
+        router.push("/dashboard");
+      } else {
+        // Clear session if no membership
+        localStorage.removeItem("sessionId");
+        toast.info("Please Create or Join an Organization");
+        // No redirect to onboarding
+      }
     }
-  }, [isLoaded, isSignedIn, router, membership, pendingMembershipCheck]);
-
-
-
+  }, [isLoaded, isSignedIn, router, membership, user]);
 
   // Membership check after sign-in and organization load
   useEffect(() => {
     if (pendingMembershipCheck) {
-      // If user has membership, persist the session candidate and proceed
-      if (membership) {
+      if (isSignedIn && membership) {
         const sess = sessionCandidateRef.current;
         if (sess) {
           localStorage.setItem("sessionId", sess);
@@ -60,26 +67,21 @@ export default function LoginPage() {
         toast.success("Signed in! Redirecting...");
         router.push("/dashboard");
       } else {
-        // Do not persist session if no membership
-        if (sessionCandidateRef.current) {
-          sessionCandidateRef.current = null;
-          localStorage.removeItem("sessionId");
-        }
+        // Clear session if missing membership or account
+        sessionCandidateRef.current = null;
+        localStorage.removeItem("sessionId");
         toast.info("Please Create or Join an Organization");
-        router.push("/onboarding");
+        // No redirect to onboarding
       }
       setPendingMembershipCheck(false);
     }
-  }, [pendingMembershipCheck, membership, router]);
+  }, [pendingMembershipCheck, membership, isSignedIn, router]);
 
-  // If user is signed in BUT has no org membership, force sign-out
+  // If user is signed in BUT has no org membership, force sign-out and clear session
   useEffect(() => {
     if (isLoaded && isSignedIn && !membership) {
-      // clear any stored session candidate
       sessionCandidateRef.current = null;
       localStorage.removeItem("sessionId");
-      
-      // sign out so the user can login with another account
       signOut();
     }
   }, [isLoaded, isSignedIn, membership, signOut]);
@@ -96,6 +98,7 @@ export default function LoginPage() {
 
     try {
       const signInAttempt = await signIn.create({
+        
         identifier: email,
         password,
       });
