@@ -1,137 +1,79 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useOrganization, useSignIn, useUser } from "@clerk/nextjs";
+import React, { useEffect, useState, useRef } from "react";
+import { useSignIn, useUser, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Toaster, toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Session } from '@supabase/supabase-js'
-import { useClerk } from '@clerk/nextjs';
-interface OrgDataItem {
-  public_user_data?: {
-    identifier?: string;
-  };
-  organization?: {
-    id?: string;
-  };
-}
 
 export default function LoginPage() {
   const { isLoaded, signIn, setActive } = useSignIn();
-  const { isSignedIn, user } = useUser();
-  const { membership } = useOrganization();
-  const { signOut } = useClerk() 
-  const [pendingMembershipCheck, setPendingMembershipCheck] = useState(false);
+  const { isSignedIn } = useUser();
+  const { sessionId } = useAuth();
   const router = useRouter();
-    const [email, setEmail] = useState("");
+
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const justSignedIn = useRef(false);
 
-  // Add a ref to track if just signed in
-  const justSignedIn = React.useRef(false);
+  // Single useEffect for auto redirect logic
+  useEffect(() => {
+    if (!isLoaded) return;
 
-  // Temp holder for a session id returned by sign-in attempt — do NOT persist immediately
-  const sessionCandidateRef = React.useRef<string | null>(null);
-
-  // Redirect if already signed in
-  React.useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      if (membership) {
-        // Save session if not already saved
-        if (!localStorage.getItem("sessionId") && user?.id) {
-          localStorage.setItem("sessionId", user.id);
-        }
-        toast.success("Already signed in! Redirecting...");
+    if (isSignedIn) {
+      const storedSessionId = localStorage.getItem("sessionId");
+      if (justSignedIn.current) {
+        // Prevent double toast/redirect after sign-in
+        justSignedIn.current = false;
+        return;
+      }
+      if (storedSessionId && storedSessionId === sessionId) {
+        toast.success("Already signed in!");
         router.push("/dashboard");
-      } else {
-        // Clear session if no membership
-        localStorage.removeItem("sessionId");
-        toast.info("Please Create or Join an Organization");
-        // No redirect to onboarding
+      } else if (sessionId) {
+        localStorage.setItem("sessionId", sessionId);
+        toast.success("Signed in!");
+        router.push("/dashboard");
       }
     }
-  }, [isLoaded, isSignedIn, router, membership, user]);
-
-  // Membership check after sign-in and organization load
-  useEffect(() => {
-    if (pendingMembershipCheck) {
-      if (isSignedIn && membership) {
-        const sess = sessionCandidateRef.current;
-        if (sess) {
-          localStorage.setItem("sessionId", sess);
-          justSignedIn.current = true;
-          sessionCandidateRef.current = null;
-        }
-        toast.success("Signed in! Redirecting...");
-        router.push("/dashboard");
-      } else {
-        // Clear session if missing membership or account
-        sessionCandidateRef.current = null;
-        localStorage.removeItem("sessionId");
-        toast.info("Please Create or Join an Organization");
-        // No redirect to onboarding
-      }
-      setPendingMembershipCheck(false);
-    }
-  }, [pendingMembershipCheck, membership, isSignedIn, router]);
-
-  // If user is signed in BUT has no org membership, force sign-out and clear session
-  useEffect(() => {
-    if (isLoaded && isSignedIn && !membership) {
-      sessionCandidateRef.current = null;
-      localStorage.removeItem("sessionId");
-      signOut();
-    }
-  }, [isLoaded, isSignedIn, membership, signOut]);
-
+  }, [isLoaded, isSignedIn, sessionId, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLoaded) return;
 
     setIsLoggingIn(true);
-    justSignedIn.current = false;
-    // Track any session id returned by the attempt so we can avoid persisting it on failure
-    let attemptedSessionId: string | null = null;
 
     try {
       const signInAttempt = await signIn.create({
-        
         identifier: email,
         password,
       });
 
-      attemptedSessionId = signInAttempt.createdSessionId || null;
+      const newSessionId = signInAttempt.createdSessionId || null;
 
-      if (signInAttempt.status === "complete" && attemptedSessionId) {
-        // Activate the session now but do NOT persist it until we confirm membership
-        await setActive({ session: attemptedSessionId });
-        sessionCandidateRef.current = attemptedSessionId;
-        setPendingMembershipCheck(true);
+      if (signInAttempt.status === "complete" && newSessionId) {
+        await setActive({ session: newSessionId });
+        localStorage.setItem("sessionId", newSessionId);
+        toast.success("Signed in successfully!");
+        justSignedIn.current = true; // Set flag to prevent double toast
+        router.push("/dashboard");
       } else {
-        // do not persist anything if sign in not complete
-        if (attemptedSessionId) {
-          localStorage.removeItem("sessionId");
-          attemptedSessionId = null;
-          sessionCandidateRef.current = null;
-        }
+        localStorage.removeItem("sessionId");
         toast.error("Sign in not complete. Further steps required.");
       }
-
     } catch (err) {
-      // ensure nothing from this failed attempt remains persisted
-      if (attemptedSessionId) {
-        localStorage.removeItem("sessionId");
-        attemptedSessionId = null;
-        sessionCandidateRef.current = null;
-      }
-
-      let message = "Invalid email or password.";
-      if (err && typeof err === "object" && "errors" in err && Array.isArray(err.errors)) {
-        message = (err).errors[0]?.message || message;
-      }
+      localStorage.removeItem("sessionId");
+      const message =
+        (typeof err === "object" &&
+          err !== null &&
+          "errors" in err &&
+          Array.isArray((err).errors) &&
+          (err).errors[0]?.message) ||
+        "Invalid email or password.";
       toast.error(message);
     } finally {
       setIsLoggingIn(false);
@@ -139,7 +81,7 @@ export default function LoginPage() {
   };
 
   return (
-    <section className="h-screen  bg-black text-white px-6 flex items-center justify-center">
+    <section className="h-screen bg-black text-white px-6 flex items-center justify-center">
       <Toaster position="top-center" richColors />
       <div className="max-w-md shadow-none w-full border-2 border-white/10 mx-auto rounded-2xl p-4 md:p-8 shadow-input bg-black">
         <h2 className="font-semibold pb-6 text-xl text-center text-neutral-200">
