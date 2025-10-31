@@ -30,7 +30,7 @@ export default function InstagramPost({
       {/* Image */}
       <div className="relative w-[350px] h-[350px] bg-gray-100">
         <Image
-          src={mediaUrl}
+          src={`https://egenie-whatsapp.koyeb.app/api/instagram/proxy/instagram-media?url=${encodeURIComponent(mediaUrl)}`}
           alt="Instagram media"
           fill
           className="object-cover"

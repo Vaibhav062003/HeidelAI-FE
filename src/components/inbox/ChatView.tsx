@@ -74,6 +74,8 @@ import { useTypingIndicator } from "../hooks/typingIndicator";
 import Conversation_Status from "./Conversation_Status";
 import InstagramPost from "../instagram/messaging/InstagramPost";
 import InstagramReel from "../instagram/messaging/InstagramReel";
+import InstagramStory from "../instagram/messaging/InstagramStory";
+import LazyMediaLoader from "../LazyMediaLoader";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -642,6 +644,7 @@ const ChatView = ({
   }>>(new Map());
 
   const [activeReelId, setActiveReelId] = useState<string | null>(null);
+  const [activeStoryId, setActiveStoryId] = useState<string | null>(null);
   const [globalMuted, setGlobalMuted] = useState(true);
 
   const handleMuteToggle = (muted: boolean) => {
@@ -1746,8 +1749,12 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
             const latestReelIndex = [...messages]
             .reverse()
             .findIndex((m) => m.type === "ig_reel");
+            const latestStoryIndex = [...messages]
+            .reverse()
+            .findIndex((m) => m.type === "ig_story");
 
             const isLatest = index === messages.length - 1 - latestReelIndex;
+            const isLatestStory = index === messages.length - 1 - latestStoryIndex;
 
             return (
               <div key={message.id}>
@@ -1797,31 +1804,50 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
                   className={`max-w-[41%] flex flex-col items-end sticky right-0 `}
                   >
 
-                  {/* Render IG Posts */}
-                  {message.type === "share" && message.payload && (
-                      <InstagramPost 
-                        mediaUrl={message.payload.url}
+                  <LazyMediaLoader key={index} index={index}>
+                    {/* Render IG Posts */}
+                    {message.type === "share" && message.payload && (
+                          <InstagramPost 
+                            mediaUrl={message.payload.url}
+                            timestamp={formatMessageTime(message.timestamp)}
+                          />
+                        )}
+
+                    {/* Render IG Reels */}
+                    {message.type === "ig_reel" && message.payload && (
+                      <InstagramReel
+                        key={index}
+                        id={message.payload.reel_video_id}
+                        reelVideoUrl={message.payload.url}
+                        title={message.payload.caption}
                         timestamp={formatMessageTime(message.timestamp)}
+                        viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
+                        isLatest={isLatest}
+                        isActive={activeReelId === message.payload.reel_video_id}
+                        onPlay={(id) => setActiveReelId(id)} // stops others
+                        isMuted={globalMuted}
+                        onMuteToggle={handleMuteToggle}
+                        isAgent={message.role.toLowerCase() === "agent"}
                       />
                     )}
 
-                  {/* Render IG Reels */}
-                  {message.type === "ig_reel" && message.payload && (
-                    <InstagramReel
-                      key={index}
-                      id={message.payload.reel_video_id}
-                      reelVideoUrl={message.payload.url}
-                      title={message.payload.caption}
-                      timestamp={formatMessageTime(message.timestamp)}
-                      viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
-                      isLatest={isLatest}
-                      isActive={activeReelId === message.payload.reel_video_id}
-                      onPlay={(id) => setActiveReelId(id)} // stops others
-                      isMuted={globalMuted}
-                      onMuteToggle={handleMuteToggle}
-                      isAgent={message.role.toLowerCase() === "agent"}
-                    />
-                  )}
+                    {/* Render IG Story */}
+                    {message.type === "ig_story" && message.payload && (
+                      <InstagramStory
+                        id={message.payload.story_media_id}
+                        sharedBy="You"
+                        storyOwnerName={"Instagram User"}
+                        storyMediaUrl={message.payload.story_media_url}
+                        isActive={activeStoryId === message.payload.story_media_id} // only one plays
+                        onPlay={(id) => setActiveStoryId(id)}
+                        isMuted={globalMuted}
+                        onMuteToggle={(muted) => setGlobalMuted(muted)}
+                        isAgent={message.role.toLowerCase() === "agent"}
+                        timestamp={formatMessageTime(message.timestamp)}
+                        />
+                    )}
+                  </LazyMediaLoader>
+
                   
                   {/* {botProductInfo && message.role === "ai" && (
                     <div className="flex flex-col max-w-[40%] overflow-hidden justify-end mb-4">

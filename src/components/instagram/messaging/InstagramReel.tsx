@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
 
 interface InstagramReelProps {
     id: string;
@@ -22,7 +23,6 @@ export default function InstagramReel({
     profileImage = "/icons/ig_no_pfp.jpg",
     username = "Instagram User",
     reelVideoUrl,
-    title,
     timestamp,
     viewOnInstagramUrl,
     isLatest = false,
@@ -126,7 +126,7 @@ export default function InstagramReel({
             >
                 <div
                     className={`relative w-full ${isFullscreen ? "h-[90vh]" : "aspect-[9/16]"
-                        } bg-black/50 rounded-2xl`}
+                        } bg-gray-200 rounded-2xl`}
                     onClick={isFullscreen ? handleVideoClick : undefined}
                 >
                     <video
@@ -138,6 +138,7 @@ export default function InstagramReel({
                         onClick={!isFullscreen ? handleVideoClick : undefined}
                         onPlay={() => onPlay?.(id)}
                         className="object-cover w-full h-full"
+                        onError={() => toast.error("We're having trouble loading Reels. Please try again later.")}
                     />
 
                     {/* Profile Info */}
