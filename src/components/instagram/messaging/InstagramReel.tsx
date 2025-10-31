@@ -137,8 +137,7 @@ export default function InstagramReel({
                         playsInline
                         onClick={!isFullscreen ? handleVideoClick : undefined}
                         onPlay={() => onPlay?.(id)}
-                        className="object-cover w-full h-full"
-                        onError={() => toast.error("We're having trouble loading Reels. Please try again later.")}
+                        className="object-cover w-[250px]"
                     />
 
                     {/* Profile Info */}
