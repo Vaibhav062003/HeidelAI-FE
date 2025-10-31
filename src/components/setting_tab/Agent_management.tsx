@@ -29,6 +29,7 @@ export const TeamManagement = () => {
     invitations: true,
   });
   
+  
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -40,10 +41,15 @@ export const TeamManagement = () => {
   });
   const [activeTab, setActiveTab] = useState<'members' | 'invitations'>('members');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   
   React.useEffect(() => {
     if (!memberships?.data) return;
     if (!invitations?.data) return;
+
+    // console.log('Memberships data:', memberships.data);
+    // const org = memberships.data.map((m)=> m.organization?.maxAllowedMemberships)
+    // console.log('Organization from memberships:', org);
 
 
     // Invitations mapping
@@ -143,28 +149,8 @@ export const TeamManagement = () => {
     setDeleteDialog({ open: true, member, type: 'member' });
   };
 
-  const handleRevokeInvitation = async (invitation: InvitedMember) => {
-    try {
-      const response = await fetch("http://localhost:8000/revoke-invite", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          invitation_id: invitation.id,
-          requesting_user_id: user?.id,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data?.error || 'Failed to revoke invitation');
-      }
-      toast.success('Invitation revoked successfully');
-      setInvitationsList((prev) => prev.filter(i => i.id !== invitation.id));
-    } catch (error) {
-      toast.error('Failed to revoke invitation. Please try again.');
-    }
-    setDeleteDialog({ open: false, member: null, type: 'invitation' });
+  const handleRevokeInvitation = (invitation: InvitedMember) => {
+    setDeleteDialog({ open: true, member: invitation as InvitedMember, type: 'invitation' });
   };
 
   const confirmDelete = async () => {
@@ -189,8 +175,26 @@ export const TeamManagement = () => {
         toast.error('Failed to remove member. Please try again.');
       }
     } else {
-      setInvitationsList((prev) => prev.filter(i => i.id !== (deleteDialog.member as InvitedMember).id));
-      toast.success('Invitation revoked successfully');
+      try {
+        const response = await fetch("http://localhost:8000/revoke-invite", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            invitation_id: (deleteDialog.member as InvitedMember).id,
+            requesting_user_id: user?.id,
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data?.error || 'Failed to revoke invitation');
+        }
+        toast.success('Invitation revoked successfully');
+        setInvitationsList((prev) => prev.filter(i => i.id !== (deleteDialog.member as InvitedMember).id));
+      } catch (error) {
+        toast.error('Failed to revoke invitation. Please try again.');
+      }
     }
 
     setDeleteDialog({ open: false, member: null, type: 'member' });
@@ -218,6 +222,14 @@ export const TeamManagement = () => {
     return colors[index];
   };
 
+  // Get max allowed members (from organization or fallback to 5)
+  const maxAllowedMemberships =
+    organization?.maxAllowedMemberships ??
+    (memberships?.data?.[0]?.organization?.maxAllowedMemberships ?? 5);
+
+  const membersCount = members.length;
+  const inviteDisabled = membersCount >= maxAllowedMemberships;
+
   return (
     <div className="w-full min-h-screen bg-white">
       <div className="w-full max-w-10xl mx-auto px-6 py-10">
@@ -241,23 +253,43 @@ export const TeamManagement = () => {
 
         {/* Stats Section */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
-          <div className="flex items-center justify-between">
+          <div className="relative flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Members</p>
               <p className="text-4xl font-semibold text-gray-900">{members.length}</p>
             </div>
-            <button
-              onClick={() => setIsInviteOpen(true)}
-              className="flex text-black items-center gap-2 bg-gray-200 px-4 py-2.5  hover:bg-blue-500 hover:text-white  rounded-lg transition-colors font-medium"
+            <div
+              onMouseEnter={() => inviteDisabled && setShowTooltip(true)}
+              onMouseLeave={() => setShowTooltip(false)}
+              className="relative"
             >
-              <UserPlus className="w-4 h-4" />
-              Invite Member
-            </button>
+              {isAdmin && (
+                <button
+                onClick={() => setIsInviteOpen(true)}
+                className={`flex text-black items-center gap-2 bg-gray-200 px-4 py-2.5 rounded-lg transition-colors font-medium ${
+                  inviteDisabled
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-blue-500 hover:text-white"
+                }`}
+                disabled={inviteDisabled}
+                id="invite-member-btn"
+              >
+                <UserPlus className="w-4 h-4" />
+                Invite Member
+              </button>
+              )}
+              
+              {inviteDisabled && showTooltip && (
+                <div className="absolute left-1/2 -translate-x-1/2 mt-2 px-4 py-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 whitespace-nowrap">
+                  You have reached the maximum of {maxAllowedMemberships} members for this organization.
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Invite Modal */}
-        {isInviteOpen && (
+        {isInviteOpen &&  (
           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
               <div className="flex items-center justify-between mb-4">
@@ -315,14 +347,16 @@ export const TeamManagement = () => {
               </p>
               <div className="flex gap-3 justify-end">
                 <button
+                  id="cancel-delete"
                   onClick={() => setDeleteDialog({ open: false, type: 'member', member: null })}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
+                  id={deleteDialog.type === 'member' ? "confirm-remove-member" : "confirm-revoke-invitation"}
                   onClick={confirmDelete}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-200 transition-colors"
                 >
                   {deleteDialog.type === 'member' ? 'Remove' : 'Revoke'}
                 </button>
@@ -349,7 +383,8 @@ export const TeamManagement = () => {
                   {members.length}
                 </span>
               </button>
-              <button
+              {isAdmin && (
+                <button
                 onClick={() => setActiveTab('invitations')}
                 className={`flex-1 px-6 py-4 text-center font-medium text-sm uppercase tracking-wide border-b-2 transition-colors ${
                   activeTab === 'invitations'
@@ -362,6 +397,8 @@ export const TeamManagement = () => {
                   {invitationsList.length}
                 </span>
               </button>
+              )}
+              
             </div>
           </div>
 
@@ -443,8 +480,9 @@ export const TeamManagement = () => {
                         {isAdmin && (
                           <td className="px-6 py-4 text-right">
                             <button
+                              id={`revoke-invite-${invitation.id}`}
                               onClick={() => handleRevokeInvitation(invitation)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
                             >
                               <Trash2 className="w-4 h-4" />
                               Revoke
