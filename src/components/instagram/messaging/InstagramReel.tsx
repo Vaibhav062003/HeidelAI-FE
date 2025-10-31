@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
 
 interface InstagramReelProps {
     id: string;
@@ -22,7 +23,6 @@ export default function InstagramReel({
     profileImage = "/icons/ig_no_pfp.jpg",
     username = "Instagram User",
     reelVideoUrl,
-    title,
     timestamp,
     viewOnInstagramUrl,
     isLatest = false,
@@ -47,16 +47,16 @@ export default function InstagramReel({
         );
 
         if (isActive) {
-            // this reel explicitly chosen → play
-            video.play().catch(() => { });
+            video.play().catch(() => {});
         } else if (isLatest && !anyPlaying) {
-            // latest reel → only autoplay if nothing else playing
-            video.play().catch(() => { });
+            // Autoplay latest only if nothing else is playing
+            video.play().catch(() => {});
         } else {
-            // pause in all other cases
             video.pause();
         }
     }, [isActive, isLatest]);
+
+
 
     useEffect(() => {
         const video = videoRef.current;
@@ -126,7 +126,7 @@ export default function InstagramReel({
             >
                 <div
                     className={`relative w-full ${isFullscreen ? "h-[90vh]" : "aspect-[9/16]"
-                        } bg-black/50 rounded-2xl`}
+                        } bg-gray-200 rounded-2xl`}
                     onClick={isFullscreen ? handleVideoClick : undefined}
                 >
                     <video

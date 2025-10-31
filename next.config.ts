@@ -54,7 +54,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'lookaside.fbsbx.com',
+        hostname: 'egenie-whatsapp.koyeb.app',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lookaside.fbsbx.com'
       }
     ],
   }
