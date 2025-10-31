@@ -643,9 +643,14 @@ const ChatView = ({
     timestamp: number;
   }>>(new Map());
 
-  const [activeReelId, setActiveReelId] = useState<string | null>(null);
-  const [activeStoryId, setActiveStoryId] = useState<string | null>(null);
   const [globalMuted, setGlobalMuted] = useState(true);
+  const [activeMediaId, setActiveMediaId] = useState<string | null>(null);
+  const [activeMediaType, setActiveMediaType] = useState<"reel" | "story" | null>(null);
+
+  const handlePlay = (id: string, type: "reel" | "story") => {
+    setActiveMediaId(id);
+    setActiveMediaType(type);
+  };
 
   const handleMuteToggle = (muted: boolean) => {
     setGlobalMuted(muted);
@@ -1746,15 +1751,18 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
             // console.log("productInfo", productInfo);
             // console.log("botProductInfo", botProductInfo);
             // reel related logic
-            const latestReelIndex = [...messages]
-            .reverse()
-            .findIndex((m) => m.type === "ig_reel");
-            const latestStoryIndex = [...messages]
-            .reverse()
-            .findIndex((m) => m.type === "ig_story");
+            const latestMediaMessage = [...messages]
+              .reverse()
+              .find((m) => m.type === "ig_reel" || m.type === "ig_story");
 
-            const isLatest = index === messages.length - 1 - latestReelIndex;
-            const isLatestStory = index === messages.length - 1 - latestStoryIndex;
+            const latestMediaId = latestMediaMessage?.payload?.reel_video_id || latestMediaMessage?.payload?.story_media_id;
+            const latestMediaType = latestMediaMessage?.type; // "ig_reel" or "ig_story"
+
+            const isLatest =
+              (message.type === "ig_reel" &&
+                message.payload?.reel_video_id === latestMediaId) ||
+              (message.type === "ig_story" &&
+                message.payload?.story_media_id === latestMediaId);
 
             return (
               <div key={message.id}>
@@ -1823,8 +1831,11 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
                         timestamp={formatMessageTime(message.timestamp)}
                         viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
                         isLatest={isLatest}
-                        isActive={activeReelId === message.payload.reel_video_id}
-                        onPlay={(id) => setActiveReelId(id)} // stops others
+                        isActive={
+                          activeMediaType === "reel" &&
+                          activeMediaId === message.payload.reel_video_id
+                        }
+                        onPlay={(id) => handlePlay(id, "reel")} // stops others
                         isMuted={globalMuted}
                         onMuteToggle={handleMuteToggle}
                         isAgent={message.role.toLowerCase() === "agent"}
@@ -1838,9 +1849,13 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
                         sharedBy="You"
                         storyOwnerName={"Instagram User"}
                         storyMediaUrl={message.payload.story_media_url}
-                        isActive={activeStoryId === message.payload.story_media_id} // only one plays
-                        onPlay={(id) => setActiveStoryId(id)}
+                        isActive={
+                          activeMediaType === "story" &&
+                          activeMediaId === message.payload.story_media_id
+                        } // only one plays
+                        onPlay={(id) => handlePlay(id, "story")}
                         isMuted={globalMuted}
+                        isLatest={isLatest}
                         onMuteToggle={(muted) => setGlobalMuted(muted)}
                         isAgent={message.role.toLowerCase() === "agent"}
                         timestamp={formatMessageTime(message.timestamp)}

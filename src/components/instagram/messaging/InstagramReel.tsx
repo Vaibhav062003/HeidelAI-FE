@@ -47,16 +47,16 @@ export default function InstagramReel({
         );
 
         if (isActive) {
-            // this reel explicitly chosen → play
-            video.play().catch(() => { });
+            video.play().catch(() => {});
         } else if (isLatest && !anyPlaying) {
-            // latest reel → only autoplay if nothing else playing
-            video.play().catch(() => { });
+            // Autoplay latest only if nothing else is playing
+            video.play().catch(() => {});
         } else {
-            // pause in all other cases
             video.pause();
         }
     }, [isActive, isLatest]);
+
+
 
     useEffect(() => {
         const video = videoRef.current;
