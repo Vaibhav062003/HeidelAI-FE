@@ -20,27 +20,27 @@ import { ExternalLink, Send, Plus, Search, Eye, Share2, AlertTriangle } from "lu
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import api from "@/lib/session_api";
-
+import { Product } from "../types/product";
 type PlatformType = "pinecone" | "shopify" | "other" | undefined;
 
 const WS_URL = 'wss://egenie-whatsapp.koyeb.app/cs';
 
-interface Product {
-  id: string;
-  category: string;
-  description: string;
-  images: string;
-  name: string;
-  on_sale: string;
-  permalink: string;
-  price: number;
-  product_id: number;
-  purchasable: string;
-  regular_price: string;
-  sale_price: string;
-  slug: string;
-  stock_quantity: number;
-}
+// interface Product {
+//   id: string;
+//   category: string;
+//   description: string;
+//   images: string;
+//   name: string;
+//   on_sale: string;
+//   permalink: string;
+//   price: number;
+//   product_id: number;
+//   purchasable: string;
+//   regular_price: string;
+//   sale_price: string;
+//   slug: string;
+//   stock_quantity: number;
+// }
 
 interface ProductsTabProps {
   selectedConversationId?: string;
@@ -86,16 +86,16 @@ const LoadingState = () => (
   </div>
 );
 
-const ProductsTab = ({ 
-  onProductSelect, 
+const ProductsTab = ({
+  onProductSelect,
   selectedConversationId,
-  onShareProduct 
+  onShareProduct
 }: ProductsTabProps) => {
   const [searchProduct, setSearchProduct] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true); // Initialize as true
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showOptions, setShowOptions] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -103,20 +103,17 @@ const ProductsTab = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [retries, setRetries] = useState(0);
   const [ws, setWs] = useState<WebSocket | null>(null);
-  
+
   const maxRetries = 5;
   const retryDelay = 3000;
 
   const fetchProducts = async (conversationId: string) => {
     if (!conversationId) return;
-    
+
     setLoading(true);
     try {
-      // console.log("id:",conversationId);
       const response = await api.post(`/api/ai/product-recommendations/${conversationId}`);
-
       if (response.status !== 200) throw new Error("Failed to fetch products");
-
       const data = await response.data();
 
       if (data.status === "error") {
@@ -125,7 +122,7 @@ const ProductsTab = ({
         setFilteredProducts([]);
         return;
       }
-      
+
       setError(null);
       const productsData = Array.isArray(data.data) ? data.data : [];
       setProducts(productsData);
@@ -146,18 +143,16 @@ const ProductsTab = ({
       return;
     }
 
-    // Initial fetch
     fetchProducts(selectedConversationId);
 
-    // WebSocket connection
     const connectWebSocket = () => {
       try {
         const wsConnection = new WebSocket(`${WS_URL}/client-${Date.now()}`);
-        
+
         wsConnection.onopen = () => {
           setRetries(0);
         };
-        
+
         wsConnection.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
@@ -192,7 +187,6 @@ const ProductsTab = ({
       }
     };
 
-    // Only connect WebSocket in browser environment
     if (typeof window !== 'undefined') {
       connectWebSocket();
     }
@@ -204,7 +198,6 @@ const ProductsTab = ({
     };
   }, [selectedConversationId]);
 
-  // Filter products when search or category changes
   useEffect(() => {
     const filtered = products.filter((product) => {
       const matchesSearch = product.name
@@ -260,14 +253,14 @@ const ProductsTab = ({
   }
 
   return (
-    <div className="p-3 mb-2 bg-white shadow-sm">
+       <div className="p-3 bg-white">
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
-        <div className="flex-1 relative top-[1.5]">
+        <div className="flex-1 relative">
           <Input
-            placeholder="Search products.."
+            placeholder="Search products..."
             value={searchProduct}
             onChange={(e) => setSearchProduct(e.target.value)}
-            className="pl-8 pr-3 py-1.5 text-sm border-gray-300 focus:ring-1 focus:ring-blue-500"
+            className="pl-8 pr-3 py-1.5 text-sm"
           />
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
         </div>
@@ -290,25 +283,19 @@ const ProductsTab = ({
               <div className="py-1">
                 <button
                   onClick={() => handleOptionSelect("pinecone")}
-                  className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white 
-                            border border-transparent hover:border-gray-300 
-                            hover:bg-gray-50 text-left transition-all"
+                  className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
                 >
                   Add to Pinecone
                 </button>
                 <button
                   onClick={() => handleOptionSelect("shopify")}
-                  className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white 
-                            border border-transparent hover:border-gray-300 
-                            hover:bg-gray-50 text-left transition-all"
+                  className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
                 >
                   Add to Shopify
                 </button>
                 <button
                   onClick={() => handleOptionSelect("other")}
-                  className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white 
-                            border border-transparent hover:border-gray-300 
-                            hover:bg-gray-50 text-left transition-all"
+                  className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
                 >
                   Add to Wordpress
                 </button>
@@ -318,17 +305,16 @@ const ProductsTab = ({
         </div>
       </div>
 
-      <ScrollArea className="h-[calc(100vh-145px)] pr-2">
         <div className="space-y-2">
           {filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="group flex items-center gap-4 p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-200 transition-all shadow-sm hover:shadow-md cursor-pointer"
+            className="group flex items-center gap-4 p-3 bg-white rounded-lg border hover:border-blue-200"
               onClick={() => onProductSelect(product)}
             >
               <div className="w-20 bg-gray-50 rounded-md overflow-hidden">
-                <img 
-                  src={product.images} 
+                <img
+                  src={product.images}
                   alt={product.name}
                   className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
                 />
@@ -365,17 +351,17 @@ const ProductsTab = ({
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onShareProduct(product);
-                    }}
-                  >
-                    <Share2 className="h-4 w-4" />
-                  </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onShareProduct(product);
+                      }}
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </Button>
                   </TooltipTrigger>
                   <TooltipContent>Share product</TooltipContent>
                 </Tooltip>
@@ -389,7 +375,6 @@ const ProductsTab = ({
             No products found matching your criteria
           </div>
         )}
-      </ScrollArea>
 
       {showForm && (
         <div

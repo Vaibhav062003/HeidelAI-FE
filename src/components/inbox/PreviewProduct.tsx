@@ -27,25 +27,24 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import {toast} from 'sonner'
+import { Product } from "../types/product";
 
-
-
-interface Product {
-  id: string;
-  category: string;
-  description: string;
-  images: string;
-  name: string;
-  on_sale: string; // Use boolean if the data contains `true/false` instead of `"True"/"False"`
-  permalink: string;
-  price: number;
-  product_id: number;
-  purchasable: string; // Use boolean if the data contains `true/false`
-  regular_price: string; // Use `number` if parsed as numeric values
-  sale_price: string; // Use `number` if parsed as numeric values
-  slug: string;
-  stock_quantity: number;
-}
+// interface Product {
+//   id: string;
+//   category: string;
+//   description: string;
+//   images: string;
+//   name: string;
+//   on_sale: string; // Use boolean if the data contains `true/false` instead of `"True"/"False"`
+//   permalink: string;
+//   price: number;
+//   product_id: number;
+//   purchasable: string; // Use boolean if the data contains `true/false`
+//   regular_price: string; // Use `number` if parsed as numeric values
+//   sale_price: string; // Use `number` if parsed as numeric values
+//   slug: string;
+//   stock_quantity: number;
+// }
 
 type MetadataValue = string | number | boolean;
 
