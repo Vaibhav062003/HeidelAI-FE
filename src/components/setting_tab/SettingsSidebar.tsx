@@ -14,10 +14,18 @@ import {
   Shield, 
   Clock, 
   UserCog, 
-  Link 
+  Link,
+  ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import CannedResponses from './CannedResponsesContext';
 
 interface AgentMember {
@@ -37,9 +45,7 @@ interface InvitedAgent {
   status: string;
 }
 
-
 const AGENT_LIMIT = 5;
-
 
 const SettingsSections = [
   { 
@@ -81,7 +87,6 @@ const SettingsSections = [
     icon: List, 
     name: 'CannedResponses', 
     component: () => <CannedResponses onInsertResponse={(message: string) => {
-      // Handle the response insertion here
       console.log('Inserting response:', message);
     }} />
   },
@@ -112,8 +117,7 @@ const SettingsSections = [
 const SettingsDashboard = () => { 
   const router = useRouter();
   const [activeSection, setActiveSection] = useState(SettingsSections[0]);
-
-   const [members, setMembers] = useState<AgentMember[]>([]);
+  const [members, setMembers] = useState<AgentMember[]>([]);
   const [invited, setInvited] = useState<InvitedAgent[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -147,11 +151,10 @@ const SettingsDashboard = () => {
 
   useEffect(() => {
     fetchMembers();
-    const interval = setInterval(fetchMembers, 5 * 60 * 1000); // every 5 min
+    const interval = setInterval(fetchMembers, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // Handle navigation based on URL hash
   useEffect(() => {
     const hash = window.location.hash.replace('#', '');
     const section = SettingsSections.find((s) => s.name.toLowerCase() === hash.toLowerCase());
@@ -160,29 +163,88 @@ const SettingsDashboard = () => {
     }
   }, []);
 
+  // Listen for integrations open event
+  useEffect(() => {
+    const handleOpenIntegrations = () => {
+      const integrationsSection = SettingsSections.find(s => s.name === 'Integrations');
+      if (integrationsSection) {
+        setActiveSection(integrationsSection);
+        router.push('#integrations');
+      }
+    };
+
+    window.addEventListener('openIntegrationsSettings', handleOpenIntegrations);
+    
+    return () => {
+      window.removeEventListener('openIntegrationsSettings', handleOpenIntegrations);
+    };
+  }, [router]);
+
   const handleSectionChange = (section: typeof SettingsSections[0]) => {
     setActiveSection(section);
-    router.push(`#${section.name.toLowerCase()}`); // Update the URL hash
+    router.push(`#${section.name.toLowerCase()}`);
   };
 
   return (
-      <Card className="h-[100vh] w-[1350px] translate-x-[-40px] mx-auto my-2 shadow-lg rounded-xl">
-      <CardContent className="p-6 flex h-full">
-        <div className="w-64 border-r pr-4">
-          <h2 className="text-lg font-semibold mb-4">Account Settings</h2>
+    <Card className="h-full w-full max-w-full mx-auto shadow-lg rounded-xl overflow-hidden">
+      <CardContent className="p-4 md:p-6 flex flex-col md:flex-row h-full gap-4 md:gap-6 min-h-0">
+        
+        {/* Mobile Dropdown Selector */}
+        <div className="md:hidden w-full">
+          <Select
+            value={activeSection.name}
+            onValueChange={(value) => {
+              const section = SettingsSections.find(s => s.name === value);
+              if (section) handleSectionChange(section);
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue>
+                <div className="flex items-center gap-2">
+                  <activeSection.icon className="h-4 w-4" />
+                  <span>{activeSection.name}</span>
+                  {activeSection.badge && (
+                    <span className="ml-auto px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">
+                      {activeSection.badge}
+                    </span>
+                  )}
+                </div>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {SettingsSections.map((section) => (
+                <SelectItem key={section.name} value={section.name}>
+                  <div className="flex items-center gap-2">
+                    <section.icon className="h-4 w-4" />
+                    <span>{section.name}</span>
+                    {section.badge && (
+                      <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">
+                        {section.badge}
+                      </span>
+                    )}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Desktop Sidebar */}
+        <div className="hidden md:flex w-56 lg:w-64 border-r pr-4 flex-shrink-0 flex-col">
+          <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Account Settings</h2>
           
-          <div className="space-y-1">
+          <div className="space-y-1 overflow-y-auto flex-1 min-h-0">
             {SettingsSections.map((section) => (
               <Button
                 key={section.name}
                 variant={activeSection.name === section.name ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
+                className="w-full justify-start text-sm"
                 onClick={() => handleSectionChange(section)}
               >
-                <section.icon className="mr-2 h-4 w-4" />
-                {section.name}
+                <section.icon className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{section.name}</span>
                 {section.badge && (
-                  <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">
+                  <span className="ml-auto px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded flex-shrink-0">
                     {section.badge}
                   </span>
                 )}
@@ -191,14 +253,15 @@ const SettingsDashboard = () => {
           </div>
         </div>
         
-        <div className="flex-1 pl-6">
+        {/* Content Area */}
+        <div className="flex-1 min-w-0 overflow-y-auto">
           {activeSection.name === 'Agents' ? (
             <AgentsSettings
               members={members}
               invited={invited}
               initialLoading={initialLoading}
               refresh={fetchMembers}
-              agentLimit={AGENT_LIMIT}
+              agentlimit={AGENT_LIMIT}
             />
           ) : (
             React.createElement(activeSection.component)

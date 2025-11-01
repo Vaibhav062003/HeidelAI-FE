@@ -56,7 +56,7 @@ interface AgentsSettingsProps {
   invited: InvitedAgent[];
   initialLoading: boolean;
   refresh: () => void;
-  agentLimit: number;
+  agentlimit: number;
 }
 
 export const AgentsSettings = ({
@@ -64,7 +64,7 @@ export const AgentsSettings = ({
   invited,
   initialLoading,
   refresh,
-  agentLimit,
+  agentlimit,
 }: AgentsSettingsProps) => {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
@@ -240,310 +240,345 @@ export const AgentsSettings = ({
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="border-b border-gray-200 pb-4">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Agents Management</h2>
-        <p className="text-gray-600">
-          Manage your organization&apos;s agents and invitations. Current usage: {totalAgents}/{AGENT_LIMIT} agents.
-        </p>
-      </div>
+   <div className="h-full w-full overflow-y-auto bg-gray-50/30">
+      <div className="
+        max-w-7xl mx-auto
+        h-full
+        p-4 sm:p-6 lg:p-15
+        space-y-5
+      ">
+        
+        {/* Header Section */}
+        {/* <div className="border-b border-gray-200 pb-6">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Agents Management
+          </h2>
+          <p className="text-gray-600 leading-relaxed">
+            Manage your organization&apos;s agents and invitations. Current usage: 
+            <span className="font-semibold text-gray-900"> {totalAgents}/{AGENT_LIMIT} agents</span>.
+          </p>
+        </div> */}
 
-      {limitReached && (
-        <div className="border border-amber-200 rounded-lg bg-amber-50 p-4">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <h3 className="font-semibold text-amber-800 mb-1">Agent Limit Reached</h3>
-              <p className="text-amber-700">
-                You have reached the maximum number of agents ({AGENT_LIMIT}). 
-                Contact support to increase your limit.
-              </p>
+        {/* Alert Banner */}
+        {limitReached && (
+          <div className="border border-amber-200 rounded-xl bg-amber-50 p-6 shadow-sm">
+            <div className="flex items-start gap-4">
+              <AlertTriangle className="h-6 w-6 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-amber-800 mb-2 text-lg">
+                  Agent Limit Reached
+                </h3>
+                <p className="text-amber-700 leading-relaxed">
+                  You have reached the maximum number of agents ({AGENT_LIMIT}). 
+                  Contact support to increase your limit.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <UserPlus className="h-5 w-5" />
-            Team Members & Invitations
-          </h3>
-        </div>
+        {/* Table Container with proper boundaries */}
+        <div className="
+          bg-white 
+          border border-gray-200 
+          rounded-xl 
+          shadow-sm hover:shadow-md 
+          transition-shadow duration-200
+          overflow-hidden
+        ">
+          
+          {/* Table Header */}
+          <div className="px-6 py-5 border-b border-gray-200 bg-gray-50/50">
+            <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
+              <UserPlus className="h-6 w-6 text-blue-600" />
+              Team Members & Invitations
+            </h3>
+          </div>
 
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="font-semibold text-gray-900">
-                  <div className="flex items-center gap-2">
-                    Email Address
+          {/* Table with proper width constraints */}
+          <div className="w-full overflow-x-auto">
+            <div className="min-w-full inline-block align-middle">
+              <Table className="min-w-full">
+                <TableHeader>
+                  <TableRow className="bg-gray-50/80 border-b border-gray-200">
+                    <TableHead className="
+                      font-semibold text-gray-900 
+                      px-6 py-4 text-left
+                      w-2/5 min-w-[250px]
+                    ">
+                      Email Address
+                    </TableHead>
+                    <TableHead className="
+                      font-semibold text-gray-900
+                      px-6 py-4 text-left
+                      w-1/5 min-w-[120px]
+                    ">
+                      Role
+                    </TableHead>
+                    <TableHead className="
+                      font-semibold text-gray-900
+                      px-6 py-4 text-left
+                      w-1/5 min-w-[120px]
+                    ">
+                      Status
+                    </TableHead>
+                    <TableHead className="
+                      font-semibold text-gray-900
+                      px-6 py-4 text-right
+                      w-1/5 min-w-[120px]
+                    ">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {initialLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-16 px-6">
+                        <div className="flex flex-col items-center gap-4 text-gray-500">
+                          <div className="animate-spin h-10 w-10 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
+                          <span className="text-lg font-medium">Loading members...</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : members.length === 0 && invited.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-16 px-6">
+                        <div className="flex flex-col items-center gap-4 text-gray-500">
+                          <UserPlus className="h-16 w-16 text-gray-300" />
+                          <div className="space-y-2">
+                            <span className="text-xl font-semibold text-gray-700">No team members yet</span>
+                            <span className="text-gray-500">Start by inviting your first agent</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    <>
+                      {members.map((member: AgentMember) => (
+                        <TableRow key={member.id} className="
+                          hover:bg-gray-50/80 
+                          transition-colors duration-150
+                          border-b border-gray-100
+                        ">
+                          <TableCell className="px-6 py-4 font-medium">
+                            <div className="truncate max-w-xs">
+                              {member.public_user_data?.identifier || member.identifier || 'N/A'}
+                            </div>
+                          </TableCell>
+                          <TableCell className="px-6 py-4">
+                            <span className={`
+                              inline-flex items-center 
+                              px-3 py-1.5 rounded-full 
+                              text-sm font-medium border 
+                              ${getRoleBadgeColor(member.role_name)}
+                            `}>
+                              {getRoleDisplayName(member.role_name)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="px-6 py-4">
+                            <span className="
+                              inline-flex items-center 
+                              px-3 py-1.5 rounded-full 
+                              text-sm font-medium 
+                              bg-green-100 text-green-800 
+                              border border-green-200
+                            ">
+                              Active
+                            </span>
+                          </TableCell>
+                          <TableCell className="px-6 py-4 text-right">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={deletingUserId === member.user_id || actionLoading}
+                                  className="
+                                    text-red-600 border-red-200 
+                                    hover:bg-red-50 hover:border-red-300
+                                  "
+                                >
+                                  {deletingUserId === member.user_id ? (
+                                    <div className="flex items-center gap-2">
+                                      <div className="animate-spin h-3 w-3 border border-red-600 border-t-transparent rounded-full"></div>
+                                      Removing...
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-1">
+                                      <Trash2 className="h-3 w-3" />
+                                      Remove
+                                    </div>
+                                  )}
+                                </Button>
+                              </AlertDialogTrigger>
+                            </AlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {invited.map((invite: InvitedAgent) => (
+                        <TableRow key={invite.id} className="
+                          hover:bg-gray-50/80 
+                          transition-colors duration-150
+                          border-b border-gray-100
+                        ">
+                          <TableCell className="px-6 py-4 font-medium">
+                            <div className="truncate max-w-xs">
+                              {invite.email_address}
+                            </div>
+                          </TableCell>
+                          <TableCell className="px-6 py-4">
+                            <span className="
+                              inline-flex items-center 
+                              px-3 py-1.5 rounded-full 
+                              text-sm font-medium 
+                              bg-gray-100 text-gray-800 
+                              border border-gray-200
+                            ">
+                              Pending
+                            </span>
+                          </TableCell>
+                          <TableCell className="px-6 py-4">
+                            <span className="
+                              inline-flex items-center 
+                              px-3 py-1.5 rounded-full 
+                              text-sm font-medium 
+                              bg-yellow-100 text-yellow-800 
+                              border border-yellow-200
+                            ">
+                              Invitation Sent
+                            </span>
+                          </TableCell>
+                          <TableCell className="px-6 py-4 text-right">
+                            
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="px-6 py-5 border-t border-gray-200 bg-gray-50/30">
+            <Dialog open={isOpen} onOpenChange={(open) => {
+              setIsOpen(open);
+              if (!open) {
+                setEmail('');
+                setRole('');
+              }
+            }}>
+              <DialogTrigger asChild>
+                <Button
+                  className="
+                    w-full bg-blue-600 hover:bg-blue-700 
+                    text-white py-4 text-lg font-medium
+                    rounded-lg transition-all duration-200
+                    hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed
+                  "
+                  disabled={limitReached}
+                >
+                  <UserPlus className="h-5 w-5 mr-2" />
+                  {limitReached ? 'Agent Limit Reached' : 'Invite New Agent'}
+                </Button>
+              </DialogTrigger>
+
+              <DialogContent className="
+                w-full max-w-sm mx-4 
+                sm:max-w-md sm:mx-0
+                lg:max-w-lg
+              ">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Mail className="h-5 w-5 text-blue-600" />
+                    Invite New Agent
+                  </DialogTitle>
+                </DialogHeader>
+                <form
+                  className="space-y-4 sm:space-y-5"
+                  onSubmit={e => {
+                    e.preventDefault();
+                    handleInviteAgent();
+                  }}
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                      Email Address *
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={inviting}
+                      placeholder="agent@example.com"
+                      required
+                      className="w-full text-sm sm:text-base"
+                    />
                   </div>
-                </TableHead>
-                <TableHead className="font-semibold text-gray-900">Role</TableHead>
-                <TableHead className="font-semibold text-gray-900">Status</TableHead>
-                <TableHead className="font-semibold text-gray-900 text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {initialLoading ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-12">
-                    <div className="flex flex-col items-center gap-2 text-gray-500">
-                      <div className="animate-spin h-6 w-6 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
-                      <span>Loading members...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : members.length === 0 && invited.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-12">
-                    <div className="flex flex-col items-center gap-2 text-gray-500">
-                      <UserPlus className="h-8 w-8 text-gray-300" />
-                      <span className="text-lg font-medium">No team members yet</span>
-                      <span className="text-sm">Start by inviting your first agent</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                <>
-                  {members.map((member: AgentMember) => (
-                    <TableRow key={member.id} className="hover:bg-gray-50">
-                      <TableCell className="font-medium">
-                        {member.public_user_data?.identifier || member.identifier || 'N/A'}
-                      </TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeColor(member.role_name)}`}>
-                          {getRoleDisplayName(member.role_name)}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                          Active
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={deletingUserId === member.user_id || actionLoading}
-                              className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
-                            >
-                              {deletingUserId === member.user_id ? (
-                                <div className="flex items-center gap-2">
-                                  <div className="animate-spin h-3 w-3 border border-red-600 border-t-transparent rounded-full"></div>
-                                  Removing...
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1">
-                                  <Trash2 className="h-3 w-3" />
-                                  Remove
-                                </div>
-                              )}
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle className="flex items-center gap-2">
-                                <AlertTriangle className="h-5 w-5 text-red-600" />
-                                Remove Team Member
-                              </AlertDialogTitle>
-                              <AlertDialogDescription className="text-left">
-                                Are you sure you want to remove <strong>{member.public_user_data?.identifier || member.identifier}</strong> from your organization?
-                                <br /><br />
-                                This action cannot be undone. The user will lose access to all organization resources immediately.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDeleteMember(member.user_id)}
-                                className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-                              >
-                                Remove Member
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {invited.map((invite: InvitedAgent) => (
-                    <TableRow key={invite.id} className="hover:bg-gray-50">
-                      <TableCell className="font-medium">
-                        {invite.email_address}
-                      </TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-                          Pending
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
-                          Invitation Sent
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={revokingInviteId === invite.id || actionLoading}
-                              className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300"
-                            >
-                              {revokingInviteId === invite.id ? (
-                                <div className="flex items-center gap-2">
-                                  <div className="animate-spin h-3 w-3 border border-orange-600 border-t-transparent rounded-full"></div>
-                                  Revoking...
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1">
-                                  <UserMinus className="h-3 w-3" />
-                                  Revoke
-                                </div>
-                              )}
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle className="flex items-center gap-2">
-                                <AlertTriangle className="h-5 w-5 text-orange-600" />
-                                Revoke Invitation
-                              </AlertDialogTitle>
-                              <AlertDialogDescription className="text-left">
-                                Are you sure you want to revoke the invitation sent to <strong>{invite.email_address}</strong>?
-                                <br /><br />
-                                This will cancel their pending invitation and they will no longer be able to join your organization using the current invite link.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleRevokeInvite(invite.id as string)}
-                                className="bg-orange-600 hover:bg-orange-700 focus:ring-orange-600"
-                              >
-                                Revoke Invitation
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <Dialog open={isOpen} onOpenChange={(open) => {
-            setIsOpen(open);
-            if (!open) {
-              setEmail('');
-              setRole('');
-            }
-          }}>
-            <DialogTrigger asChild>
-              <Button
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                disabled={limitReached}
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                {limitReached ? 'Agent Limit Reached' : 'Invite New Agent'}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Mail className="h-5 w-5 text-blue-600" />
-                  Invite New Agent
-                </DialogTitle>
-              </DialogHeader>
-              <form
-                className="space-y-4"
-                onSubmit={e => {
-                  e.preventDefault();
-                  handleInviteAgent();
-                }}
-              >
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                    Email Address *
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={inviting}
-                    placeholder="agent@example.com"
-                    required
-                    className="w-full"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role" className="text-sm font-medium text-gray-700">
-                    Role *
-                  </Label>
-                  <Select
-                    value={role}
-                    onValueChange={(value) => setRole(value)}
-                    disabled={inviting}
-                    required
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="org:member">
-                        <div className="flex flex-col items-start">
-                          <span className="font-medium">Member</span>
-                          <span className="text-xs text-gray-500">Standard access permissions</span>
+                  <div className="space-y-2">
+                    <Label htmlFor="role" className="text-sm font-medium text-gray-700">
+                      Role *
+                    </Label>
+                    <Select
+                      value={role}
+                      onValueChange={(value) => setRole(value)}
+                      disabled={inviting}
+                      required
+                    >
+                      <SelectTrigger className="w-full text-sm sm:text-base">
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="org:member">
+                          <div className="flex flex-col items-start">
+                            <span className="font-medium">Member</span>
+                            <span className="text-xs text-gray-500">Standard access permissions</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="org:admin">
+                          <div className="flex flex-col items-start">
+                            <span className="font-medium">Administrator</span>
+                            <span className="text-xs text-gray-500">Full management permissions</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <DialogFooter className="gap-2 mt-6 flex flex-col sm:flex-row">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsOpen(false)}
+                      disabled={inviting}
+                      className="w-full sm:w-auto order-2 sm:order-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={!email || !role || inviting}
+                      className="w-full sm:w-auto order-1 sm:order-2"
+                    >
+                      {inviting ? (
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin h-3 w-3 border border-white border-t-transparent rounded-full"></div>
+                          Sending...
                         </div>
-                      </SelectItem>
-                      <SelectItem value="org:admin">
-                        <div className="flex flex-col items-start">
-                          <span className="font-medium">Administrator</span>
-                          <span className="text-xs text-gray-500">Full management permissions</span>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-3 w-3" />
+                          Send Invitation
                         </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <DialogFooter className="gap-2 mt-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsOpen(false)}
-                    disabled={inviting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={!email || !role || inviting}
-                    
-                  >
-                    {inviting ? (
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin h-3 w-3 border border-white border-t-transparent rounded-full"></div>
-                        Sending...
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-3 w-3" />
-                        Send Invitation
-                      </div>
-                    )}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
     </div>

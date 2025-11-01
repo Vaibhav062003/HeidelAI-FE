@@ -1,6 +1,9 @@
                                as bbbvfasdasdag  
 abcdef
 
+dev2:
+merged vaibbhav's changes, deploying on testing.heidelai.com to test them
+
 dev:
 deploying changes regarding : updated post api endpoint addedd CORS origin header
 deploying : updated reel video height and width to fit on ipad | test

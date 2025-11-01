@@ -25,7 +25,7 @@ const team_collabration = () => {
   const invited: InvitedAgent[] = [];
   const initialLoading = false;
   const refresh = () => {};
-  const agentLimit = 0;
+  const agentlimit = 0;
 
   return (
     <AgentsSettings
@@ -33,7 +33,7 @@ const team_collabration = () => {
       invited={invited}
       initialLoading={initialLoading}
       refresh={refresh}
-      agentLimit={agentLimit}
+      agentlimit={agentlimit}
     />
   )
 }
