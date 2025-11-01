@@ -57,6 +57,14 @@ const nextConfig: NextConfig = {
         hostname: 'framerusercontent.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'egenie-whatsapp.koyeb.app',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lookaside.fbsbx.com'
       }
     ],
   }
