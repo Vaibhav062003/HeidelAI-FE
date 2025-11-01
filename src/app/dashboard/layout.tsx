@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { LogIn } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useEffect } from "react";
+import Image from "next/image";
 
 export default function DashboardLayout({
   children,
@@ -13,7 +14,7 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const router = useRouter();
-  const { isSignedIn, isLoaded, user } = useUser();
+  const { isSignedIn, isLoaded} = useUser();
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -22,7 +23,7 @@ export default function DashboardLayout({
   }, [isLoaded, isSignedIn]);
 
   if (!isLoaded) {
-    // Enlarged Loading spinner
+    // HeidelAI Logo Loader with Shine Effect
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-gray-100 to-indigo-100 relative overflow-hidden">
         <div className="absolute inset-0">
@@ -36,7 +37,29 @@ export default function DashboardLayout({
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="backdrop-blur-xl bg-white/30 p-20 rounded-3xl shadow-2xl text-center border border-white/40 z-10"
         >
-          <div className="w-20 h-20 mx-auto mb-8 border-8 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <div className="relative w-32 h-32 mx-auto mb-8 flex items-center justify-center">
+            <Image
+              src="/heidelai.png"
+              alt="HeidelAI"
+              width={260} 
+              height={260}
+              className="mb-8 drop-shadow-2xl"
+            />
+            <motion.div
+              className="absolute top-0 left-0 w-32 h-32 pointer-events-none"
+              initial={{ x: -128, opacity: 0.2 }}
+              animate={{ x: 128, opacity: [0.2, 0.8, 0.2] }}
+              transition={{
+                repeat: Infinity,
+                duration: 1.6,
+                ease: "easeInOut"
+              }}
+              style={{
+                background:
+                  "linear-gradient(120deg, transparent 60%, rgba(255,255,255,0.7) 80%, transparent 100%)"
+              }}
+            />
+          </div>
           <h1 className="text-4xl font-bold text-gray-800 mb-4">
             Checking your session...
           </h1>
@@ -49,7 +72,7 @@ export default function DashboardLayout({
   }
 
   if (!isSignedIn) {
-    // Enlarged Not signed in UI
+    // Enlarged Not signed in UI with HeidelAI Logo Loader with Shine Effect
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 relative overflow-hidden">
         <div className="absolute inset-0">
@@ -63,8 +86,28 @@ export default function DashboardLayout({
           transition={{ duration: 0.7, ease: "easeOut" }}
           className="backdrop-blur-xl bg-white/30 p-20 rounded-3xl shadow-2xl text-center border border-white/40 z-10 max-w-2xl"
         >
-          <div className="mx-auto mb-8 flex items-center justify-center w-24 h-24 rounded-full bg-indigo-600 text-white shadow-lg">
-            <LogIn className="w-14 h-14" />
+          <div className="relative w-32 h-32 mx-auto mb-8 flex items-center justify-center">
+            <Image
+              src="/heidelai.png"
+              alt="HeidelAI"
+              width={260} 
+              height={260}
+              className="mb-8 drop-shadow-2xl"
+            />
+            <motion.div
+              className="absolute top-0 left-0 w-32 h-32 pointer-events-none"
+              initial={{ x: -128, opacity: 0.2 }}
+              animate={{ x: 128, opacity: [0.2, 0.8, 0.2] }}
+              transition={{
+                repeat: Infinity,
+                duration: 1.6,
+                ease: "easeInOut"
+              }}
+              style={{
+                background:
+                  "linear-gradient(120deg, transparent 60%, rgba(255,255,255,0.7) 80%, transparent 100%)"
+              }}
+            />
           </div>
 
           <h1 className="text-4xl font-bold text-gray-800 mb-6">
