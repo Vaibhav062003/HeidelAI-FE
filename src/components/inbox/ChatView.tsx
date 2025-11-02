@@ -215,60 +215,81 @@ interface CannedResponse {
   created_at: string;
 }
 
-const MessageSkeleton = memo(() => (
-  <div className="flex flex-col gap-4">
+// Skeletons
+
+const MessageSkeleton = () => (
+  <div className="flex flex-col gap-4 animate-pulse">
+    {/* Left side message */}
     <div className="flex items-start gap-2 max-w-[50%]">
-      <div className="w-8 h-8 skeleton rounded-full" />
+      <div className="w-8 h-8 bg-gray-200 rounded-full" />
       <div className="flex flex-col gap-2">
-        <div className="h-4 w-24 skeleton rounded-full" />
-        <div className="h-10 w-48 skeleton rounded-lg" />
+        <div className="h-4 w-24 bg-gray-200 rounded-full" />
+        <div className="h-10 w-48 bg-gray-200 rounded-lg" />
       </div>
     </div>
+    
+    {/* Right side message */}
     <div className="flex items-start gap-2 max-w-[50%] self-end">
       <div className="flex flex-col gap-2">
-        <div className="h-4 w-24 skeleton rounded-full self-end" />
-        <div className="h-10 w-56 skeleton rounded-lg" />
+        <div className="h-4 w-24 bg-gray-200 rounded-full self-end" />
+        <div className="h-10 w-56 bg-gray-200 rounded-lg" />
       </div>
     </div>
   </div>
-));
-MessageSkeleton.displayName = "MessageSkeleton";
+);
 
-const LoadingState = memo(() => (
-  <Card className="h-screen flex flex-col bg-white">
+const LoadingState = () => (
+  <Card className="h-screen flex flex-col bg-white ">
+    {/* Header skeleton */}
     <div className="p-4 border-b flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 skeleton rounded-full" />
+        <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
         <div className="space-y-2">
-          <div className="h-4 w-32 skeleton rounded-full" />
-          <div className="h-3 w-24 skeleton rounded-full" />
+          <div className="h-4 w-32 bg-gray-200 rounded-full animate-pulse" />
+          <div className="h-3 w-24 bg-gray-200 rounded-full animate-pulse" />
         </div>
       </div>
       <div className="flex gap-2">
-        <div className="w-8 h-8 skeleton rounded-full" />
-        <div className="w-8 h-8 skeleton rounded-full" />
-        <div className="w-8 h-8 skeleton rounded-full" />
+        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
       </div>
     </div>
+
+    {/* Messages area */}
     <ScrollArea className="flex-1 h-full p-4">
       <div className="space-y-6">
-        {[1, 2, 3, 4].map((i) => (
+        {[1,2,3,4].map(i => (
           <MessageSkeleton key={i} />
         ))}
       </div>
     </ScrollArea>
+
+    {/* Input area skeleton */}
     <div className="p-4 border-t">
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 skeleton rounded-lg" />
-        <div className="flex-1 h-10 skeleton rounded-lg" />
-        <div className="w-8 h-8 skeleton rounded-lg" />
+        <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
+        <div className="flex-1 h-10 bg-gray-200 rounded-lg animate-pulse" />
+        <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
       </div>
     </div>
   </Card>
-));
-LoadingState.displayName = "LoadingState";
+);
 
-const SharedProductPreview = memo(({ product, onRemove }: { product: Product; onRemove: () => void }) => (
+// const parseProductData = (productDataString: string): ProductData[] => {
+//   try {
+//     return JSON.parse(productDataString);
+//   } catch (error) {
+//     console.error('Error parsing product data:', error);
+//     return [];
+//   }
+// };
+
+
+const SharedProductPreview = ({ product, onRemove }: {
+  product: Product;
+  onRemove: () => void;
+}) => (
   <div className="flex items-center w-fit gap-3 p-2 bg-gray-50 rounded-lg border border-gray-200 mb-2">
     <div className="w-15 h-15 relative">
       <Image
@@ -280,23 +301,30 @@ const SharedProductPreview = memo(({ product, onRemove }: { product: Product; on
       />
     </div>
     <div className="flex-1 min-w-0">
-      <p className="text-base font-medium text-gray-900">
-        {product.name.length > 50 ? `${product.name.substring(0, 50)}...` : product.name}
+      <p className="text-base font-medium text-gray-900 ">
+        {product.name.length > 50 
+          ? `${product.name.substring(0, 50)}...` 
+          : product.name}
       </p>
       <p className="text-sm text-gray-500">₹{product.price}</p>
     </div>
-    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onRemove}>
+    <Button
+      variant="ghost"
+      size="sm"
+      className="h-8 w-8 p-0"
+      onClick={onRemove}
+    >
       <X className="h-4 w-4" />
     </Button>
   </div>
-));
-SharedProductPreview.displayName = "SharedProductPreview";
+);
 
-const RemindersPopover = ({
-  reminders,
-  onCreateReminder,
-  onDeleteReminder
-}: {
+
+const RemindersPopover = ({ 
+  reminders, 
+  onCreateReminder, 
+  onDeleteReminder 
+}: { 
   reminders: Reminder[];
   onCreateReminder: () => void;
   onDeleteReminder: (id: string) => void;
@@ -307,9 +335,9 @@ const RemindersPopover = ({
         <div className="flex items-center justify-between mb-2">
           <h4 className="font-medium">Reminders</h4>
           {reminders.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
+            <Button 
+              variant="ghost" 
+              size="sm" 
               onClick={onCreateReminder}
               className="h-8 px-2 text-blue-600 hover:text-blue-700"
             >
@@ -322,8 +350,8 @@ const RemindersPopover = ({
           {reminders.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-sm text-gray-500 mb-4">No reminders set</div>
-              <Button
-                variant="outline"
+              <Button 
+                variant="outline" 
                 size="sm"
                 onClick={onCreateReminder}
               >
@@ -344,11 +372,11 @@ const RemindersPopover = ({
                     <p className="text-xs text-gray-500">{reminder.notes}</p>
                   )}
                   <p className="text-xs text-gray-500 mt-1">
-                    {format(
-                      // Add IST offset (UTC+5:30)
-                      new Date(new Date(reminder.dateTime).getTime() + (5.5 * 60 * 60 * 1000)),
-                      "MMM d, yyyy 'at' h:mm a"
-                    )}
+                  {format(
+          // Add IST offset (UTC+5:30)
+          new Date(new Date(reminder.dateTime).getTime() + (5.5 * 60 * 60 * 1000)),
+          "MMM d, yyyy 'at' h:mm a"
+        )}
                   </p>
                 </div>
                 <Button
@@ -367,39 +395,37 @@ const RemindersPopover = ({
     </PopoverContent>
   );
 };
-// RemindersPopover.displayName = "RemindersPopover";
 
-const CartMessage = memo(({ items }: { items: CartItem[] }) => {
+const CartMessage = ({ items }: { items: CartItem[] }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const { total, totalQuantity } = useMemo(() => ({
-    total: items.reduce((sum, item) => sum + item.item_price * item.quantity, 0),
-    totalQuantity: items.reduce((sum, item) => sum + item.quantity, 0)
-  }), [items]);
+  const total = items.reduce((sum, item) => sum + (item.item_price * item.quantity), 0);
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <>
       <div className="flex flex-col w-fit mb-4 bg-gray-50 rounded-lg p-4 border">
         <div className="flex items-center gap-4">
-          <img
+          <img 
             src={items[0].product_data.image_url}
             alt={items[0].product_data.name}
-            className="w-24 h-24 rounded"
-            loading="lazy"
+            className="w-24 h-24  rounded"
           />
           <div className="flex flex-col space-y-2">
-            <div className="relative flex space-x-2">
-              <ShoppingCart className="h-6 w-6 text-blue-600" />
-              <div className="font-medium">{totalQuantity} items</div>
-            </div>
-            <div className="text-sm">
-              ₹{total.toLocaleString("en-IN")} (estimated total)
-            </div>
+          <div className="relative flex space-x-2">
+            <ShoppingCart className="h-6 w-6 text-blue-600" />
+            <div className="font-medium ">{totalQuantity} items</div>
+          </div>
+          <div className="text-sm">₹{total.toLocaleString('en-IN')} (estimated total)</div>
           </div>
         </div>
-        <Button variant="outline" className="mt-3" onClick={() => setIsModalOpen(true)}>
+        <Button 
+          variant="outline" 
+          className="mt-3"
+          onClick={() => setIsModalOpen(true)}
+        >
           View Cart ({totalQuantity} items)
         </Button>
+        
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -410,22 +436,19 @@ const CartMessage = memo(({ items }: { items: CartItem[] }) => {
           <div className="space-y-4 max-h-[60vh] overflow-auto p-4">
             {items.map((item, idx) => (
               <div key={idx} className="flex gap-4 border-b pb-4">
-                <img
+                <img 
                   src={item.product_data.image_url}
                   alt={item.product_data.name}
-                  className="w-24 h-24 rounded"
-                  loading="lazy"
+                  className="w-24 h-24  rounded"
                 />
                 <div className="flex-1">
                   <h4 className="font-medium line-clamp-2">{item.product_data.name}</h4>
                   <div className="flex items-center justify-between mt-2">
                     <span>Quantity: {item.quantity}</span>
                     <div className="text-right">
-                      <div className="font-medium">
-                        ₹{(item.item_price * item.quantity).toLocaleString("en-IN")}
-                      </div>
+                      <div className="font-medium">₹{(item.item_price * item.quantity).toLocaleString('en-IN')}</div>
                       <div className="text-sm text-gray-500">
-                        {item.quantity} × ₹{item.item_price.toLocaleString("en-IN")}
+                        {item.quantity} × ₹{item.item_price.toLocaleString('en-IN')}
                       </div>
                     </div>
                   </div>
@@ -434,86 +457,96 @@ const CartMessage = memo(({ items }: { items: CartItem[] }) => {
             ))}
             <div className="flex justify-between pt-4 text-lg font-medium">
               <span>Total ({totalQuantity} items)</span>
-              <span className="font-bold">₹{total.toLocaleString("en-IN")}</span>
+              <span className="font-bold">₹{total.toLocaleString('en-IN')}</span>
             </div>
           </div>
         </DialogContent>
       </Dialog>
     </>
   );
-});
-CartMessage.displayName = "CartMessage";
+};
 
-const AddressMessage = memo(({ data }: { data: AddressData }) => (
-  <div className="flex flex-col w-fit mb-4 bg-gray-50 rounded-lg p-4 border max-w-md hover:shadow-md transition-shadow">
-    <div className="flex items-center gap-3 mb-3">
-      <MapPin className="h-5 w-5 text-blue-600" />
-      <div className="font-medium">Delivery Address</div>
-    </div>
-    <div className="space-y-3 text-sm">
-      <div className="flex flex-col">
-        <span className="font-medium">{data.address.full_name}</span>
-        <span className="text-gray-600">{data.address.email}</span>
-        <span className="text-gray-600">+{data.sender_id}</span>
+const AddressMessage = ({ data }: { data: AddressData }) => {
+  return (
+    <div className="flex flex-col w-fit mb-4 bg-gray-50 rounded-lg p-4 border max-w-md hover:shadow-md transition-shadow">
+      <div className="flex items-center gap-3 mb-3">
+        <MapPin className="h-5 w-5 text-blue-600" />
+        <div className="font-medium">Delivery Address</div>
       </div>
-      <div className="flex flex-col">
-        <span>{data.address.address}</span>
-        <span>{data.address.city}, {data.address.state}</span>
-        <span>{data.address.pin_code}</span>
-        <span>{data.address.country.replace("0_", "")}</span>
-      </div>
-      <div className="pt-3 border-t">
-        <div className="text-xs text-gray-500 mb-1">Order Summary</div>
-        {data.order_details.map((item, idx) => (
-          <div key={idx} className="flex justify-between">
-            <span>{item.quantity} items</span>
-            <span className="font-medium">
-              {item.currency} {item.item_price.toLocaleString("en-IN")}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-));
-AddressMessage.displayName = "AddressMessage";
+      
+      <div className="space-y-3 text-sm">
+        <div className="flex flex-col">
+          <span className="font-medium">{data.address.full_name}</span>
+          <span className="text-gray-600">{data.address.email}</span>
+          <span className="text-gray-600">+{data.sender_id}</span>
+        </div>
 
-const FilePreview = memo(({
-  file,
+        <div className="flex flex-col">
+          <span>{data.address.address}</span>
+          <span>{data.address.city}, {data.address.state}</span>
+          <span>{data.address.pin_code}</span>
+          <span>{data.address.country.replace('0_', '')}</span>
+        </div>
+
+        <div className="pt-3 border-t">
+          <div className="text-xs text-gray-500 mb-1">Order Summary</div>
+          {data.order_details.map((item, idx) => (
+            <div key={idx} className="flex justify-between">
+              <span>{item.quantity} items</span>
+              <span className="font-medium">
+                {item.currency} {item.item_price.toLocaleString('en-IN')}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const FilePreview = ({ 
+  file, 
   caption,
   setCaption,
-  onCancel
-}: {
+  onCancel 
+}: { 
   file: File;
   caption: string;
   setCaption: (text: string) => void;
   progress: number;
   onCancel: () => void;
 }) => {
-  const isVideo = file.type.startsWith("video/");
-  const previewUrl = useMemo(() => URL.createObjectURL(file), [file]);
+  const isVideo = file.type.startsWith('video/');
+  const previewUrl = URL.createObjectURL(file);
 
-  const formatFileSize = useCallback((bytes: number): string => {
+  const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  }, []);
-
-  useEffect(() => {
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [previewUrl]);
+  };
 
   return (
     <div className="relative">
       <div className="relative w-full rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+        {/* Media preview */}
         <div className="aspect-video w-full relative">
           {isVideo ? (
-            <video src={previewUrl} className="w-full h-full object-contain" controls={false} />
+            <video
+              src={previewUrl}
+              className="w-full h-full object-contain"
+              controls={false}
+            />
           ) : (
-            <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="w-full h-full object-contain"
+            />
           )}
+          
+          {/* Cancel button */}
           <button
             onClick={onCancel}
             className="absolute top-2 right-2 p-1 rounded-full bg-black/50 hover:bg-black/75 transition-colors"
@@ -521,11 +554,13 @@ const FilePreview = memo(({
             <X className="h-4 w-4 text-white" />
           </button>
         </div>
+        
+        {/* Caption input - WhatsApp style */}
         <div className="p-3 bg-white border-t border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <Input
-                placeholder="Add a caption..."
+              <Input 
+                placeholder="Add a caption..." 
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
                 className="border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-400 text-sm"
@@ -539,8 +574,7 @@ const FilePreview = memo(({
       </div>
     </div>
   );
-});
-FilePreview.displayName = "FilePreview";
+};
 
 const MessageItem = memo(({
   message,
@@ -664,119 +698,153 @@ const ChatView = ({
     setGlobalMuted(muted);
   };
 
-  const token = async () => {
+  const token = async()=>{
     const sessionId = localStorage.getItem("sessionId");
     if (!sessionId) throw new Error("Session ID not found in localStorage");
 
-    const res = await fetch("api/session-token", {
+    const res = await fetch("api/session-token",{
       method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ sessionId })
-    });
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({sessionId})
+    })
     const { token: sessionToken } = await res.json();
-    return sessionToken;
-  };
+    return sessionToken
+  }
 
-  const startRecording = useCallback(async () => {
+  const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true});
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "audio/webm;codecs=opus",
+        mimeType: 'audio/webm;codecs=opus' // Ensure WebM format with Opus codec
       });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
-
+  
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
-
+  
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const audioUrl = URL.createObjectURL(audioBlob);
         setAudioURL(audioUrl);
         setIsRecording(false);
       };
-
+  
       mediaRecorder.start();
       setIsRecording(true);
     } catch (error) {
-      console.error("Error accessing microphone:", error);
-      toast.error("Error accessing microphone. Please check your permissions.");
+      console.error('Error accessing microphone:', error);
+      toast.error('Error accessing microphone. Please check your permissions.');
     }
-  }, []);
+  };
 
-  const stopRecording = useCallback(() => {
+  const stopRecording =()=>{
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+      // Stop all audio tracks
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
     }
-  }, []);
+  }
 
-  const handleMicClick = useCallback(() => {
+
+    // Add this useEffect for loading canned responses
+    useEffect(() => {
+      const fetchCannedResponses = async () => {
+        const { data, error } = await supabase
+          .from('canned_responses')
+          .select('*');
+        
+        if (!error && data) {
+          setCannedResponses(data);
+        }
+      };
+      
+      fetchCannedResponses();
+    }, []);
+  
+    // Add this useEffect for handling canned response suggestions
+    useEffect(() => {
+      if (message.startsWith('/')) {
+        const query = message.substring(1).toLowerCase();
+        const filtered = cannedResponses.filter(response =>
+          response.shortcode.toLowerCase().includes(query)
+        );
+        setFilteredResponses(filtered);
+        setShowCannedResponses(true);
+      } else {
+        setShowCannedResponses(false);
+      }
+    }, [message, cannedResponses]);  
+
+  const handleMicClick = () => {
     setIsRecording(!isRecording);
-  }, [isRecording]);
+  };
 
-  const handleSendAudio = useCallback(async () => {
+  const handleSendAudio = async () => {
     if (!audioURL || !selectedConversationId) return;
-
+  
     setIsSending(true);
     try {
+      // Create a new FormData instance
       const formData = new FormData();
-      const audioBlob = await fetch(audioURL).then((r) => r.blob());
-      const audioFile = new window.File([audioBlob], "voice-message.webm", {
-        type: "audio/webm",
+      
+      // Convert the audioURL blob to a File object
+      const audioBlob = await fetch(audioURL).then(r => r.blob());
+      const audioFile = new window.File([audioBlob], 'voice-message.webm', { 
+        type: 'audio/webm' // Keep original WebM format from recording
       });
-
-      formData.append("file", audioFile);
-      formData.append("type", "audio");
-      formData.append("messaging_product", "whatsapp");
-      formData.append("conversation_id", selectedConversationId);
-
-      const response = await fetch(
-        `https://egenie-whatsapp.koyeb.app/media/${selectedConversationId}/upload`,
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        }
-      );
-
+      
+      // Add required metadata
+      formData.append('file', audioFile);
+      formData.append('type', 'audio');
+      formData.append('messaging_product', 'whatsapp');
+      formData.append('conversation_id', selectedConversationId);
+  
+      // Send the audio file
+      const response = await fetch(`https://egenie-whatsapp.koyeb.app/media/${selectedConversationId}/upload`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+  
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(errorData?.message || `Server error: ${response.status}`);
       }
-
+  
       const data = await response.json();
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          content: data.fileUrl || audioURL,
-          type: "voice",
-          role: "agent",
-          conversation_id: selectedConversationId,
-          timestamp: new Date().toISOString(),
-          sender_id: "agent",
-          fileUrl: data.fileUrl || audioURL,
-        },
-      ]);
-
+      
+      // Add the voice message to the messages array
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        content: data.fileUrl || audioURL,
+        type: 'voice',
+        role: 'agent',
+        conversation_id: selectedConversationId,
+        timestamp: new Date().toISOString(),
+        sender_id: 'agent',
+        fileUrl: data.fileUrl || audioURL
+      }]);
+  
+      // Clear the audio state
       setAudioURL(null);
-      toast.success("Voice message sent successfully");
+      toast.success('Voice message sent successfully');
     } catch (error) {
-      console.error("Error sending audio message:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to send voice message");
+      console.error('Error sending audio message:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to send voice message');
     } finally {
       setIsSending(false);
     }
-  }, [audioURL, selectedConversationId]);
+  };
 
 
-  const handleFileUpload = useCallback(async (file: File | null, recipient: string, caption: string = "") => {
+  const handleFileUpload = async (file: File | null, recipient: string, caption: string = "") => {
     if (!file || !selectedConversationId) return;
 
     setUploading(true);
@@ -789,14 +857,18 @@ const ChatView = ({
         return;
       }
 
+      // Prepare FormData for media upload
       const formData = new FormData();
       formData.append('file', file);
       formData.append('recipient_id', recipient.split('_')[1]);
       if (caption.trim()) formData.append('caption', caption.trim());
 
+      // Use a dedicated endpoint for WhatsApp media
       const response = await api.post(
         `whatsapp/${whatsappId}/media/send`,
-        { data: formData }
+        {
+          data: formData,
+        }
       );
 
       if (response.status !== 200) {
@@ -805,14 +877,15 @@ const ChatView = ({
 
       const data = response.data;
 
+      // Add the message to the UI
       setMessages(prev => [
         ...prev,
         {
           id: data.details.message_id || Date.now().toString(),
           content: caption || `[File]`,
           type: file.type.startsWith('image/') ? 'image' :
-            file.type.startsWith('video/') ? 'video' :
-              file.type.startsWith('audio/') ? 'voice' : 'file',
+                file.type.startsWith('video/') ? 'video' :
+                file.type.startsWith('audio/') ? 'voice' : 'file',
           role: 'agent',
           conversation_id: selectedConversationId,
           timestamp: new Date().toISOString(),
@@ -833,15 +906,13 @@ const ChatView = ({
       setFileCaption("");
       setIsFileModalOpen(false);
     }
-  }, [selectedConversationId]);
+  };
 
-  const handleShareProduct = useCallback(async (messageText: string, product: Product) => {
+  const handleShareProduct = async (messageText: string, product: Product) => {
     if (!selectedConversationId) return;
 
     if (!messageText.trim()) {
-      toast.error("Cannot send empty message", {
-        description: "Please add a message to send with the product",
-      });
+      toast.error("Cannot send empty message", {description: "Please add a message to send with the product"});
       return;
     }
 
@@ -849,7 +920,9 @@ const ChatView = ({
     try {
       const response = await fetch('https://egenie-whatsapp.koyeb.app/api/send_single_product', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           conversation_id: selectedConversationId,
           product_id: product.product_id,
@@ -857,39 +930,33 @@ const ChatView = ({
         }),
         credentials: 'include'
       });
-
+  
       if (!response.ok) {
-        throw new Error("Failed to share product");
+        throw new Error('Failed to share product');
       }
-
-      setMessage("");
+  
+      // Clear the message input and shared product
+      setMessage('');
       onClearSharedProduct();
-      toast.success("Product shared successfully");
+      
+      toast.success('Product shared successfully');
     } catch (error) {
-      console.error("Error sharing product:", error);
-      toast.error("Failed to share product");
+      console.error('Error sharing product:', error);
+      toast.error('Failed to share product');
     } finally {
       setIsSending(false);
     }
-  }, [selectedConversationId, onClearSharedProduct]);
+  };
 
-  const debouncedSetMessage = useMemo(() => {
-    let timeoutId: NodeJS.Timeout;
-    return (value: string) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        setMessage(value);
-      }, 50);
-    };
-  }, []);
-
-  const sendMessage = useCallback(async () => {
+  const sendMessage = async () => {
     if (!message.trim() || !selectedConversationId || isSending) return;
 
     let contentToSend = message.trim();
-    const platform = selectedConversationId.split('_')[0];
-    const sender_id = selectedConversationId.split('_')[1];
+    const platform = selectedConversationId.split('_')[0]; 
+    const sender_id = selectedConversationId.split('_')[1]; 
+  
 
+    // Canned response support
     if (contentToSend.startsWith('/')) {
       const shortcode = contentToSend.slice(1).toLowerCase();
       const cannedResponse = cannedResponses.find(
@@ -902,13 +969,12 @@ const ChatView = ({
 
     setIsSending(true);
     try {
-
       let response;
       if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
         if (!whatsappId) throw new Error('No WhatsApp ID found');
 
-        const payload = {
+        const payload= {
           conversation_id: selectedConversationId,
           content: contentToSend,
           sender_id: sender_id,
@@ -917,11 +983,14 @@ const ChatView = ({
         if (response.status !== "success") throw new Error(response.message || 'Failed to send message');
       } else if (platform === 'instagram') {
         const data = {
-          conversation_id: selectedConversationId,
-          content: contentToSend,
-          sender_id: sender_id
-        };
-        response = await api.post(`/api/instagram/conversations/send_message`, data);
+            conversation_id: selectedConversationId,
+            content: contentToSend,
+            sender_id : sender_id
+        }
+        console.log("selectedConversationId:", selectedConversationId);
+        response = await api.post(`/api/instagram/conversations/send_message`,
+         data
+        );
         if (response.status !== 200) throw new Error('Failed to send message');
       }
       setMessage('');
@@ -930,7 +999,7 @@ const ChatView = ({
     } finally {
       setIsSending(false);
     }
-  }, [message, selectedConversationId, isSending, cannedResponses]);
+  };
 
   useEffect(() => {
     // Scroll to the bottom when new messages are added
@@ -941,7 +1010,7 @@ const ChatView = ({
 
   const toggleAI = async () => {
     if (!selectedConversationId || isToggling) return;
-
+    
     setIsToggling(true);
     try {
       const platform = selectedConversationId.split('_')[0];
@@ -958,15 +1027,15 @@ const ChatView = ({
         if (response.status !== 200) throw new Error('Failed to toggle AI');
       }
       setIsAIEnabled(!isAIEnabled);
-      toast.success(`AI ${!isAIEnabled ? "enabled" : "disabled"} for this conversation`);
+      toast.success(`AI ${!isAIEnabled ? 'enabled' : 'disabled'} for this conversation`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to toggle AI status');
     } finally {
       setIsToggling(false);
     }
-  }
+  };
 
-  const saveCustomerInfo = useCallback(async (updatedData: {
+  const saveCustomerInfo = async (updatedData: {
     name: string;
     email: string;
     billingaddress: string;
@@ -978,41 +1047,27 @@ const ChatView = ({
         `https://egenie-whatsapp.koyeb.app/conversations/${selectedConversationId}/update_customer_info`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(updatedData),
         }
       );
-
+  
       if (!response.ok) {
         throw new Error("Failed to update customer info");
       }
-
+  
       const updatedConversation = await response.json();
-      setConversation(updatedConversation);
+      setConversation(updatedConversation); // Update the state with the new data
       toast.success("Customer information updated successfully!");
     } catch (error) {
       console.error("Error updating customer info:", error);
       toast.error("Failed to update customer information.");
     }
-  }, [selectedConversationId]);
+  };
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (sharedProduct) {
-        handleShareProduct(message, sharedProduct);
-      } else if (audioURL) {
-        handleSendAudio();
-      } else {
-        sendMessage();
-      }
-    }
-    if (e.key === "/" && message === "") {
-      setShowCannedResponses(true);
-    }
-  }, [sharedProduct, message, audioURL, handleShareProduct, handleSendAudio, sendMessage]);
-
-  const handleResolve = useCallback(() => {
+    const handleResolve = useCallback(() => {
     setIsResolved(true);
     setIsFollowUp(false);
     setConversationStatus('closed');
@@ -1090,128 +1145,40 @@ const ChatView = ({
     }, 100);
   }, [selectedConversationId]);
 
-  // const avatarSource = useMemo(() => {
-  //   if (conversation?.platform === "whatsapp") return "/features/whatsapp.png";
-  //   if (conversation?.platform === "telegram") return "/features/telegram.png";
-  //   if (conversation?.platform === "instagram") return "/features/instagram.png";
-  //   return "";
-  // }, [conversation?.platform]);
-
-  // const { lastCustomerMessage, isWindowExpired } = useMemo(() => {
-  //   const lastMsg = messages
-  //     .filter((m) => m.role === "customer")
-  //     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-
-  //   const expired = lastMsg
-  //     ? new Date().getTime() - new Date(lastMsg.timestamp).getTime() > 24 * 60 * 60 * 1000
-  //     : true;
-
-  //   return { lastCustomerMessage: lastMsg, isWindowExpired: expired };
-  // }, [messages]);
-
-  // Store conversation in localStorage so desktop Sidebar can access it
-  // useEffect(() => {
-  //   if (conversation) {
-  //     localStorage.setItem(`conversation_${selectedConversationId}`, JSON.stringify(conversation));
-  //     window.dispatchEvent(new Event('conversationUpdated'));
-  //   }
-  // }, [conversation, selectedConversationId]);
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`;
-    }
-  }, [message]);
-
-  useEffect(() => {
-    if (lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
-  }, [messages]);
+  let ws: WebSocket | null = null;
 
 useEffect(() => {
-  if (!selectedConversationId) return;
+  if (!selectedConversationId) return () => {};
 
-  const timerInterval = setInterval(() => {
-    setCustomerTimers((prev) => ({
-      ...prev,
-      [selectedConversationId]: (prev[selectedConversationId] ?? 24) - 1,
-    }));
-  }, 3600000);
-
-  return () => clearInterval(timerInterval);
-}, [selectedConversationId]);
-
-
-  useEffect(() => {
-    const fetchCannedResponses = async () => {
-      const { data, error } = await supabase.from("canned_responses").select("*");
-      if (!error && data) {
-        setCannedResponses(data);
+  const setUnreadCount = async () => {
+    try {
+      const platform = selectedConversationId.split('_')[0];
+      let url;
+      if (platform === 'instagram') { 
+        url = `/api/instagram/conversations/${selectedConversationId}/read`;
+        await api.get(url);
+      } else if (platform === 'whatsapp') {
+        const whatsappId = localStorage.getItem('whatsapp_user_id');
+        if (!whatsappId) return;
+        url = `/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/read`;
+        await api.get(url);
       }
-    };
-    fetchCannedResponses();
-  }, []);
-
-  useEffect(() => {
-    if (message.startsWith("/")) {
-      const query = message.substring(1).toLowerCase();
-      const filtered = cannedResponses.filter((response) =>
-        response.shortcode.toLowerCase().includes(query)
-      );
-      setFilteredResponses(filtered);
-      setShowCannedResponses(true);
-    } else {
-      setShowCannedResponses(false);
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Error setting unread count:", error);
+      }
     }
-  }, [message, cannedResponses]);
-
-// Add these refs at the top of your ChatView component
-const messageIdsRef = useRef(new Set<string>());
-const isCleaningUpRef = useRef(false);
-const typingTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
-
-// Main useEffect for conversation handling
-useEffect(() => {
-  if (!selectedConversationId) return;
-
-  // Mark as not cleaning up
-  isCleaningUpRef.current = false;
-  
-  // Clear everything immediately when switching conversations
-  setMessages([]);
-  messageIdsRef.current.clear();
-  setTypingUsers(new Map());
-  setLoading(true);
-
-    const setUnreadCount = async () => {
-      try {
-        const platform = selectedConversationId.split('_')[0];
-        let url;
-        if (platform === 'instagram') {
-          url = `/api/instagram/conversations/${selectedConversationId}/read`;
-          await api.get(url);
-        } else if (platform === 'whatsapp') {
-          const whatsappId = localStorage.getItem('whatsapp_user_id');
-          if (!whatsappId) return;
-          url = `/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/read`;
-          await api.get(url);
-        }
-      } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-          console.error("Error setting unread count:", error);
-        }
-      }
-    };
+  };
 
   const fetchConversation = async () => {
     try {
+      setLoading(true);
       const platform = selectedConversationId.split('_')[0];
       let response;
       if (platform === 'instagram') {
         response = await api.get(`/api/instagram/conversations/${selectedConversationId}`);
         setConversation(response?.data);
+        console.log("Fetched Instagram conversation:", response?.data);
       } else if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
         if (!whatsappId) return;
@@ -1224,11 +1191,14 @@ useEffect(() => {
       }
     } catch (error) {
       toast.error("Failed to load conversation");
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchAIStatus = async () => {
     try {
+      setLoading(true);
       const platform = selectedConversationId.split('_')[0];
       let response;
       if (platform === 'instagram') {
@@ -1242,29 +1212,24 @@ useEffect(() => {
       }
     } catch (error) {
       setIsAIEnabled(true);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchMessages = async () => {
     try {
+      setLoading(true);
       const platform = selectedConversationId.split('_')[0];
       let response;
       if (platform === 'instagram') {
         response = await api.get(`/api/instagram/conversations/${selectedConversationId}/messages`);
-        const fetchedMessages = response?.data || [];
-        // Keep only last 100 messages to prevent memory bloat
-        const recentMessages = fetchedMessages.slice(-100);
-        setMessages(recentMessages);
-        recentMessages.forEach((msg: Message) => messageIdsRef.current.add(msg.id));
+        setMessages(response?.data || []);
       } else if (platform === 'whatsapp') {
         const whatsappId = localStorage.getItem('whatsapp_user_id');
         if (!whatsappId) return;
         response = await conversationService.getWhatsAppMessages(whatsappId, selectedConversationId);
-        const fetchedMessages = Array.isArray(response.data) ? response.data : [];
-        // Keep only last 100 messages to prevent memory bloat
-        const recentMessages = fetchedMessages.slice(-100);
-        setMessages(recentMessages);
-        recentMessages.forEach((msg: Message) => messageIdsRef.current.add(msg.id));
+        setMessages(Array.isArray(response.data) ? response.data : []);
       }
     } catch (error) {
       toast.error('Failed to load messages');
@@ -1273,212 +1238,158 @@ useEffect(() => {
     }
   };
   
+  
+  // WebSocket setup
   const WS_BASE_URL = "wss://egenie-whatsapp.koyeb.app";
+  // const WS_BASE_URL = `ws://127.0.0.1:8000`;
   const platform = selectedConversationId.split('_')[0];
   
+  // Create a unique clientId for this chat view instance
   function getOrCreateChatClientId() {
-    let id = localStorage.getItem('chat_client_id');
-    if (!id) {
-      id = `chat-view-${Date.now()}`;
-      localStorage.setItem('chat_client_id', id);
-    }
-    return id;
+  let id = localStorage.getItem('chat_client_id');
+  if (!id) {
+    id = `chat-view-${Date.now()}`;
+    localStorage.setItem('chat_client_id', id);
   }
-  
+  return id;
+}
   const chatClientId = getOrCreateChatClientId();
 
-  // Message handler for WebSocket
-  const handleMessage = (data: any) => {
-    if (data.type === 'typing_indicator') {
-      const myClientId = localStorage.getItem('chat_client_id');
-      if (data.agent_id !== myClientId && data.conversation_id === selectedConversationId) {
-        if (data.is_typing) {
-          // Clear any existing timeout for this agent
-          const existingTimeout = typingTimeoutsRef.current.get(data.agent_id);
-          if (existingTimeout) {
-            clearTimeout(existingTimeout);
-          }
-
-          setTypingUsers(prev => {
-            const next = new Map(prev);
-            next.set(data.agent_id, { agent_name: data.user, timestamp: Date.now() });
-            return next;
-          });
-          
-          // Auto-remove typing indicator after 3 seconds
-          const timeout = setTimeout(() => {
-            setTypingUsers(prev => {
-              const next = new Map(prev);
-              next.delete(data.agent_id);
-              return next;
-            });
-            typingTimeoutsRef.current.delete(data.agent_id);
-          }, 3000);
-          
-          typingTimeoutsRef.current.set(data.agent_id, timeout);
-        } else {
-          // Clear timeout and remove typing indicator immediately
-          const timeout = typingTimeoutsRef.current.get(data.agent_id);
-          if (timeout) {
-            clearTimeout(timeout);
-            typingTimeoutsRef.current.delete(data.agent_id);
-          }
-          
-          setTypingUsers(prev => {
-            const next = new Map(prev);
-            next.delete(data.agent_id);
-            return next;
-          });
-        }
-      }
-    }
-
-    if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
-      // O(1) duplicate check using Set
-      if (messageIdsRef.current.has(data.message.id)) return;
-      
-      messageIdsRef.current.add(data.message.id);
-      
-      // Keep only last 100 messages to prevent unbounded growth
-      setMessages(prev => {
-        const updated = [...prev, data.message];
-        return updated.slice(-100);
-      });
-    }
-    else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
-      messageIdsRef.current.delete(data.message_id);
-      setMessages(prev => prev.filter(msg => msg.id !== data.message_id));
-    }
-  };
-
-  // WebSocket setup for Instagram
   if (platform === 'instagram') {
     token().then(sessionToken => {
-      if (isCleaningUpRef.current) {
-        console.log('Already cleaning up, skipping WebSocket creation');
-        return;
-      }
-
+      // Use the unique clientId here instead of reusing the one from localStorage
       const clientId = localStorage.getItem('chat_client_id') || chatClientId;
       const ws = new WebSocket(`${WS_BASE_URL}/ws2/${platform}/${clientId}`, [sessionToken]);
-      
       wsRef.current = ws;
 
+
       ws.onopen = () => {
-        console.log(`ChatView: Instagram WebSocket connected for ${selectedConversationId}`);
+        console.log(`ChatView: Connected to Instagram WebSocket with ID ${clientId}`);
       };
 
       ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          handleMessage(data);
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
+        const data = JSON.parse(event.data);
+        console.log("ChatView: Instagram WebSocket received message: ", data);
+
+        // Handle typing indicators
+         
+          if (data.type === 'typing_indicator') {
+            const myClientId = localStorage.getItem('chat_client_id');
+            // Only show typing if it's for this conversation
+            if (
+              data.agent_id !== myClientId &&
+              data.conversation_id === selectedConversationId
+            ) {
+              if (data.is_typing) {
+                setTypingUsers(prev => {
+                  const next = new Map(prev);
+                  next.set(data.agent_id, { agent_name: data.user, timestamp: Date.now() });
+                  return next;
+                });
+              } else {
+                setTypingUsers(prev => {
+                  const next = new Map(prev);
+                  next.delete(data.agent_id);
+                  return next;
+                });
+              }
+            }
+          }
+
+
+        if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
+          console.log("ChatView: new_message event type ✅ && data conv_id: ", data.message.conversation_id);
+  
+          // Check if this message already exists in the messages array to avoid duplicates
+          const messageExists = messages.some(msg => 
+            msg.id === data.message.id || 
+            (msg.content === data.message.content && 
+            msg.timestamp === data.message.timestamp && 
+            msg.sender_id === data.message.sender_id)
+          );
+          
+          // Only add the message if it's not already in the messages array
+          if (!messageExists) {
+            setMessages(prev => [...prev, data.message]);
+          }
+        }
+
+        else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
+          setMessages(prev => 
+            prev.filter(msg => msg.id !== data.message_id)
+          );
+          
+          console.log(`ChatView: Message with ID ${data.message_id} was deleted`);
         }
       };
       
+      // Also add error and close handlers
       ws.onerror = (error) => {
-        console.error("ChatView: WebSocket error:", error);
+        console.error("ChatView: WebSocket error: ", error);
       };
       
       ws.onclose = (event) => {
-        console.log(`ChatView: WebSocket closed with code ${event.code}`);
-        wsRef.current = null;
+        console.log(`ChatView: WebSocket closed with code ${event.code}: ${event.reason}`);
       };
 
     }).catch(error => {
       console.error("Failed to get session token:", error);
     });
-  } 
-  // WebSocket setup for WhatsApp
-  else if (platform === 'whatsapp') {
+    
+    } 
+  if (platform === 'whatsapp') {
     const whatsappId = localStorage.getItem('whatsapp_user_id');
     const clientId = `client-${Date.now()}-wa`;
     
     if (whatsappId) {
-      const ws = new WebSocket(`${WS_BASE_URL}/ws2/whatsapp/${clientId}/${whatsappId}`);
-      
-      wsRef.current = ws;
+      ws = new WebSocket(`${WS_BASE_URL}/ws2/whatsapp/${clientId}/${whatsappId}`);
+      console.log("Connected to WhatsApp WebSocket");
 
       ws.onopen = () => {
-        console.log(`ChatView: WhatsApp WebSocket connected for ${selectedConversationId}`);
+        console.log(`ChatView: Connected to WhatsApp WebSocket with ID ${clientId}`);
       };
       
       ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          handleMessage(data);
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
+        const data = JSON.parse(event.data);
+        console.log("ChatView: WhatsApp WebSocket received message: ", data);
+        
+        if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
+          console.log("ChatView: new_message event type ✅ && data conv_id: ", data.message.conversation_id);
+          setMessages(prev => [...prev, data.message]);
+        }
+        else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
+          setMessages(prev => 
+            prev.filter(msg => msg.id !== data.message_id)
+          );
+          console.log(`ChatView: Message with ID ${data.message_id} was deleted`);
         }
       };
       
       ws.onerror = (error) => {
-        console.error("ChatView: WebSocket error:", error);
+        console.error("ChatView: WebSocket error: ", error);
       };
       
       ws.onclose = (event) => {
-        console.log(`ChatView: WebSocket closed with code ${event.code}`);
-        wsRef.current = null;
+        console.log(`ChatView: WebSocket closed with code ${event.code}: ${event.reason}`);
       };
-    }
-  }
+    } 
+  } 
+  // else {
+  //   // Regular WebSocket for other conversations
+  //   ws = new WebSocket(`wss://egenie-whatsapp.koyeb.app/ws2/client-${Date.now()}`);
+  // }
+  
 
-  // Execute all async functions
+  
   fetchConversation();
   setUnreadCount();
   fetchAIStatus();
   fetchMessages();
+  setTypingUsers(new Map());
+    
 
-  // Cleanup function
-  return () => {
-    console.log(`ChatView: Cleaning up conversation ${selectedConversationId}`);
-    isCleaningUpRef.current = true;
-    
-    // Close WebSocket
-    if (wsRef.current) {
-      wsRef.current.close(1000, "Switching conversations");
-      wsRef.current = null;
-    }
-    
-    // Clear all typing indicator timeouts
-    typingTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
-    typingTimeoutsRef.current.clear();
-    
-    // Clear all state
-    setMessages([]);
-    messageIdsRef.current.clear();
-    setTypingUsers(new Map());
-  };
+  return () => {if (ws) ws.close();};
 }, [selectedConversationId]);
-
-// Separate useEffect for customer timer
-useEffect(() => {
-  if (!selectedConversationId) return;
-
-  // Initialize timer if not exists
-  if (customerTimers[selectedConversationId] === undefined) {
-    setCustomerTimers(prev => ({
-      ...prev,
-      [selectedConversationId]: 24,
-    }));
-  }
-
-  // Set up interval
-  const timerInterval = setInterval(() => {
-    setCustomerTimers(prev => {
-      const currentValue = prev[selectedConversationId] ?? 24;
-      return {
-        ...prev,
-        [selectedConversationId]: Math.max(0, currentValue - 1),
-      };
-    });
-  }, 3600000); // 1 hour
-
-  return () => {
-    clearInterval(timerInterval);
-  };
-}, [selectedConversationId]); 
 
   const sendFn = (payload: Record<string, unknown>) => {
     console.log("🚀 Trying to send:", payload, wsRef.current?.readyState)
@@ -1602,37 +1513,37 @@ useEffect(() => {
 
 
 
-  //   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 
-  //     if (e.key === "Enter" && !e.shiftKey) {
+      if (e.key === "Enter" && !e.shiftKey) {
 
-  //       e.preventDefault();
+        e.preventDefault();
 
-  //       if (sharedProduct) {
+        if (sharedProduct) {
 
-  //         handleShareProduct(message, sharedProduct);
+          handleShareProduct(message, sharedProduct);
 
-  //       } else if (audioURL) {
+        } else if (audioURL) {
 
-  //         handleSendAudio();
+          handleSendAudio();
 
-  //       } else {
+        } else {
 
-  //         sendMessage();
+          sendMessage();
 
-  //       }
+        }
 
-  //     }
+      }
 
 
 
-  //     if (e.key === "/" && message === "") {
+      if (e.key === "/" && message === "") {
 
-  //       setShowCannedResponses(true);
+        setShowCannedResponses(true);
 
-  //     }
+      }
 
-  //   };
+    };
 
 
 
