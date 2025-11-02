@@ -150,7 +150,7 @@ interface Message {
   sender_id: string;
   conversation_id: string;
   status?: "sent" | "delivered" | "read";
-  type?: "text" | "image" | "file" | "voice" | "video" | "share" | "ig_story" | "ig_reel" | "system";
+  type?: "text" | "image" | "file" | "voice" | "video" | "share" | "ig_story" | "ig_reel" | "story_reply" | "system";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
   product_data?: ProductData[];
@@ -2232,26 +2232,29 @@ useEffect(() => {
                                 />
                               )}
 
-                              {/* Render IG Story */}
-                              {message.type === "ig_story" && message.payload && (
-                                <InstagramStory
-                                  id={message.payload.story_media_id}
-                                  sharedBy="You"
-                                  storyOwnerName={"Instagram User"}
-                                  storyMediaUrl={message.payload.story_media_url}
-                                  isActive={
-                                    activeMediaType === "story" &&
-                                    activeMediaId === message.payload.story_media_id
-                                  } // only one plays
-                                  onPlay={(id) => handlePlay(id, "story")}
-                                  isMuted={globalMuted}
-                                  isLatest={isLatest}
-                                  onMuteToggle={(muted) => setGlobalMuted(muted)}
-                                  isAgent={message.role.toLowerCase() === "agent"}
-                                  timestamp={formatMessageTime(message.timestamp)}
-                                />
-                              )}
-                            </LazyMediaLoader>
+                    {/* Render IG Story */}
+                    {(message.type === "ig_story" || message.type === "story_reply") && message.payload && (
+                      <InstagramStory
+                        id={message.payload.story_media_id}
+                        sharedBy="You"
+                        storyOwnerName={"Instagram User"}
+                        storyMediaUrl={message.payload.story_media_url}
+                        isActive={
+                          activeMediaType === "story" &&
+                          activeMediaId === message.payload.story_media_id
+                        } // only one plays
+                        onPlay={(id) => handlePlay(id, "story")}
+                        isMuted={globalMuted}
+                        isLatest={isLatest}
+                        onMuteToggle={(muted) => setGlobalMuted(muted)}
+                        isAgent={message.role.toLowerCase() === "agent"}
+                        timestamp={formatMessageTime(message.timestamp)}
+                        content={message.content}
+                        storyOwnerUsername={message.payload.owner_username}
+                        type={message.type}
+                        />
+                    )}
+                  </LazyMediaLoader>
 
                             {/* Normal Messages */}
                             {!message.payload && (
