@@ -3,9 +3,7 @@
 import { Toaster, toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { LogIn } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-import { useEffect } from "react";
 import Image from "next/image";
 
 export default function DashboardLayout({
@@ -15,12 +13,6 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const { isSignedIn, isLoaded} = useUser();
-
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      toast.error("You are not logged in. Please login to continue.");
-    }
-  }, [isLoaded, isSignedIn]);
 
   if (!isLoaded) {
     // HeidelAI Logo Loader with Shine Effect
@@ -35,7 +27,7 @@ export default function DashboardLayout({
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="backdrop-blur-xl bg-white/30 p-20 rounded-3xl shadow-2xl text-center border border-white/40 z-10"
+          className=" p-20  text-center  z-10"
         >
           <div className="relative w-32 h-32 mx-auto mb-8 flex items-center justify-center">
             <Image
@@ -84,7 +76,7 @@ export default function DashboardLayout({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
-          className="backdrop-blur-xl bg-white/30 p-20 rounded-3xl shadow-2xl text-center border border-white/40 z-10 max-w-2xl"
+          className=" text-center  z-10 max-w-2xl"
         >
           <div className="relative w-32 h-32 mx-auto mb-8 flex items-center justify-center">
             <Image
