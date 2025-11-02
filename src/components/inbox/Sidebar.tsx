@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import ProductPreview from "./PreviewProduct";
 import ProductsTab from "./Product";
 import CustomerInfo from "./CustomerInfo";
-import { User, Mail, Users, TrendingUp, Clock, Phone, Fingerprint, IdCard, MapPin, ChevronDown } from "lucide-react";
+import { User, Mail, Users, TrendingUp, Clock, Phone, IdCard, MapPin } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -33,7 +33,6 @@ import {
   Plus,
   Search,
   ChevronRight,
-  ArrowLeft,
   MessageSquare,
 } from "lucide-react";
 
@@ -43,33 +42,13 @@ import { WhatsAppTemplateDialog } from "./WhatsAppTemplateDialog";
 import { WhatsAppTemplate } from "../types/template";
 import WhatsAppAnalyticsContent from "@/components/inbox/WhatsAppAnalyticsContent";
 import { Conversation } from "../types/conversation";
-import { useConversations } from "../hooks/useConversations";
 import { Product } from "../types/product";
-
-// interface Product {
-//   id: string;
-//   category: string;
-//   description: string;
-//   images: string;
-//   name: string;
-//   on_sale: string;
-//   permalink: string;
-//   price: number;
-//   product_id: number;
-//   purchasable: string;
-//   regular_price: string;
-//   sale_price: string;
-//   slug: string;
-//   stock_quantity: number;
-// }
 
 interface SidebarProps {
   selectedConversationId: string;
   onShareProduct: (product: Product) => void;
   onConversationSelect: (id: string) => void;
   onToggleVisibility?: () => void;
-  isMobile?: boolean;
-  isOpen?: boolean;
   conversation?: Conversation | null;
 }
 
@@ -260,8 +239,6 @@ const Sidebar = ({
   onShareProduct,
   conversation: passedConversation,
   onToggleVisibility,
-  isMobile = false,
-  isOpen = true,
 }: SidebarProps) => {
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
   const [accordionValue, setAccordionValue] = useState("summary");
@@ -271,9 +248,7 @@ const Sidebar = ({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showCustomerInfo, setShowCustomerInfo] = useState(false);
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(
-    null
-  );
+  const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
   const [conversation, setConversation] = useState<Conversation | null>(null);
 
   useEffect(() => {
@@ -445,11 +420,6 @@ const Sidebar = ({
     [conversation?.customer_name]
   );
 
-  const platformName = useMemo(
-    () => (conversation?.platform === "instagram" ? "Instagram" : "WhatsApp"),
-    [conversation?.platform]
-  );
-
   const accordionSections = useMemo(
     () => [
       {
@@ -468,7 +438,7 @@ const Sidebar = ({
         color: "blue",
         content: (
           <>
-            <div className="flex items-center gap-[var(--sidebar-gap)] mb-[var(--sidebar-gap)]">
+            <div className="flex items-center gap-[var(--sidebar-gap)] mb-[var(--sidebar-gap)] px-[var(--sidebar-padding)] pt-[var(--sidebar-padding)]">
               <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-[calc(var(--icon-size)*0.8)] w-[calc(var(--icon-size)*0.8)]" />
                 <Input
@@ -494,7 +464,7 @@ const Sidebar = ({
                 </TooltipContent>
               </Tooltip>
             </div>
-            <ScrollArea className="h-[clamp(10rem,30vh,15rem)] ios-scrollbar">
+            <ScrollArea className="h-[clamp(10rem,30vh,15rem)] ios-scrollbar px-[var(--sidebar-padding)]">
               {loading ? (
                 <div className="flex items-center justify-center h-32 w-full">
                   <div className="flex flex-col items-center gap-2">
@@ -557,7 +527,7 @@ const Sidebar = ({
             selectedConversationId={selectedConversationId}
           />
         ) : (
-          <div className="space-y-[var(--sidebar-gap)]">
+          <div className="space-y-[var(--sidebar-gap)] px-[var(--sidebar-padding)]">
             <AnalyticsCard
               icon={Clock}
               title="Response Time"
@@ -617,262 +587,191 @@ const Sidebar = ({
     return activeSection ? [activeSection, ...otherSections] : accordionSections;
   }, [accordionValue, accordionSections]);
 
-  const MobileOverlay = useCallback(
-    ({ children }: { children: React.ReactNode }) => {
-      if (!isMobile) return <>{children}</>;
+  return (
+    <TooltipProvider>
+      <style>
+        {`
+          ${fluidStyles}
+          .ios-scrollbar::-webkit-scrollbar { width: 3px; }
+          .ios-scrollbar::-webkit-scrollbar-track { background: transparent; }
+          .ios-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+          }
+          .ios-scrollbar:hover::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); }
+          * {
+            min-width: 0;
+            min-height: 0;
+          }
+        `}
+      </style>
 
-      return (
-        <>
-          {isOpen && (
-            <div
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+      {showTemplateBuilder && (
+        <TemplateBuilders
+          isOpen={showTemplateBuilder}
+          setIsOpen={handleCloseTemplateBuilder}
+          templates={templates}
+          setTemplates={setTemplates}
+          searchTemplate={searchTemplate}
+          setSearchTemplate={setSearchTemplate}
+        />
+      )}
+
+      {selectedTemplate && selectedConversationId && (
+        <WhatsAppTemplateDialog
+          template={selectedTemplate}
+          isOpen={!!selectedTemplate}
+          onClose={handleCloseTemplate}
+          onSend={() => {
+            console.log("Sending template:", selectedTemplate);
+            handleCloseTemplate();
+          }}
+          selectedConversationId={selectedConversationId}
+          languageCode={selectedTemplate.language}
+        />
+      )}
+
+      <Dialog open={showCustomerInfo} onOpenChange={setShowCustomerInfo}>
+        <DialogContent className="max-w-4xl rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-gray-800 flex items-center">
+              <User className="h-6 w-6 mr-2 text-blue-600" />
+              Customer Information
+            </DialogTitle>
+          </DialogHeader>
+
+          {conversation && (
+            <CustomerInfo
+              name={conversation?.customer_name || "Not Saved"}
+              email={contactEmail}
+              billingaddress={conversation?.billingAddress || "Not Saved"}
+              shippingaddress={conversation?.shippingAddress || "Not Saved"}
+              platform={conversation?.platform || ""}
+              selectedConversationId={selectedConversationId}
+              saveCustomerInfo={saveCustomerInfo}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Card className="h-full max-h-screen bg-white/95 backdrop-blur-sm overflow-hidden flex flex-col rounded-l-3xl border-l border-gray-200/60 shadow-lg">
+        {/* Header */}
+        <div className="bg-white/40 backdrop-blur-sm border-b border-gray-100/60 flex-shrink-0 flex items-center justify-between px-[var(--sidebar-padding)] py-[var(--sidebar-padding)]">
+          <h2 className="font-semibold text-gray-900 text-[clamp(1rem,2.5vw,1.125rem)]">
+            Contact
+          </h2>
+
+          {onToggleVisibility && (
+            <Button
               onClick={onToggleVisibility}
-            />
+              variant="ghost"
+              size="icon"
+              className="bg-white/60 hover:bg-white/90 rounded-xl transition-all duration-200 hover:scale-105 flex items-center justify-center h-[clamp(2rem,4vw,2.5rem)] w-[clamp(2rem,4vw,2.5rem)]"
+              aria-label="Hide details sidebar"
+            >
+              <X className="text-gray-600 h-[calc(var(--icon-size)*0.9)] w-[calc(var(--icon-size)*0.9)]" />
+            </Button>
           )}
-          <div
-            className={`
-              fixed inset-y-0 right-0 z-50 w-full max-w-sm transform transition-transform duration-300 ease-in-out
-              ${isOpen ? "translate-x-0" : "translate-x-full"}
-            `}
-          >
-            {children}
-          </div>
-        </>
-      );
-    },
-    [isMobile, isOpen, onToggleVisibility]
-  );
+        </div>
 
-  const sidebarContent = useMemo(
-    () => (
-      <TooltipProvider>
-        <style>
-          {`
-            ${fluidStyles}
-            .ios-scrollbar::-webkit-scrollbar { width: 3px; }
-            .ios-scrollbar::-webkit-scrollbar-track { background: transparent; }
-            .ios-scrollbar::-webkit-scrollbar-thumb {
-              background: rgba(0,0,0,0.1);
-              border-radius: 8px;
-              transition: all 0.3s ease;
-            }
-            .ios-scrollbar:hover::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); }
-            * {
-              min-width: 0;
-              min-height: 0;
-            }
-          `}
-        </style>
-
-        {showTemplateBuilder && (
-          <TemplateBuilders
-            isOpen={showTemplateBuilder}
-            setIsOpen={handleCloseTemplateBuilder}
-            templates={templates}
-            setTemplates={setTemplates}
-            searchTemplate={searchTemplate}
-            setSearchTemplate={setSearchTemplate}
-          />
-        )}
-
-        {selectedTemplate && selectedConversationId && (
-          <WhatsAppTemplateDialog
-            template={selectedTemplate}
-            isOpen={!!selectedTemplate}
-            onClose={handleCloseTemplate}
-            onSend={() => {
-              console.log("Sending template:", selectedTemplate);
-              handleCloseTemplate();
-            }}
-            selectedConversationId={selectedConversationId}
-            languageCode={selectedTemplate.language}
-          />
-        )}
-
-        <Dialog open={showCustomerInfo} onOpenChange={setShowCustomerInfo}>
-          <DialogContent className="max-w-4xl rounded-3xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-gray-800 flex items-center">
-                <User className="h-6 w-6 mr-2 text-blue-600" />
-                Customer Information
-              </DialogTitle>
-            </DialogHeader>
-
-            {conversation && (
-              <CustomerInfo
-                name={conversation?.customer_name || "Not Saved"}
-                email={contactEmail}
-                billingaddress={conversation?.billingAddress || "Not Saved"}
-                shippingaddress={
-                  conversation?.shippingAddress || "Not Saved"
-                }
-                platform={conversation?.platform || ""}
-                selectedConversationId={selectedConversationId}
-                saveCustomerInfo={saveCustomerInfo}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
-
-        <Card className="h-full max-h-screen bg-white/95 backdrop-blur-sm overflow-hidden flex flex-col relative rounded-l-3xl border-l border-gray-200/60 shadow-lg">
-          {/* Header */}
-          <div className="bg-white/40 backdrop-blur-sm border-b border-gray-100/60 flex-shrink-0 flex items-center justify-between px-[var(--sidebar-padding)] py-[var(--sidebar-padding)]">
-            <h2 className="font-semibold text-gray-900 text-[clamp(1rem,2.5vw,1.125rem)]">
-              Contact
-            </h2>
-
-            {onToggleVisibility && (
-              <Button
-                onClick={onToggleVisibility}
-                variant="ghost"
-                size="icon"
-                className="bg-white/60 hover:bg-white/90 rounded-xl transition-all duration-200 hover:scale-105 flex items-center justify-center h-[clamp(2rem,4vw,2.5rem)] w-[clamp(2rem,4vw,2.5rem)]"
-                aria-label="Hide details sidebar"
-              >
-                <X className="text-gray-600 h-[calc(var(--icon-size)*0.9)] w-[calc(var(--icon-size)*0.9)]" />
-              </Button>
-            )}
-          </div>
-
-          {/* Scrollable Content */}
-          <ScrollArea className="flex-1 ios-scrollbar min-h-0">
-              {/* Customer Profile Section */}
-              <div className="bg-white border-b border-gray-100/60 p-[var(--sidebar-padding)]">
-                <div className="flex items-start gap-[var(--sidebar-gap)]">
-                  <div className="bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 w-[calc(var(--avatar-size)*0.95)] h-[calc(var(--avatar-size)*0.95)]">
-                    <span className="text-white font-semibold text-[calc(var(--sidebar-text-sm)*0.85)]">
-                      {customerInitial}
-                    </span>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h3
-                      className="font-bold text-gray-900 truncate mb-1"
-                      style={{ fontSize: "var(--sidebar-text-sm)" }}
-                    >
-                      {conversation?.customer_name || "Unknown"}
-                    </h3>
-
-                    {/* View Details Button */}
-                    <button
-                      onClick={handleShowCustomerInfo}
-                      className="text-blue-600 hover:text-blue-700 font-medium transition-colors text-left flex items-center gap-1"
-                      style={{
-                        fontSize: "calc(var(--sidebar-text-xs) * 1.05)",
-                      }}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2.5}
-                        stroke="currentColor"
-                        className="w-[calc(var(--icon-size)*0.85)] h-[calc(var(--icon-size)*0.85)]"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
-                        />
-                      </svg>
-                      View details
-                    </button>
-                  </div>
-                </div>
-
-                {/* Contact Details */}
-                <div className="space-y-0 border-t border-gray-100 mt-[var(--sidebar-gap)] pt-[var(--sidebar-gap)]">
-                  <ContactDetail
-                    icon={
-                      conversation?.platform === "whatsapp" ? Phone : IdCard
-                    }
-                    label="Phone"
-                    text={contactPhone}
-                  />
-                  <ContactDetail icon={Mail} label="Email" text={contactEmail} />
-                  <ContactDetail
-                    icon={MapPin}
-                    label="Location"
-                    text="Not Available"
-                  />
-                </div>
+        {/* Scrollable Content */}
+        <ScrollArea className="flex-1 ios-scrollbar min-h-0">
+          {/* Customer Profile Section */}
+          <div className="bg-white border-b border-gray-100/60 p-[var(--sidebar-padding)]">
+            <div className="flex items-start gap-[var(--sidebar-gap)]">
+              <div className="bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 w-[calc(var(--avatar-size)*0.95)] h-[calc(var(--avatar-size)*0.95)]">
+                <span className="text-white font-semibold text-[calc(var(--sidebar-text-sm)*0.85)]">
+                  {customerInitial}
+                </span>
               </div>
-              {/* Accordion */}
-              <div className="flex-1 flex flex-col">
-              <Accordion
-                type="single"
-                collapsible
-                value={accordionValue}
-                onValueChange={setAccordionValue}
-                className="w-full flex-1 flex flex-col"
-              >
-                {orderedSections.map((section) => (
-                  <AccordionSection
-                    key={section.value}
-                    value={section.value}
-                    icon={section.icon}
-                    title={section.title}
-                    subtitle={section.subtitle}
-                    color={section.color}
+
+              <div className="flex-1 min-w-0">
+                <h3
+                  className="font-bold text-gray-900 truncate mb-1"
+                  style={{ fontSize: "var(--sidebar-text-sm)" }}
+                >
+                  {conversation?.customer_name || "Unknown"}
+                </h3>
+
+                <button
+                  onClick={handleShowCustomerInfo}
+                  className="text-blue-600 hover:text-blue-700 font-medium transition-colors text-left flex items-center gap-1"
+                  style={{
+                    fontSize: "calc(var(--sidebar-text-xs) * 1.05)",
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2.5}
+                    stroke="currentColor"
+                    className="w-[calc(var(--icon-size)*0.85)] h-[calc(var(--icon-size)*0.85)]"
                   >
-                    {section.content}
-                  </AccordionSection>
-                ))}
-              </Accordion>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+                    />
+                  </svg>
+                  View details
+                </button>
+              </div>
             </div>
-          </ScrollArea>
 
-          {selectedProduct && (
-            <ProductPreview
-              product={selectedProduct}
-              onClose={handleProductClose}
-              onShare={handleProductShare}
-              open={!!selectedProduct}
-            />
-          )}
-        </Card>
-      </TooltipProvider>
-    ),
-    [
-      orderedSections, 
-      accordionValue,
-      showTemplateBuilder,
-      handleCloseTemplateBuilder,
-      templates,
-      searchTemplate,
-      selectedTemplate,
-      selectedConversationId,
-      handleCloseTemplate,
-      showCustomerInfo,
-      handleCloseCustomerInfo,
-      conversation,
-      contactEmail,
-      saveCustomerInfo,
-      onToggleVisibility,
-      customerInitial,
-      platformName,
-      handleShowCustomerInfo,
-      contactPhone,
-      loading,
-      error,
-      filteredTemplates,
-      handleTemplateSelect,
-      handleProductSelect,
-      onShareProduct,
-      analytics,
-      selectedProduct,
-      handleProductClose,
-      handleProductShare,
-      handleSearchChange,
-      handleShowTemplateBuilder,
-    ]
+            {/* Contact Details */}
+            <div className="space-y-0 border-t border-gray-100 mt-[var(--sidebar-gap)] pt-[var(--sidebar-gap)]">
+              <ContactDetail
+                icon={conversation?.platform === "whatsapp" ? Phone : IdCard}
+                label="Phone"
+                text={contactPhone}
+              />
+              <ContactDetail icon={Mail} label="Email" text={contactEmail} />
+              <ContactDetail
+                icon={MapPin}
+                label="Location"
+                text="Not Available"
+              />
+            </div>
+          </div>
+
+          {/* Accordion */}
+          <div className="flex-1 flex flex-col">
+            <Accordion
+              type="single"
+              collapsible
+              value={accordionValue}
+              onValueChange={setAccordionValue}
+              className="w-full flex-1 flex flex-col"
+            >
+              {orderedSections.map((section) => (
+                <AccordionSection
+                  key={section.value}
+                  value={section.value}
+                  icon={section.icon}
+                  title={section.title}
+                  subtitle={section.subtitle}
+                  color={section.color}
+                >
+                  {section.content}
+                </AccordionSection>
+              ))}
+            </Accordion>
+          </div>
+        </ScrollArea>
+
+        {selectedProduct && (
+          <ProductPreview
+            product={selectedProduct}
+            onClose={handleProductClose}
+            onShare={handleProductShare}
+            open={!!selectedProduct}
+          />
+        )}
+      </Card>
+    </TooltipProvider>
   );
-
-  if (isMobile) {
-    return <MobileOverlay>{sidebarContent}</MobileOverlay>;
-  }
-
-  return sidebarContent;
 };
 
 export default memo(Sidebar);
