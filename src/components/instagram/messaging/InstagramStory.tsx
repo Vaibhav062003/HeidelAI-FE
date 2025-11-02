@@ -13,6 +13,9 @@ interface InstagramStoryProps {
   isAgent?: boolean;
   timestamp: string;
   isLatest?: boolean;
+  content?: string;
+  storyOwnerUsername?: string;
+  type: "ig_story" | "story_reply";
 }
 
 export default function InstagramStory({
@@ -26,14 +29,16 @@ export default function InstagramStory({
   isMuted = true,
   onMuteToggle,
   isAgent = false,
-  timestamp
+  timestamp,
+  content,
+  storyOwnerUsername,
+  type,
 }: InstagramStoryProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isVideo, setIsVideo] = useState(false);
   const [isPhoto, setIsPhoto] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
-
   // Detect if the media is video or photo or expired
   useEffect(() => {
     let didCancel = false;
@@ -136,14 +141,14 @@ export default function InstagramStory({
   };
 
   return (
-    <div className="flex flex-col items-start p-1 rounded-2xl w-fit max-w-[220px] ">
+    <div className={`flex flex-col ${isAgent ? "items-end" : "items-start"} p-1 rounded-2xl w-fit max-w-[220px]`}>
       {/* Text */}
       <p
         className={`text-sm ${
-          isAgent ? "pr-3 text-right" : "pl-1.5 text-left"
+          isAgent ? "pr-1.5 text-right" : "pl-1.5 text-left"
         } w-full text-gray-700 mb-1`}
       >
-        Shared a story.
+        {type === "ig_story" ? "Shared a story." : `Replied to ${storyOwnerUsername ? storyOwnerUsername + "'s" : ""} story`}
       </p>
 
       {/* Story preview */}
@@ -153,7 +158,7 @@ export default function InstagramStory({
         {isExpired ? (
           <>
             <div className="h-[25px] w-[4px] bg-gray-200 rounded-xl" />
-            <p className="text-sm text-gray-500">Story unavailable.</p>
+            <p className="text-sm text-gray-500">Story unavailable</p>
           </>
         ) : (
           <>
@@ -223,16 +228,40 @@ export default function InstagramStory({
         )}
       </div>
 
-      {/* Timestamp */}
-      <div className={`py-1 w-full ${isAgent ? "pr-2" : "pl-2"}`}>
-        <p
-          className={`text-xs ${
-            isAgent ? "text-right" : "text-left"
-          } text-gray-500 mt-1 uppercase tracking-wide`}
-        >
-          {timestamp}
-        </p>
+      {/* Message Bubble */}
+      { content && type === "story_reply" ? (
+        <div className={`mt-2 w-full flex ${isAgent ? "justify-end" : "justify-start"}`}>
+      <div
+        className={`rounded-3xl  px-3 py-2 sm:px-4 sm:py-3 w-fit shadow-sm border hw-accel ${!isAgent
+            ? "bg-white/90 backdrop-blur-sm rounded-tl-lg text-gray-900 border-gray-200/60"
+            : "bg-blue-600/90 backdrop-blur-sm rounded-tr-lg text-white border-blue-500/60"
+          }`}
+        style={{ wordBreak: "break-word" }}
+      >
+        <div className="break-words">
+          <p className="text-sm leading-relaxed">{content}</p>
+        </div>
+        <div className="flex justify-end mt-2">
+          <span
+            className={`text-xs ${!isAgent ? "text-gray-500" : "text-white/70"
+              }`}
+          >
+            {timestamp}
+          </span>
+        </div>
       </div>
+      </div>
+      ) : (
+        <div className={`py-1 w-full ${isAgent ? "pr-2" : "pl-2"}`}>
+          <p
+            className={`text-xs ${
+              isAgent ? "text-right" : "text-left"
+            } text-gray-500 mt-1 uppercase tracking-wide`}
+          >
+            {timestamp}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
