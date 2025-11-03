@@ -39,7 +39,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { TagsPopup } from '@/components/Contacts/TagsPopup';
+import TagSidebar from '@/components/Contacts/TagSidebar';
 
 const ChatView = dynamic(() => import('@/components/inbox/ChatView'), {
   ssr: false,
@@ -150,12 +150,11 @@ const SidebarNavigation = memo(({
   const { user } = useUser();
   const { isSignedIn, isLoaded } = useUser();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isTagsPopupOpen, setIsTagsPopupOpen] = useState(false);
 
   const mainNavigationItems = useMemo(() => [
     { value: 'inbox', icon: Home, label: 'Inbox' },
     { value: 'analyticsbot', icon: BarChart2, label: 'Analytics' },
-    { value: 'Contacts', icon: ContactRoundIcon, label: 'Customers', hasDropdown: true },
+    { value: 'Contacts', icon: ContactRoundIcon, label: 'Customers' },
   ], []);
 
   const additionalItems = useMemo(() => [
@@ -372,33 +371,23 @@ const SidebarNavigation = memo(({
           <nav className="space-y-1 flex-1 overflow-y-auto min-h-0">
             {isExpanded ? (
               <>
-                {mainNavigationItems.map(({ value, icon: Icon, label, hasDropdown }) => (
-                  <div key={value} className="relative">
-                    <button
-                      onClick={() => onNavigate(value)}
-                      className={`
-                        w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200
-                        ${activeView === value
-                          ? 'bg-gray-100 text-gray-900'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                        }
-                      `}
-                    >
-                      <Icon className="h-4 w-4 flex-shrink-0" />
-                      <span className="text-xs font-medium truncate overflow-hidden text-ellipsis flex-1 text-left">
-                        {label}
-                      </span>
-                      {hasDropdown && (
-                        <ChevronDown
-                          className="h-3.5 w-3.5 flex-shrink-0 text-gray-400 hover:text-gray-600"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsTagsPopupOpen(true);
-                          }}
-                        />
-                      )}
-                    </button>
-                  </div>
+                {mainNavigationItems.map(({ value, icon: Icon, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => onNavigate(value)}
+                    className={`
+                      w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200
+                      ${activeView === value
+                        ? 'bg-gray-100 text-gray-900'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }
+                    `}
+                  >
+                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-xs font-medium truncate overflow-hidden text-ellipsis flex-1 text-left">
+                      {label}
+                    </span>
+                  </button>
                 ))}
 
                 <div className="my-3 border-t border-gray-200" />
@@ -532,11 +521,6 @@ const SidebarNavigation = memo(({
           )}
         </div>
       </aside>
-
-      <TagsPopup
-        isOpen={isTagsPopupOpen}
-        onClose={() => setIsTagsPopupOpen(false)}
-      />
     </>
   );
 });
