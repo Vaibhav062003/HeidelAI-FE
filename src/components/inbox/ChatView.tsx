@@ -138,7 +138,7 @@ interface Message {
   sender_id: string;
   conversation_id: string;
   status?: "sent" | "delivered" | "read";
-  type?: "text" | "image" | "file" | "voice" | "video" | "share" | "ig_story" | "ig_reel";
+  type?: "text" | "image" | "file" | "voice" | "video" | "share" | "ig_story" | "ig_reel" | "story_reply";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
   product_data?: ProductData[];
@@ -1843,7 +1843,7 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
                     )}
 
                     {/* Render IG Story */}
-                    {message.type === "ig_story" && message.payload && (
+                    {(message.type === "ig_story" || message.type === "story_reply") && message.payload && (
                       <InstagramStory
                         id={message.payload.story_media_id}
                         sharedBy="You"
@@ -1859,6 +1859,9 @@ const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
                         onMuteToggle={(muted) => setGlobalMuted(muted)}
                         isAgent={message.role.toLowerCase() === "agent"}
                         timestamp={formatMessageTime(message.timestamp)}
+                        content={message.content}
+                        storyOwnerUsername={message.payload.owner_username}
+                        type={message.type}
                         />
                     )}
                   </LazyMediaLoader>
