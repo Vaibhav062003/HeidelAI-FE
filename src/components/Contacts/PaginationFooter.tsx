@@ -91,67 +91,6 @@ export function PaginationFooter({
   return (
     <div className="border-t bg-white">
       <div className="px-3 py-3 sm:px-4 sm:py-4 lg:px-6">
-        {/* Mobile Layout */}
-        <div className="block md:hidden">
-          <div className="space-y-3">
-            {/* Info row */}
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-700">
-                {startItem}-{endItem} of {totalItems}
-              </span>
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                {itemsPerPage}/page
-              </span>
-            </div>
-            
-            {/* Navigation row - ALWAYS visible on mobile */}
-            <div className="flex justify-between items-center w-full">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-                className={`px-3 py-2 text-sm border border-gray-300 rounded-lg transition-colors flex-shrink-0 ${
-                  currentPage === 1 
-                    ? 'opacity-50 cursor-not-allowed bg-gray-50' 
-                    : 'hover:bg-gray-50 active:bg-gray-100'
-                }`}
-              >
-                Previous
-              </button>
-              
-              <div className="flex items-center justify-center gap-1 mx-2 min-w-0 flex-1">
-                {totalPages <= 1 ? (
-                  <span className="text-sm text-gray-500 px-2 py-1">Page 1</span>
-                ) : (
-                  pageNumbers.map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => onPageChange(page)}
-                      className={`w-8 h-8 text-sm rounded-lg transition-colors flex-shrink-0 ${
-                        currentPage === page
-                          ? 'bg-blue-600 text-white shadow-sm'
-                          : 'hover:bg-gray-100 text-gray-700 active:bg-gray-200'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))
-                )}
-              </div>
-              
-              <button
-                disabled={currentPage >= totalPages}
-                onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-                className={`px-3 py-2 text-sm border border-gray-300 rounded-lg transition-colors flex-shrink-0 ${
-                  currentPage >= totalPages 
-                    ? 'opacity-50 cursor-not-allowed bg-gray-50' 
-                    : 'hover:bg-gray-50 active:bg-gray-100'
-                }`}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </div>
 
         {/* Desktop Layout */}
         <div className="hidden md:flex md:justify-between md:items-center">
@@ -183,7 +122,7 @@ export function PaginationFooter({
                 onClick={() => onPageChange(page)}
                 className={`w-8 h-8 text-sm rounded-lg transition-colors ${
                   currentPage === page
-                    ? 'bg-blue-600 text-white shadow-sm'
+                    ? 'bg-gray-600 text-white shadow-sm'
                     : 'hover:bg-gray-100 text-gray-700'
                 }`}
               >
