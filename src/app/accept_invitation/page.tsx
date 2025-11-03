@@ -6,8 +6,9 @@ import Link from "next/link";
 import { useSignIn, useSignUp, useUser, useOrganization } from "@clerk/nextjs";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Suspense } from "react";
 
-const Page = () => {
+const PageContent = () => {
   const { isSignedIn, user } = useUser();
   const router = useRouter();
   const { organization } = useOrganization();
@@ -422,5 +423,11 @@ const Page = () => {
     </div>
   );
 };
+
+const Page = () => (
+  <Suspense fallback={<div>Loading invitation...</div>}>
+    <PageContent />
+  </Suspense>
+);
 
 export default Page;
