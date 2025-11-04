@@ -8,6 +8,7 @@ testing:
 merged vaibhav's changes with development branch
 merged rounak's custoemr-story-reply branch 
 changes to floating input section
+changes to Link Integrations button
 
 dev:
 deploying changes regarding : updated post api endpoint addedd CORS origin header
