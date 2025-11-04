@@ -2278,7 +2278,7 @@ const ChatView = ({
             </div>
 
             {/* Input Section */}
-            <div className="flex-shrink-0 bg-gray-50">
+            <div className="flex-shrink-0 mb-3 bg-gray-50">
               {/* Typing Users */}
               {typingUsers.size > 0 && (
                 <div className="flex items-center gap-2 text-sm text-gray-500 p-2">
@@ -2319,7 +2319,7 @@ const ChatView = ({
                   </button>
                 </div>
               ) : (
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-3 hover:border-gray-300/60 flex flex-col shadow-sm mx-3">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-3 hover:border-gray-300/60 flex flex-col shadow-xl mx-3">
                   {/* Mode Toggle */}
                   <div className="mb-5 w-40 bg-gray-100/80 rounded-2xl p-0.5 flex items-center">
                     <button
