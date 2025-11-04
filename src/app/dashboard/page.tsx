@@ -253,9 +253,9 @@ const SidebarNavigation = memo(({
 
               <button
                 onClick={handleOpenIntegrations}
-                className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border-gray-100"
+                className="w-full flex items-center justify-between px-2 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border-gray-100"
               >
-                <span className="text-[10px] font-medium text-gray-700">Link Integrations</span>
+                <span className="text-xs font-medium text-gray-700">Link Integrations</span>
                 <div className="flex items-center gap-0.5">
                   <div className="w-4 h-4 rounded-sm bg-[#25D366] flex items-center justify-center">
                     <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 24 24">
