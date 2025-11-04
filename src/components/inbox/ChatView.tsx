@@ -36,6 +36,7 @@ import LandingDashboard from "./LandingDashboard";
 import api from "@/lib/session_api";
 import { useConversations } from "../hooks/useConversations";
 import { storeData, getData, getAllKeys, deleteData } from '@/lib/indexedDB';
+import MessageReaction from "../messaging/MessageReaction";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -156,6 +157,15 @@ interface Message {
   fileUrl?: string;
   fileName?: string;
   fileType?: string;
+  reaction?: MessageReactions;
+}
+
+interface MessageReactions {
+  emoji: string;
+  username: string;
+  full_name: string;
+  timestamp: string;
+  profile_picture_url: string;
 }
 
 interface ChatViewProps {
@@ -568,31 +578,34 @@ const MessageItem = memo(({
   }
 
   return (
-
-          <div
-            className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${message.role === "customer"
-                ? "bg-white/90 backdrop-blur-sm rounded-bl-lg text-gray-900 border-gray-200/60"
-                : "bg-blue-600/90 backdrop-blur-sm rounded-br-lg text-white border-blue-500/60"
+    <>
+      <div
+        className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${message.role === "customer"
+            ? "bg-white/90 backdrop-blur-sm rounded-bl-lg text-gray-900 border-gray-200/60"
+            : "bg-blue-600/90 backdrop-blur-sm rounded-br-lg text-white border-blue-500/60"
+          }`}
+        style={{ wordBreak: "break-word" }}
+      >
+        <div className="break-words">
+          <p className="text-sm leading-relaxed">{message.content}</p>
+        </div>
+        <div className="flex justify-end mt-2">
+          <span
+            className={`text-xs ${message.role === "customer" ? "text-gray-500" : "text-white/70"
               }`}
-            style={{ wordBreak: "break-word" }}
           >
-            <div className="break-words">
-              <p className="text-sm leading-relaxed">{message.content}</p>
-            </div>
-            <div className="flex justify-end mt-2">
-              <span
-                className={`text-xs ${message.role === "customer" ? "text-gray-500" : "text-white/70"
-                  }`}
-              >
-                {formatMessageTime(message.timestamp)}
-              </span>
-            </div>
-          </div>
+            {formatMessageTime(message.timestamp)}
+          </span>
+        </div>
+      </div>
 
+      
+    </>
   );
 }, (prevProps, nextProps) => {
   return prevProps.message.id === nextProps.message.id &&
-    prevProps.isLast === nextProps.isLast;
+    prevProps.isLast === nextProps.isLast &&
+    JSON.stringify(prevProps.message.reaction) === JSON.stringify(nextProps.message.reaction);
 });
 MessageItem.displayName = "MessageItem";
 
@@ -1338,7 +1351,6 @@ const ChatView = ({
             }
           }
 
-
           if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
             console.log("ChatView: new_message event type ✅ && data conv_id: ", data.message.conversation_id);
 
@@ -1354,6 +1366,22 @@ const ChatView = ({
             if (!messageExists) {
               setMessages(prev => [...prev, data.message]);
             }
+          }
+
+          if (data.type === 'message_reaction' && data.message.conversation_id === selectedConversationId) {
+            const updatedMessage = data.message;
+            
+            setMessages(prev => prev.map(message => {
+              if (message.id === updatedMessage.message_id || message.id === updatedMessage.id) {
+                return {
+                  ...message,
+                  reaction: updatedMessage.reaction
+                };
+              }
+              return message;
+            }));
+
+            console.log(`ChatView: Reaction updated for message ${updatedMessage.message_id || updatedMessage.id}`);
           }
 
           else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
@@ -2227,95 +2255,108 @@ const ChatView = ({
               ) : (
                 <>
                   {messages.map((message, index) => {
-                    const latestMediaMessage = [...messages]
-                      .reverse()
-                      .find((m) => m.type === "ig_reel" || m.type === "ig_story");
+                      const latestMediaMessage = [...messages]
+                        .reverse()
+                        .find((m) => m.type === "ig_reel" || m.type === "ig_story");
 
-                    const latestMediaId = latestMediaMessage?.payload?.reel_video_id || latestMediaMessage?.payload?.story_media_id;
+                      const latestMediaId = latestMediaMessage?.payload?.reel_video_id || latestMediaMessage?.payload?.story_media_id;
 
-                    const isLatest =
-                      (message.type === "ig_reel" &&
-                        message.payload?.reel_video_id === latestMediaId) ||
-                      (message.type === "ig_story" &&
-                        message.payload?.story_media_id === latestMediaId);
-                    return (
-                      <div key={message.id} className="w-full message-item">
-                        <div className={`flex ${message.role === "customer" ? "justify-start" : "justify-end"}`}>
-                          <div
-                            className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === "customer" ? "items-start" : "items-end"
-                              }`}
+                      const isLatest =
+                        (message.type === "ig_reel" &&
+                          message.payload?.reel_video_id === latestMediaId) ||
+                        (message.type === "ig_story" &&
+                          message.payload?.story_media_id === latestMediaId);
+                      return (
+                         <div
+                          key={message.id}
+                          className="relative group w-full message-item"
                           >
-                            {/* IG Media Messages */}
-                            <LazyMediaLoader key={index} index={index}>
-                              {/* Render IG Posts */}
-                              {message.type === "share" && message.payload && (
-                                <InstagramPost
-                                  mediaUrl={message.payload.url}
-                                  timestamp={formatMessageTime(message.timestamp)}
-                                />
-                              )}
+                          <div className={`flex ${message.role === "customer" ? "justify-start" : "justify-end"}`}>
+                            <div
+                              className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === "customer" ? "items-start" : "items-end"
+                                }`}
+                            >
+                              {/* IG Media Messages */}
+                              <LazyMediaLoader key={index} index={index}>
+                                {/* Render IG Posts */}
+                                {message.type === "share" && message.payload && (
+                                  <InstagramPost
+                                    mediaUrl={message.payload.url}
+                                    timestamp={formatMessageTime(message.timestamp)}
+                                  />
+                                )}
 
-                              {/* Render IG Reels */}
-                              {message.type === "ig_reel" && message.payload && (
-                                <InstagramReel
-                                  key={index}
-                                  id={message.payload.reel_video_id}
-                                  reelVideoUrl={message.payload.url}
-                                  title={message.payload.caption}
-                                  timestamp={formatMessageTime(message.timestamp)}
-                                  viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
+                                {/* Render IG Reels */}
+                                {message.type === "ig_reel" && message.payload && (
+                                  <InstagramReel
+                                    key={index}
+                                    id={message.payload.reel_video_id}
+                                    reelVideoUrl={message.payload.url}
+                                    title={message.payload.caption}
+                                    timestamp={formatMessageTime(message.timestamp)}
+                                    viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
+                                    isLatest={isLatest}
+                                    isActive={
+                                      activeMediaType === "reel" &&
+                                      activeMediaId === message.payload.reel_video_id
+                                    }
+                                    onPlay={(id) => handlePlay(id, "reel")} // stops others
+                                    isMuted={globalMuted}
+                                    onMuteToggle={handleMuteToggle}
+                                    isAgent={message.role.toLowerCase() === "agent"}
+                                  />
+                                )}
+
+                                {/* Render IG Story */}
+                                {(message.type === "ig_story" || message.type === "story_reply") && message.payload && (
+                                  <InstagramStory
+                                    id={message.payload.story_media_id}
+                                    sharedBy="You"
+                                    storyOwnerName={"Instagram User"}
+                                    storyMediaUrl={message.payload.story_media_url}
+                                    isActive={
+                                      activeMediaType === "story" &&
+                                      activeMediaId === message.payload.story_media_id
+                                    } // only one plays
+                                    onPlay={(id) => handlePlay(id, "story")}
+                                    isMuted={globalMuted}
+                                    isLatest={isLatest}
+                                    onMuteToggle={(muted) => setGlobalMuted(muted)}
+                                    isAgent={message.role.toLowerCase() === "agent"}
+                                    timestamp={formatMessageTime(message.timestamp)}
+                                    content={message.content}
+                                    storyOwnerUsername={message.payload.owner_username}
+                                    type={message.type}
+                                    />
+                                )}
+                              </LazyMediaLoader>
+
+                              {/* Normal Messages */}
+                              {!message.payload && (
+                                <MessageItem
+                                  key={message.id}
+                                  message={message}
+                                  index={index}
                                   isLatest={isLatest}
-                                  isActive={
-                                    activeMediaType === "reel" &&
-                                    activeMediaId === message.payload.reel_video_id
-                                  }
-                                  onPlay={(id) => handlePlay(id, "reel")} // stops others
-                                  isMuted={globalMuted}
-                                  onMuteToggle={handleMuteToggle}
-                                  isAgent={message.role.toLowerCase() === "agent"}
+                                  isLast={index === messages.length - 1}
                                 />
                               )}
 
-                    {/* Render IG Story */}
-                    {(message.type === "ig_story" || message.type === "story_reply") && message.payload && (
-                      <InstagramStory
-                        id={message.payload.story_media_id}
-                        sharedBy="You"
-                        storyOwnerName={"Instagram User"}
-                        storyMediaUrl={message.payload.story_media_url}
-                        isActive={
-                          activeMediaType === "story" &&
-                          activeMediaId === message.payload.story_media_id
-                        } // only one plays
-                        onPlay={(id) => handlePlay(id, "story")}
-                        isMuted={globalMuted}
-                        isLatest={isLatest}
-                        onMuteToggle={(muted) => setGlobalMuted(muted)}
-                        isAgent={message.role.toLowerCase() === "agent"}
-                        timestamp={formatMessageTime(message.timestamp)}
-                        content={message.content}
-                        storyOwnerUsername={message.payload.owner_username}
-                        type={message.type}
-                        />
-                    )}
-                  </LazyMediaLoader>
-
-                            {/* Normal Messages */}
-                            {!message.payload && (
-                              <MessageItem
-                                key={message.id}
-                                message={message}
-                                index={index}
-                                isLatest={isLatest}
-                                isLast={index === messages.length - 1}
-                              />
-                            )}
+                              {/* Message Reaction */}
+                              {message.reaction && (
+                                <div className={`flex ${message.role === "customer" ? "justify-start" : "justify-end"} mt-1`}>
+                                  <MessageReaction
+                                    reaction={message.reaction}
+                                    messageId={message.id}
+                                  />
+                                </div>
+                              )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    )
-                  })}
-                <div ref={lastMessageRef} />
+                      )
+                    })}
+                  <div ref={lastMessageRef} />
                 </>
               )}
             </div>
