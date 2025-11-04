@@ -151,11 +151,9 @@ const handleMessageSend = (data: MessageData) => {
             absolute right-0 top-12 
             w-56 
             bg-white 
-            border border-gray-200 
             rounded-2xl 
             shadow-xl 
             z-50
-            backdrop-blur-sm
             overflow-hidden
           "
         >
@@ -238,9 +236,8 @@ const handleMessageSend = (data: MessageData) => {
       onClick={handleOpenMessageComposer}
       className={`
         flex items-center gap-2
-        bg-gradient-to-r from-blue-600 to-blue-700
-        hover:from-blue-700 hover:to-blue-800
-        text-white font-medium
+        bg-gradient-to-r
+        hover:bg-gray-100 active:bg-gray-200 hover:text-gray-900 text-black font-medium
         rounded-2xl
         shadow-md hover:shadow-lg
         transition-all duration-200
@@ -258,84 +255,6 @@ const handleMessageSend = (data: MessageData) => {
 
   return (
     <div className="w-full bg-white border-b border-gray-200">
-      {/* Mobile Layout */}
-      <div className="block sm:hidden">
-        <div className="px-4 py-3">
-          {/* Top Action Bar */}
-          <div className="flex items-center justify-between">
-            {/* Left: Quick Message Button */}
-            <div className="flex items-center gap-2">
-              <MessageButton size="sm" />
-            </div>
-
-            {/* Right: Action Buttons */}
-            <div className="flex items-center gap-2">
-              <ActionButton
-                onClick={handleSearchToggle}
-                icon={isSearchExpanded ? X : Search}
-                label={isSearchExpanded ? "Close search" : "Search contacts"}
-                variant={isSearchExpanded ? "default" : "default"}
-              />
-              
-              <ActionButton
-                onClick={onAddContact}
-                icon={Plus}
-                label="Add contact"
-                variant="success"
-              />
-              
-              <QuickActionMenu />
-            </div>
-          </div>
-
-          {/* Expandable Search Bar */}
-          {isSearchExpanded && (
-            <div className="mt-3 animate-in slide-in-from-top duration-200">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Search contacts..."
-                  className="
-                    w-full pl-11 pr-4 py-3
-                    bg-gray-50 border border-gray-200
-                    text-gray-900 placeholder-gray-500
-                    rounded-2xl
-                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                    focus:bg-white
-                    transition-all duration-200
-                  "
-                  value={searchValue}
-                  onChange={(e) => onSearch(e.target.value)}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* MOBILE */}
-          {isMessageComposerOpen && (
-            <div className="mt-3 animate-in slide-in-from-top duration-200">
-              <div className="relative p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl">
-                <button
-                  onClick={() => setIsMessageComposerOpen(false)}
-                  className="absolute top-2 right-2 p-1 hover:bg-white/60 rounded-lg transition-colors z-10"
-                  aria-label="Close message composer"
-                >
-                  <X className="h-4 w-4 text-gray-500" />
-                </button>
-                <MessageComposer 
-                  directMode={true}
-                  onMessageSend={(data) => {
-                    onMessageSend(data);
-                    setIsMessageComposerOpen(false);
-                  }} 
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Tablet Layout */}
       <div className="hidden sm:block lg:hidden">
@@ -430,11 +349,8 @@ const handleMessageSend = (data: MessageData) => {
                   className="
                     pl-12 pr-4 py-3
                     w-80 xl:w-96
-                    border border-gray-300
                     text-gray-900 placeholder-gray-500
                     rounded-2xl
-                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                    transition-all duration-200
                   "
                   value={searchValue}
                   onChange={(e) => onSearch(e.target.value)}
