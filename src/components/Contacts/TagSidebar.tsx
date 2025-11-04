@@ -147,10 +147,10 @@ const TagSidebar = ({
 
   return (
     <>
-      {/* Container - Perfectly aligned structure */}
+      {/* Container*/}
       <div className="w-full h-full bg-white flex flex-col border-r border-gray-200">
 
-        {/* Search Bar - Consistent padding */}
+        {/* Search Bar  */}
         <div className="px-4 pt-4 pb-3 flex-shrink-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -159,7 +159,7 @@ const TagSidebar = ({
               placeholder="Search tags..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-gray-50 border text-gray-900 text-sm rounded-xl transition-all"
+              className="w-full pl-9 pr-3 py-2 bg-gray-50 text-gray-900 text-sm rounded-xl"
             />
           </div>
         </div>
@@ -173,7 +173,7 @@ const TagSidebar = ({
             </div>
           ) : (
             <>
-              {/* Action Buttons Section - Aligned with consistent padding */}
+              {/* Action Buttons Section */}
               <div className="px-4 pb-3 flex-shrink-0 relative">
   {/* Operation loading overlay */}
   {isOperationLoading && (
@@ -185,9 +185,9 @@ const TagSidebar = ({
     </div>
   )}
 
-  {/* Stacked buttons - Vertical layout */}
+  {/* Stacked buttons  */}
   <div className="flex flex-col gap-2.5">
-    {/* Create New Tag Button - Full width primary */}
+    {/* Create New Tag Button  */}
     <button
       onClick={() => {
         setShowCreateForm(true);
@@ -200,7 +200,7 @@ const TagSidebar = ({
       <span>New Tag</span>
     </button>
 
-    {/* All Customers Button - Secondary style */}
+    {/* All Customers Button  */}
     <button
       onClick={() => handleTagSelect(null)}
       disabled={isOperationLoading}
