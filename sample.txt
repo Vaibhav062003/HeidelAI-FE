@@ -9,6 +9,7 @@ merged vaibhav's changes with development branch
 merged rounak's custoemr-story-reply branch 
 changes to floating input section
 changes to Link Integrations button
+merged ig-message-reactions branch & fixed minor error in vaibhav's code
 
 dev:
 deploying changes regarding : updated post api endpoint addedd CORS origin header
