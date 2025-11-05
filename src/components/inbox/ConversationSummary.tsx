@@ -100,6 +100,7 @@ const fetchConversation = async (conversationId: string) => {
       console.error(' No data in response');
       setError('No data received from API');
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     console.error(' Full Error Object:', err);
     
