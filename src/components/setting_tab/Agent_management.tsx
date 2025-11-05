@@ -88,34 +88,33 @@ export const TeamManagement = () => {
     checkRole();
   }, [memberships?.data, invitations?.data, organization, user]);
 
-  // Refresh memberships and invitations every 3-5 minutes
-  React.useEffect(() => {
-    const refreshInterval = setInterval(() => {
-      if (organization) {
-        organization.getMemberships().then((membershipsRes) => {
-          const mapped: TeamMember[] = membershipsRes.data.map((m) => ({
-            id: m.id,
-            name: `${m.publicUserData?.firstName ?? ''} ${m.publicUserData?.lastName ?? ''}`.trim() || 
-                  m.publicUserData?.identifier || 'Unknown',
-            email: m.publicUserData?.identifier ?? 'Unknown',
-            role: m.roleName as 'Admin' | 'Member',
-          }));
-          setMembers(mapped);
-        });
-        organization.getInvitations().then((invitationsRes) => {
-          const inviteMapped: InvitedMember[] = invitationsRes.data.map((inv) => ({
-            id: inv.id,
-            name: inv.emailAddress || 'Invited User',
-            email: inv.emailAddress || 'No Email',
-            role: inv.roleName as 'Admin' | 'Member',
-          }));
-          setInvitationsList(inviteMapped);
-        });
-      }
-    }, 180000 + Math.floor(Math.random() * 120000)); // 3-5 min
+  const refreshData = async () => {
+  if (!organization) return;
+  try {
+    const membershipsRes = await organization.getMemberships();
+    const mapped: TeamMember[] = membershipsRes.data.map((m) => ({
+      id: m.id,
+      name: `${m.publicUserData?.firstName ?? ''} ${m.publicUserData?.lastName ?? ''}`.trim() || 
+            m.publicUserData?.identifier || 'Unknown',
+      email: m.publicUserData?.identifier ?? 'Unknown',
+      role: m.roleName as 'Admin' | 'Member',
+      userId: m.publicUserData?.userId,
+    }));
+    setMembers(mapped);
 
-    return () => clearInterval(refreshInterval);
-  }, [organization]);
+    const invitationsRes = await organization.getInvitations();
+    const inviteMapped: InvitedMember[] = invitationsRes.data.map((inv) => ({
+      id: inv.id,
+      name: inv.emailAddress || 'Invited User',
+      email: inv.emailAddress || 'No Email',
+      role: inv.roleName as 'Admin' | 'Member',
+    }));
+    setInvitationsList(inviteMapped);
+  } catch (err) {
+    console.error("Failed to refresh data:", err);
+  }
+};
+
 
   const handleInvite = async () => {
     if (!email) {
@@ -128,14 +127,20 @@ export const TeamManagement = () => {
         role: "org:member",
         redirect_url: `${window.location.origin}/accept-invite`,
       });
-      const data = await response.data();
-      if (response.status < 200 || response.status >= 300) {
-        throw new Error(data?.error || 'Failed to send invitation');
+
+      // axios-like clients put payload on response.data; don't call data() as a function
+      const resData = response?.data ?? response;
+      // prefer checking HTTP status when available
+      if (response?.status === 200 || resData?.status === 200 || resData?.ok || resData?.success) {
+        toast.success('Team member invited successfully!');
+        setIsInviteOpen(false);
+        setEmail('');
+        await refreshData(); 
+      } else {
+        throw new Error(resData?.error || 'Failed to send invitation');
       }
-      toast.success('Team member invited successfully!');
-      setIsInviteOpen(false);
-      setEmail('');
     } catch (error) {
+      console.error("invite error:", error);
       toast.error('Failed to send invitation. Please try again.');
     }
   };
@@ -151,48 +156,47 @@ export const TeamManagement = () => {
   const confirmDelete = async () => {
     if (!deleteDialog.member) return;
 
-    if (deleteDialog.type === 'member') {
-      
-      try {
-        const response = await fetch(`http://localhost:8000/delete-member?user_id=${deleteDialog.member.userId}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data?.error || 'Failed to remove member');
-        }
-        setMembers((prev) => prev.filter(m => m.userId !== deleteDialog.member!.userId));
-        toast.success('Member removed successfully');
-      } catch (error) {
-        toast.error('Failed to remove member. Please try again.');
-      }
-    } else {
-      try {
-        const response = await fetch("http://localhost:8000/revoke-invite", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            invitation_id: (deleteDialog.member as InvitedMember).id,
-            requesting_user_id: user?.id,
-          }),
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data?.error || 'Failed to revoke invitation');
-        }
-        toast.success('Invitation revoked successfully');
-        setInvitationsList((prev) => prev.filter(i => i.id !== (deleteDialog.member as InvitedMember).id));
-      } catch (error) {
-        toast.error('Failed to revoke invitation. Please try again.');
-      }
-    }
+    try {
+      if (deleteDialog.type === 'member') {
+        const userId = deleteDialog.member.userId;
+        if (!userId) throw new Error('No user id provided for member removal');
 
-    setDeleteDialog({ open: false, member: null, type: 'member' });
+        const response = await api.delete(`/api/clerk/delete-member?user_id=${userId}`);
+
+        const resData = response?.data ?? response;
+        console.log('delete-member response:', response);
+        console.log('delete-member data:', resData);
+
+        if (response?.status === 200 || resData?.status === 200 || resData?.ok || resData?.success) {
+          setMembers((prev) => prev.filter(m => m.userId !== userId));
+          toast.success('Member removed successfully');
+          await refreshData(); 
+        } else {
+          throw new Error(resData?.error || 'Failed to remove member');
+        }
+      } else {
+        const invitationId = (deleteDialog.member as InvitedMember).id;
+        const response = await api.post("/api/clerk/revoke-invite", {
+          invitation_id: invitationId,
+          requesting_user_id: user?.id,
+        });
+
+        const resData = response?.data ?? response;
+
+        if (response?.status === 200 || resData?.status === 200 || resData?.ok || resData?.success) {
+          toast.success('Invitation revoked successfully');
+          setInvitationsList((prev) => prev.filter(i => i.id !== invitationId));
+          await refreshData(); 
+        } else {
+          throw new Error(resData?.error || 'Failed to revoke invitation');
+        }
+      }
+    } catch (error) {
+      console.error("confirmDelete error:", error);
+      toast.error('Failed to remove. Please try again.');
+    } finally {
+      setDeleteDialog({ open: false, member: null, type: 'member' });
+    }
   };
 
   const getInitials = (name: string) => {
