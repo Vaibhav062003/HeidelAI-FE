@@ -1,11 +1,10 @@
 "use client";
 
-import { Toaster } from "sonner";
-import { useEffect } from "react";
+import { Toaster, toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../../contexts/AuthContext";
 import { motion } from "framer-motion";
-import { LogIn } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
+import Image from "next/image";
 
 export default function DashboardLayout({
   children,
@@ -13,27 +12,50 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { isSignedIn, isLoaded} = useUser();
 
-  if (loading) {
+  if (!isLoaded) {
+    // HeidelAI Logo Loader with Shine Effect
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-gray-100 to-indigo-100 relative overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute w-96 h-96 bg-blue-300/20 rounded-full blur-3xl top-10 left-10 animate-pulse" />
-          <div className="absolute w-80 h-80 bg-indigo-300/20 rounded-full blur-3xl bottom-10 right-10 animate-pulse delay-200" />
+          <div className="absolute w-[32rem] h-[32rem] bg-blue-300/20 rounded-full blur-3xl top-10 left-10 animate-pulse" />
+          <div className="absolute w-[28rem] h-[28rem] bg-indigo-300/20 rounded-full blur-3xl bottom-10 right-10 animate-pulse delay-200" />
         </div>
 
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="backdrop-blur-xl bg-white/30 p-10 rounded-2xl shadow-lg text-center border border-white/40 z-10"
+          className=" p-20  text-center  z-10"
         >
-          <div className="w-10 h-10 mx-auto mb-4 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          <h1 className="text-2xl font-semibold text-gray-800 mb-2">
+          <div className="relative w-32 h-32 mx-auto mb-8 flex items-center justify-center">
+            <Image
+              src="/heidelai.png"
+              alt="HeidelAI"
+              width={260} 
+              height={260}
+              className="mb-8 drop-shadow-2xl"
+            />
+            <motion.div
+              className="absolute top-0 left-0 w-32 h-32 pointer-events-none"
+              initial={{ x: -128, opacity: 0.2 }}
+              animate={{ x: 128, opacity: [0.2, 0.8, 0.2] }}
+              transition={{
+                repeat: Infinity,
+                duration: 1.6,
+                ease: "easeInOut"
+              }}
+              style={{
+                background:
+                  "linear-gradient(120deg, transparent 60%, rgba(255,255,255,0.7) 80%, transparent 100%)"
+              }}
+            />
+          </div>
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">
             Checking your session...
           </h1>
-          <p className="text-gray-600">
+          <p className="text-xl text-gray-600">
             Please wait while we verify your authentication status.
           </p>
         </motion.div>
@@ -41,42 +63,61 @@ export default function DashboardLayout({
     );
   }
 
-  if (!user) {
+  if (!isSignedIn) {
+    // Enlarged Not signed in UI with HeidelAI Logo Loader with Shine Effect
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 relative overflow-hidden">
-        {/* Glowing background orbs */}
         <div className="absolute inset-0">
-          <div className="absolute w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl top-10 left-10 animate-pulse" />
-          <div className="absolute w-80 h-80 bg-blue-400/20 rounded-full blur-3xl bottom-10 right-10 animate-pulse delay-200" />
+          <div className="absolute w-[32rem] h-[32rem] bg-indigo-400/20 rounded-full blur-3xl top-10 left-10 animate-pulse" />
+          <div className="absolute w-[28rem] h-[28rem] bg-blue-400/20 rounded-full blur-3xl bottom-10 right-10 animate-pulse delay-200" />
         </div>
 
-        {/* Glassmorphic card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
-          className="backdrop-blur-xl bg-white/30 p-10 rounded-2xl shadow-lg text-center border border-white/40 z-10 max-w-md"
+          className=" text-center  z-10 max-w-2xl"
         >
-          <div className="mx-auto mb-4 flex items-center justify-center w-14 h-14 rounded-full bg-indigo-600 text-white shadow-lg">
-            <LogIn className="w-7 h-7" />
+          <div className="relative w-32 h-32 mx-auto mb-8 flex items-center justify-center">
+            <Image
+              src="/heidelai.png"
+              alt="HeidelAI"
+              width={260} 
+              height={260}
+              className="mb-8 drop-shadow-2xl"
+            />
+            <motion.div
+              className="absolute top-0 left-0 w-32 h-32 pointer-events-none"
+              initial={{ x: -128, opacity: 0.2 }}
+              animate={{ x: 128, opacity: [0.2, 0.8, 0.2] }}
+              transition={{
+                repeat: Infinity,
+                duration: 1.6,
+                ease: "easeInOut"
+              }}
+              style={{
+                background:
+                  "linear-gradient(120deg, transparent 60%, rgba(255,255,255,0.7) 80%, transparent 100%)"
+              }}
+            />
           </div>
 
-          <h1 className="text-3xl font-semibold text-gray-800 mb-3">
+          <h1 className="text-4xl font-bold text-gray-800 mb-6">
             You’re not logged in
           </h1>
-          <p className="text-gray-600 mb-6">
+          <p className="text-xl text-gray-600 mb-8">
             Please log in to access your personalized dashboard and insights.
           </p>
 
           <button
             onClick={() => router.push("/login")}
-            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-md transition-all duration-300"
+            className="px-10 py-5 bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-semibold rounded-2xl shadow-lg transition-all duration-300"
           >
             Go to Login
           </button>
         </motion.div>
 
-        <p className="text-gray-400 text-sm mt-6 z-10">
+        <p className="text-gray-400 text-lg mt-10 z-10">
           HeidelAI • Secure Access Portal
         </p>
 

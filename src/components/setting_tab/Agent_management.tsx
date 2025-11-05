@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { useUser, useOrganization } from '@clerk/nextjs';
 import { Users, Mail, UserPlus, UserMinus, Trash2, X } from 'lucide-react';
+import api from '@/lib/session_api';
 
 interface TeamMember {
   name: string;
@@ -122,19 +123,13 @@ export const TeamManagement = () => {
       return;
     }
     try {
-      const response = await fetch("http://127.0.0.1:8000/invite-agent", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email_address: email,
-          role: "org:member",
-          redirect_url: "http://localhost:3000/accept_invitation",
-        }),
+      const response = await api.post("/api/clerk/invite-agent", {
+        email_address: email,
+        role: "org:member",
+        redirect_url: `${window.location.origin}/accept-invite`,
       });
-      const data = await response.json();
-      if (!response.ok) {
+      const data = await response.data();
+      if (response.status < 200 || response.status >= 300) {
         throw new Error(data?.error || 'Failed to send invitation');
       }
       toast.success('Team member invited successfully!');
