@@ -109,6 +109,7 @@ import InstagramReel from "../instagram/messaging/InstagramReel";
 import InstagramStory from "../instagram/messaging/InstagramStory";
 import LazyMediaLoader from "../LazyMediaLoader";
 import { MessageWrapper } from "../messaging/MessageWrapper";
+import { useUser } from "@clerk/nextjs";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -685,6 +686,7 @@ const ChatView = ({
   isRightSidebarVisible,
   onOpenRightSidebar,
 }: ChatViewProps) => {
+  const {user, isLoaded} = useUser();
   const [isRecording, setIsRecording] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
   const [isAIEnabled, setIsAIEnabled] = useState(false);
@@ -743,6 +745,9 @@ const ChatView = ({
   const [activeMediaType, setActiveMediaType] = useState<
     "reel" | "story" | null
   >(null);
+
+ 
+
 
   const handlePlay = (id: string, type: "reel" | "story") => {
     setActiveMediaId(id);
@@ -1311,14 +1316,16 @@ const ChatView = ({
     };
 
     const fetchMessages = async () => {
+      if (!isLoaded || !user) return;
+      const agent_username = user.username;
       try {
         const platform = selectedConversationId.split("_")[0];
         let response;
         if (platform === "instagram") {
           response = await api.get(
-            `/api/instagram/conversations/${selectedConversationId}/messages`
+            `/api/instagram/conversations/${selectedConversationId}/messages?agent_username=${agent_username}`
           );
-          setMessages(response?.data || []);
+          setMessages(response?.data.messages || []);
         } else if (platform === "whatsapp") {
           const whatsappId = localStorage.getItem("whatsapp_user_id");
           if (!whatsappId) return;
@@ -2134,17 +2141,7 @@ const ChatView = ({
             className="flex-1 h-full px-3 py-0.1 bg-gray-50"
           >
             <div className="space-y-3 max-w-full pb-4 sm:pb-0">
-              {messages.length === 0 ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}>
-                      <div className={`max-w-[75%] ${i % 2 === 0 ? "items-start" : "items-end"} flex flex-col`}>
-                        <div className={`skeleton rounded-3xl ${i % 2 === 0 ? "rounded-bl-lg" : "rounded-br-lg"} p-4 w-48 h-16`}></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
+              
                 <>
                   {messages.map((message, index) => {
                     const latestMediaMessage = [...messages]
@@ -2242,7 +2239,6 @@ const ChatView = ({
                     })}
                   <div ref={lastMessageRef} />
                 </>
-              )}
             </div>
           </ScrollArea>
 
@@ -2318,7 +2314,11 @@ const ChatView = ({
                     <textarea
                       ref={textareaRef}
                       value={message}
-                      onChange={(e) => setMessage(e.target.value)}
+                      onChange={(e) => {
+                        setMessage(e.target.value)
+                        console.log("⌨️ User typing...");
+                        handleTyping()
+                      }}
                       onKeyDown={handleKeyDown}
                       placeholder={
                         mode === "reply"
