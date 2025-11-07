@@ -68,7 +68,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'scontent-fra3-2.cdninstagram.com'
+        hostname: 'cdninstagram.com'
+      },
+      {
+        protocol: 'https',
+        hostname: '*.cdninstagram.com'
       },
     ],
   }

@@ -78,7 +78,7 @@ return (
             {customerName}
           </h3>
           <span className="text-[11px] text-gray-500 flex-shrink-0">
-            {getRelativeTime(timestamp)}
+            {timestamp}
           </span>
         </div>
         

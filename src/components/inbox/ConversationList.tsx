@@ -7,7 +7,7 @@ import ConversationPreview from "./ConversationPreview";
 import { useConversations } from "../hooks/useConversations";
 import { Conversation } from '@/components/types/conversation';
 import { FilterMenu, FilterOptions } from './FilterMenu';
-import { format, isToday, isYesterday, subDays, startOfDay } from 'date-fns';
+import { format, isToday, isYesterday, subDays, startOfDay, parseISO } from 'date-fns';
 import { MessagesSquare, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/inbox_button";
 
@@ -62,13 +62,17 @@ const ConversationItem = memo(({
   }, [conversation.id, onSelect]);
 
   const formattedTime = useMemo(() => {
-    const date = new Date(conversation.timestamp);
-    
+    const ISOdate = parseISO(conversation.timestamp);
+    const date = new Date(ISOdate.getTime() + 5.5 * 60 * 60 * 1000);
     if (isToday(date)) {
       return format(date, "h:mm a");
-    } else if (isYesterday(date)) {
-      return format(date, "h:mm a");
-    } else if (date >= subDays(startOfDay(new Date()), 7)) {
+
+    
+    }    
+    else if (isYesterday(date)) {
+      return "Yesterday";
+    } 
+    else if (date >= subDays(startOfDay(new Date()), 7)) {
       return format(date, "EEE h:mm a");
     } else {
       return format(date, "MMM d");
@@ -84,7 +88,7 @@ const ConversationItem = memo(({
 
   return (
     <div 
-      className={`border-b border-gray-100/60 cursor-pointer ${
+      className={`border-b border-gray-100/60 hover:bg-gray-100/80 cursor-pointer ${
         isSelected ? 'bg-blue-50/80' : 'bg-white/80'
       }`}
       onClick={handleClick}

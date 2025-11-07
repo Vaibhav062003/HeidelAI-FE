@@ -90,7 +90,6 @@ import api from "@/lib/session_api";
 import { useConversations } from "../hooks/useConversations";
 import { storeData, getData, getAllKeys, deleteData } from "@/lib/indexedDB";
 import { Product } from "../types/product";
-import MessageReaction from "../messaging/MessageReaction";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -109,6 +108,8 @@ import InstagramPost from "../instagram/messaging/InstagramPost";
 import InstagramReel from "../instagram/messaging/InstagramReel";
 import InstagramStory from "../instagram/messaging/InstagramStory";
 import LazyMediaLoader from "../LazyMediaLoader";
+import { MessageWrapper } from "../messaging/MessageWrapper";
+import { useUser } from "@clerk/nextjs";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -685,6 +686,7 @@ const ChatView = ({
   isRightSidebarVisible,
   onOpenRightSidebar,
 }: ChatViewProps) => {
+  const {user, isLoaded} = useUser();
   const [isRecording, setIsRecording] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
   const [isAIEnabled, setIsAIEnabled] = useState(false);
@@ -743,6 +745,9 @@ const ChatView = ({
   const [activeMediaType, setActiveMediaType] = useState<
     "reel" | "story" | null
   >(null);
+
+ 
+
 
   const handlePlay = (id: string, type: "reel" | "story") => {
     setActiveMediaId(id);
@@ -1311,14 +1316,16 @@ const ChatView = ({
     };
 
     const fetchMessages = async () => {
+      if (!isLoaded || !user) return;
+      const agent_username = user.username;
       try {
         const platform = selectedConversationId.split("_")[0];
         let response;
         if (platform === "instagram") {
           response = await api.get(
-            `/api/instagram/conversations/${selectedConversationId}/messages`
+            `/api/instagram/conversations/${selectedConversationId}/messages?agent_username=${agent_username}`
           );
-          setMessages(response?.data || []);
+          setMessages(response?.data.messages || []);
         } else if (platform === "whatsapp") {
           const whatsappId = localStorage.getItem("whatsapp_user_id");
           if (!whatsappId) return;
@@ -2134,17 +2141,7 @@ const ChatView = ({
             className="flex-1 h-full px-3 py-0.1 bg-gray-50"
           >
             <div className="space-y-3 max-w-full pb-4 sm:pb-0">
-              {messages.length === 0 ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}>
-                      <div className={`max-w-[75%] ${i % 2 === 0 ? "items-start" : "items-end"} flex flex-col`}>
-                        <div className={`skeleton rounded-3xl ${i % 2 === 0 ? "rounded-bl-lg" : "rounded-br-lg"} p-4 w-48 h-16`}></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
+              
                 <>
                   {messages.map((message, index) => {
                     const latestMediaMessage = [...messages]
@@ -2168,81 +2165,73 @@ const ChatView = ({
                               className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === "customer" ? "items-start" : "items-end"
                                 }`}
                             >
-                              {/* IG Media Messages */}
-                              <LazyMediaLoader key={index} index={index}>
-                                {/* Render IG Posts */}
-                                {message.type === "share" && message.payload && (
-                                  <InstagramPost
-                                    mediaUrl={message.payload.url}
-                                    timestamp={formatMessageTime(message.timestamp)}
-                                  />
-                                )}
-
-                                {/* Render IG Reels */}
-                                {message.type === "ig_reel" && message.payload && (
-                                  <InstagramReel
-                                    key={index}
-                                    id={message.payload.reel_video_id}
-                                    reelVideoUrl={message.payload.url}
-                                    title={message.payload.caption}
-                                    timestamp={formatMessageTime(message.timestamp)}
-                                    viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
-                                    isLatest={isLatest}
-                                    isActive={
-                                      activeMediaType === "reel" &&
-                                      activeMediaId === message.payload.reel_video_id
-                                    }
-                                    onPlay={(id) => handlePlay(id, "reel")} // stops others
-                                    isMuted={globalMuted}
-                                    onMuteToggle={handleMuteToggle}
-                                    isAgent={message.role.toLowerCase() === "agent"}
-                                  />
-                                )}
-
-                                {/* Render IG Story */}
-                                {(message.type === "ig_story" || message.type === "story_reply") && message.payload && (
-                                  <InstagramStory
-                                    id={message.payload.story_media_id}
-                                    sharedBy="You"
-                                    storyOwnerName={"Instagram User"}
-                                    storyMediaUrl={message.payload.story_media_url}
-                                    isActive={
-                                      activeMediaType === "story" &&
-                                      activeMediaId === message.payload.story_media_id
-                                    } // only one plays
-                                    onPlay={(id) => handlePlay(id, "story")}
-                                    isMuted={globalMuted}
-                                    isLatest={isLatest}
-                                    onMuteToggle={(muted) => setGlobalMuted(muted)}
-                                    isAgent={message.role.toLowerCase() === "agent"}
-                                    timestamp={formatMessageTime(message.timestamp)}
-                                    content={message.content}
-                                    storyOwnerUsername={message.payload.owner_username}
-                                    type={message.type}
+                              <MessageWrapper message={message} index={index} >
+                                {/* IG Media Messages */}
+                                <LazyMediaLoader key={index} index={index}>
+                                  {/* Render IG Posts */}
+                                  {message.type === "share" && message.payload && (
+                                    <InstagramPost
+                                      mediaUrl={message.payload.url}
+                                      timestamp={formatMessageTime(message.timestamp)}
                                     />
-                                )}
-                              </LazyMediaLoader>
+                                  )}
 
-                              {/* Normal Messages */}
-                              {!message.payload && (
-                                <MessageItem
-                                  key={message.id}
-                                  message={message}
-                                  index={index}
-                                  isLatest={isLatest}
-                                  isLast={index === messages.length - 1}
-                                />
-                              )}
+                                  {/* Render IG Reels */}
+                                  {message.type === "ig_reel" && message.payload && (
+                                    <InstagramReel
+                                      key={index}
+                                      id={message.payload.reel_video_id}
+                                      reelVideoUrl={message.payload.url}
+                                      title={message.payload.caption}
+                                      timestamp={formatMessageTime(message.timestamp)}
+                                      viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
+                                      isLatest={isLatest}
+                                      isActive={
+                                        activeMediaType === "reel" &&
+                                        activeMediaId === message.payload.reel_video_id
+                                      }
+                                      onPlay={(id) => handlePlay(id, "reel")} // stops others
+                                      isMuted={globalMuted}
+                                      onMuteToggle={handleMuteToggle}
+                                      isAgent={message.role.toLowerCase() === "agent"}
+                                    />
+                                  )}
 
-                              {/* Message Reaction */}
-                              {message.reaction && (
-                                <div className={`flex ${message.role === "customer" ? "justify-start" : "justify-end"} mt-1`}>
-                                  <MessageReaction
-                                    reaction={message.reaction}
-                                    messageId={message.id}
+                                  {/* Render IG Story */}
+                                  {(message.type === "ig_story" || message.type === "story_reply") && message.payload && (
+                                    <InstagramStory
+                                      id={message.payload.story_media_id}
+                                      sharedBy="You"
+                                      storyOwnerName={"Instagram User"}
+                                      storyMediaUrl={message.payload.story_media_url}
+                                      isActive={
+                                        activeMediaType === "story" &&
+                                        activeMediaId === message.payload.story_media_id
+                                      } // only one plays
+                                      onPlay={(id) => handlePlay(id, "story")}
+                                      isMuted={globalMuted}
+                                      isLatest={isLatest}
+                                      onMuteToggle={(muted) => setGlobalMuted(muted)}
+                                      isAgent={message.role.toLowerCase() === "agent"}
+                                      timestamp={formatMessageTime(message.timestamp)}
+                                      content={message.content}
+                                      storyOwnerUsername={message.payload.owner_username}
+                                      type={message.type}
+                                      />
+                                  )}
+                                </LazyMediaLoader>
+
+                                {/* Normal Messages */}
+                                {!message.payload && (
+                                  <MessageItem
+                                    key={message.id}
+                                    message={message}
+                                    index={index}
+                                    isLatest={isLatest}
+                                    isLast={index === messages.length - 1}
                                   />
-                                </div>
-                              )}
+                                )}
+                              </MessageWrapper>
                           </div>
                         </div>
                       </div>
@@ -2250,7 +2239,6 @@ const ChatView = ({
                     })}
                   <div ref={lastMessageRef} />
                 </>
-              )}
             </div>
           </ScrollArea>
 
@@ -2326,7 +2314,11 @@ const ChatView = ({
                     <textarea
                       ref={textareaRef}
                       value={message}
-                      onChange={(e) => setMessage(e.target.value)}
+                      onChange={(e) => {
+                        setMessage(e.target.value)
+                        console.log("⌨️ User typing...");
+                        handleTyping()
+                      }}
                       onKeyDown={handleKeyDown}
                       placeholder={
                         mode === "reply"
