@@ -9,7 +9,7 @@ import Image from "next/image";
 export default function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   const router = useRouter();
   const { isSignedIn, isLoaded} = useUser();
@@ -129,16 +129,15 @@ export default function DashboardLayout({
   return (
     <html lang="en">
       <head>
-      <link rel="icon" href="/HeidelAi Favicon.ico.ico" />
-
+        <link rel="icon" href="/HeidelAi Favicon.ico.ico" />
         <title>Dashboard</title>
       </head>
       <body>
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-screen bg-gray-50">
           <Toaster position="top-center" richColors />
           {children}
         </div>
       </body>
     </html>
-  )
+  );
 }
