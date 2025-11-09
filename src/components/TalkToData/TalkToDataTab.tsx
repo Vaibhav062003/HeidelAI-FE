@@ -24,20 +24,12 @@ const typingIndicatorStyles = `
   }
 
   .typing-indicator span {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
     background-color: #b2b2b2;
     border-radius: 50%;
-    margin-right: 3px;
+    margin-right: 4px;
     animation: typing 1.5s infinite;
-  }
-
-  @media (min-width: 640px) {
-    .typing-indicator span {
-      width: 8px;
-      height: 8px;
-      margin-right: 4px;
-    }
   }
 
   .typing-indicator span:nth-child(2) {
@@ -52,18 +44,6 @@ const typingIndicatorStyles = `
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-6px); }
   }
-
-  /* Mobile message bubbles */
-  @media (max-width: 639px) {
-    .message-bubble {
-      max-width: 85% !important;
-      font-size: 0.875rem;
-    }
-    
-    .message-bubble strong {
-      font-size: 0.9rem;
-    }
-  }
 `;
 
 function formatBotMessage(output: string) {
@@ -73,7 +53,7 @@ function formatBotMessage(output: string) {
   // Replace bold text with <strong> tags
   formatted = formatted.replace(/\*\*(.*?)\*\*/g, `<strong>$1</strong>`);
 
-  // Add spacing for list-like items using tabs - responsive spacing
+  // Add spacing for list-like items using tabs
   formatted = formatted.replace(/\* (.*?)\n/g, `<span style="margin-left:16px;display: block;height: fit-content;width: 100%;text-align: start;margin-bottom: 0;">&#8226;&nbsp;&nbsp;$1</span>`);
 
   // Replace double newlines with a single <br> for better spacing
@@ -93,21 +73,9 @@ const TalkToDataTab = () => {
   
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [screenWidth, setScreenWidth] = useState(0);
   const ws = useRef<WebSocket | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
-
-  // Screen size detection
-  useEffect(() => {
-    const handleResize = () => {
-      setScreenWidth(window.innerWidth);
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     if (!scrollContainerRef.current) return;
@@ -212,59 +180,50 @@ const TalkToDataTab = () => {
     }
   };
 
-  // Determine if mobile layout
-  const isMobile = screenWidth < 640;
-  const isTablet = screenWidth >= 640 && screenWidth < 1024;
-
   return (
-    <div className="h-screen w-full flex items-center justify-center p-2 sm:p-4 lg:p-6 bg-gray-50">
+    <div className="h-screen w-full flex items-center justify-center p-6 bg-gray-50">
       <style>{typingIndicatorStyles}</style>
       
-      <Card className="h-full w-full max-w-full shadow-lg rounded-lg sm:rounded-xl overflow-hidden">
+      <Card className="h-full w-full max-w-full shadow-lg rounded-xl overflow-hidden">
         <CardContent className="p-0 flex flex-col h-full">
           <div className="flex flex-col h-full w-full bg-white">
-            {/* Header - Responsive */}
-            <div className="border-b p-3 sm:p-4 lg:p-6 bg-white flex-shrink-0">
+            {/* Header - Desktop */}
+            <div className="border-b p-6 bg-white flex-shrink-0">
               <div className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
-                <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">
+                <MessageSquare className="h-6 w-6 text-blue-600" />
+                <h2 className="text-2xl font-semibold text-gray-900">
                   Talk to Data
                 </h2>
               </div>
-              {isMobile && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Ask questions about your data
-                </p>
-              )}
             </div>
 
-            {/* Messages Container - Responsive */}
+            {/* Messages Container */}
             <div className="flex-1 overflow-hidden relative">
               <ScrollArea
                 className="h-full w-full"
                 ref={scrollContainerRef}
               >
-                <div className="p-3 sm:p-4 lg:p-6">
+                <div className="p-6">
                   {messages.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-full text-center py-12 sm:py-16">
-                      <MessageSquare className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mb-4" />
-                      <h3 className="text-lg sm:text-xl font-medium text-gray-900 mb-2">
+                    <div className="flex flex-col items-center justify-center h-full text-center py-16">
+                      <MessageSquare className="h-16 w-16 text-gray-400 mb-4" />
+                      <h3 className="text-xl font-medium text-gray-900 mb-2">
                         Start a conversation
                       </h3>
-                      <p className="text-sm sm:text-base text-gray-600 max-w-md">
+                      <p className="text-base text-gray-600 max-w-md">
                         Ask me anything about your data. I can help you analyze trends, 
                         find insights, and answer questions.
                       </p>
                       <div className="mt-6 flex flex-wrap gap-2 justify-center">
                         <button
                           onClick={() => setInputMessage("Show me recent trends in my data")}
-                          className="px-3 py-2 text-xs sm:text-sm bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors"
+                          className="px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors"
                         >
                           Recent trends
                         </button>
                         <button
                           onClick={() => setInputMessage("What are my top performing metrics?")}
-                          className="px-3 py-2 text-xs sm:text-sm bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors"
+                          className="px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors"
                         >
                           Top metrics
                         </button>
@@ -272,7 +231,7 @@ const TalkToDataTab = () => {
                     </div>
                   )}
                   
-                  <div className="space-y-3 sm:space-y-4">
+                  <div className="space-y-4">
                     {messages.map((message, index) => (
                       <div
                         key={index}
@@ -283,14 +242,14 @@ const TalkToDataTab = () => {
                         }`}
                       >
                         <div
-                          className={`message-bubble rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 sm:py-3 max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${
+                          className={`rounded-xl px-4 py-3 max-w-[75%] ${
                             message.type === "outgoing"
                               ? "bg-blue-600 text-white"
                               : "bg-gray-100 text-gray-900"
                           }`}
                         >
                           <div
-                            className="text-sm sm:text-base leading-relaxed"
+                            className="text-base leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: message.content }}
                           />
                         </div>
@@ -312,9 +271,9 @@ const TalkToDataTab = () => {
               </ScrollArea>
             </div>
 
-            {/* Input Area - Responsive */}
-            <div className="border-t bg-white p-3 sm:p-4 lg:p-6 flex-shrink-0">
-              <div className="flex gap-2 sm:gap-3 items-end">
+            {/* Input Area - Desktop */}
+            <div className="border-t bg-white p-6 flex-shrink-0">
+              <div className="flex gap-3 items-end">
                 <div className="flex-1">
                   <textarea
                     value={inputMessage}
@@ -325,27 +284,20 @@ const TalkToDataTab = () => {
                         handleSendMessage();
                       }
                     }}
-                    placeholder={isMobile ? "Ask about your data..." : "Ask me anything about your data..."}
-                    className="w-full resize-none rounded-lg sm:rounded-xl border border-gray-300 p-2.5 sm:p-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                    rows={isMobile ? 1 : isTablet ? 2 : 1}
-                    style={{ minHeight: isMobile ? '40px' : '44px' }}
+                    placeholder="Ask me anything about your data..."
+                    className="w-full resize-none rounded-xl border border-gray-300 p-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    rows={1}
+                    style={{ minHeight: '44px' }}
                   />
                 </div>
                 <Button
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim() || isTyping}
-                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                  className="h-12 w-12 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                 >
-                  <Send className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <Send className="h-5 w-5" />
                 </Button>
               </div>
-              
-              {/* Mobile helper text */}
-              {isMobile && (
-                <p className="text-xs text-gray-500 mt-2">
-                  Press Enter to send • Shift+Enter for new line
-                </p>
-              )}
             </div>
           </div>
         </CardContent>
