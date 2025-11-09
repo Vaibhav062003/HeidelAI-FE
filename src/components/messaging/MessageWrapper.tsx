@@ -24,7 +24,10 @@ export const MessageWrapper = ({ message, index, children, allMessages }: any) =
   };
 
   const handleReply = () => {
-    console.log("Replying to:", message.id);
+    if(message.platform == "instagram") {
+      toast.warning("Can't reply to Instagram messages yet ☹️");
+      return;
+    }
     // TODO: handle reply input
   };
 
