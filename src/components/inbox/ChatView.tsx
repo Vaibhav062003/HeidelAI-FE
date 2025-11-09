@@ -110,6 +110,7 @@ import InstagramStory from "../instagram/messaging/InstagramStory";
 import LazyMediaLoader from "../LazyMediaLoader";
 import { MessageWrapper } from "../messaging/MessageWrapper";
 import { useUser } from "@clerk/nextjs";
+import MediaMessage from "../messaging/MediaMessage";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -746,13 +747,13 @@ const ChatView = ({
   const [globalMuted, setGlobalMuted] = useState(true);
   const [activeMediaId, setActiveMediaId] = useState<string | null>(null);
   const [activeMediaType, setActiveMediaType] = useState<
-    "reel" | "story" | null
+    "reel" | "story" | "video" | null
   >(null);
 
  
 
 
-  const handlePlay = (id: string, type: "reel" | "story") => {
+  const handlePlay = (id: string, type: "reel" | "story" | "video") => {
     setActiveMediaId(id);
     setActiveMediaType(type);
   };
@@ -2222,10 +2223,29 @@ const ChatView = ({
                                       type={message.type}
                                       />
                                   )}
+
+                                  {/* Render Images / Videos */}
+                                  {(message.type === "image" || message.type === "video") && message.payload && (
+                                    <MediaMessage
+                                      type={message.type === "image" ? "image" : "video"}
+                                      url={message.payload.url}
+                                      isAgent={message.role.toLowerCase() === "agent"}
+                                      isLatest={isLatest}
+                                      isActive={
+                                        activeMediaType === "video" &&
+                                        activeMediaId === message.id
+                                      }
+                                      onPlay={(id) => handlePlay(id, "video")}
+                                      isMuted={globalMuted}
+                                      onMuteToggle={(muted) => setGlobalMuted(muted)}
+                                      id={message.id}
+                                      timestamp={formatMessageTime(message.timestamp)}
+                                    />
+                                  )}
                                 </LazyMediaLoader>
 
                                 {/* Normal Messages */}
-                                {message.type !== "ig_story" && message.type !== "story_reply" && message.type !== "ig_reel" && message.type !== "share" && (
+                                {!["ig_story", "story_reply", "ig_reel", "share", "image", "video"].includes(message.type ?? "") && (
                                   <MessageItem
                                     key={message.id}
                                     message={message}
