@@ -33,7 +33,7 @@ export default function DashboardLayout({
 
       {/* Offline Banner */}
       {!isOnline && (
-        <div className="fixed top-0 left-0 w-full z-50 text-center border-[#fcb3b3] border-y bg-[#fff5f5] text-black  py-2  font-medium ">
+        <div className="fixed top-0 left-0 w-full z-50 text-center text-red-600 border-[#fcb3b3] border-y bg-[#fff5f5] text-black  py-2  font-medium ">
           ⚠️ You are not connected to the internet. Messages are not syncing
         </div>
       )}
