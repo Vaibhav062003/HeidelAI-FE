@@ -125,7 +125,7 @@ export const TeamManagement = () => {
       const response = await api.post("/api/clerk/invite-agent", {
         email_address: email,
         role: "org:member",
-        redirect_url: `${window.location.origin}/accept-invite`,
+        redirect_url: `${window.location.origin}/accept_invitation`,
       });
 
       // axios-like clients put payload on response.data; don't call data() as a function
