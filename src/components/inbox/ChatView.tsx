@@ -1112,7 +1112,26 @@ const ChatView = ({
         );
         if (response.status !== "success")
           throw new Error(response.message || "Failed to send message");
-      } else if (platform === "instagram") {
+      } else if (platform === "instagram" && attachments.length > 0){
+        const file = attachments[0];
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("caption", contentToSend);
+        formData.append("conversation_id", selectedConversationId);
+
+        response = await api.post(
+          `/api/instagram/conversations/send_media_message`,
+          formData
+        );
+        if (response.status !== 200) {
+          toast.error("Failed to send message")
+          return;
+        };
+        setMessage("")
+        setAttachments([ ]);
+      } 
+      else if( platform === "instagram") {
         const data = {
           conversation_id: selectedConversationId,
           content: contentToSend,
