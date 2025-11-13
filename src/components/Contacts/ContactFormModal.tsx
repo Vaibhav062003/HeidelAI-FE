@@ -27,6 +27,8 @@ interface ContactFormModalProps {
   contact?: Partial<Contact>;
   onClose: () => void;
   onSave: (contact: Partial<Contact>) => void;
+  isMobile?: boolean;
+
 }
 
 interface Tag {

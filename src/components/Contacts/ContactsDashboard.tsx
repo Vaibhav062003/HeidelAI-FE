@@ -7,7 +7,7 @@ import { ContactListHeader } from "../Contacts/ContactListHeader";
 import { PaginationFooter } from "../Contacts/PaginationFooter";
 import { ContactForm } from "../Contacts/ContactFormModal";
 import { Spinner } from "../Contacts/Spinner";
-import TagSidebar from "../Contacts/TagSidebar";
+import TagSidebar from "./TagSidebar";
 
 interface Contact {
   id: string;
@@ -45,20 +45,15 @@ const ContactsDashboard = () => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [tagsLoading, setTagsLoading] = useState(true);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const fetchContacts = useCallback(async () => {
     try {
-      let query = supabase
-        .from('contacts')
-        .select('*');
+      let query = supabase.from('contacts').select('*');
       
-      console.log("contacts :" ,query);
       if (selectedTag) {
         query = query.contains('tags', [selectedTag]);
       }
-      console.log("selected",selectedTag);
-      console.log("query",query);
   
       const { data, error } = await query;
       
@@ -67,15 +62,13 @@ const ContactsDashboard = () => {
         ...c,
         tags: Array.isArray(c.tags) ? c.tags : []
       })) || []);
-      // console.log("contact",contacts);
-
-  } catch (err) {
-    console.error("Failed to fetch contacts:", err); // Add detailed logging
-    setError("Failed to load contacts. Please try again.");
+    } catch (err) {
+      console.error("Failed to fetch contacts:", err);
+      setError("Failed to load contacts. Please try again.");
     } finally {
       setLoading(false);
     }
-  }, [selectedTag]); // Add selectedTagId as a dependency
+  }, [selectedTag]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -292,82 +285,95 @@ const ContactsDashboard = () => {
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
     });
-  }, [contacts, searchQuery]); // Removed client-side tag filtering
-  // console.log( "filtered contact", filteredContacts );
+  }, [contacts, searchQuery]);
 
   const paginatedContacts = filteredContacts.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  return (
-      <div className="h-screen w-[1400px] flex flex-row bg-background">
-      <TagSidebar
-        tags={tags}
-        tagsLoading={tagsLoading}
-        onCreateTag={handleCreateTag}
-        onEditTag={handleEditTag}
-        onDeleteTag={handleDeleteTag}
-        onTagSelect={setSelectedTag}
-        selectedTag={selectedTag}
-        onTagModalOpen={() => setIsTagModalOpen(true)}
-        onTagModalClose={() => setIsTagModalOpen(false)}
-        error={error}
-      />
+  const handleItemsPerPageChange = useCallback((newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  }, []);
 
-      <div className="flex-1 flex flex-col h-screen max-h-screen">
-        <div className="flex-none">
+  return (
+    <div className="h-full w-full flex bg-white overflow-hidden">
+      {/* Tag Sidebar */}
+      <div className="w-64 flex-shrink-0 h-full bg-white border-r border-gray-200">
+        <TagSidebar
+          tags={tags}
+          tagsLoading={tagsLoading}
+          onCreateTag={handleCreateTag}
+          onEditTag={handleEditTag}
+          onDeleteTag={handleDeleteTag}
+          onTagSelect={setSelectedTag}
+          selectedTag={selectedTag}
+          onTagModalOpen={() => setIsTagModalOpen(true)}
+          error={error}
+        />
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col h-full min-w-0 bg-white">
+        {/* Header */}
+        <div className="flex-shrink-0">
           <ContactListHeader
             searchValue={searchQuery}
             onSearch={setSearchQuery}
             onAddContact={() => setSelectedContact({} as Contact)}
             onImportCSV={handleFileUpload}
-            onMessageSend={() => {}} // Add your message sending logic here
+            onMessageSend={() => {}}
           />
         </div>
 
-       <div className="flex-1 overflow-hidden p-4">
-        {loading ? (
-          <div className="h-full flex items-center justify-center">
-            <Spinner />
-          </div>
-        ) : filteredContacts.length === 0 ? ( 
-          <div className="h-full flex items-center justify-center">
-            <p className="text-gray-500 text-lg">
-              {searchQuery ? "No matching contacts found 🔍" : "No contacts found 🔍"}
-            </p>
-          </div>
-        ) : (
-          <div className="h-full flex flex-col">
-            <div className="flex-1 overflow-y-auto bg-white rounded-lg shadow-sm border">
-              {paginatedContacts.map((contact) => ( 
-                <ContactItem
-                  key={contact.id}
-                  contact={contact}
-                  onEdit={() => handleEdit(contact)}
-                  onDelete={() => handleDelete(contact.id)}
-                />
-              ))}
+        {/* Content Area */}
+        <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+          {loading ? (
+            <div className="flex-1 flex items-center justify-center">
+              <Spinner />
             </div>
-
-              {filteredContacts.length > itemsPerPage && (
-                <div className="flex-none pt-4">
-                  <PaginationFooter
-                    currentPage={currentPage}
-                    totalItems={filteredContacts.length}
-                    itemsPerPage={itemsPerPage}
-                    onPageChange={setCurrentPage}
-                  />
+          ) : filteredContacts.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center">
+              <p className="text-gray-500 text-sm">
+                {searchQuery ? "No matching contacts found 🔍" : "No contacts found 🔍"}
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Contact List */}
+              <div className="flex-1 overflow-y-auto min-h-0">
+                <div className="divide-y divide-gray-100">
+                  {paginatedContacts.map((contact) => (
+                    <ContactItem
+                      key={contact.id}
+                      contact={contact}
+                      onEdit={() => handleEdit(contact)}
+                      onDelete={() => handleDelete(contact.id)}
+                    />
+                  ))}
                 </div>
-              )}
-            </div>
+              </div>
+
+              {/* Pagination */}
+              <div className="flex-shrink-0">
+                <PaginationFooter
+                  currentPage={currentPage}
+                  totalItems={filteredContacts.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                  onItemsPerPageChange={handleItemsPerPageChange}
+                />
+              </div>
+            </>
           )}
         </div>
       </div>
 
+      {/* Contact Modal */}
       {selectedContact && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-xl">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto w-full max-w-md">
             <ContactForm
               contact={selectedContact}
               onClose={() => setSelectedContact(null)}
@@ -377,24 +383,25 @@ const ContactsDashboard = () => {
         </div>
       )}
 
+      {/* Error Toast */}
       {error && (
-        <div className="fixed bottom-4 right-4 bg-red-100 text-red-700 p-4 rounded flex items-center">
-          {error}
+        <div className="fixed bottom-4 right-4 max-w-sm bg-red-50 text-red-700 rounded-lg shadow-lg flex items-center z-50 p-4 border border-red-200">
+          <span className="text-sm flex-1">{error}</span>
           <button
             onClick={() => setError(null)}
-            className="ml-4 text-red-700 hover:text-red-900"
+            className="ml-4 text-red-700 hover:text-red-900 text-sm font-medium"
           >
             Dismiss
           </button>
         </div>
       )}
 
+      {/* Import Toast */}
       {isImporting && (
-        <div className="fixed bottom-4 right-4 bg-blue-100 text-blue-700 p-4 rounded-lg shadow-md flex items-center gap-2">
+        <div className="fixed bottom-4 right-4 max-w-sm bg-blue-50 text-blue-700 rounded-lg shadow-lg flex items-center gap-3 z-50 p-4 border border-blue-200">
           <Spinner />
-          <span>
-            Importing {importingCount} contact{importingCount !== 1 ? "s" : ""}
-            ...
+          <span className="text-sm">
+            Importing {importingCount} contact{importingCount !== 1 ? "s" : ""}...
           </span>
         </div>
       )}
