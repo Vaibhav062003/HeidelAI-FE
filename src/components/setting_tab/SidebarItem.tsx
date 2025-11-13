@@ -28,6 +28,9 @@ import InstagramProfileView from './InstagramProfileView';
 import FacebookSDK, { FacebookLoginResponse } from '@/components/facebook/FacebookSDK';
 import { useIntegrations } from '@/components/hooks/useIntegrations';
 import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
+
+// import { useIntegrations } from '@/components/hooks/useIntegrations';
+// import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
 import { 
   Table, 
   TableBody, 
@@ -87,6 +90,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// import { useUser } from '@clerk/nextjs';
 
 const loginWithFacebook = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -305,7 +309,13 @@ const InstagramDialog = () => {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showProfileView, setShowProfileView] = useState(false);
+
   const { user } = useUser();
+  // const isAdmin = user?.publicMetadata?.role === 'admin';
+  
+
+  // const { integrations, loading: integrationsLoading, refreshIntegrations } = useIntegrations();
+  // const { user } = useUser();
   const { organization } = useOrganization();
   const [isAdmin, setIsAdmin] = useState(false);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
@@ -938,42 +948,107 @@ export default function DashboardPage() {
 export const InboxSettings = () => {
   const [inboxConfig, setInboxConfig] = useState({
     autoAssign: true,
-    defaultTeam: 'Support Team',
-    emailRouting: 'intelligent'
+    emailRouting: 'intelligent',
+    businessHours: true,
+    notifications: true,
   });
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Inbox Management</h2>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between border p-4 rounded-lg">
-          <div>
-            <h3 className="font-semibold">Auto Assignment</h3>
-            <p className="text-sm text-muted-foreground">
-              Automatically route incoming messages to agents
-            </p>
+    <div className="space-y-6 max-w-6xl">
+      {/* Simple Header */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-1">Inbox Management</h2>
+        <p className="text-sm text-gray-600">Configure how incoming messages are handled and routed</p>
+      </div>
+
+      {/* Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Auto Assignment Card */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 flex items-start justify-between hover:shadow-md transition-shadow">
+          <div className="flex items-start gap-4 flex-1">
+            <div className="bg-blue-100 rounded-lg p-3 flex-shrink-0">
+              <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">Auto Assignment</h3>
+              <p className="text-sm text-gray-600">Automatically assign conversations to agents</p>
+            </div>
           </div>
           <Switch 
             checked={inboxConfig.autoAssign}
             onCheckedChange={(checked) => setInboxConfig(prev => ({...prev, autoAssign: checked}))}
+            className="ml-4"
           />
         </div>
 
-        <div className="border p-4 rounded-lg">
-          <h3 className="font-semibold mb-2">Email Routing</h3>
-          <Select 
-            value={inboxConfig.emailRouting}
-            onValueChange={(value) => setInboxConfig(prev => ({...prev, emailRouting: value}))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select routing method" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="intelligent">Intelligent Routing</SelectItem>
-              <SelectItem value="round-robin">Round Robin</SelectItem>
-              <SelectItem value="manual">Manual Assignment</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Email Routing Card */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-start gap-4 mb-4">
+            <div className="bg-purple-100 rounded-lg p-3 flex-shrink-0">
+              <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-900 mb-1">Email Routing</h3>
+              <p className="text-sm text-gray-600 mb-3">Message distribution strategy</p>
+              <Select 
+                value={inboxConfig.emailRouting}
+                onValueChange={(value) => setInboxConfig(prev => ({...prev, emailRouting: value}))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="intelligent">Intelligent Routing</SelectItem>
+                  <SelectItem value="round-robin">Round Robin</SelectItem>
+                  <SelectItem value="manual">Manual Assignment</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Business Hours Card */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 flex items-start justify-between hover:shadow-md transition-shadow">
+          <div className="flex items-start gap-4 flex-1">
+            <div className="bg-green-100 rounded-lg p-3 flex-shrink-0">
+              <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">Business Hours</h3>
+              <p className="text-sm text-gray-600">Auto-responder outside hours</p>
+            </div>
+          </div>
+          <Switch 
+            checked={inboxConfig.businessHours}
+            onCheckedChange={(checked) => setInboxConfig(prev => ({...prev, businessHours: checked}))}
+            className="ml-4"
+          />
+        </div>
+
+        {/* Notifications Card */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 flex items-start justify-between hover:shadow-md transition-shadow">
+          <div className="flex items-start gap-4 flex-1">
+            <div className="bg-orange-100 rounded-lg p-3 flex-shrink-0">
+              <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">Notifications</h3>
+              <p className="text-sm text-gray-600">Enable agent alerts and reminders</p>
+            </div>
+          </div>
+          <Switch 
+            checked={inboxConfig.notifications}
+            onCheckedChange={(checked) => setInboxConfig(prev => ({...prev, notifications: checked}))}
+            className="ml-4"
+          />
         </div>
       </div>
     </div>
@@ -982,48 +1057,120 @@ export const InboxSettings = () => {
 
 export const LabelsSettings = () => {
   const [labels, setLabels] = useState([
-    { id: '1', name: 'Urgent', color: 'red' },
-    { id: '2', name: 'Follow Up', color: 'blue' }
+    { id: '1', name: 'Urgent', color: '#EF4444', count: 12 },
+    { id: '2', name: 'Follow Up', color: '#3B82F6', count: 8 },
+    { id: '3', name: 'VIP Customer', color: '#F59E0B', count: 5 },
+    { id: '4', name: 'Bug Report', color: '#8B5CF6', count: 3 },
   ]);
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Labels Management</h2>
-      <div className="border rounded-lg p-4">
-        <div className="flex flex-wrap gap-2">
-          {labels.map((label) => (
-            <div 
-              key={label.id} 
-              className={`px-3 py-1 rounded-full text-white bg-${label.color}-500`}
-            >
-              {label.name}
-            </div>
-          ))}
+    <div className="space-y-6 max-w-6xl">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">Labels Management</h2>
+          <p className="text-sm text-gray-600">Organize conversations with custom labels</p>
         </div>
-        <Button className="mt-4">Create Label</Button>
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          + Create Label
+        </Button>
+      </div>
+
+      {/* Labels Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {labels.map((label) => (
+          <div 
+            key={label.id}
+            className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div 
+                  className="w-10 h-10 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: `${label.color}20` }}
+                >
+                  <svg className="w-5 h-5" style={{ color: label.color }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">{label.name}</h3>
+                  <p className="text-xs text-gray-600">{label.count} conversations</p>
+                </div>
+              </div>
+              <button className="text-gray-400 hover:text-gray-600">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 };
 
-// Placeholder for the remaining components with similar structure
-export const CustomAttributesSettings = () => (
-  <div className="space-y-6">
-    <h2 className="text-2xl font-bold">Custom Attributes</h2>
-    <p>Configure custom fields for contacts and conversations</p>
-  </div>
-);
+export const CustomAttributesSettings = () => {
+  const attributes = [
+    { id: '1', name: 'Customer Type', type: 'Dropdown', icon: '📋', color: 'blue' },
+    { id: '2', name: 'Order Value', type: 'Number', icon: '💰', color: 'green' },
+    { id: '3', name: 'Subscription Plan', type: 'Text', icon: '📝', color: 'purple' },
+    { id: '4', name: 'Priority Level', type: 'Dropdown', icon: '⭐', color: 'orange' },
+  ];
+
+  return (
+    <div className="space-y-6 max-w-6xl">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">Custom Attributes</h2>
+          <p className="text-sm text-gray-600">Define custom fields for contacts and conversations</p>
+        </div>
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          + Add Attribute
+        </Button>
+      </div>
+
+      {/* Attributes Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {attributes.map((attr) => (
+          <div 
+            key={attr.id}
+            className="bg-white border border-gray-200 rounded-xl p-6 flex items-center justify-between hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-center gap-4">
+              <div className={`bg-${attr.color}-100 rounded-lg p-3 text-2xl`}>
+                {attr.icon}
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">{attr.name}</h3>
+                <p className="text-sm text-gray-600">Type: {attr.type}</p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm">Manage</Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 
 export const AutomationSettings = () => (
-  <div className="space-y-6">
-    <h2 className="text-2xl font-bold">Automation Rules</h2>
-    <p>Create and manage automated workflows</p>
-
-    <div className="mt-6">
+  <div className="space-y-6 max-w-6xl">
+    <div>
+      <h2 className="text-2xl font-bold text-gray-900">Automation Rules</h2>
+      <p className="text-sm text-gray-600 mt-1">
+        Create workflows to automate repetitive tasks and improve efficiency
+      </p>
+    </div>
+    <div className="bg-white border border-gray-200 rounded-xl p-6">
       <AutomationPage />
     </div>
   </div>
 );
+
 
 export const MacrosSettings = () => (
   <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
@@ -1050,28 +1197,30 @@ export const MacrosSettings = () => (
 
 
 export const IntegrationsSettings = () => (
-  <div className="min-h-[300px] flex flex-col items-start p-8">
-    <h2 className="text-2xl font-bold mb-6">Platform Integrations</h2>
+  <div className="min-h-[300px] flex flex-col items-start p-4 md:p-8">
+    <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Platform Integrations</h2>
     
-    <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+    {/* Responsive Grid - 1 column mobile, 2 columns desktop */}
+    <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+      
       {/* Facebook Integration Card */}
-      <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+      <div className="border rounded-lg p-4 md:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
         <div className="space-y-4">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-[#1877F2] rounded-lg p-2">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="bg-[#1877F2] rounded-lg p-2 flex-shrink-0">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
                 </svg>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold">Facebook</h3>
-                <p className="text-sm text-gray-600">Connect your Facebook pages</p>
+              <div className="min-w-0">
+                <h3 className="text-base md:text-lg font-semibold truncate">Facebook</h3>
+                <p className="text-xs md:text-sm text-gray-600 truncate">Connect your Facebook pages</p>
               </div>
             </div>
             <Button
               onClick={loginWithFacebook}
-              className="bg-[#1877F2] hover:bg-[#0c5bdb] text-white"
+              className="bg-[#1877F2] hover:bg-[#0c5bdb] text-white w-full sm:w-auto flex-shrink-0"
             >
               Connect
             </Button>
@@ -1079,123 +1228,159 @@ export const IntegrationsSettings = () => (
         </div>
       </div>
 
-      
       {/* WooCommerce Integration Card */}
-      <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+      <div className="border rounded-lg p-4 md:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
         <div className="space-y-4">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-[#96588A] rounded-lg p-2">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="bg-[#96588A] rounded-lg p-2 flex-shrink-0">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M19.2,6.2c-0.8-1.1-2.1-1.8-3.5-1.8c-0.8,0-1.6,0.2-2.2,0.6C12.9,4.4,12,4,11,4c-1.4,0-2.7,0.7-3.5,1.8C6.7,4.7,5.4,4,4,4C1.8,4,0,5.8,0,8c0,0.8,0.2,1.5,0.6,2.2C0.2,11.5,0,12.7,0,14c0,4.4,3.6,8,8,8h8c4.4,0,8-3.6,8-8c0-1.3-0.2-2.5-0.6-3.8C23.8,9.5,24,8.8,24,8C24,5.8,22.2,4,20,4C18.6,4,17.3,4.7,16.5,6.2z M11,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S11,15.6,11,15z M7,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S7,15.6,7,15z M15,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S15,15.6,15,15z"/>
                 </svg>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold">WooCommerce</h3>
-                <p className="text-sm text-gray-600">Connect your WooCommerce store</p>
+              <div className="min-w-0">
+                <h3 className="text-base md:text-lg font-semibold truncate">WooCommerce</h3>
+                <p className="text-xs md:text-sm text-gray-600 truncate">Connect your WooCommerce store</p>
               </div>
             </div>
-            <WooCommerceDialog />
+            <div className="w-full sm:w-auto flex-shrink-0">
+              <WooCommerceDialog />
+            </div>
           </div>
         </div>
       </div>
 
-
       {/* Shopify Integration Card */}
-      <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-  <div className="space-y-4">
-    <div className="flex items-start justify-between">
-      <div className="flex items-center gap-3">
-    
-          <img
-          src='logos/shopify.svg'
-          alt="Shopify Logo"
-          className="w-10 h-10 text-white"
-          />
-      
-        <div>
-          <h3 className="text-lg font-semibold">Shopify</h3>
-          <p className="text-sm text-gray-600">Connect to your Shopify store</p>
-        </div>
-      </div>
-      <ShopifyDialog />
-    </div>
-  </div>
-</div>
-
-{/* // Instagram Integration Card */}
-<div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-  <div className="space-y-4">
-    <div className="flex items-start justify-between">
-      <div className="flex items-center gap-3">
-        <div className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-lg p-2">
-          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-          </svg>
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold">Instagram</h3>
-          <p className="text-sm text-gray-600">Connect your Instagram business account</p>
-        </div>
-      </div>
-      <InstagramDialog />
-    </div>
-  </div>
-</div>
-
-
-{/* Facebook Catalog Integration Card */}
-<FacebookCatalogIntegration />
-
-{/* WhatsAPP Integration Card */}
-  {/* WhatsApp Integration Card */}
-<div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-  <div className="space-y-4">
-    <div className="flex items-start justify-between">
-      <div className="flex items-center gap-3">
-        <div className="bg-[#25D366] rounded-lg p-2">
-          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M20.52 3.48A11.94 11.94 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 6.01L0 24l6.15-1.58A11.94 11.94 0 0012 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.2-3.48-8.52zM12 22.05c-1.85 0-3.67-.5-5.26-1.45l-.38-.22-3.65.94.97-3.55-.25-.37A9.94 9.94 0 012.05 12c0-5.47 4.48-9.95 9.95-9.95 2.66 0 5.17 1.04 7.05 2.93a9.94 9.94 0 012.93 7.05c0 5.47-4.48 9.95-9.95 9.95zm5.6-7.88c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.2.31-.82 1.02-1.01 1.23-.18.2-.37.22-.68.07-.31-.16-1.3-.48-2.47-1.54-.91-.81-1.52-1.81-1.7-2.12-.18-.31-.02-.48.14-.63.14-.14.31-.37.47-.56.16-.18.2-.31.31-.52.1-.2.05-.38-.02-.54-.07-.16-.71-1.7-.97-2.33-.26-.63-.52-.54-.71-.55h-.6c-.2 0-.52.07-.79.38-.27.31-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.22 3.07.16.2 2.1 3.2 5.1 4.49.71.31 1.26.5 1.69.64.71.23 1.36.2 1.87.12.57-.08 1.85-.76 2.11-1.5.26-.74.26-1.38.18-1.5-.07-.12-.29-.2-.6-.36z" />
-          </svg>
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold">WhatsApp</h3>
-          <p className="text-sm text-gray-600">Connect WhatsApp account</p>
-        </div>
-      </div>
-      <WhatsAppLoginDialog />
-    </div>
-  </div>
-</div>
-
-<div>
-  <TokenTestBox />
-</div>
-
-      {/* More Integrations Coming Soon Card */}
-        {/* <div className="border rounded-lg p-4 bg-gray-50">
-          <div className="flex flex-col items-center text-center space-y-4">
-            <div className="bg-orange-100 rounded-full p-4">
-              <Construction className="h-6 w-6 text-orange-600" />
+      <div className="border rounded-lg p-4 md:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <img
+                src='/logos/shopify.svg'
+                alt="Shopify Logo"
+                className="w-10 h-10 text-white flex-shrink-0"
+              />
+              <div className="min-w-0">
+                <h3 className="text-base md:text-lg font-semibold truncate">Shopify</h3>
+                <p className="text-xs md:text-sm text-gray-600 truncate">Connect to your Shopify store</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold">More Platforms Coming Soon</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                We&apos;re working on adding more platform integrations
-              </p>
+            <div className="w-full sm:w-auto flex-shrink-0">
+              <ShopifyDialog />
             </div>
-          </div>  
-        </div> */}
+          </div>
+        </div>
+      </div>
+
+      {/* Instagram Integration Card */}
+      <div className="border rounded-lg p-4 md:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-lg p-2 flex-shrink-0">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-base md:text-lg font-semibold truncate">Instagram</h3>
+                <p className="text-xs md:text-sm text-gray-600 truncate">Connect your Instagram business account</p>
+              </div>
+            </div>
+            <div className="w-full sm:w-auto flex-shrink-0">
+              <InstagramDialog />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Facebook Catalog Integration Card */}
+      <FacebookCatalogIntegration />
+
+      {/* WhatsApp Integration Card */}
+      <div className="border rounded-lg p-4 md:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="bg-[#25D366] rounded-lg p-2 flex-shrink-0">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.52 3.48A11.94 11.94 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 6.01L0 24l6.15-1.58A11.94 11.94 0 0012 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.2-3.48-8.52zM12 22.05c-1.85 0-3.67-.5-5.26-1.45l-.38-.22-3.65.94.97-3.55-.25-.37A9.94 9.94 0 012.05 12c0-5.47 4.48-9.95 9.95-9.95 2.66 0 5.17 1.04 7.05 2.93a9.94 9.94 0 012.93 7.05c0 5.47-4.48 9.95-9.95 9.95zm5.6-7.88c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.2.31-.82 1.02-1.01 1.23-.18.2-.37.22-.68.07-.31-.16-1.3-.48-2.47-1.54-.91-.81-1.52-1.81-1.7-2.12-.18-.31-.02-.48.14-.63.14-.14.31-.37.47-.56.16-.18.2-.31.31-.52.1-.2.05-.38-.02-.54-.07-.16-.71-1.7-.97-2.33-.26-.63-.52-.54-.71-.55h-.6c-.2 0-.52.07-.79.38-.27.31-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.22 3.07.16.2 2.1 3.2 5.1 4.49.71.31 1.26.5 1.69.64.71.23 1.36.2 1.87.12.57-.08 1.85-.76 2.11-1.5.26-.74.26-1.38.18-1.5-.07-.12-.29-.2-.6-.36z" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-base md:text-lg font-semibold truncate">WhatsApp</h3>
+                <p className="text-xs md:text-sm text-gray-600 truncate">Connect WhatsApp account</p>
+              </div>
+            </div>
+            <div className="w-full sm:w-auto flex-shrink-0">
+              <WhatsAppLoginDialog />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="lg:col-span-2">
+        <TokenTestBox />
+      </div>
     </div>
   </div>
 );
 
-export const AuditLogsSettings = () => (
-  <div className="space-y-6">
-    <h2 className="text-2xl font-bold">Audit Logs</h2>
-    <p>Track and review system activities</p>
-  </div>
-);
+export const AuditLogsSettings = () => {
+  const logs = [
+    { id: '1', action: 'User Login', user: 'John Doe', time: '10:30 AM', status: 'success' },
+    { id: '2', action: 'Label Created', user: 'Jane Smith', time: '09:15 AM', status: 'success' },
+    { id: '3', action: 'Integration Connected', user: 'Admin', time: '08:00 AM', status: 'success' },
+    { id: '4', action: 'Failed Login', user: 'Unknown', time: '11:45 PM', status: 'failed' },
+  ];
+
+  return (
+    <div className="space-y-6 max-w-6xl">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">Audit Logs</h2>
+          <p className="text-sm text-gray-600">Track and review all system activities</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Input placeholder="Search logs..." className="w-56" />
+          <Button variant="outline">Filter</Button>
+        </div>
+      </div>
+
+      {/* Logs List */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        {logs.map((log, index) => (
+          <div 
+            key={log.id}
+            className={`p-6 flex items-center justify-between hover:bg-gray-50 ${
+              index !== logs.length - 1 ? 'border-b border-gray-200' : ''
+            }`}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                <span className="text-sm font-medium text-gray-600">
+                  {log.user.split(' ').map(n => n[0]).join('')}
+                </span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">{log.action}</h3>
+                <p className="text-sm text-gray-600">{log.user} • {log.time}</p>
+              </div>
+            </div>
+            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+              log.status === 'success' 
+                ? 'bg-green-100 text-green-700' 
+                : 'bg-red-100 text-red-700'
+            }`}>
+              {log.status}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export const CustomRolesSettings = () => (
   <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
