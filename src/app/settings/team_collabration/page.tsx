@@ -7,8 +7,6 @@ const team_collabration = () => {
    <DashboardLayout>
     <TeamsConfiguration />
    </DashboardLayout>
-      
-    
   )
 }
 

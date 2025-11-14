@@ -6,6 +6,8 @@ function extractSubdomain(request: NextRequest): string | null {
   const url = request.url;
   const host = request.headers.get('host') || '';
   const hostname = host.split(':')[0];
+  const { pathname } = request.nextUrl;
+  const isDashboard = pathname.startsWith('/dashboard');
 
   // Local development environment
   if (url.includes('localhost') || url.includes('127.0.0.1')) {
@@ -15,12 +17,21 @@ function extractSubdomain(request: NextRequest): string | null {
       return fullUrlMatch[1];
     }
 
+
     // Fallback to host header approach
     if (hostname.includes('.localhost')) {
       return hostname.split('.')[0];
     }
 
     return null;
+  }
+
+  const token = request.cookies.get('session-token')?.value;
+
+  if (isDashboard && !token) {
+    // Redirect to login if not authenticated
+    const loginUrl = new URL('/login', request.url);
+    NextResponse.redirect(loginUrl);
   }
 
   // Production environment
@@ -49,6 +60,8 @@ export default clerkMiddleware((auth, request)=>{
   if (subdomain) {
       return NextResponse.rewrite(new URL(`/s/${subdomain}`, request.url));
   }
+
+  return NextResponse.next();
 });
 
 export const config = {

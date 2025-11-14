@@ -1,588 +1,510 @@
-'use client'
-import React, { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+'use client';
+
+import React, { useState } from 'react';
 import { toast } from 'sonner';
-import { Trash2, UserMinus, Mail, UserPlus, AlertTriangle } from 'lucide-react';
+import { useUser, useOrganization } from '@clerk/nextjs';
+import { Users, Mail, UserPlus, UserMinus, Trash2, X } from 'lucide-react';
+import api from '@/lib/session_api';
 
-interface AgentMember {
-  id: string | number;
-  identifier: string;
-  role_name: string;
-  user_id: string; 
-  public_user_data?: {
-    identifier?: string;
-    user_id?: string;
-  };
+interface TeamMember {
+  name: string;
+  email: string;
+  role: 'Admin' | 'Member';
+  userId?: string; 
 }
 
-interface InvitedAgent {
-  id: string | number;
-  email_address: string;
-  status: string;
+interface InvitedMember {
+  id: string; // Invitation id
+  name: string;
+  email: string;
+  role: 'Admin' | 'Member';
 }
 
-interface AgentsSettingsProps {
-  members: AgentMember[];
-  invited: InvitedAgent[];
-  initialLoading: boolean;
-  refresh: () => void;
-  agentlimit: number;
-}
-
-export const AgentsSettings = ({
-  members,
-  invited,
-  initialLoading,
-  refresh,
-  agentlimit,
-}: AgentsSettingsProps) => {
+export const TeamManagement = () => {
+  const { user } = useUser();
+  const { organization, memberships, invitations } = useOrganization({
+    memberships: {
+      infinite: true,
+      keepPreviousData: true,
+    },
+    invitations: true,
+  });
+  
+  
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
-  const [inviting, setInviting] = useState(false);
-  const [loading, setLoading] = useState(false);
-  // const [members, setMembers] = useState<AgentMember[]>([]);
-  // const [invited, setInvited] = useState<InvitedAgent[]>([]);
-  // const [initialLoading, setInitialLoading] = useState(true);
-  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
-  const [revokingInviteId, setRevokingInviteId] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [invitationsList, setInvitationsList] = useState<InvitedMember[]>([]);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; member: TeamMember | null; type: 'member' | 'invitation' }>({ 
+    open: false, 
+    member: null, 
+    type: 'member' 
+  });
+  const [activeTab, setActiveTab] = useState<'members' | 'invitations'>('members');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  
+  React.useEffect(() => {
+    if (!memberships?.data) return;
+    if (!invitations?.data) return;
 
-  const AGENT_LIMIT = 5;
-  const totalAgents = members.length + invited.length;
-  const limitReached = totalAgents >= AGENT_LIMIT;
+    // console.log('Memberships data:', memberships.data);
+    // const org = memberships.data.map((m)=> m.organization?.maxAllowedMemberships)
+    // console.log('Organization from memberships:', org);
 
-  // const fetchMembers = async () => {
-  //   setInitialLoading(true);
-  //   const orgId = localStorage.getItem('org_id');
-  //   try {
-  //     const res = await fetch(`/api/Agents?org_id=${orgId}`, {
-  //       method: 'GET',
-  //       headers: { 'Content-Type': 'application/json' },
-  //     });
-  //     const data = await res.json();
-  //     if (res.ok) {
-  //       const mappedMembers = (data.members || []).map((member: AgentMember) => ({
-  //         ...member,
-  //         user_id: member.public_user_data?.user_id || '',
-  //       }));
-  //       setMembers(mappedMembers);
 
-  //       const pendingInvited = (data.invited || []).filter(
-  //         (invite: InvitedAgent) => invite.status === 'pending'
-  //       );
-  //       setInvited(pendingInvited);
-  //     } else {
-  //       toast.error(data?.error || 'Failed to fetch members.');
-  //     }
-  //   } catch (err) {
-  //     toast.error('Network error. Please try again.');
-  //   } finally {
-  //     setInitialLoading(false);
-  //   }
-  // };
+    // Invitations mapping
+    const inviteMapped: InvitedMember[] = invitations.data.map((inv) => ({
+      id: inv.id,
+      invitationId: inv.id,
+      name: inv.emailAddress || 'Invited User',
+      email: inv.emailAddress || 'No Email',
+      role: inv.roleName as 'Admin' | 'Member',
+    }));
 
-  // useEffect(() => {
-  //   fetchMembers();
-  // }, []);
+    // Members mapping
+    const mapped: TeamMember[] = memberships.data.map((m) => ({
+  
+      name: `${m.publicUserData?.firstName ?? ''} ${m.publicUserData?.lastName ?? ''}`.trim() ||
+            m.publicUserData?.identifier || 'Unknown',
+      email: m.publicUserData?.identifier ?? 'Unknown',
+      role: m.roleName as 'Admin' | 'Member',
+      userId: m.publicUserData?.userId,
+    }));
 
-  const handleInviteAgent = async () => {
-    if (!email || !role) {
-      toast.error('Please enter both email and role.');
+    setMembers(mapped);
+    setInvitationsList(inviteMapped);
+
+    const checkRole = async () => {
+      if (organization && user) {
+        const memberships = await organization.getMemberships();
+        const membership = memberships.data.find(
+          (m) => m.publicUserData?.userId === user.id
+        );
+        setIsAdmin(membership?.roleName === "Admin");
+      }
+    };
+
+    checkRole();
+  }, [memberships?.data, invitations?.data, organization, user]);
+
+  const refreshData = async () => {
+  if (!organization) return;
+  try {
+    const membershipsRes = await organization.getMemberships();
+    const mapped: TeamMember[] = membershipsRes.data.map((m) => ({
+      id: m.id,
+      name: `${m.publicUserData?.firstName ?? ''} ${m.publicUserData?.lastName ?? ''}`.trim() || 
+            m.publicUserData?.identifier || 'Unknown',
+      email: m.publicUserData?.identifier ?? 'Unknown',
+      role: m.roleName as 'Admin' | 'Member',
+      userId: m.publicUserData?.userId,
+    }));
+    setMembers(mapped);
+
+    const invitationsRes = await organization.getInvitations();
+    const inviteMapped: InvitedMember[] = invitationsRes.data.map((inv) => ({
+      id: inv.id,
+      name: inv.emailAddress || 'Invited User',
+      email: inv.emailAddress || 'No Email',
+      role: inv.roleName as 'Admin' | 'Member',
+    }));
+    setInvitationsList(inviteMapped);
+  } catch (err) {
+    console.error("Failed to refresh data:", err);
+  }
+};
+
+
+  const handleInvite = async () => {
+    if (!email) {
+      toast.error('Please fill in all fields');
       return;
     }
-    setInviting(true);
-    setActionLoading(true);
-    const OrgId = localStorage.getItem('org_id');
-    const payload = { email_address: email, role };
     try {
-      const res = await fetch(`/api/Agents?org_id=${OrgId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}`,
-        },
-        body: JSON.stringify(payload),
+      const response = await api.post("/api/clerk/invite-agent", {
+        email_address: email,
+        role: "org:member",
+        redirect_url: `${window.location.origin}/accept-invite`,
       });
-      const data = await res.json();
 
-        if (res.ok){
-        toast.success('Invitation sent successfully!');
-        setIsOpen(false);
+      // axios-like clients put payload on response.data; don't call data() as a function
+      const resData = response?.data ?? response;
+      // prefer checking HTTP status when available
+      if (response?.status === 200 || resData?.status === 200 || resData?.ok || resData?.success) {
+        toast.success('Team member invited successfully!');
+        setIsInviteOpen(false);
         setEmail('');
-        setRole('');
-        refresh();
+        await refreshData(); 
       } else {
-        toast.error(data?.error || 'Failed to invite agent.');
+        throw new Error(resData?.error || 'Failed to send invitation');
       }
-    } catch (err) {
-      toast.error('Network error. Please try again.');
-    } finally {
-      setInviting(false);
-      setActionLoading(false);
+    } catch (error) {
+      console.error("invite error:", error);
+      toast.error('Failed to send invitation. Please try again.');
     }
   };
 
-  const handleDeleteMember = async (userId: string) => {
-    setDeletingUserId(userId);
-    setActionLoading(true);
-    const orgId = localStorage.getItem('org_id');
-    try {
-      const res = await fetch(`/api/Agents?org_id=${orgId}&user_id=${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}`,
-        },
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data?.error || 'Failed to delete member.');
-      } else {
-        toast.success('Member deleted successfully!');
-        await refresh();
-      }
-    } catch (err) {
-      toast.error('Network error. Please try again.');
-    } finally {
-      setDeletingUserId(null);
-      setActionLoading(false);
-    }
+  const handleRemoveMember = (member: TeamMember) => {
+    setDeleteDialog({ open: true, member, type: 'member' });
   };
 
-  const handleRevokeInvite = async (invitationId: string) => {
-    setRevokingInviteId(invitationId);
-    setActionLoading(true);
-    const orgId = localStorage.getItem('org_id');
-    if (!orgId) {
-      toast.error("Organization ID missing.");
-      setRevokingInviteId(null);
-      setActionLoading(false);
-      return;
-    }
+  const handleRevokeInvitation = (invitation: InvitedMember) => {
+    setDeleteDialog({ open: true, member: invitation as InvitedMember, type: 'invitation' });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteDialog.member) return;
+
     try {
-      const res = await fetch(
-        `/api/Agents?org_id=${orgId}&invitation_id=${invitationId}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ requesting_user_id: null }),
+      if (deleteDialog.type === 'member') {
+        const userId = deleteDialog.member.userId;
+        if (!userId) throw new Error('No user id provided for member removal');
+
+        const response = await api.delete(`/api/clerk/delete-member?user_id=${userId}`);
+
+        const resData = response?.data ?? response;
+        console.log('delete-member response:', response);
+        console.log('delete-member data:', resData);
+
+        if (response?.status === 200 || resData?.status === 200 || resData?.ok || resData?.success) {
+          setMembers((prev) => prev.filter(m => m.userId !== userId));
+          toast.success('Member removed successfully');
+          await refreshData(); 
+        } else {
+          throw new Error(resData?.error || 'Failed to remove member');
         }
-      );
-      const data = await res.json();
-      if (res.ok) {
-        toast.success("Invitation revoked successfully.");
-        await refresh();
-      } else if (res.status === 404) {
-        toast.info("Invitation already revoked or not found.");
-        await refresh();
       } else {
-        toast.error(data?.error || "Failed to revoke invitation.");
+        const invitationId = (deleteDialog.member as InvitedMember).id;
+        const response = await api.post("/api/clerk/revoke-invite", {
+          invitation_id: invitationId,
+          requesting_user_id: user?.id,
+        });
+
+        const resData = response?.data ?? response;
+
+        if (response?.status === 200 || resData?.status === 200 || resData?.ok || resData?.success) {
+          toast.success('Invitation revoked successfully');
+          setInvitationsList((prev) => prev.filter(i => i.id !== invitationId));
+          await refreshData(); 
+        } else {
+          throw new Error(resData?.error || 'Failed to revoke invitation');
+        }
       }
-    } catch (err) {
-      toast.error("Network error. Please try again.");
+    } catch (error) {
+      console.error("confirmDelete error:", error);
+      toast.error('Failed to remove. Please try again.');
     } finally {
-      setRevokingInviteId(null);
-      setActionLoading(false);
+      setDeleteDialog({ open: false, member: null, type: 'member' });
     }
   };
 
-  const getRoleDisplayName = (role: string) => {
-    switch (role) { 
-      case 'org:admin':
-        return 'Administrator';
-      case 'org:member':
-        return 'Member';
-      default:
-        return role || 'N/A';
-    }
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case 'org:admin':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'org:member':
-        return 'bg-green-100 text-green-800 border-green-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const getAvatarColor = (name: string) => {
+    const colors = [
+      'bg-blue-500',
+      'bg-green-500',
+      'bg-purple-500',
+      'bg-orange-500',
+      'bg-pink-500',
+      'bg-teal-500',
+    ];
+    const index = name.charCodeAt(0) % colors.length;
+    return colors[index];
   };
+
+  // Get max allowed members (from organization or fallback to 5)
+  const maxAllowedMemberships =
+    organization?.maxAllowedMemberships ??
+    (memberships?.data?.[0]?.organization?.maxAllowedMemberships ?? 5);
+
+  const membersCount = members.length;
+  const inviteDisabled = membersCount >= maxAllowedMemberships;
 
   return (
-   <div className="h-full w-full overflow-y-auto bg-gray-50/30">
-      <div className="
-        max-w-7xl mx-auto
-        h-full
-        p-4 sm:p-6 lg:p-15
-        space-y-5
-      ">
-        
-        {/* Header Section */}
-        {/* <div className="border-b border-gray-200 pb-6">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Agents Management
-          </h2>
-          <p className="text-gray-600 leading-relaxed">
-            Manage your organization&apos;s agents and invitations. Current usage: 
-            <span className="font-semibold text-gray-900"> {totalAgents}/{AGENT_LIMIT} agents</span>.
-          </p>
-        </div> */}
+    <div className="w-full min-h-screen bg-white">
+      <div className="w-full max-w-10xl mx-auto px-6 py-10">
+        {/* Header */}
+       <div className="mb-10">
+        <div className="flex items-start gap-3">
+          <div className="p-2.5 bg-blue-600 rounded-lg flex-shrink-0">
+            <Users className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-semibold text-gray-900">
+              Team Management
+            </h1>
+            <p className="text-gray-600 text-sm">
+              Manage your team members and invite new collaborators
+            </p>
+          </div>
+        </div>
+      </div>
 
-        {/* Alert Banner */}
-        {limitReached && (
-          <div className="border border-amber-200 rounded-xl bg-amber-50 p-6 shadow-sm">
-            <div className="flex items-start gap-4">
-              <AlertTriangle className="h-6 w-6 text-amber-600 mt-0.5 flex-shrink-0" />
-              <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-amber-800 mb-2 text-lg">
-                  Agent Limit Reached
-                </h3>
-                <p className="text-amber-700 leading-relaxed">
-                  You have reached the maximum number of agents ({AGENT_LIMIT}). 
-                  Contact support to increase your limit.
-                </p>
+
+        {/* Stats Section */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+          <div className="relative flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Members</p>
+              <p className="text-4xl font-semibold text-gray-900">{members.length}</p>
+            </div>
+            <div
+              onMouseEnter={() => inviteDisabled && setShowTooltip(true)}
+              onMouseLeave={() => setShowTooltip(false)}
+              className="relative"
+            >
+              {isAdmin && (
+                <button
+                onClick={() => setIsInviteOpen(true)}
+                className={`flex text-black items-center gap-2 bg-gray-200 px-4 py-2.5 rounded-lg transition-colors font-medium ${
+                  inviteDisabled
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-blue-500 hover:text-white"
+                }`}
+                disabled={inviteDisabled}
+                id="invite-member-btn"
+              >
+                <UserPlus className="w-4 h-4" />
+                Invite Member
+              </button>
+              )}
+              
+              {inviteDisabled && showTooltip && (
+                <div className="absolute left-1/2 -translate-x-1/2 mt-2 px-4 py-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 whitespace-nowrap">
+                  You have reached the maximum of {maxAllowedMemberships} members for this organization.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Invite Modal */}
+        {isInviteOpen &&  (
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gray-100 rounded-lg">
+                    <Mail className="w-4 h-4 text-gray-700" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900">Invite Team Member</h2>
+                </div>
+                <button onClick={() => setIsInviteOpen(false)} className="text-gray-500 hover:text-gray-700">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mb-6">Send an invitation to join your organization</p>
+              <div className="space-y-3 mb-6">
+                <label className="block text-sm font-medium text-gray-700">Email Address</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="colleague@company.com"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500">An invitation will be sent to this email address</p>
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setIsInviteOpen(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleInvite}
+                  className="px-4 py-2 border border-gray-300 hover:bg-gray-300 rounded-lg font-medium transition-colors"
+                >
+                  Send Invite
+                </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Table Container with proper boundaries */}
-        <div className="
-          bg-white 
-          border border-gray-200 
-          rounded-xl 
-          shadow-sm hover:shadow-md 
-          transition-shadow duration-200
-          overflow-hidden
-        ">
-          
-          {/* Table Header */}
-          <div className="px-6 py-5 border-b border-gray-200 bg-gray-50/50">
-            <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
-              <UserPlus className="h-6 w-6 text-blue-600" />
-              Team Members & Invitations
-            </h3>
+        {/* Delete Confirmation Modal */}
+        {deleteDialog.open && (
+          <div className="fixed inset-0 bg-black bg-opacity-10 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                {deleteDialog.type === 'member' ? 'Remove Team Member' : 'Revoke Invitation'}
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                {deleteDialog.type === 'member'
+                  ? `Are you sure you want to remove ${deleteDialog.member?.name} from the team? This action cannot be undone.`
+                  : `Are you sure you want to revoke the invitation for ${deleteDialog.member?.email}? They will no longer be able to join using this invitation.`}
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  id="cancel-delete"
+                  onClick={() => setDeleteDialog({ open: false, type: 'member', member: null })}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  id={deleteDialog.type === 'member' ? "confirm-remove-member" : "confirm-revoke-invitation"}
+                  onClick={confirmDelete}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-200 transition-colors"
+                >
+                  {deleteDialog.type === 'member' ? 'Remove' : 'Revoke'}
+                </button>
+              </div>
+            </div>
           </div>
+        )}
 
-          {/* Table with proper width constraints */}
-          <div className="w-full overflow-x-auto">
-            <div className="min-w-full inline-block align-middle">
-              <Table className="min-w-full">
-                <TableHeader>
-                  <TableRow className="bg-gray-50/80 border-b border-gray-200">
-                    <TableHead className="
-                      font-semibold text-gray-900 
-                      px-6 py-4 text-left
-                      w-2/5 min-w-[250px]
-                    ">
-                      Email Address
-                    </TableHead>
-                    <TableHead className="
-                      font-semibold text-gray-900
-                      px-6 py-4 text-left
-                      w-1/5 min-w-[120px]
-                    ">
-                      Role
-                    </TableHead>
-                    <TableHead className="
-                      font-semibold text-gray-900
-                      px-6 py-4 text-left
-                      w-1/5 min-w-[120px]
-                    ">
-                      Status
-                    </TableHead>
-                    <TableHead className="
-                      font-semibold text-gray-900
-                      px-6 py-4 text-right
-                      w-1/5 min-w-[120px]
-                    ">
-                      Actions
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {initialLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-16 px-6">
-                        <div className="flex flex-col items-center gap-4 text-gray-500">
-                          <div className="animate-spin h-10 w-10 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
-                          <span className="text-lg font-medium">Loading members...</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : members.length === 0 && invited.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-16 px-6">
-                        <div className="flex flex-col items-center gap-4 text-gray-500">
-                          <UserPlus className="h-16 w-16 text-gray-300" />
-                          <div className="space-y-2">
-                            <span className="text-xl font-semibold text-gray-700">No team members yet</span>
-                            <span className="text-gray-500">Start by inviting your first agent</span>
-                          </div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    <>
-                      {members.map((member: AgentMember) => (
-                        <TableRow key={member.id} className="
-                          hover:bg-gray-50/80 
-                          transition-colors duration-150
-                          border-b border-gray-100
-                        ">
-                          <TableCell className="px-6 py-4 font-medium">
-                            <div className="truncate max-w-xs">
-                              {member.public_user_data?.identifier || member.identifier || 'N/A'}
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-6 py-4">
-                            <span className={`
-                              inline-flex items-center 
-                              px-3 py-1.5 rounded-full 
-                              text-sm font-medium border 
-                              ${getRoleBadgeColor(member.role_name)}
-                            `}>
-                              {getRoleDisplayName(member.role_name)}
-                            </span>
-                          </TableCell>
-                          <TableCell className="px-6 py-4">
-                            <span className="
-                              inline-flex items-center 
-                              px-3 py-1.5 rounded-full 
-                              text-sm font-medium 
-                              bg-green-100 text-green-800 
-                              border border-green-200
-                            ">
-                              Active
-                            </span>
-                          </TableCell>
-                          <TableCell className="px-6 py-4 text-right">
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  disabled={deletingUserId === member.user_id || actionLoading}
-                                  className="
-                                    text-red-600 border-red-200 
-                                    hover:bg-red-50 hover:border-red-300
-                                  "
-                                >
-                                  {deletingUserId === member.user_id ? (
-                                    <div className="flex items-center gap-2">
-                                      <div className="animate-spin h-3 w-3 border border-red-600 border-t-transparent rounded-full"></div>
-                                      Removing...
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center gap-1">
-                                      <Trash2 className="h-3 w-3" />
-                                      Remove
-                                    </div>
-                                  )}
-                                </Button>
-                              </AlertDialogTrigger>
-                            </AlertDialog>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {invited.map((invite: InvitedAgent) => (
-                        <TableRow key={invite.id} className="
-                          hover:bg-gray-50/80 
-                          transition-colors duration-150
-                          border-b border-gray-100
-                        ">
-                          <TableCell className="px-6 py-4 font-medium">
-                            <div className="truncate max-w-xs">
-                              {invite.email_address}
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-6 py-4">
-                            <span className="
-                              inline-flex items-center 
-                              px-3 py-1.5 rounded-full 
-                              text-sm font-medium 
-                              bg-gray-100 text-gray-800 
-                              border border-gray-200
-                            ">
-                              Pending
-                            </span>
-                          </TableCell>
-                          <TableCell className="px-6 py-4">
-                            <span className="
-                              inline-flex items-center 
-                              px-3 py-1.5 rounded-full 
-                              text-sm font-medium 
-                              bg-yellow-100 text-yellow-800 
-                              border border-yellow-200
-                            ">
-                              Invitation Sent
-                            </span>
-                          </TableCell>
-                          <TableCell className="px-6 py-4 text-right">
-                            
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </>
-                  )}
-                </TableBody>
-              </Table>
+        {/* Tabs and Table */}
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          {/* Tab Navigation */}
+          <div className="border-b border-gray-200">
+            <div className="flex">
+              <button
+                onClick={() => setActiveTab('members')}
+                className={`flex-1 px-6 py-4 text-center font-medium text-sm uppercase tracking-wide border-b-2 transition-colors ${
+                  activeTab === 'members'
+                    ? 'border-gray-900 text-gray-900 bg-gray-50'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Members
+                <span className="ml-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 text-gray-700 text-xs font-semibold">
+                  {members.length}
+                </span>
+              </button>
+              {isAdmin && (
+                <button
+                onClick={() => setActiveTab('invitations')}
+                className={`flex-1 px-6 py-4 text-center font-medium text-sm uppercase tracking-wide border-b-2 transition-colors ${
+                  activeTab === 'invitations'
+                    ? 'border-gray-900 text-gray-900 bg-gray-50'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Invitations
+                <span className="ml-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 text-gray-700 text-xs font-semibold">
+                  {invitationsList.length}
+                </span>
+              </button>
+              )}
+              
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="px-6 py-5 border-t border-gray-200 bg-gray-50/30">
-            <Dialog open={isOpen} onOpenChange={(open) => {
-              setIsOpen(open);
-              if (!open) {
-                setEmail('');
-                setRole('');
-              }
-            }}>
-              <DialogTrigger asChild>
-                <Button
-                  className="
-                    w-full bg-blue-600 hover:bg-blue-700 
-                    text-white py-4 text-lg font-medium
-                    rounded-lg transition-all duration-200
-                    hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed
-                  "
-                  disabled={limitReached}
-                >
-                  <UserPlus className="h-5 w-5 mr-2" />
-                  {limitReached ? 'Agent Limit Reached' : 'Invite New Agent'}
-                </Button>
-              </DialogTrigger>
+          {/* Members Table */}
+          {activeTab === 'members' && (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Member</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Email</th>
+                    {isAdmin && <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wide">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {members.length > 0 ? (
+                    members.map((member) => (
+                      <tr key={member.userId} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-full ${getAvatarColor(member.name)} text-white flex items-center justify-center text-sm font-semibold`}>
+                              {getInitials(member.name)}
+                            </div>
+                            <span className="font-medium text-gray-900">{member.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{member.email}</td>
+                        {isAdmin && (
+                          <td className="px-6 py-4">
+                            <div className="flex justify-center">
+                              <button
+                                onClick={() => handleRemoveMember(member)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-red-200 rounded-lg transition-colors"
+                              >
+                                <UserMinus className="w-4 h-4" />
+                                Remove
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={isAdmin ? 3 : 2} className="px-6 py-12 text-center text-gray-500 text-sm">
+                        No team members yet
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-              <DialogContent className="
-                w-full max-w-sm mx-4 
-                sm:max-w-md sm:mx-0
-                lg:max-w-lg
-              ">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Mail className="h-5 w-5 text-blue-600" />
-                    Invite New Agent
-                  </DialogTitle>
-                </DialogHeader>
-                <form
-                  className="space-y-4 sm:space-y-5"
-                  onSubmit={e => {
-                    e.preventDefault();
-                    handleInviteAgent();
-                  }}
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                      Email Address *
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={inviting}
-                      placeholder="agent@example.com"
-                      required
-                      className="w-full text-sm sm:text-base"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="role" className="text-sm font-medium text-gray-700">
-                      Role *
-                    </Label>
-                    <Select
-                      value={role}
-                      onValueChange={(value) => setRole(value)}
-                      disabled={inviting}
-                      required
-                    >
-                      <SelectTrigger className="w-full text-sm sm:text-base">
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="org:member">
-                          <div className="flex flex-col items-start">
-                            <span className="font-medium">Member</span>
-                            <span className="text-xs text-gray-500">Standard access permissions</span>
+          {/* Invitations Table */}
+          {activeTab === 'invitations' && (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Invited User</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Email</th>
+                    {isAdmin && <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wide">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {invitationsList.length > 0 ? (
+                    invitationsList.map((invitation) => (
+                      <tr key={invitation.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-full ${getAvatarColor(invitation.email)} text-white flex items-center justify-center text-sm font-semibold`}>
+                              {getInitials(invitation.name)}
+                            </div>
+                            <span className="font-medium text-gray-900">{invitation.name}</span>
                           </div>
-                        </SelectItem>
-                        <SelectItem value="org:admin">
-                          <div className="flex flex-col items-start">
-                            <span className="font-medium">Administrator</span>
-                            <span className="text-xs text-gray-500">Full management permissions</span>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <DialogFooter className="gap-2 mt-6 flex flex-col sm:flex-row">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsOpen(false)}
-                      disabled={inviting}
-                      className="w-full sm:w-auto order-2 sm:order-1"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={!email || !role || inviting}
-                      className="w-full sm:w-auto order-1 sm:order-2"
-                    >
-                      {inviting ? (
-                        <div className="flex items-center gap-2">
-                          <div className="animate-spin h-3 w-3 border border-white border-t-transparent rounded-full"></div>
-                          Sending...
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-3 w-3" />
-                          Send Invitation
-                        </div>
-                      )}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{invitation.email}</td>
+                        {isAdmin && (
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              id={`revoke-invite-${invitation.id}`}
+                              onClick={() => handleRevokeInvitation(invitation)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Revoke
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={isAdmin ? 3 : 2} className="px-6 py-12 text-center text-gray-500 text-sm">
+                        No pending invitations
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default AgentsSettings;
+export default TeamManagement;
