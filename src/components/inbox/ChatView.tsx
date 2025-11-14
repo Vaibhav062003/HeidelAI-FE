@@ -110,6 +110,7 @@ import InstagramStory from "../instagram/messaging/InstagramStory";
 import LazyMediaLoader from "../LazyMediaLoader";
 import { MessageWrapper } from "../messaging/MessageWrapper";
 import { useUser } from "@clerk/nextjs";
+import MediaMessage from "../messaging/MediaMessage";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -165,7 +166,8 @@ interface Message {
     | "ig_story"
     | "ig_reel"
     | "story_reply"
-    | "system";
+    | "system"
+    | "message_reply";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
   product_data?: ProductData[];
@@ -627,11 +629,13 @@ const MessageItem = memo(
     isLast,
     index,
     isLatest,
+    isReplyMessage
   }: {
     message: Message;
     isLast: boolean;
     index: number;
     isLatest: boolean;
+    isReplyMessage: boolean;
   }) => {
     if (message.role === "system") {
       return (
@@ -650,8 +654,8 @@ const MessageItem = memo(
     <>
       <div
         className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${message.role === "customer"
-            ? "bg-white/90 backdrop-blur-sm rounded-bl-lg text-gray-900 border-gray-200/60"
-            : "bg-blue-600/90 backdrop-blur-sm rounded-br-lg text-white border-blue-500/60"
+            ? `bg-white/90 backdrop-blur-sm ${isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"} text-gray-900 border-gray-200/60`
+            : `bg-blue-600/90 backdrop-blur-sm ${isReplyMessage ? "rounded-tr-lg" : "rounded-br-lg"} text-white border-blue-500/60`
           }`}
         style={{ wordBreak: "break-word" }}
       >
@@ -742,13 +746,13 @@ const ChatView = ({
   const [globalMuted, setGlobalMuted] = useState(true);
   const [activeMediaId, setActiveMediaId] = useState<string | null>(null);
   const [activeMediaType, setActiveMediaType] = useState<
-    "reel" | "story" | null
+    "reel" | "story" | "video" | null
   >(null);
 
  
 
 
-  const handlePlay = (id: string, type: "reel" | "story") => {
+  const handlePlay = (id: string, type: "reel" | "story" | "video") => {
     setActiveMediaId(id);
     setActiveMediaType(type);
   };
@@ -2164,7 +2168,7 @@ const ChatView = ({
                               className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === "customer" ? "items-start" : "items-end"
                                 }`}
                             >
-                              <MessageWrapper message={message} index={index} >
+                              <MessageWrapper message={message} index={index} allMessages={messages}>
                                 {/* IG Media Messages */}
                                 <LazyMediaLoader key={index} index={index}>
                                   {/* Render IG Posts */}
@@ -2218,16 +2222,36 @@ const ChatView = ({
                                       type={message.type}
                                       />
                                   )}
+
+                                  {/* Render Images / Videos */}
+                                  {(message.type === "image" || message.type === "video") && message.payload && (
+                                    <MediaMessage
+                                      type={message.type === "image" ? "image" : "video"}
+                                      url={message.payload.url}
+                                      isAgent={message.role.toLowerCase() === "agent"}
+                                      isLatest={isLatest}
+                                      isActive={
+                                        activeMediaType === "video" &&
+                                        activeMediaId === message.id
+                                      }
+                                      onPlay={(id) => handlePlay(id, "video")}
+                                      isMuted={globalMuted}
+                                      onMuteToggle={(muted) => setGlobalMuted(muted)}
+                                      id={message.id}
+                                      timestamp={formatMessageTime(message.timestamp)}
+                                    />
+                                  )}
                                 </LazyMediaLoader>
 
                                 {/* Normal Messages */}
-                                {!message.payload && (
+                                {!["ig_story", "story_reply", "ig_reel", "share", "image", "video"].includes(message.type ?? "") && (
                                   <MessageItem
                                     key={message.id}
                                     message={message}
                                     index={index}
                                     isLatest={isLatest}
                                     isLast={index === messages.length - 1}
+                                    isReplyMessage={message.type == "message_reply"}
                                   />
                                 )}
                               </MessageWrapper>
@@ -2315,7 +2339,6 @@ const ChatView = ({
                       value={message}
                       onChange={(e) => {
                         setMessage(e.target.value)
-                        console.log("⌨️ User typing...");
                         handleTyping()
                       }}
                       onKeyDown={handleKeyDown}
