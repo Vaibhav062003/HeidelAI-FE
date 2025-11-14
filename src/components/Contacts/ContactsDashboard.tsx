@@ -25,16 +25,15 @@ const ContactsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [isImporting, setIsImporting] = useState(false);
   const [importingCount, setImportingCount] = useState(0);
-  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [tags, setTags] = useState<Tag[]>([]);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [tagsLoading, setTagsLoading] = useState(true);
   const itemsPerPage = 10;
 
-  const mapApiContactToContact = (apiContact: ApiContact): Contact => {
+  const mapApiContactToContact = useCallback((apiContact: ApiContact): Contact => {
     const fullName = apiContact.full_name || "Unknown";
     const nameParts = fullName.trim().split(" ");
-    const firstName = nameParts[0] || "Unknown";
+    const firstName = nameParts.slice(1).join(" ") || "";
     const lastName = nameParts.slice(1).join(" ") || "";
 
     return {
@@ -54,9 +53,9 @@ const ContactsDashboard = () => {
       conversation_id: apiContact.conversation_id,
       categories: apiContact.categories,
     };
-  };
+  }, []);
 
-  const fetchContacts = async () => {
+  const fetchContacts = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -76,7 +75,6 @@ const ContactsDashboard = () => {
         return;
       }
 
-
       if (contactsArray.length === 0) {
         setContacts([]);
         setError(null);
@@ -84,50 +82,44 @@ const ContactsDashboard = () => {
         return;
       }
 
-      const mappedContacts = contactsArray.map((contact: ApiContact, index: number) => {
+      const mappedContacts = contactsArray.map((contact: ApiContact) => {
         return mapApiContactToContact(contact);
       });
-
 
       setContacts(mappedContacts);
       setError(null);
 
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "Failed to load contacts");
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      setError(error.response?.data?.message || error.message || "Failed to load contacts");
       setContacts([]);
     } finally {
       setLoading(false);
-      console.log("🏁 Fetch complete");
     }
-  };
+  }, [mapApiContactToContact]);
 
   useEffect(() => {
     fetchContacts();
     fetchTags();
-  }, []);
+  }, [fetchContacts]);
 
-  useEffect(() => {
-    if (selectedTag !== null) {
-      fetchContacts();
-    }
-  }, [selectedTag]);
-
-  const fetchTags = async () => {
+  const fetchTags = useCallback(async () => {
     setTagsLoading(true);
     try {
       const { data, error } = await supabase
         .from("tags")
         .select("*")
         .order("created_at", { ascending: false });
-      if (error) throw error;      setTags(data || []);
+      if (error) throw error;
+      setTags(data || []);
     } catch (err) {
-      console.error(" Tags error:", err);
+      console.error("Tags error:", err);
     } finally {
       setTagsLoading(false);
     }
-  };
+  }, []);
 
-  const handleFileUpload = useCallback(
+    const handleFileUpload = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file) return;
@@ -187,11 +179,12 @@ const ContactsDashboard = () => {
           );
         }
         setSelectedContact(null);
-      } catch (err: any) {
-        setError(err.response?.data?.message || "Failed to save contact");
+      } catch (err) {
+        const error = err as { response?: { data?: { message?: string } } };
+        setError(error.response?.data?.message || "Failed to save contact");
       }
     },
-    [selectedContact]
+    [selectedContact, mapApiContactToContact]
   );
 
   const handleCreateTag = async (name: string, description: string) => {
@@ -256,8 +249,6 @@ const ContactsDashboard = () => {
   };
 
   const filteredContacts = useMemo(() => {
-    console.log(`Filtering - Total: ${contacts.length}, Search: "${searchQuery}", Tag: ${selectedTag}`);
-    
     let filtered = contacts;
     
     if (selectedTag) {
@@ -271,7 +262,6 @@ const ContactsDashboard = () => {
         const searchText = `${contact.firstName} ${contact.lastName} ${contact.email} ${contact.username || ""}`;
         return searchText.toLowerCase().includes(searchQuery.toLowerCase());
       });
-      console.log(` After search: ${filtered.length}`);
     }
     
     return filtered;
@@ -283,8 +273,8 @@ const ContactsDashboard = () => {
     return filteredContacts.slice(start, end);
   }, [filteredContacts, currentPage, itemsPerPage]);
 
-return (
-      <div className="h-full w-full flex bg-white overflow-hidden">
+  return (
+    <div className="h-full w-full flex bg-white overflow-hidden">
       <div className="w-64 flex-shrink-0 h-full bg-white border-r border-gray-200">
         <TagSidebar
           tags={tags}
@@ -294,127 +284,124 @@ return (
           onDeleteTag={handleDeleteTag}
           onTagSelect={setSelectedTag}
           selectedTag={selectedTag}
-          onTagModalOpen={() => setIsTagModalOpen(true)}
+          onTagModalOpen={() => {}}
           error={error}
         />
+      </div>
+
+      <div className="flex-1 flex flex-col h-screen max-h-screen">
+        <div className="flex-none">
+          <ContactListHeader
+            searchValue={searchQuery}
+            onSearch={setSearchQuery}
+            onAddContact={() => setSelectedContact({} as Contact)}
+            onImportCSV={handleFileUpload}
+            onMessageSend={() => {}}
+          />
         </div>
 
-
-    <div className="flex-1 flex flex-col h-screen max-h-screen">
-      <div className="flex-none">
-        <ContactListHeader
-          searchValue={searchQuery}
-          onSearch={setSearchQuery}
-          onAddContact={() => setSelectedContact({} as Contact)}
-          onImportCSV={handleFileUpload}
-          onMessageSend={() => {}}
-        />
-      </div>
-
-      <div className="flex-1 overflow-hidden">
-         {/* Active Filters Bar */}
-        {(selectedTag || searchQuery) && (
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100 px-4 py-2.5 flex items-center gap-3 flex-shrink-0">
-            <span className="text-sm text-gray-600 font-medium">Filters:</span>
-            
-            {selectedTag && (
-              <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 border border-indigo-200 shadow-sm">
-                <span className="text-sm text-indigo-700 font-medium">🏷️ {selectedTag}</span>
-                <button
-                  onClick={() => setSelectedTag(null)}
-                  className="text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full p-0.5 transition-colors"
-                  title="Remove tag filter"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            )}
-            
-            {searchQuery && (
-              <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 border border-indigo-200 shadow-sm">
-                <span className="text-sm text-indigo-700 font-medium">🔍 "{searchQuery}"</span>
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full p-0.5 transition-colors"
-                  title="Clear search"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            )}
-            
-            <button
-              onClick={() => {
-                setSelectedTag(null);
-                setSearchQuery("");
-              }}
-              className="ml-auto text-sm text-indigo-600 hover:text-indigo-800 font-medium hover:underline transition-colors"
-            >
-              Clear all
-            </button>
-            
-            <span className="text-xs text-gray-500">
-              {filteredContacts.length} of {contacts.length} contacts
-            </span>
-          </div>
-        )}
-
-        {loading ? (
-          <div className="h-full flex flex-col items-center justify-center gap-3">
-            <Spinner />
-            <p className="text-gray-500">Loading contacts...</p>
-          </div>
-        ) : filteredContacts.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center gap-2">
-            <p className="text-gray-500 text-lg">No contacts found 🔍</p>
-            <p className="text-gray-400 text-sm">
-              {contacts.length > 0 
-                ? `${contacts.length} total contacts (hidden by filters)`
-                : "Check your API connection or add contacts"}
-            </p>
-            <button 
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedTag(null);
-              }}
-              className="mt-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
-            >
-              Clear Filters
-            </button>
-          </div>
-        ) : (
-          <div className="h-full flex flex-col">
-            {/* Contact List */}
-            <div className="flex-1 overflow-y-auto bg-white">
-              {paginatedContacts.map((contact) => (
-                <ContactItem
-                  key={contact.id}
-                  contact={contact}
-                  onEdit={() => handleEdit(contact)}
-                  onDelete={() => handleDelete(contact.id)}
-                />
-              ))}
+        <div className="flex-1 overflow-hidden">
+          {/* Active Filters Bar */}
+          {(selectedTag || searchQuery) && (
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100 px-4 py-2.5 flex items-center gap-3 flex-shrink-0">
+              <span className="text-sm text-gray-600 font-medium">Filters:</span>
+              
+              {selectedTag && (
+                <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 border border-indigo-200 shadow-sm">
+                  <span className="text-sm text-indigo-700 font-medium">🏷️ {selectedTag}</span>
+                  <button
+                    onClick={() => setSelectedTag(null)}
+                    className="text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full p-0.5 transition-colors"
+                    title="Remove tag filter"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+              
+              {searchQuery && (
+                <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 border border-indigo-200 shadow-sm">
+                  <span className="text-sm text-indigo-700 font-medium">🔍 &quot;{searchQuery}&quot;</span>
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full p-0.5 transition-colors"
+                    title="Clear search"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+              
+              <button
+                onClick={() => {
+                  setSelectedTag(null);
+                  setSearchQuery("");
+                }}
+                className="ml-auto text-sm text-indigo-600 hover:text-indigo-800 font-medium hover:underline transition-colors"
+              >
+                Clear all
+              </button>
+              
+              <span className="text-xs text-gray-500">
+                {filteredContacts.length} of {contacts.length} contacts
+              </span>
             </div>
+          )}
 
-            {/* Pagination */}
-            {filteredContacts.length > itemsPerPage && (
-              <div className="flex-none border-t border-gray-200 bg-white">
-                <PaginationFooter
-                  currentPage={currentPage}
-                  totalItems={filteredContacts.length}
-                  itemsPerPage={itemsPerPage}
-                  onPageChange={setCurrentPage}
-                />
+          {loading ? (
+            <div className="h-full flex flex-col items-center justify-center gap-3">
+              <Spinner />
+              <p className="text-gray-500">Loading contacts...</p>
+            </div>
+          ) : filteredContacts.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center gap-2">
+              <p className="text-gray-500 text-lg">No contacts found 🔍</p>
+              <p className="text-gray-400 text-sm">
+                {contacts.length > 0 
+                  ? `${contacts.length} total contacts (hidden by filters)`
+                  : "Check your API connection or add contacts"}
+              </p>
+              <button 
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedTag(null);
+                }}
+                className="mt-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
+              >
+                Clear Filters
+              </button>
+            </div>
+          ) : (
+            <div className="h-full flex flex-col">
+              <div className="flex-1 overflow-y-auto bg-white">
+                {paginatedContacts.map((contact) => (
+                  <ContactItem
+                    key={contact.id}
+                    contact={contact}
+                    onEdit={() => handleEdit(contact)}
+                    onDelete={() => handleDelete(contact.id)}
+                  />
+                ))}
               </div>
-            )}
-          </div>
-        )}
+
+              {filteredContacts.length > itemsPerPage && (
+                <div className="flex-none border-t border-gray-200 bg-white">
+                  <PaginationFooter
+                    currentPage={currentPage}
+                    totalItems={filteredContacts.length}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
 
       {selectedContact && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -453,3 +440,7 @@ return (
 };
 
 export default ContactsDashboard;
+
+
+
+
