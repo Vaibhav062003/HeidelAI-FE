@@ -4,6 +4,7 @@ import { useAuth, useClerk, useSignIn } from '@clerk/nextjs'
 import type { NextPage } from 'next'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { toast } from 'sonner';
 
 const ForgotPasswordPage: NextPage = () => {
   const [email, setEmail] = useState('')
@@ -22,6 +23,7 @@ const ForgotPasswordPage: NextPage = () => {
 
   useEffect(() => {
     if (isSignedIn) {
+      toast.success('You are already signed in. Redirecting to dashboard...')
       router.push('/dashboard')
     }
   }, [isSignedIn, router])
