@@ -3,6 +3,7 @@ import { getSessionToken } from "@/components/utils/clerkSession";
 
 const allowedOrigins = [
   "https://heidelai.com",
+  "https://www.heidelai.com"
   "https://development.heidelai.com",
   "https://testing.heidelai.com",
   "https://testing2.heidelai.com",
