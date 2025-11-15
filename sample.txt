@@ -1,6 +1,7 @@
 main:
 cloned using testing
 CORS issue not able to call session-token api
+updated HOST_URL in env variable to include www. subdomain
 
 testing:
 merged vaibhav's changes with development branch
