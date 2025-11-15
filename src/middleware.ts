@@ -1,8 +1,9 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { rootDomain } from "@/lib/utils";
 
-const allowedOrigins = [
+const allowedOrigins: string[] = [
   "https://heidelai.com",
   "https://www.heidelai.com",
   "https://development.heidelai.com",
@@ -10,7 +11,7 @@ const allowedOrigins = [
   "https://testing2.heidelai.com",
 ];
 
-function applyCors(req: NextRequest, res: NextResponse) {
+function applyCors(req: NextRequest, res: NextResponse): NextResponse {
   const origin = req.headers.get("origin") || "";
 
   if (allowedOrigins.includes(origin)) {
@@ -29,55 +30,48 @@ function applyCors(req: NextRequest, res: NextResponse) {
   return res;
 }
 
-function extractSubdomain(request: NextRequest): string | null {
+function extractSubdomain(request: NextRequest): string | null | NextResponse {
   const url = request.url;
   const host = request.headers.get("host") || "";
   const hostname = host.split(":")[0];
   const { pathname } = request.nextUrl;
   const isDashboard = pathname.startsWith("/dashboard");
 
-  // Local development
   if (url.includes("localhost") || url.includes("127.0.0.1")) {
-    const fullUrlMatch = url.match(/http:\/\/([^.]+)\.localhost/);
-    if (fullUrlMatch && fullUrlMatch[1]) {
-      return fullUrlMatch[1];
-    }
+    const match = url.match(/http:\/\/([^.]+)\.localhost/);
 
-    if (hostname.includes(".localhost")) {
-      return hostname.split(".")[0];
-    }
+    if (match && match[1]) return match[1];
+    if (hostname.includes(".localhost")) return hostname.split(".")[0];
 
     return null;
   }
 
-  // Dashboard auth check
   const token = request.cookies.get("session-token")?.value;
   if (isDashboard && !token) {
     const loginUrl = new URL("/login", request.url);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return NextResponse.redirect(loginUrl) as any;
+    return NextResponse.redirect(loginUrl);
   }
 
-  // Production
   const rootDomainFormatted = rootDomain.split(":")[0];
 
-  // Preview deployments (tenant---branch.vercel.app)
   if (hostname.includes("---") && hostname.endsWith(".vercel.app")) {
-    const parts = hostname.split("---");
-    return parts.length > 0 ? parts[0] : null;
+    return hostname.split("---")[0] ?? null;
   }
 
-  // Regular subdomain detection
   const isSubdomain =
     hostname !== rootDomainFormatted &&
     hostname !== `www.${rootDomainFormatted}` &&
     hostname.endsWith(`.${rootDomainFormatted}`);
 
-  return isSubdomain ? hostname.replace(`.${rootDomainFormatted}`, "") : null;
+  if (isSubdomain) {
+    return hostname.replace(`.${rootDomainFormatted}`, "");
+  }
+
+  return null;
 }
 
-export default clerkMiddleware((auth, request) => {
-  const { pathname } = request.nextUrl;
+export default clerkMiddleware((auth, request: NextRequest): NextResponse => {
+  const pathname = request.nextUrl.pathname;
 
   if (request.method === "OPTIONS" && pathname.startsWith("/api")) {
     return applyCors(request, new NextResponse(null, { status: 204 }));
@@ -85,16 +79,18 @@ export default clerkMiddleware((auth, request) => {
 
   let response = NextResponse.next();
 
-  const subdomain = extractSubdomain(request);
+  const subdomainResult = extractSubdomain(request);
 
-  // Subdomain rewrite
-  if (typeof subdomain === "string") {
+  // If Dashboard auth returned a redirect
+  if (subdomainResult instanceof NextResponse) {
+    return subdomainResult;
+  }
+
+  // If subdomain exists → rewrite
+  if (typeof subdomainResult === "string") {
     response = NextResponse.rewrite(
-      new URL(`/s/${subdomain}`, request.url)
+      new URL(`/s/${subdomainResult}`, request.url)
     );
-  } else if (subdomain instanceof NextResponse) {
-    // Dashboard redirect case
-    return subdomain;
   }
 
   if (pathname.startsWith("/api")) {
@@ -106,9 +102,9 @@ export default clerkMiddleware((auth, request) => {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files
+    // Skip Next.js internals and static files
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
+    // Always run for API and tRPC
     "/(api|trpc)(.*)",
   ],
 };
