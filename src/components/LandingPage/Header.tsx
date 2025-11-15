@@ -271,7 +271,15 @@ const Header = () => {
 						<div className="flex w-full justify-between lg:w-auto">
 							<Link
 								href="/"
-								onClick={(e) => handleNavClick(e, '#home')}
+								onClick={(e) => {
+									if (window.location.pathname === '/') {
+									e.preventDefault();
+									window.scrollTo({
+										top: 0,
+										behavior: 'smooth'
+									});
+									}
+								}}
 								aria-label="home"
 								className="flex items-center gap-2"
 							>
@@ -354,7 +362,6 @@ const Header = () => {
 							</div>
 							<div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
 								<Button
-									asChild
 									variant="outline"
 									size="sm"
 									className={cn(
@@ -364,111 +371,33 @@ const Header = () => {
 											? 'border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white hover:border-white/50'
 											: 'border-gray-300 bg-transparent text-gray-900 hover:bg-gray-100 hover:border-gray-400'
 									)}
+									onClick={() => router.push('/login')}
 								>
-									<a href="/login">
-										<span>Login</span>
-									</a>
+									<span>Login</span>
 								</Button>
-								<Drawer.Root repositionInputs={false} open={isOpen} onOpenChange={setIsOpen}>
-									<Drawer.Trigger className="focus-visible:border-none">
-										<Button
-											asChild
-											size="sm"
-											className={cn(
-												isScrolled ? 'hidden' : 'lg:inline-flex',
-												'backdrop-blur-sm transform focus-visible:ring-0 hover:scale-105 w-full transition-all duration-300 shadow-lg bg-white text-black hover:bg-white/90'
-											)}
-										>
-											<a href="#">
-												<span>Sign Up</span>
-											</a>
-										</Button>
-										<Button
-									asChild
+								<Button
+									size="sm"
+									className={cn(
+										isScrolled ? 'hidden' : 'lg:inline-flex',
+										'backdrop-blur-sm transform focus-visible:ring-0 hover:scale-105 w-full transition-all duration-300 shadow-lg bg-white text-black hover:bg-white/90'
+									)}
+									onClick={() => router.push('/onboarding')}
+								>
+									<span>Sign Up</span>
+								</Button>
+								<Button
 									size="sm"
 									className={cn(
 										isScrolled ? 'lg:inline-flex' : 'hidden',
 										'backdrop-blur-sm transform w-full hover:scale-105 transition-all duration-300 shadow-lg',
 										isDarkTheme
-											? 'bg-white text-black hover:bg-white/90'
-											: 'bg-gray-900 text-white hover:bg-gray-800'
+										? 'bg-white text-black hover:bg-white/90'
+										: 'bg-gray-900 text-white hover:bg-gray-800'
 									)}
-								>
-									<a href="#">
-										<span>Get Started</span>
-									</a>
-								</Button>
-
-								</Drawer.Trigger>
-								<Drawer.Portal>
-									<Drawer.Overlay className="fixed inset-0 bg-black/40" />
-									<Drawer.Content className="bg-white flex flex-col  fixed bottom-0  left-0 right-0 max-h-[85vh] rounded-t-[10px] z-[999]">
-									<div className="max-w-md flex justify-center flex-col w-full mx-auto overflow-auto p-4 mb-4 rounded-t-[10px]">
-										<div aria-hidden className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-4" />
-
-										<Drawer.Title className="text-2xl lg:text-3xl md:text-3xl font-semibold text-black text-center">
-										Contact Us
-										</Drawer.Title>
-										<p className="text-neutral-600 px-4 lg:px-0 text-xs lg:text-base text-center mt-2">
-										We will contact you based on the below information
-									</p>
-										<form method="POST" action={"https://docs.google.com/forms/d/e/1FAIpQLSdB_mtDsubutUM_y1draxzdbfzcsqcIz9Ok_hTwPayBukJPNg/formResponse"} onSubmit={handleDemoRequest}>
-										<label htmlFor="fname" className="font-medium text-gray-900 text-sm mt-8 mb-2 block">
-										Name
-										</label>
-										<input
-										value={userName}
-										onChange={(e) => setUserName(e.target.value)}
-										id="name"
-										name="entry.545040562"
-										type="text"
-										className="border border-gray-200 bg-white w-full text-sm p-3 py-2 h-9 rounded-xl outline-none focus:ring-2 focus:ring-black/5 text-gray-900"
-										/>
-										<label htmlFor="email" className="font-medium text-gray-900 text-sm mt-4 mb-2 block">
-										Email ID
-										</label>
-										<input
-										value={userEmail}
-										onChange={(e) => setUserEmail(e.target.value)}
-										type="text"
-										name="entry.1231199003"
-										className="border border-gray-200 bg-white w-full resize-none rounded-xl p-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-black/5 focus:ring-offset-0"
-										/>
-										<label htmlFor="number" className="font-medium text-gray-900 text-sm mt-4 mb-2 block">
-										Phone Number
-										</label>
-										<input
-										value={userPhone}
-										onChange={(e) => {
-											// Allow only numbers, spaces, dashes, parentheses, and plus sign
-											const value = e.target.value.replace(/[^0-9\s\-\(\)\+]/g, '');
-											setUserPhone(value);
-										}}
-										type="tel" // Changed from "number" to "tel" for better mobile experience
-										name="entry.1154213412"
-										placeholder="+91 9876543210"
-										className="border border-gray-200 bg-white w-full resize-none rounded-xl p-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-black/5 focus:ring-offset-0"
-										/>
-										<label htmlFor="name" className="font-medium text-gray-900 text-sm mt-4 mb-2 block">
-										Company name
-										</label>
-										<input
-										value={companyName}
-										onChange={(e) => setCompanyName(e.target.value)}
-										type="text"
-										name="entry.1081121699"
-										className="border border-gray-200 bg-white w-full resize-none  p-3 rounded-xl py-2 text-gray-900 outline-none focus:ring-2 focus:ring-black/5 focus:ring-offset-0"
-										/>
-										<p className="text-neutral-600  text-xs  mt-2 mb-8">
-										By submitting you agree to our Terms & Conditions.
-									</p>
-										<button onClick={() => setIsOpen(false)} type="submit" className="h-[44px] bg-black mx-auto rounded-full sticky bottom-0 text-gray-50  mt-4 w-full font-medium">Submit</button>
-										</form>
-									</div>
-									</Drawer.Content>
-								</Drawer.Portal>
-								</Drawer.Root>
-								
+									onClick={() => router.push('/onboarding')}
+									>
+									<span>Get Started</span>
+									</Button>
 							</div>
 						</div>
 					</div>

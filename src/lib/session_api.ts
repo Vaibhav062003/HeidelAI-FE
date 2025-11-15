@@ -1,0 +1,29 @@
+import axios from "axios";
+
+const api = axios.create({
+  // baseURL: process.env.NEXT_PUBLIC_API_URL
+  baseURL: "https://egenie-whatsapp.koyeb.app"
+})
+
+api.interceptors.request.use(async (config) => {
+  let sessionId: string | null = null;
+  if (typeof window !== "undefined") {
+    sessionId = localStorage.getItem("sessionId");
+  }
+  if (!sessionId) throw new Error("Session ID not found in localStorage");
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_HOST_URL}/api/session-token`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({ sessionId })
+  });
+  const { token: sessionToken } = await res.json();
+
+  config.headers.Authorization = `Bearer ${sessionToken}`;
+  return config;
+});
+
+export default api;
+

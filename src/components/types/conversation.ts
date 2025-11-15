@@ -17,4 +17,5 @@ export interface Conversation {
   priority: "low" | "medium" | "high";
   sentiment: "positive" | "neutral" | "negative";
   query?: string;
+  status?: string; // added status property
 }

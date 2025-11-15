@@ -52,6 +52,28 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'egeniestores.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'framerusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'egenie-whatsapp.koyeb.app',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lookaside.fbsbx.com'
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdninstagram.com'
+      },
+      {
+        protocol: 'https',
+        hostname: '*.cdninstagram.com'
+      },
     ],
   }
   

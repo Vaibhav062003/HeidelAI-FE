@@ -1,8 +1,9 @@
-
+"use client"
 import AgentsSettings from '@/components/setting_tab/Agent_management'
 import React from 'react'
 
-const team_collabration = () => {
+
+const team_collabration = () => { 
   return (
     <AgentsSettings/>
   )

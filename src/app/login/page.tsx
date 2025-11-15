@@ -1,37 +1,46 @@
 "use client";
 
-import React, { useState } from "react";
-import { useSignIn, useUser } from "@clerk/nextjs";
+import React, { useEffect, useState, useRef } from "react";
+import { useSignIn, useUser, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Toaster, toast } from "sonner";
 import { cn } from "@/lib/utils";
-interface OrgDataItem {
-  public_user_data?: {
-    identifier?: string;
-  };
-  organization?: {
-    id?: string;
-  };
-}
 
+// ...existing code...
 export default function LoginPage() {
   const { isLoaded, signIn, setActive } = useSignIn();
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn } = useUser();
+  const { sessionId } = useAuth();
   const router = useRouter();
-
-  // Redirect if already signed in
-  React.useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      toast.success("Already signed in! Redirecting...");
-      router.push("/dashboard");
-    }
-  }, [isLoaded, isSignedIn, router]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const justSignedIn = useRef(false);
+
+  // Single useEffect for auto redirect logic
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (isSignedIn) {
+      const storedSessionId = localStorage.getItem("sessionId");
+      if (justSignedIn.current) {
+        // Prevent double toast/redirect after sign-in
+        justSignedIn.current = false;
+        return;
+      }
+      if (storedSessionId && storedSessionId === sessionId) {
+        toast.success("Already signed in!");
+        router.push("/dashboard");
+      } else if (sessionId) {
+        localStorage.setItem("sessionId", sessionId);
+        toast.success("Signed in!");
+        router.push("/dashboard");
+      }
+    }
+  }, [isLoaded, isSignedIn, sessionId, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,42 +54,35 @@ export default function LoginPage() {
         password,
       });
 
-      if (signInAttempt.status === "complete") {
-        await setActive({ session: signInAttempt.createdSessionId });
-        // Fetch organization data after session is active
-        const res = await fetch("/api/getorgdata");
-        const data = await res.json();
+      const newSessionId = signInAttempt.createdSessionId || null;
 
-        const membership = data?.data?.find(
-          (item: OrgDataItem) =>
-            item.public_user_data?.identifier === email
-        );
-
-        if (membership?.organization?.id && isLoaded) {
-          localStorage.setItem("org_id", membership.organization.id);
-          toast.success("Signed in! Redirecting...");
-          router.push("/dashboard");
-        } else {
-          toast.info("No organization found for this account.");
-        }
+      if (signInAttempt.status === "complete" && newSessionId) {
+        await setActive({ session: newSessionId });
+        localStorage.setItem("sessionId", newSessionId);
+        toast.success("Signed in successfully!");
+        justSignedIn.current = true; // Set flag to prevent double toast
+        router.push("/dashboard");
       } else {
+        localStorage.removeItem("sessionId");
         toast.error("Sign in not complete. Further steps required.");
       }
     } catch (err) {
-      let message = "Invalid email or password.";
-      if (err && typeof err === "object" && "errors" in err && Array.isArray(err.errors)) {
-        message = err.errors[0]?.message || message;
-      }
+      localStorage.removeItem("sessionId");
+      const message =
+        (typeof err === "object" &&
+          err !== null &&
+          "errors" in err &&
+          Array.isArray((err).errors) &&
+          (err).errors[0]?.message) ||
+        "Invalid email or password.";
       toast.error(message);
     } finally {
       setIsLoggingIn(false);
     }
   };
 
-
-
   return (
-    <section className="h-screen  bg-black text-white px-6 flex items-center justify-center">
+    <section className="h-screen bg-black text-white px-6 flex items-center justify-center">
       <Toaster position="top-center" richColors />
       <div className="max-w-md shadow-none w-full border-2 border-white/10 mx-auto rounded-2xl p-4 md:p-8 shadow-input bg-black">
         <h2 className="font-semibold pb-6 text-xl text-center text-neutral-200">
