@@ -54,6 +54,7 @@ function extractSubdomain(request: NextRequest): string | null {
   const token = request.cookies.get("session-token")?.value;
   if (isDashboard && !token) {
     const loginUrl = new URL("/login", request.url);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return NextResponse.redirect(loginUrl) as any;
   }
 
