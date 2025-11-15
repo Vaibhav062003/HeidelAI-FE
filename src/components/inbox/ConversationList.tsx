@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo, useCallback, memo } from "react";
+import React, { useState, useMemo, useCallback, memo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, X } from "lucide-react";
@@ -121,6 +121,8 @@ const ConversationItem = memo(({
 });
 ConversationItem.displayName = "ConversationItem";
 
+
+
 const ConversationList = ({
   selectedConversationId,
   onConversationSelect,
@@ -128,17 +130,40 @@ const ConversationList = ({
   onToggleVisibility,
 }: ConversationListProps) => {
   const [activeTab, setActiveTab] = useState<TabValue>('all');
-  const { conversations, loading, error } = useConversations();
+  const [isTabLoading, setIsTabLoading] = useState(false);
+  const statusForTab: TabValue | undefined = activeTab === 'all' ? undefined : activeTab;
+  const { conversations, loading, error } = useConversations(statusForTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({
     platform: [],
     priority: [],
     sentiment: [],
-    unreadOnly: false,
+    unreadOnly: false,  
     hasQuery: false,
   });
 
-  const showSkeleton = loading && conversations.length === 0;
+
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value as TabValue);
+    setIsTabLoading(true); // Start loader on tab change
+  }, []);
+
+  // Set loader to true when tab changes, and false when loading completes
+  useEffect(() => {
+    setIsTabLoading(true);
+  }, [activeTab]);
+
+  useEffect(() => {
+  if (!loading) {
+    const timeout = setTimeout(() => {
+      setIsTabLoading(false);
+    }, 2); 
+
+    return () => clearTimeout(timeout);
+  }
+}, [loading]);
+
+  const showSkeleton =loading || isTabLoading;
 
   const filteredConversations = useMemo(() => {
     if (!conversations.length) return [];
@@ -155,6 +180,7 @@ const ConversationList = ({
 
     let filtered = conversations;  
 
+   
     if (filters.unreadOnly) {
       filtered = filtered.filter(c => c.unread_count > 0);
     }
@@ -178,11 +204,11 @@ const ConversationList = ({
       filtered = filtered.filter(c => sentimentSet.has(c.sentiment));
     }
 
-    if (activeTab === 'all') {
-      filtered = filtered.filter(c => c.is_ai_enabled);
-    } else if (activeTab === 'open') {
-      filtered = filtered.filter(c => !c.is_ai_enabled);
-    }
+    // if (activeTab === 'all') {
+    //   filtered = filtered.filter(c => c);
+    // } else if (activeTab === 'open') {
+    //   filtered = filtered.filter(c => c);
+    // }
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -205,10 +231,6 @@ const ConversationList = ({
     setSearchQuery('');
   }, []);
 
-  const handleTabChange = useCallback((value: string) => {
-    setActiveTab(value as TabValue);
-  }, []);
-
   const handleFilterChange = useCallback((newFilters: FilterOptions) => {
     setFilters(newFilters);
   }, []);
@@ -216,6 +238,7 @@ const ConversationList = ({
   const handleConversationSelect = useCallback((id: string) => {
     onConversationSelect?.(id);
   }, [onConversationSelect]);
+
 
   return (
     <div className="w-full h-full max-h-screen bg-white/95 flex flex-col overflow-hidden border-r border-gray-200/60">

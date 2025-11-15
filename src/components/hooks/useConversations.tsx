@@ -161,6 +161,7 @@ export const useConversations = (status?: "open" | "closed") => {
             ...allres.data.map((conv: any) => normalizeConversation({ ...conv }))
           ];
         }
+        // console.log("All conversations fetched and status: ", allConversations.slice(0,5),status); // Log first 5 for brevity
       }
       catch (error){
          if (process.env.NODE_ENV === 'development') {
