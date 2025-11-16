@@ -130,7 +130,6 @@ const ConversationList = ({
   onToggleVisibility,
 }: ConversationListProps) => {
   const [activeTab, setActiveTab] = useState<TabValue>('all');
-  const [isTabLoading, setIsTabLoading] = useState(false);
   const statusForTab: TabValue | undefined = activeTab === 'all' ? undefined : activeTab;
   const { conversations, loading, error } = useConversations(statusForTab);
   const [searchQuery, setSearchQuery] = useState('');
@@ -142,28 +141,9 @@ const ConversationList = ({
     hasQuery: false,
   });
 
-
   const handleTabChange = useCallback((value: string) => {
     setActiveTab(value as TabValue);
-    setIsTabLoading(true); // Start loader on tab change
   }, []);
-
-  // Set loader to true when tab changes, and false when loading completes
-  useEffect(() => {
-    setIsTabLoading(true);
-  }, [activeTab]);
-
-  useEffect(() => {
-  if (!loading) {
-    const timeout = setTimeout(() => {
-      setIsTabLoading(false);
-    }, 2); 
-
-    return () => clearTimeout(timeout);
-  }
-}, [loading]);
-
-  const showSkeleton =loading || isTabLoading;
 
   const filteredConversations = useMemo(() => {
     if (!conversations.length) return [];
@@ -238,6 +218,8 @@ const ConversationList = ({
   const handleConversationSelect = useCallback((id: string) => {
     onConversationSelect?.(id);
   }, [onConversationSelect]);
+
+  const showSkeleton = loading && conversations.length === 0;
 
 
   return (
@@ -328,7 +310,7 @@ const ConversationList = ({
       <div className="flex-1 overflow-y-auto ios-scrollbar">
         {showSkeleton ? (
           <OptimisticSkeletonLayout />
-        ) : error ? (
+        ) : error ? ( 
           <div className="flex items-center justify-center p-8 h-full">
             <div className="text-center">
               <div className="w-16 h-16 bg-red-100/80 rounded-3xl flex items-center justify-center mx-auto mb-4">
