@@ -53,7 +53,8 @@ function normalizeConversation(conv: any): Conversation {
     billingAddress: conv.billingAddress || '',
     shippingAddress: conv.shippingAddress || '',
     gstin: conv.gstin || '',
-    avatar_url: conv.avatar_url || ''
+    avatar_url: conv.avatar_url || '',
+    status:conv.status
   };
 }
 
@@ -161,7 +162,7 @@ export const useConversations = (status?: "open" | "closed") => {
             ...allres.data.map((conv: any) => normalizeConversation({ ...conv }))
           ];
         }
-        // console.log("All conversations fetched and status: ", allConversations.slice(0,5),status); // Log first 5 for brevity
+        console.log("All conversations fetched and status: ", allConversations.slice(0,5),status); // Log first 5 for brevity
       }
       catch (error){
          if (process.env.NODE_ENV === 'development') {

@@ -846,6 +846,18 @@ const ChatView = ({
     }
   }, [message, cannedResponses]);
 
+  useEffect(()=>{
+    const setConversatioStatus= async ()=>{
+      if(!selectedConversationId) return;
+      const status = conversation?.status
+      if(status){
+        setConversationStatus(status as "open" | "closed" | "followup");
+        setIsResolved(status === "closed");
+        setIsFollowUp(status === "followup");
+    }
+  }
+    setConversatioStatus();
+  },[selectedConversationId, conversation]);
   const handleSendAudio = async () => {
     if (!audioURL || !selectedConversationId) return;
 
@@ -1526,6 +1538,7 @@ const ChatView = ({
       if (wsRef.current) wsRef.current.close();
     };
   }, [selectedConversationId]);
+  
 
   const sendFn = (payload: Record<string, unknown>) => {
     console.log("🚀 Trying to send:", payload, wsRef.current?.readyState);
