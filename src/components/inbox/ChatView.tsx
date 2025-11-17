@@ -103,7 +103,7 @@ const Picker = dynamic(
   { ssr: false }
 );
 
-import Conversation_Status from "./Conversation_Status";
+
 import InstagramPost from "../instagram/messaging/InstagramPost";
 import InstagramReel from "../instagram/messaging/InstagramReel";
 import InstagramStory from "../instagram/messaging/InstagramStory";
@@ -1169,7 +1169,7 @@ const ChatView = ({
     }
   };
 
-  const handleResolve = useCallback(() => {
+  const handleResolve = useCallback(async(selectedConversationId:string) => {
     setIsResolved(true);
     setIsFollowUp(false);
     setConversationStatus("closed");
@@ -1196,6 +1196,38 @@ const ChatView = ({
         });
       }
     }, 100);
+
+    try {
+    // Use encodeURIComponent to be safe with IDs that contain special chars
+    const res = await api.post(
+      `/api/conversations/${encodeURIComponent(selectedConversationId)}/close`
+    );
+
+    // handle non-2xx as error
+    if (!(res && (res.status === 200 || res.status === 204))) {
+      throw new Error(
+        `Unexpected response from server: ${res?.status ?? "no status"}`
+      );
+    }
+
+    toast.success("Closed conversation successfully");
+  } catch (err) {
+    // Rollback optimistic UI: remove system message we added earlier
+    console.error("Error closing conversation:", err);
+    setMessages((prev) =>
+      prev.filter((msg) => msg.id !== systemMessage.id)
+    );
+
+    // rollback other state if you want (optional — uncomment to revert)
+    // setIsResolved(false);
+    // setConversationStatus("open");
+
+    const message =
+      (typeof err === "object" && err !== null && "response" in err && typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === "string")
+        ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
+        : "Failed to close conversation. Try again.";
+    toast.error(message);
+  }
   }, [selectedConversationId]);
 
   const handleReopen = useCallback(() => {
@@ -1204,6 +1236,7 @@ const ChatView = ({
     setConversationStatus("open");
     setIsStatusDropdownOpen(false);
     const agentName = "You";
+
 
     const systemMessage: Message = {
       id: `system-${Date.now()}`,
@@ -1227,12 +1260,21 @@ const ChatView = ({
     }, 100);
   }, [selectedConversationId]);
 
-  const handleFollowUp = useCallback(() => {
+  const handleFollowUp = useCallback(async(selectedConversationId:string) => {
     setIsResolved(false);
     setIsFollowUp(true);
     setConversationStatus("followup");
     setIsStatusDropdownOpen(false);
     const agentName = "You";
+
+    try{
+      const res = await api.post(`/api/ai/schedule-message/${selectedConversationId}`);
+      const data = res.data;
+      console.log(data)
+      toast.success("Reopened conversation successfully");
+    }catch (err){
+      console.error("Error scheduling message on reopen:", err);
+    }
 
     const systemMessage: Message = {
       id: `system-${Date.now()}`,
@@ -1719,7 +1761,7 @@ const ChatView = ({
                     {conversationStatus === "open" && (
                       <>
                         <DropdownMenuItem
-                          onClick={handleResolve}
+                          onClick={() => handleResolve(selectedConversationId)}
                           className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-red-50 rounded-xl mx-2"
                         >
                           <XCircle className="h-4 w-4 mr-3 text-red-600" />
@@ -1728,7 +1770,7 @@ const ChatView = ({
                           </span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={handleFollowUp}
+                          onClick={() => handleFollowUp(selectedConversationId)}
                           className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-amber-50 rounded-xl mx-2"
                         >
                           <Clock className="h-4 w-4 mr-3 text-amber-600" />
