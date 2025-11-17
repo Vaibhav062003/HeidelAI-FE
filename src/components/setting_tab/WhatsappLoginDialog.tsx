@@ -237,11 +237,9 @@ const WhatsAppLoginDialog = () => {
       setIsLoading(true);
       
       // Exchange authorization code for access token via backend
-      const response = await api.post('/api/whatsapp/auth', {
-        data: JSON.stringify({ 
+      const response = await api.post('/api/whatsapp/auth', { 
           code,
           redirect_uri: WHATSAPP_REDIRECT_URI
-        }),
       });
       
       if (response.status === 403) {
