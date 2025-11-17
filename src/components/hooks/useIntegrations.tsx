@@ -4,7 +4,19 @@ import { storeData, getData, DB_KEYS } from "@/lib/indexedDB";
 
 interface Integrations {
     instagram: false | InstagramData;
-    whatsapp: boolean;
+    whatsapp: false | WhatsappData;
+}
+
+export interface WhatsappData {
+    status: boolean;
+    name: string;
+    phone: string;
+    userId: string;
+    businessInfo?: {
+        account_type?: string;
+        status?: string;
+    };
+    lastUpdated?: number;
 }
 
 interface InstagramData {
