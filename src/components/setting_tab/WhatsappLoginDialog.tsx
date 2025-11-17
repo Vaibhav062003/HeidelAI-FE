@@ -122,11 +122,17 @@ const WhatsAppLoginDialog = () => {
     const handleMessage = (event: MessageEvent) => {
       console.log("Received message event from WhatsApp window:", event);
       // Validate origin for security
-      if (event.origin !== window.location.origin) return;
+      if (event.origin !== window.location.origin) {
+        console.log("Ignored message from unknown origin:", event.origin);
+        return
+      };
       // Handle auth data from popup
       if (event.data && event.data.type === 'WHATSAPP_AUTH_CALLBACK') {
+        console.log("Processing WhatsApp auth callback data:", event.data);
         const { code, state } = event.data;
+        console.log("Extracted code and state:", code, state);
         if (code && state === localStorage.getItem('whatsapp_auth_state')) {
+          console.log("State matches, handling WhatsApp callback");
           handleWhatsAppCallback(code);
         }
       }
@@ -324,7 +330,7 @@ const WhatsAppLoginDialog = () => {
         }
 
         // For backward compatibility, also clear localStorage
-        localStorage.removeItem('whatsapp_auth_state');
+        // localStorage.removeItem('whatsapp_auth_state');
 
         setConnected(false);
         setAccountInfo(null);
