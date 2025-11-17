@@ -57,46 +57,39 @@ const ContactsDashboard = () => {
   };
 
 
-  const fetchContacts = useCallback(async () => {
-    setLoading(true);
+const fetchContacts = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+
+  try {
+    const response = await api.get("/api/contacts");
+
+    if (!response.data || !Array.isArray(response.data.contacts)) {
+      setContacts([]);
+      setError("Invalid response format");
+      setLoading(false);
+      return;
+    }
+
+    const contactsArray: ApiContact[] = response.data.contacts;
+    const mappedContacts = contactsArray.map((contact: ApiContact) => {
+      return mapApiContactToContact(contact);
+    });
+
+    setContacts(mappedContacts);
     setError(null);
 
-    try {
-      const response = await api.get("/api/contacts");
-
-      let contactsArray: ApiContact[] = [];
-
-      if (Array.isArray(response.data)) {
-        contactsArray = response.data;
-      } else if (response.data && Array.isArray(response.data.contacts)) {
-        contactsArray = response.data.contacts;
-      } else {
-        setContacts([]);
-        setError("Invalid response format from API");
-        setLoading(false);
-        return;
-      }
-
-
-      const mappedContacts = contactsArray.map((contact: ApiContact, index: number) => {
-        return mapApiContactToContact(contact);
-      });
-
-
-      setContacts(mappedContacts);
-      setError(null);
-
-    } catch (err: unknown) {
-  if (err instanceof Error) {
-    setError(err.message || "Failed to load contacts");
-  } else {
-    setError("Failed to load contacts");
-  }
-  setContacts([]);
-} finally {
-      setLoading(false);
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      setError(err.message || "Failed to load contacts");
+    } else {
+      setError("Failed to load contacts");
     }
-  }, [selectedTag]);
+    setContacts([]);
+  } finally {
+    setLoading(false);
+  }
+}, [selectedTag]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
