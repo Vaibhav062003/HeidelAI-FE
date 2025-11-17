@@ -17,3 +17,4 @@ testing vaibhav's code where he removed mobile support
 dev:
 deploying changes regarding : updated post api endpoint addedd CORS origin header
 deploying : updated reel video height and width to fit on ipad | test
+allowing testing2 domain in cors origin

@@ -57,11 +57,7 @@ const shouldHideEmail = (email: string): boolean => {
   if (!email) return false;
   
   const emailLower = email.toLowerCase();
-  return emailLower.includes('@whatsapp.user') || 
-         emailLower.includes('@instagram.user') ||
-         emailLower.includes('@telegram.user') ||
-         emailLower.includes('@facebook.user') ||
-         emailLower.includes('@discord.user');
+  return emailLower.includes('Not available');
 };
 
 const FlagImage = ({ country }: { country: string }) => {

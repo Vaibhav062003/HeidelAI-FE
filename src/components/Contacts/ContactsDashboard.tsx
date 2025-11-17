@@ -41,7 +41,7 @@ const ContactsDashboard = () => {
       id: apiContact.conversation_id,
       firstName,
       lastName,
-      email: apiContact.email || `@${apiContact.platform}.user`,
+      email: apiContact.email || "",
       phone: apiContact.phone_number,
       company: undefined,
       country: apiContact.country || undefined,

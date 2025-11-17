@@ -33,6 +33,8 @@ export interface Contact {
   full_name?: string;
   conversation_id?: string;
   categories?: string[];
+  city?: string;
+  bio?: string;
 }
 
 export interface Tag {

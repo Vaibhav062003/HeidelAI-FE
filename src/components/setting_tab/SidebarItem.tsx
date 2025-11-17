@@ -31,6 +31,9 @@ import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
 
 // import { useIntegrations } from '@/components/hooks/useIntegrations';
 // import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
+
+// import { useIntegrations } from '@/components/hooks/useIntegrations';
+// import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
 import { 
   Table, 
   TableBody, 
@@ -56,22 +59,6 @@ interface CatalogProduct {
   [key: string]: string | number | boolean | undefined; // For any additional fields
 }
 
-interface AgentMember {
-  id: string | number;
-  identifier: string;
-  role_name: string;
-  user_id: string; 
-  public_user_data?: {
-    identifier?: string;
-    user_id?: string;
-  };
-}
-
-interface InvitedAgent {
-  id: string | number;
-  email_address: string;
-  status: string;
-}
 
 interface CatalogResponse {
   data: CatalogProduct[];
@@ -943,11 +930,6 @@ const handleDisconnect = async () => {
 
 
 export default function DashboardPage() {
-  const members: AgentMember[] = [];
-  const invited: InvitedAgent[] = [];
-  const initialLoading = false;
-  const refresh = () => {};
-  const agentlimit = 0;
   const handleInsertResponse = (message: string) => {
     // Handle the canned response insertion
     console.log('Inserting canned response:', message);
@@ -956,15 +938,9 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-      
+    
       {/* Add component */}
-      <AgentsSettings
-        members={members}
-        invited={invited}
-        initialLoading={initialLoading}
-        refresh={refresh}
-        agentlimit={agentlimit}
-      />
+      <AgentsSettings/>
       <TeamsConfiguration />
       <CannedResponses onInsertResponse={handleInsertResponse} />
       {/* You can add other dashboard components here */}
