@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect } from 'react';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Dialog as ConfirmDialog, DialogContent as ConfirmDialogContent, DialogHeader as ConfirmDialogHeader, DialogTitle as ConfirmDialogTitle } from "@/components/ui/dialog"; 
@@ -119,6 +120,7 @@ const WhatsAppLoginDialog = () => {
   useEffect(() => {
     // Listen for messages from popup window
     const handleMessage = (event: MessageEvent) => {
+      console.log("Received message event from WhatsApp window:", event);
       // Validate origin for security
       if (event.origin !== window.location.origin) return;
       // Handle auth data from popup
