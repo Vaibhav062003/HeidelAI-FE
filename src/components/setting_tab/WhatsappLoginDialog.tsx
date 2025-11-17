@@ -58,7 +58,7 @@ const WhatsAppLoginDialog = () => {
       status?: string;
     };
   } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [showProfileView, setShowProfileView] = useState(false);
   const { organization } = useOrganization();
   const [isAdmin, setIsAdmin] = useState(false);
