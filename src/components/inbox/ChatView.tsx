@@ -722,6 +722,7 @@ const ChatView = ({
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [fileCaption, setFileCaption] = useState("");
+  const [statusLoading, setStatusLoading] = useState(false);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
@@ -1174,6 +1175,7 @@ const ChatView = ({
     setIsFollowUp(false);
     setConversationStatus("closed");
     setIsStatusDropdownOpen(false);
+    setStatusLoading(true);
     const agentName = "You";
 
     const systemMessage: Message = {
@@ -1227,6 +1229,8 @@ const ChatView = ({
         ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
         : "Failed to close conversation. Try again.";
     toast.error(message);
+  } finally{
+     setStatusLoading(false);
   }
   }, [selectedConversationId]);
 
@@ -1235,6 +1239,7 @@ const ChatView = ({
     setIsFollowUp(false);
     setConversationStatus("open");
     setIsStatusDropdownOpen(false);
+    // setStatusLoading(true); 
     const agentName = "You";
 
 
@@ -1265,15 +1270,35 @@ const ChatView = ({
     setIsFollowUp(true);
     setConversationStatus("followup");
     setIsStatusDropdownOpen(false);
+    setStatusLoading(true);
     const agentName = "You";
 
     try{
       const res = await api.post(`/api/ai/schedule-message/${selectedConversationId}`);
-      const data = res.data;
-      console.log(data)
-      toast.success("Reopened conversation successfully");
+
+      if (!(res && (res.status === 200 || res.status === 204))) {
+      throw new Error(
+        `Unexpected response from server: ${res?.status ?? "no status"}`
+      );
+    }
+      toast.success("Marked conversation for follow-up successfully");
     }catch (err){
-      console.error("Error scheduling message on reopen:", err);
+      console.error("Error scheduling message for follow-up:", err);
+    setMessages((prev) =>
+      prev.filter((msg) => msg.id !== systemMessage.id)
+    );
+
+    // rollback other state if you want (optional — uncomment to revert)
+    // setIsResolved(false);
+    // setConversationStatus("open");
+
+    const message =
+      (typeof err === "object" && err !== null && "response" in err && typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === "string")
+        ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
+        : "Failed to set conversation for follow-up. Try again.";
+    toast.error(message);
+    }finally{
+      setStatusLoading(false);
     }
 
     const systemMessage: Message = {
@@ -1736,6 +1761,7 @@ const ChatView = ({
                     <Button
                       variant="ghost"
                       className="rounded-2xl hover:bg-gray-100 flex items-center space-x-1 px-3 py-2.5 bg-white"
+                      disabled={statusLoading}
                     >
                       {conversationStatus === "closed" ? (
                         <div className="w-2 h-2 bg-red-500 rounded-full"></div>
@@ -1752,6 +1778,9 @@ const ChatView = ({
                           : "Open"}
                       </span>
                       <ChevronDown className="h-4 w-4 text-gray-600" />
+                      {statusLoading && (
+                        <Loader2 className="h-4 w-4 ml-2 animate-spin text-blue-600" />
+                      )}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
@@ -1763,6 +1792,7 @@ const ChatView = ({
                         <DropdownMenuItem
                           onClick={() => handleResolve(selectedConversationId)}
                           className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-red-50 rounded-xl mx-2"
+                          disabled={statusLoading}
                         >
                           <XCircle className="h-4 w-4 mr-3 text-red-600" />
                           <span className="font-medium">
@@ -1772,6 +1802,7 @@ const ChatView = ({
                         <DropdownMenuItem
                           onClick={() => handleFollowUp(selectedConversationId)}
                           className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-amber-50 rounded-xl mx-2"
+                          disabled={statusLoading}
                         >
                           <Clock className="h-4 w-4 mr-3 text-amber-600" />
                           <span className="font-medium">
@@ -1786,6 +1817,7 @@ const ChatView = ({
                       <DropdownMenuItem
                         onClick={handleReopen}
                         className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-green-50 rounded-xl mx-2"
+                        disabled={statusLoading}
                       >
                         <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
                         <span className="font-medium">Reopen Conversation</span>
