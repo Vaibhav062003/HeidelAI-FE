@@ -111,6 +111,7 @@ import LazyMediaLoader from "../LazyMediaLoader";
 import { MessageWrapper } from "../messaging/MessageWrapper";
 import { useUser } from "@clerk/nextjs";
 import MediaMessage from "../messaging/MediaMessage";
+import User_Status from "./User_Status";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -1752,7 +1753,21 @@ const ChatView = ({
 
               {/* Action Buttons Section */}
               <div className="flex items-center space-x-2">
-                {/* Status Dropdown */}
+                 <User_Status
+                  conversationStatus={conversationStatus}
+                  isStatusDropdownOpen={isStatusDropdownOpen}
+                  setIsStatusDropdownOpen={setIsStatusDropdownOpen}
+                  selectedConversationId={selectedConversationId!}
+                  statusLoading={statusLoading}
+                  message={messages}
+                  setMessages={setMessages}
+                  lastMessageRef={lastMessageRef}
+                  setConversationStatus={setConversationStatus}
+                  handleResolve={handleResolve}
+                  handleFollowUp={handleFollowUp}
+                  handleReopen={handleReopen}
+                  />
+                {/* Status Dropdown
                 <DropdownMenu
                   open={isStatusDropdownOpen}
                   onOpenChange={setIsStatusDropdownOpen}
@@ -1824,7 +1839,7 @@ const ChatView = ({
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>
-                </DropdownMenu>
+                </DropdownMenu> */}
 
                 {/* Reminders Button */}
                 <Tooltip>
