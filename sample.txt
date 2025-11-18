@@ -1,8 +1,5 @@
-                               as bbbvfasdasdag  
-abcdef
-
-dev2:
-merged vaibbhav's changes, deploying on testing.heidelai.com to test them
+development:
+cloned using testing
 
 testing:
 merged vaibhav's changes with development branch
@@ -10,11 +7,3 @@ merged rounak's custoemr-story-reply branch
 changes to floating input section
 changes to Link Integrations button
 merged ig-message-reactions branch & fixed minor error in vaibhav's code
-
-testing2:
-testing vaibhav's code where he removed mobile support
-
-dev:
-deploying changes regarding : updated post api endpoint addedd CORS origin header
-deploying : updated reel video height and width to fit on ipad | test
-allowing testing2 domain in cors origin
