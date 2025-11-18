@@ -1774,7 +1774,7 @@ const ChatView = ({
                 >
                   <DropdownMenuTrigger asChild>
                     <Button
-                      variant="ghost"
+                      variant="ghost
                       className="rounded-2xl hover:bg-gray-100 flex items-center space-x-1 px-3 py-2.5 bg-white"
                       disabled={statusLoading}
                     >
