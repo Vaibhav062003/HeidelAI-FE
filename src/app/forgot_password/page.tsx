@@ -77,7 +77,6 @@ const ForgotPasswordPage: NextPage = () => {
             .catch((err) => {
               setError(err.errors?.[0]?.longMessage || 'Failed to set active session')
             })
-          setError('')
         }
       })
       .catch((err) => {
