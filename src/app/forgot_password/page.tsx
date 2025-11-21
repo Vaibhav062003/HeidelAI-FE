@@ -68,7 +68,9 @@ const ForgotPasswordPage: NextPage = () => {
         } else if (result.status === 'complete') {
           setActive({ session: result.createdSessionId })
             .then(() => {
-              localStorage.setItem('sessionId', result.createdSessionId!)
+              if (result.createdSessionId) {
+                localStorage.setItem('sessionId', result.createdSessionId);
+              }
               setSuccess(true)
               router.push('/dashboard')
             })
