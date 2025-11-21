@@ -46,7 +46,7 @@ const ForgotPasswordPage: NextPage = () => {
         setError('')
       })
       .catch((err) => {
-        setError(err.errors[0].longMessage)
+        setError(err.errors?.[0]?.longMessage || 'An error occurred')
       })
     setLoading(false)
   }
