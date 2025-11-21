@@ -206,6 +206,7 @@ const ForgotPasswordPage: NextPage = () => {
                     onChange={(e) => setCode(e.target.value)}
                     className="block w-full rounded-xl border-2 border-gray-300 px-4 py-3 text-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     required
+                    autoComplete="one-time-code"
                   />
                 </div>
                 <button
