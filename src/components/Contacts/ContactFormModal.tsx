@@ -161,7 +161,7 @@ return (
             {contact?.id ? 'Edit Contact' : 'Add New Contact'}
           </h2>
           <p className="text-slate-600">
-            Please fill out the form below with the contact's information
+            Please fill out the form below with the contact&apos;s information
           </p>
         </div>
 
