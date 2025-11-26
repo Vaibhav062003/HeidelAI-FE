@@ -81,6 +81,9 @@ const WhatsAppLoginDialog = () => {
   const { integrations, loading: integrationsLoading, refreshIntegrations } = useIntegrations();
   const { user } = useUser();
 
+  const state = window.crypto.getRandomValues(new Uint32Array(1))[0].toString(36);
+
+
   useEffect(() => {
     const checkRole = async () => {
       if (organization && user) {
@@ -177,9 +180,9 @@ const WhatsAppLoginDialog = () => {
       // Handle auth data from popup
       if (isSelf && data && data.type === 'WHATSAPP_AUTH_CALLBACK') {
         console.log("Processing WhatsApp auth callback data:", data);
-        const { code, state } = data;
+        const { code, sessionState } = data;
         console.log("Extracted code and state:", code, state);
-        if (code && state === localStorage.getItem('whatsapp_auth_state')) {
+        if (code && (sessionState === localStorage.getItem('whatsapp_auth_state') || sessionState === state)) {
           console.log("State matches, handling WhatsApp callback");
           handleWhatsAppCallback(code);
         }
@@ -201,7 +204,6 @@ const WhatsAppLoginDialog = () => {
 
     try {
       // Generate cryptographically secure state
-      const state = window.crypto.getRandomValues(new Uint32Array(1))[0].toString(36);
       localStorage.setItem("whatsapp_auth_state", state);
 
       // Build WhatsApp authorization URL
