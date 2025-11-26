@@ -81,8 +81,9 @@ const WhatsAppLoginDialog = () => {
   const { integrations, loading: integrationsLoading, refreshIntegrations } = useIntegrations();
   const { user } = useUser();
 
-  const state = window.crypto.getRandomValues(new Uint32Array(1))[0].toString(36);
-
+  const [oauthState] = useState(() =>
+    window.crypto.getRandomValues(new Uint32Array(1))[0].toString(36)
+  );
 
   useEffect(() => {
     const checkRole = async () => {
@@ -181,8 +182,12 @@ const WhatsAppLoginDialog = () => {
       if (isSelf && data && data.type === 'WHATSAPP_AUTH_CALLBACK') {
         console.log("Processing WhatsApp auth callback data:", data);
         const { code, sessionState } = data;
-        console.log("Extracted code and state:", code, state);
-        if (code && (sessionState === localStorage.getItem('whatsapp_auth_state') || sessionState === state)) {
+        console.log("Extracted state values:", {
+          popupReturned: sessionState,
+          expectedLocal: localStorage.getItem("whatsapp_auth_state"),
+          expectedMemory: oauthState
+        });
+        if (code && sessionState === sessionStorage.getItem("whatsapp_auth_state")) {          
           console.log("State matches, handling WhatsApp callback");
           handleWhatsAppCallback(code);
         }
@@ -204,7 +209,7 @@ const WhatsAppLoginDialog = () => {
 
     try {
       // Generate cryptographically secure state
-      localStorage.setItem("whatsapp_auth_state", state);
+      sessionStorage.setItem("whatsapp_auth_state", oauthState);
 
       // Build WhatsApp authorization URL
       const authUrl = new URL('https://www.facebook.com/v23.0/dialog/oauth');
@@ -213,7 +218,7 @@ const WhatsAppLoginDialog = () => {
       authUrl.searchParams.append('redirect_uri', WHATSAPP_REDIRECT_URI);
       authUrl.searchParams.append('config_id', WHATSAPP_CONFIG_ID);
       authUrl.searchParams.append('response_type', 'code');
-      authUrl.searchParams.append('state', state);
+      authUrl.searchParams.append('state', oauthState);
       authUrl.searchParams.append('auth_type', '');
       authUrl.searchParams.append('override_default_response_type', 'true');
       authUrl.searchParams.append('extras', JSON.stringify({
