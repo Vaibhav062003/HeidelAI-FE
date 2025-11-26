@@ -181,13 +181,13 @@ const WhatsAppLoginDialog = () => {
       // Handle auth data from popup
       if (isSelf && data && data.type === 'WHATSAPP_AUTH_CALLBACK') {
         console.log("Processing WhatsApp auth callback data:", data);
-        const { code, sessionState } = data;
+        const { code, state } = data;
         console.log("Extracted state values:", {
-          popupReturned: sessionState,
-          expectedLocal: localStorage.getItem("whatsapp_auth_state"),
+          popupReturned: state,
+          expectedLocal: sessionStorage.getItem("whatsapp_auth_state"),
           expectedMemory: oauthState
         });
-        if (code && sessionState === sessionStorage.getItem("whatsapp_auth_state")) {          
+        if (code && state === sessionStorage.getItem("whatsapp_auth_state")) {          
           console.log("State matches, handling WhatsApp callback");
           handleWhatsAppCallback(code);
         }
