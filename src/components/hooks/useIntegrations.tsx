@@ -132,6 +132,20 @@ export const useIntegrations = () => {
                 DB_KEYS.INTEGRATIONS.INSTAGRAM
             );
 
+            const whatsappData = await getData<WhatsappData>(
+                "integrations",
+                DB_KEYS.INTEGRATIONS.WHATSAPP
+            );
+
+            if (whatsappData && whatsappData.status) {
+                console.log("Loaded WhatsApp from IndexedDB:", whatsappData);
+                setIntegrations((prev) => ({
+                    ...prev,
+                    whatsapp: whatsappData || false,
+                }));
+                setLoading(false); // don’t block UI, show cached instantly
+            }
+
             if (instagramData && instagramData.status) {
                 console.log("Loaded Instagram from IndexedDB:", instagramData);
                 setIntegrations((prev) => ({
