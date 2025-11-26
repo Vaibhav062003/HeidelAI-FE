@@ -25,7 +25,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { createClient } from '@supabase/supabase-js';
 import InstagramProfileView from './InstagramProfileView';
-import FacebookSDK, { FacebookLoginResponse } from '@/components/facebook/FacebookSDK';
+// import FacebookSDK, { FacebookLoginResponse } from '@/components/facebook/FacebookSDK';
 import { useIntegrations } from '@/components/hooks/useIntegrations';
 import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
 
