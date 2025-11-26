@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Dialog as ConfirmDialog, DialogContent as ConfirmDialogContent, DialogHeader as ConfirmDialogHeader, DialogTitle as ConfirmDialogTitle } from "@/components/ui/dialog"; 
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,16 @@ import { DB_KEYS, getData, storeData } from '@/lib/indexedDB';
 
 interface ErrorResponse {
   message?: string;
+}
+
+interface WhatsAppSignupData {
+  phone_number_id: string;
+  waba_id: string;
+  business_id: string;
+  page_ids: string[];
+  catalog_ids: string[];
+  dataset_ids: string[];
+  instagram_account_ids: string[];
 }
 
 // WhatsApp app configuration
@@ -65,6 +75,9 @@ const WhatsAppLoginDialog = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
+  // Store the embedded signup data (waba_id, phone_number_id) temporarily
+  const whatsappSignupDataRef = useRef<WhatsAppSignupData | null>(null);
+  
   const { integrations, loading: integrationsLoading, refreshIntegrations } = useIntegrations();
   const { user } = useUser();
 
@@ -121,25 +134,64 @@ const WhatsAppLoginDialog = () => {
     // Listen for messages from popup window
     const handleMessage = (event: MessageEvent) => {
       console.log("Received message event from WhatsApp window:", event);
-      // Validate origin for security
-      if (event.origin !== window.location.origin) {
+
+      // Allow messages from self (for auth callback) and facebook (for embedded signup events)
+      const isSelf = event.origin === window.location.origin;
+      const isFacebook = event.origin === "https://www.facebook.com" || event.origin === "https://web.facebook.com";
+
+      if (!isSelf && !isFacebook) {
         console.log("Ignored message from unknown origin:", event.origin);
-        return
+        return;
       };
+
+      let data = event.data;
+
+      // Handle Facebook Embedded Signup events (often wrapped in array)
+      if (Array.isArray(data)) {
+        data = data[0];
+      }
+
+      // Check for WA_EMBEDDED_SIGNUP events
+      if (data && data.type === 'WA_EMBEDDED_SIGNUP') {
+        if (data.event === 'FINISH') {
+          console.log("Captured WhatsApp Session Data:", data.data);
+          whatsappSignupDataRef.current = data.data;
+        } else if (data.event === 'CANCEL') {
+          const {current_step} = data.data;
+          console.log("WhatsApp Signup Canceled at ", current_step);
+          toast.info("Connection Canceled", {
+            description: "WhatsApp setup was canceled."
+          });
+          setIsLoading(false);
+        } else if(data.event == 'ERROR') {
+          const {error_message} = data.data;
+          console.log('Error occured in WhatsApp Signup:', error_message);
+          toast.error("Connection Error", {
+            description: `WhatsApp setup encountered an error: ${error_message}`
+          });
+          setIsLoading(false);
+        }
+        return;
+      };
+
       // Handle auth data from popup
-      if (event.data && event.data.type === 'WHATSAPP_AUTH_CALLBACK') {
-        console.log("Processing WhatsApp auth callback data:", event.data);
-        const { code, state } = event.data;
+      if (isSelf && data && data.type === 'WHATSAPP_AUTH_CALLBACK') {
+        console.log("Processing WhatsApp auth callback data:", data);
+        const { code, state } = data;
         console.log("Extracted code and state:", code, state);
         if (code && state === localStorage.getItem('whatsapp_auth_state')) {
           console.log("State matches, handling WhatsApp callback");
           handleWhatsAppCallback(code);
         }
-      }
+      };
     };
     
     window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    console.log('added event listener for whatsapp')
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      console.log('removed event listener for whatsapp')
+    };
   }, []);
 
 
@@ -236,10 +288,13 @@ const WhatsAppLoginDialog = () => {
     try {
       setIsLoading(true);
       
+      const signupData = whatsappSignupDataRef.current;
+
       // Exchange authorization code for access token via backend
       const response = await api.post('/api/whatsapp/auth', { 
           code,
-          redirect_uri: WHATSAPP_REDIRECT_URI
+          redirect_uri: WHATSAPP_REDIRECT_URI,
+          ...signupData
       });
       
       if (response.status === 403) {
