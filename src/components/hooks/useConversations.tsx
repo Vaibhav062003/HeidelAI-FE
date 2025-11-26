@@ -277,7 +277,7 @@ export const useConversations = (status?: "open" | "closed") => {
           });
         });
       } else if (data.type === 'typing_indicator') {
-        console.log("Typing indicator received:", data);
+        // console.log("Typing indicator received:", data);
       } else {
         // Log any other message types for debugging
         console.log("Unhandled WebSocket message type:", data.type, data);

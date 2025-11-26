@@ -1,9 +1,19 @@
 "use client"
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+
+interface WhatsAppSignupData {
+  phone_number_id: string;
+  waba_id: string;
+  business_id: string;
+  page_ids: string[];
+  catalog_ids: string[];
+  dataset_ids: string[];
+  instagram_account_ids: string[];
+}
 
 function WhatsAppCallbackContent() {
   const router = useRouter();
@@ -11,12 +21,78 @@ function WhatsAppCallbackContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState("Processing WhatsApp authorization...");
 
+  const whatsappSignupDataRef = useRef<WhatsAppSignupData | null>(null);
+  
+  useEffect(() => {
+    // Listen for messages from popup window
+    const handleMessage = (event: MessageEvent) => {
+      console.log("Received message event from WhatsApp window in callback page:", event);
+
+      // Allow messages from self (for auth callback) and facebook (for embedded signup events)
+      const isSelf = event.origin === window.location.origin;
+      const isFacebook = event.origin === "https://www.facebook.com" || event.origin === "https://web.facebook.com";
+
+      if (!isSelf && !isFacebook) {
+        console.log("Ignored message from unknown origin in callback page:", event.origin);
+        return;
+      };
+
+      let data = event.data;
+
+      // Handle Facebook Embedded Signup events (often wrapped in array)
+      if (Array.isArray(data)) {
+        data = data[0];
+      }
+
+      // Check for WA_EMBEDDED_SIGNUP events
+      if (data && data.type === 'WA_EMBEDDED_SIGNUP') {
+        if (data.event === 'FINISH') {
+          console.log("Captured WhatsApp Session Data in callback page:", data.data);
+          whatsappSignupDataRef.current = data.data;
+        } else if (data.event === 'CANCEL') {
+          const {current_step} = data.data;
+          console.log("WhatsApp Signup Canceled at callback page:", current_step);
+          toast.info("Connection Canceled", {
+            description: "WhatsApp setup was canceled."
+          });
+        } else if(data.event == 'ERROR') {
+          const {error_message} = data.data;
+          console.log('Error occured in WhatsApp Signup in callback page:', error_message);
+          toast.error("Connection Error", {
+            description: `WhatsApp setup encountered an error: ${error_message}`
+          });
+        }
+        return;
+      };
+
+      // Handle auth data from popup
+      if (isSelf && data && data.type === 'WHATSAPP_AUTH_CALLBACK') {
+        console.log("Processing WhatsApp auth callback data in callback page:", data);
+        const { code, state } = data;
+        console.log("Extracted state values:", {
+          popupReturned: state,
+          expectedLocal: sessionStorage.getItem("whatsapp_auth_state"),
+        });
+        if (code && state === sessionStorage.getItem("whatsapp_auth_state")) {          
+          console.log("State matches, handling WhatsApp callback in callback page");
+        }
+      };
+    };
+    
+    window.addEventListener('message', handleMessage);
+    console.log('added event listener for whatsapp in callback')
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      console.log('removed event listener for whatsapp in callback')
+    };
+  }, []);
+
   useEffect(() => {
     if (!searchParams) return; // early return if searchParams is null
     
     const code = searchParams.get('code');
     const state = searchParams.get('state');
-    const storedState = typeof window !== 'undefined' ? localStorage.getItem('whatsapp_auth_state') : null;
+    const storedState = typeof window !== 'undefined' ? sessionStorage.getItem('whatsapp_auth_state') : null;
     
     // First, handle the case where this page was opened directly (not in popup)
     if (!window.opener) {
