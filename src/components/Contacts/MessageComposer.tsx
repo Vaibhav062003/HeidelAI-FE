@@ -4,11 +4,11 @@ import { createClient } from "@supabase/supabase-js";
 import { WhatsAppTemplateContent } from "./WhatsAppTemplateContent";
 import { WhatsAppTemplate } from "../types/template";
 import { ScrollArea } from "../ui/scroll-area";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import api from "@/lib/session_api";
+// const supabase = createClient(
+//   process.env.NEXT_PUBLIC_SUPABASE_URL!,
+//   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// );
 
 interface MessageData {
   tag?: string;
@@ -45,13 +45,20 @@ export const MessageComposer = ({ onMessageSend, directMode = false, preSelected
     }
   }, [directMode]);
 
-  useEffect(() => {
-    const fetchTags = async () => {
-      const { data, error } = await supabase.from("tags").select("name");
-      if (!error && data) setTags(data.map((tag) => tag.name));
-    };
-    fetchTags();
-  }, []);
+useEffect(() => {
+  const fetchTags = async () => {
+    try {
+      const response = await api.get<{ tags: string[] }>("/api/org/metadata/tags");
+      if (response.data && response.data.tags) {
+        setTags(response.data.tags);
+      }
+    } catch (error) {
+      console.error("Error fetching tags:", error);
+      setTags([]); // Optionally clear tags on error
+    }
+  };
+  fetchTags();
+}, []);
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -295,7 +302,9 @@ export const MessageComposer = ({ onMessageSend, directMode = false, preSelected
         className="flex items-center gap-2 px-4 py-2 bg-white text-black border border-gray-300 rounded-lg hover:border-black-600 transition-colors shadow-sm"
       >
         <MessageSquare className="h-5 w-5" />
-        <span className="font-medium">Message</span>
+          <h3 className="font-sans text-xs font-medium">
+            Message         
+           </h3>
       </button>
 
       {isMessageMenuOpen && (
@@ -306,7 +315,6 @@ export const MessageComposer = ({ onMessageSend, directMode = false, preSelected
           <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl flex">
             <div className="w-1/2 p-6 border-r border-gray-200 flex flex-col">
               <h2 className="text-xl font-semibold mb-6 text-black">Compose Message</h2>
-
               <div className="space-y-6 flex-1">
                 {/* Same form content */}
                 <div>

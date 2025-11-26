@@ -9,27 +9,14 @@ import { ContactForm } from "../Contacts/ContactFormModal";
 import { Spinner } from "../Contacts/Spinner";
 import TagSidebar from "./TagSidebar";
 import api from "@/lib/session_api";
-import { ApiContact, Contact, Tag } from "../types/contacts";
+import { ApiContact, Contact } from "../types/contacts";
+
+type Tag = string;
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
-
-const ContactsDashboard = () => {
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isImporting, setIsImporting] = useState(false);
-  const [importingCount, setImportingCount] = useState(0);
-  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [tagsLoading, setTagsLoading] = useState(true);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
 
     const mapApiContactToContact = (apiContact: ApiContact): Contact => {
     const fullName = apiContact.full_name || "Unknown";
@@ -56,6 +43,20 @@ const ContactsDashboard = () => {
     };
   };
 
+const ContactsDashboard = () => {
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importingCount, setImportingCount] = useState(0);
+  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [tagsLoading, setTagsLoading] = useState(true);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
 const fetchContacts = useCallback(async () => {
   setLoading(true);
@@ -89,7 +90,7 @@ const fetchContacts = useCallback(async () => {
   } finally {
     setLoading(false);
   }
-}, [selectedTag]);
+}, []);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -103,21 +104,17 @@ const fetchContacts = useCallback(async () => {
     fetchContacts();
   }, [selectedTag, fetchContacts]);
 
-  const fetchTags = async () => {
-    setTagsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("tags")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      setTags(data || []);
-    } catch (err) {
-      setError("Failed to load tags");
-    } finally {
-      setTagsLoading(false);
-    }
-  };
+const fetchTags = async () => {
+  setTagsLoading(true);
+  try {
+    const response = await api.get<{ tags: string[] }>("/api/org/metadata/tags");
+    setTags(response.data.tags || []);
+  } catch (err) {
+    setError("Failed to load tags");
+  } finally {
+    setTagsLoading(false);
+  }
+};
 
   const handleFileUpload = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -210,95 +207,97 @@ const fetchContacts = useCallback(async () => {
     }
   };
 
-  const handleSaveContact = useCallback(
-    (newContact: Partial<Contact>) => {
-      const updatedContact = {
-        ...newContact,
-        tags: newContact.tags || [],
-      };
+const handleSaveContact = useCallback(
+  (newContact: Partial<Contact>) => {
+    const updatedContact = {
+      ...newContact,
+      tags: newContact.tags || [],
+    };
 
-      setContacts((prev) => {
-        if (selectedContact?.id) {
-          return prev.map((c) =>
-            c.id === selectedContact.id
-              ? ({ ...c, ...updatedContact } as Contact)
-              : c
-          );
-        }
-        return [
-          ...prev,
-          { ...updatedContact, id: `manual-${Date.now()}` } as Contact,
-        ];
-      });
-      setSelectedContact(null);
-    },
-    [selectedContact]
-  );
-
-  const handleCreateTag = async (name: string, description: string) => {
-    try {
-      const { data: existingTags } = await supabase
-        .from("tags")
-        .select("id")
-        .ilike("name", name);
-
-      if (existingTags && existingTags.length > 0) {
-        throw new Error("Tag name already exists");
+    setContacts((prev) => {
+      if (selectedContact?.id) {
+        return prev.map((c) =>
+          c.id === selectedContact.id
+            ? { ...c, ...updatedContact } as Contact
+            : c
+        );
       }
+      return [
+        ...prev,
+        { ...updatedContact, id: `manual-${Date.now()}` } as Contact,
+      ];
+    });
+      },
+  [selectedContact]
+);
 
-      const { data, error } = await supabase
-        .from("tags")
-        .insert([{ name, tag_description: description }])
-        .select();
-
-      if (error) throw error;
-      setTags((prev) => [data[0], ...prev]);
-    } catch (err) {
-      setError((err as Error).message);
+const handleCreateTag = async (name: string) => {
+  try {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      throw new Error("Tag name is required");
     }
-  };
 
-  const handleEditTag = async (
-    id: string,
-    name: string,
-    description: string
-  ) => {
-    try {
-      const { data: existingTags } = await supabase
-        .from("tags")
-        .select("id")
-        .ilike("name", name)
-        .neq("id", id);
+    await api.patch("/api/org/metadata/tags/add", null, {
+      params: { tag: trimmedName },
+    });
 
-      if (existingTags && existingTags.length > 0) {
-        throw new Error("Tag name already exists");
-      }
+    setTags((prev) =>
+      prev.includes(trimmedName) ? prev : [trimmedName, ...prev]
+    );
+  } catch (err) {
+    setError(
+      err instanceof Error ? err.message : "Failed to create tag"
+    );
+  }
+};
 
-      const { data, error } = await supabase
-        .from("tags")
-        .update({ name, tag_description: description })
-        .eq("id", id)
-        .select();
+  // const handleEditTag = async (
+  //   id: string,
+  //   name: string,
+  //   description: string
+  // ) => {
+  //   try {
+  //     const { data: existingTags } = await supabase
+  //       .from("tags")
+  //       .select("id")
+  //       .ilike("name", name)
+  //       .neq("id", id);
 
-      if (error) throw error;
-      setTags((prev) => prev.map((tag) => (tag.id === id ? data[0] : tag)));
-    } catch (err) {
-      setError((err as Error).message);
+  //     if (existingTags && existingTags.length > 0) {
+  //       throw new Error("Tag name already exists");
+  //     }
+
+  //     const { data, error } = await supabase
+  //       .from("tags")
+  //       .update({ name, tag_description: description })
+  //       .eq("id", id)
+  //       .select();
+
+  //     if (error) throw error;
+  //     setTags((prev) => prev.map((tag) => (tag.id === id ? data[0] : tag)));
+  //   } catch (err) {
+  //     setError((err as Error).message);
+  //   }
+  // };
+
+const handleDeleteTag = async (tagName: string) => {
+  try {
+    if (!window.confirm(`Are you sure you want to delete the tag "${tagName}"?`)) {
+      return;
     }
-  };
 
-  const handleDeleteTag = async (id: string) => {
-    try {
-      if (!window.confirm("Are you sure you want to delete this tag?")) return;
+    await api.patch("/api/org/metadata/tags/remove", null, {
+      params: { tag: tagName },
+    });
 
-      const { error } = await supabase.from("tags").delete().eq("id", id);
-
-      if (error) throw error;
-      setTags((prev) => prev.filter((tag) => tag.id !== id));
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  };
+    setTags((prev) => prev.filter((tag) => tag !== tagName));
+  } catch (err) {
+    setError(
+      err instanceof Error ? err.message : "Failed to delete tag"
+    );
+  }
+};
 
  const filteredContacts = useMemo(() => {
     let filtered = contacts;
@@ -337,7 +336,6 @@ const fetchContacts = useCallback(async () => {
           tags={tags}
           tagsLoading={tagsLoading}
           onCreateTag={handleCreateTag}
-          onEditTag={handleEditTag}
           onDeleteTag={handleDeleteTag}
           onTagSelect={setSelectedTag}
           selectedTag={selectedTag}

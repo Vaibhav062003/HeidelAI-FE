@@ -53,12 +53,12 @@ interface ContactItemProps {
   onDelete: (id: string) => void;
 }
 
-const shouldHideEmail = (email: string): boolean => {
-  if (!email) return false;
+// const shouldHideEmail = (email: string): boolean => {
+//   if (!email) return false;
   
-  const emailLower = email.toLowerCase();
-  return emailLower.includes('Not available');
-};
+//   const emailLower = email.toLowerCase();
+//   return emailLower.includes('Not available');
+// };
 
 const FlagImage = ({ country }: { country: string }) => {
   const countryCode = countryToCodes[country];
@@ -212,122 +212,108 @@ export const ContactItem = ({ contact, onEdit, onDelete }: ContactItemProps) => 
     ? `${countryPrefixes[contact.country] ?? ""} ${contact.phone}`
     : contact.phone;
 
-  const hideEmail = shouldHideEmail(contact.email);
+  const showEmail = contact.email != null && contact.email !== '';
+
+  // const hideEmail = shouldHideEmail(contact.email);
   
 return (
-  <div className="group bg-white rounded-xl shadow-sm p-2 sm:p-4 mb-2 sm:mb-0.5 transition-all border border-gray-100 hover:shadow-lg hover:border-indigo-50">
-    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-4">
-      <ProfileAvatar 
-        firstName={contact.firstName} 
-        lastName={contact.lastName} 
-        profileUrl={contact.profile_url} 
-      />
-      
-      {/* aligned details */}
-      <div className="grid grid-cols-[minmax(150px,200px)_1px_minmax(120px,150px)_1px_minmax(100px,120px)_1px_minmax(80px,100px)_1px_minmax(60px,80px)_1px_minmax(80px,120px)_1px_minmax(80px,150px)] items-center gap-2 sm:gap-3 min-w-0">
-        {/* Customer Name */}
-        <h3 className="text-sm sm:text-base font-semibold text-gray-900 truncate">
-          {contact.firstName} {contact.lastName}
-        </h3>
-        
-        <div className="hidden sm:block w-px h-6 bg-gray-200"></div>
-        
-        {/* Email */}
-        <div className="min-w-0">
-          {!hideEmail ? (
-            <span className="text-xs sm:text-sm text-gray-600 truncate block">
-              {contact.email}
-            </span>
-          ) : (
-            <span className="text-xs text-gray-400"></span>
-          )}
-        </div>
-        
-        <div className="hidden sm:block w-px h-6 bg-gray-200"></div>
-        
-        {/* Company */}
-        <div className="flex items-center gap-1 min-w-0">
-          {contact.username ? (
-            <>
-              <span className="text-indigo-500 text-xs"></span>
-              <span className="text-xs sm:text-sm text-gray-600 truncate">
-                {contact.username}
-              </span>
-            </>
-          ) : (
-            <span className="text-xs text-gray-400"></span>
-          )}
-        </div>
-        
-        <div className="hidden sm:block w-px h-6 bg-gray-200"></div>
-        
-        {/* Phone */}
-        <div className="min-w-0">
-          {formattedPhone ? (
-            <span className="text-xs sm:text-sm text-gray-600 truncate block">
-              {formattedPhone}
-            </span>
-          ) : (
-            <span className="text-xs text-gray-400"></span>
-          )}
-        </div>
-        
-        <div className="hidden sm:block w-px h-6 bg-gray-200"></div>
-        
-        {/* Platform */}
-        <div className="flex items-center justify-center">
-          {contact.platform ? (
-            <PlatformLogo platform={contact.platform} />
-          ) : (
-            <span className="text-xs text-gray-400"></span>
-          )}
-        </div>
-        
-        <div className="hidden sm:block w-px h-6 bg-gray-200"></div>
-        
-        {/* Country Flag */}
-        <div className="flex items-center justify-center">
-          {contact.country ? (
-            <FlagImage country={contact.country} />
-          ) : (
-            <span className="text-xs text-gray-400"></span>
-          )}
-        </div>
-        
-        <div className="hidden sm:block w-px h-6 bg-gray-200"></div>
-        
-        {/* Tags */}
-        <div className="min-w-0">
-          {formattedTags ? (
-            <span className="text-xs sm:text-sm text-indigo-600 truncate block">
-              {formattedTags}
-            </span>
-          ) : (
-            <span className="text-xs text-gray-400"></span>
-          )}
-        </div>
+  <div className="group bg-white rounded-xl shadow-sm p-2 sm:p-3 mb-2 sm:mb-0.5
+                  transition-all border border-gray-100 hover:shadow-lg hover:border-indigo-50
+                  h-[88px] sm:h-[80px]">
+    <div className="flex items-center gap-3 h-full">
+      {/* Profile Avatar */}
+      <div className="flex-shrink-0">
+        <ProfileAvatar 
+          firstName={contact.firstName} 
+          lastName={contact.lastName} 
+          profileUrl={contact.profile_url} 
+        />
       </div>
+      
+      {/* Main Content */}
+<div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5 overflow-hidden">
+  {/* Top Row: Name */}
+  <div className="flex items-center justify-between gap-3">
+    <h3 className="font-sans text-xs font-medium">
+      {contact.firstName} {contact.lastName}
+    </h3>
+  </div>
 
-      {/* Dropdown Menu */}
-      <DropdownMenu>
-        <DropdownMenuTrigger className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex-shrink-0">
-          <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-36">
-          <DropdownMenuItem 
-            onClick={() => onEdit(contact.id)}
-            className="flex items-center px-3 py-2 text-sm text-gray-600 hover:bg-indigo-50 cursor-pointer"
+  {/* Middle Row: Contact Details */}
+  <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
+        {showEmail && contact.email && (
+      <span className="truncate max-w-[180px]">{contact.email}</span>
+    )}
+    {contact.username && (
+      <span className="truncate">@{contact.username}</span>
+    )}
+    {formattedPhone && (
+      <span className="truncate">{formattedPhone}</span>
+    )}
+
+    {/* Tags */}
+    {contact.tags && contact.tags.length > 0 && (
+      <div className="flex gap-1.5 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300 
+                      scrollbar-track-transparent hover:scrollbar-thumb-slate-400 mr-2">
+        {contact.tags.map((tag) => (
+          <span 
+            key={tag} 
+            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                       bg-blue-50 text-blue-700 border border-blue-200
+                       hover:bg-blue-100 whitespace-nowrap flex-shrink-0"
           >
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem 
-            onClick={() => onDelete(contact.id)}
-            className="flex items-center px-3 py-2 text-sm text-red-500 hover:bg-red-50 cursor-pointer"
+            {tag}
+          </span>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {contact.platform && <PlatformLogo platform={contact.platform} />}
+            {contact.country && <FlagImage country={contact.country} />}
+          </div>
+
+      {/* Actions Dropdown */}
+      <div className="flex-shrink-0">
+        <DropdownMenu>
+          <DropdownMenuTrigger 
+            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 
+                       rounded-lg transition-colors
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            aria-label="Contact actions"
           >
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5" />
+          </DropdownMenuTrigger>
+          
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem 
+              onClick={() => onEdit(contact.id)}
+              className="flex items-center px-3 py-2 text-sm text-gray-700 
+                         hover:bg-indigo-50 hover:text-indigo-900 cursor-pointer
+                         focus:bg-indigo-50 focus:text-indigo-900"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit Contact
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem 
+              onClick={() => onDelete(contact.id)}
+              className="flex items-center px-3 py-2 text-sm text-red-600 
+                         hover:bg-red-50 hover:text-red-700 cursor-pointer
+                         focus:bg-red-50 focus:text-red-700"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Delete Contact
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   </div>
 );

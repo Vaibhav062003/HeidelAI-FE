@@ -37,9 +37,9 @@ export interface Contact {
   bio?: string;
 }
 
-export interface Tag {
-  id: string;
-  name: string;
-  tag_description: string;
-  created_at?: string;
-}
+// export interface Tag {
+//   id: string;
+//   name: string;
+//   tag_description: string;
+//   created_at?: string;
+// }

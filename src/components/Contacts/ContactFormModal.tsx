@@ -37,38 +37,27 @@ export const ContactForm: React.FC<ContactFormModalProps> = ({
     tags: Array.isArray(contact?.tags) ? contact.tags : [],
   });
 
-  const [tagsList, setTagsList] = useState<Tag[]>([]);
-  const [loadingTags, setLoadingTags] = useState(true);
+const [tagsList, setTagsList] = useState<string[]>([]);
+const [loadingTags, setLoadingTags] = useState(false);
   const [isTagsOpen, setIsTagsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch tag names from Supabase only
-  useEffect(() => {
-    const fetchTags = async () => {
-      setLoadingTags(true);
-      try {
-        const { data, error } = await supabase
-          .from("tags")
-          .select("name")
-          .order("name", { ascending: true });
-
-        if (error) throw error;
-
-        if (data) {
-          setTagsList(
-            data
-              .filter((tag): tag is { name: string } => !!tag.name)
-              .map((tag) => ({ name: tag.name }))
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching tags:", error);
-      } finally {
-        setLoadingTags(false);
-      }
-    };
-    fetchTags();
-  }, []);
+  // Fetch tag names from Supabase
+useEffect(() => {
+  const fetchTags = async () => {
+    setLoadingTags(true);
+    try {
+      // Use your API instance (axios, fetch, etc.)
+      const response = await api.get<{ tags: string[] }>("/api/org/metadata/tags");
+      setTagsList(response.data.tags || []);
+    } catch (error) {
+      console.error("Error fetching tags:", error);
+    } finally {
+      setLoadingTags(false);
+    }
+  };
+  fetchTags();
+}, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -83,61 +72,73 @@ export const ContactForm: React.FC<ContactFormModalProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (!formData.firstName) {
+    alert("First Name is required");
+    return;
+  }
+
+  try {
+    const contactData = {
+      ...formData,
+    };
+
+    onSave(contactData);
     
-    // Form validation remains the same
-    if (!formData.firstName) {
-      alert("First Name is required");
-      return;
+    onClose();
+    
+  } catch (error) {
+    if (error instanceof Error || error instanceof PostgrestError) {
+      alert(`Error saving contact: ${error.message}`);
+    } else {
+      alert('An unexpected error occurred while saving the contact');
     }
-
-    // Only save form data locally (no DB updates for other fields)
-    try {
-      const contactData = {
-        ...formData,
-      };
-
-      onSave(contactData);
-    } catch (error) {
-      if (error instanceof Error || error instanceof PostgrestError) {
-        alert(`Error saving contact: ${error.message}`);
-      } else {
-        alert('An unexpected error occurred while saving the contact');
-      }
-    }
-  };
+  }
+};
 
   // push tag to API
-  const toggleTag = async (tagName: string) => {
-    const currentTags = Array.isArray(formData.tags) ? formData.tags : [];
+const toggleTag = async (tagName: string) => {
+  setFormData((prevFormData) => {
+    const currentTags = Array.isArray(prevFormData.tags) ? prevFormData.tags : [];
     const isRemoving = currentTags.includes(tagName);
     const newTags = isRemoving
       ? currentTags.filter((name) => name !== tagName)
       : [...currentTags, tagName];
 
-    setFormData({ ...formData, tags: newTags });
+    const optimisticFormData = { ...prevFormData, tags: newTags };
+      onSave(optimisticFormData);
+    
+    (async () => {
+      try {
+        const response = await api.post("/api/contacts/update-categories", {
+          conversation_id: contact?.conversation_id || contact?.id,
+          categories: newTags,
+        });
 
-    // Push only the tag update to the API endpoint
-    try {
-      const response = await api.post("/api/contacts/update-categories", {
-        conversation_id: contact?.conversation_id || contact?.id,
-        categories: newTags,
-      });
-
-      if (response.status === 200 || response.data?.success) {
+        if (!(response.status === 200 || response.data?.success)) {
+          throw new Error("Failed to update categories");
+        }
+        
         console.log("Categories updated successfully");
-      } else {
-        throw new Error("Failed to update categories");
+        
+      } catch (error) {
+        console.error("Error updating categories:", error);
+        alert("Failed to update tags. Please try again.");
+        
+        const revertedFormData = { ...prevFormData, tags: currentTags };
+        setFormData((current) => ({
+          ...current,
+          tags: currentTags,
+        }));
+        onSave(revertedFormData);
       }
-    } catch (error) {
-      console.error("Error updating categories:", error);
-      alert("Failed to update tags. Please try again.");
-      
-      // Revert the tag change on error
-      setFormData({ ...formData, tags: currentTags });
-    }
-  };
+    })();
+
+    return optimisticFormData;
+  });
+};
 
   const countries = [
     "India",
@@ -434,51 +435,51 @@ return (
 
             {/* Tags Dropdown */}
             {isTagsOpen && (
-              <div className="mt-2 bg-white border border-slate-300 rounded-lg shadow-lg 
-                            max-h-60 overflow-y-auto animate-slideDown">
-                {tagsList.length === 0 ? (
-                  <div className="p-8 text-center">
-                    <div className="w-12 h-12 mx-auto mb-3 text-slate-300">
-                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                      </svg>
-                    </div>
-                    <p className="text-slate-500 text-sm">No tags available</p>
-                  </div>
-                ) : (
-                  tagsList.map((tag) => {
-                    const isSelected = formData.tags?.includes(tag.name);
-                    return (
-                      <button
-                        key={tag.name}
-                        type="button"
-                        onClick={() => toggleTag(tag.name)}
-                        className={`w-full px-4 py-3 flex items-center gap-3 text-left
-                                  transition-colors duration-150
-                                  hover:bg-slate-50 active:bg-slate-100
-                                  ${isSelected ? "bg-blue-50" : ""}`}
-                      >
-                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0
-                                      transition-colors duration-150
-                                      ${isSelected 
-                                        ? "bg-blue-500 border-blue-500" 
-                                        : "border-slate-300"}`}
-                        >
-                          {isSelected && (
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-                        <span className={`text-sm ${isSelected ? "font-semibold text-blue-900" : "text-slate-700"}`}>
-                          {tag.name}
-                        </span>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            )}
+  <div className="mt-2 bg-white border border-slate-300 rounded-lg shadow-lg 
+                  max-h-60 overflow-y-auto animate-slideDown">
+    {tagsList.length === 0 ? (
+      <div className="p-8 text-center">
+        <div className="w-12 h-12 mx-auto mb-3 text-slate-300">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+        </div>
+        <p className="text-slate-500 text-sm">No tags available</p>
+      </div>
+    ) : (
+      tagsList.map((tag) => {
+        const isSelected = formData.tags?.includes(tag);
+        return (
+          <button
+            key={tag}
+            type="button"
+            onClick={() => toggleTag(tag)}
+            className={`w-full px-4 py-3 flex items-center gap-3 text-left
+                        transition-colors duration-150
+                        hover:bg-slate-50 active:bg-slate-100
+                        ${isSelected ? "bg-blue-50" : ""}`}
+          >
+            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0
+                            transition-colors duration-150
+                            ${isSelected 
+                              ? "bg-blue-500 border-blue-500" 
+                              : "border-slate-300"}`}
+            >
+              {isSelected && (
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+            <span className={`text-sm ${isSelected ? "font-semibold text-blue-900" : "text-slate-700"}`}>
+              {tag}
+            </span>
+          </button>
+        );
+      })
+    )}
+  </div>
+)}
             <p className="text-xs text-slate-500 mt-1.5">
               Select tags to categorize this contact
             </p>

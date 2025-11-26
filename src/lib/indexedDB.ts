@@ -360,7 +360,8 @@ export const DB_KEYS = {
   INTEGRATIONS: {
     INSTAGRAM: "instagram_connection",
     INSTAGRAM_POSTS: "instagram_posts",
-    WHATSAPP: "whatsapp_connection"
+    WHATSAPP: "whatsapp_connection",
+    WHATSAPP_DETAILS: "whatsapp_details"
   },
   USER_PREFERENCES: {
     THEME: "theme_preference",
