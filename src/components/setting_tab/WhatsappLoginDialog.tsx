@@ -12,6 +12,13 @@ import { useOrganization, useUser } from '@clerk/nextjs';
 import { useIntegrations, WhatsappData } from '../hooks/useIntegrations';
 import { DB_KEYS, getData, storeData } from '@/lib/indexedDB';
 
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    FB: any;
+    fbAsyncInit: () => void;
+  }
+}
 interface ErrorResponse {
   message?: string;
 }
@@ -85,6 +92,26 @@ const WhatsAppLoginDialog = () => {
     window.crypto.getRandomValues(new Uint32Array(1))[0].toString(36)
   );
 
+  // Load and Initialize Facebook SDK
+  useEffect(() => {
+    window.fbAsyncInit = function() {
+      window.FB.init({
+        appId            : WHATSAPP_CLIENT_ID,
+        autoLogAppEvents : true,
+        xfbml            : true,
+        version          : 'v24.0'
+      });
+    };
+
+    // Load the SDK asynchronously if not already loaded
+    if (!document.getElementById('facebook-jssdk')) {
+      const js = document.createElement('script');
+      js.id = 'facebook-jssdk';
+      js.src = "https://connect.facebook.net/en_US/sdk.js";
+      document.body.appendChild(js);
+    }
+  }, []);
+
   useEffect(() => {
     const checkRole = async () => {
       if (organization && user) {
@@ -116,7 +143,6 @@ const WhatsAppLoginDialog = () => {
     }
   };
 
-
   // Check if user has already connected WhatsApp
   useEffect(() => {
     if (!integrationsLoading) {
@@ -137,61 +163,46 @@ const WhatsAppLoginDialog = () => {
   useEffect(() => {
     // Listen for messages from popup window
     const handleMessage = (event: MessageEvent) => {
-      console.log("Received message event from WhatsApp window:", event);
-
-      // Allow messages from self (for auth callback) and facebook (for embedded signup events)
-      const isSelf = event.origin === window.location.origin;
-      const isFacebook = event.origin === "https://www.facebook.com" || event.origin === "https://web.facebook.com";
-
-      if (!isSelf && !isFacebook) {
-        console.log("Ignored message from unknown origin:", event.origin);
+      // Security check: only accept messages from Facebook
+      if (event.origin !== "https://www.facebook.com" && event.origin !== "https://web.facebook.com") {
         return;
-      };
-
-      let data = event.data;
-
-      // Handle Facebook Embedded Signup events (often wrapped in array)
-      if (Array.isArray(data)) {
-        data = data[0];
       }
 
-      // Check for WA_EMBEDDED_SIGNUP events
-      if (data && data.type === 'WA_EMBEDDED_SIGNUP') {
-        if (data.event === 'FINISH') {
-          console.log("Captured WhatsApp Session Data:", data.data);
-          whatsappSignupDataRef.current = data.data;
-        } else if (data.event === 'CANCEL') {
-          const {current_step} = data.data;
-          console.log("WhatsApp Signup Canceled at ", current_step);
-          toast.info("Connection Canceled", {
-            description: "WhatsApp setup was canceled."
-          });
-          setIsLoading(false);
-        } else if(data.event == 'ERROR') {
-          const {error_message} = data.data;
-          console.log('Error occured in WhatsApp Signup:', error_message);
-          toast.error("Connection Error", {
-            description: `WhatsApp setup encountered an error: ${error_message}`
-          });
-          setIsLoading(false);
+      try {
+        let data = event.data;
+        
+        if (typeof data === 'string') {
+          try {
+            data = JSON.parse(data);
+          } catch (e) {
+            // Not JSON, ignore
+            return;
+          }
         }
-        return;
-      };
 
-      // Handle auth data from popup
-      if (isSelf && data && data.type === 'WHATSAPP_AUTH_CALLBACK') {
-        console.log("Processing WhatsApp auth callback data:", data);
-        const { code, state } = data;
-        console.log("Extracted state values:", {
-          popupReturned: state,
-          expectedLocal: sessionStorage.getItem("whatsapp_auth_state"),
-          expectedMemory: oauthState
-        });
-        if (code && state === sessionStorage.getItem("whatsapp_auth_state")) {          
-          console.log("State matches, handling WhatsApp callback");
-          handleWhatsAppCallback(code);
+        if (data.type === 'WA_EMBEDDED_SIGNUP') {
+          if (data.event === 'FINISH') {
+            console.log("Captured WhatsApp Session Data:", data.data);
+            whatsappSignupDataRef.current = data.data as WhatsAppSignupData;
+          } else if (data.event === 'CANCEL') {
+            const { current_step } = data.data || {};
+            console.log("WhatsApp Signup Canceled at", current_step);
+            toast.info("Connection Canceled", {
+              description: "WhatsApp setup was canceled."
+            });
+            setIsLoading(false);
+          } else if (data.event === 'ERROR') {
+            const { error_message } = data.data || {};
+            console.log('Error occurred in WhatsApp Signup:', error_message);
+            toast.error("Connection Error", {
+              description: `WhatsApp setup encountered an error: ${error_message}`
+            });
+            setIsLoading(false);
+          }
         }
-      };
+      } catch (e) {
+        console.log('Error processing message event', e);
+      }
     };
     
     window.addEventListener('message', handleMessage);
@@ -207,87 +218,35 @@ const WhatsAppLoginDialog = () => {
   const handleWhatsAppLogin = () => {
     setIsLoading(true);
 
-    try {
-      // Generate cryptographically secure state
-      sessionStorage.setItem("whatsapp_auth_state", oauthState);
+    if (!window.FB) {
+      toast.error("Facebook SDK not loaded", {
+        description: "Please refresh the page and try again."
+      });
+      setIsLoading(false);
+      return;
+    }
 
-      // Build WhatsApp authorization URL
-      const authUrl = new URL('https://www.facebook.com/v23.0/dialog/oauth');
-      authUrl.searchParams.append('display', 'popup');
-      authUrl.searchParams.append('client_id', WHATSAPP_CLIENT_ID);
-      authUrl.searchParams.append('redirect_uri', WHATSAPP_REDIRECT_URI);
-      authUrl.searchParams.append('config_id', WHATSAPP_CONFIG_ID);
-      authUrl.searchParams.append('response_type', 'code');
-      authUrl.searchParams.append('state', oauthState);
-      authUrl.searchParams.append('auth_type', '');
-      authUrl.searchParams.append('override_default_response_type', 'true');
-      authUrl.searchParams.append('extras', JSON.stringify({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    window.FB.login((response: any) => {
+      if (response.authResponse) {
+        const code = response.authResponse.code;
+        console.log("FB Login Success, Code received");
+        handleWhatsAppCallback(code);
+      } else {
+        console.log('User cancelled login or did not fully authorize.');
+        setIsLoading(false);
+        toast.info("Login Cancelled");
+      }
+    }, {
+      config_id: WHATSAPP_CONFIG_ID,
+      response_type: 'code',
+      override_default_response_type: true,
+      extras: {
         "featureType": "whatsapp_business_app_onboarding",
         "sessionInfoVersion": "3",
         "version": "v3"
-      }));
-      
-      // Open popup window
-      const width = 600;
-      const height = 700;
-      const left = window.innerWidth / 2 - width / 2;
-      const top = window.innerHeight / 2 - height / 2;
-      
-      const popup = window.open(
-        authUrl.toString(),
-        'whatsapp_auth_popup',
-        `width=${width},height=${height},top=${top},left=${left},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`
-      );
-
-      // Create a checker that will periodically check if the popup is closed or redirected
-      const popupChecker = setInterval( async () => {
-        if (!popup || popup.closed) {
-          clearInterval(popupChecker);
-          setIsLoading(false);
-
-          const whatsappUserId = await getWhatsappUserId();
-          if (!whatsappUserId) {
-            toast.info("Authentication Canceled", {
-              description: "WhatsApp connection was canceled."
-            });
-          }
-        } else {
-          // Try to detect the redirect to callback URL within the popup
-          try {
-            // This will throw if popup is on a different origin due to same-origin policy
-            const currentUrl = popup.location.href;
-            
-            // If we can access the URL and it contains our callback
-            if (currentUrl.includes('auth/whatsapp/callback')) {
-              const urlObj = new URL(currentUrl);
-              const code = urlObj.searchParams.get('code');
-              const state = urlObj.searchParams.get('state');
-              
-              if (code && state === localStorage.getItem('whatsapp_auth_state')) {
-                // Process the code
-                handleWhatsAppCallback(code);
-                // Close the popup
-                popup.close();
-                clearInterval(popupChecker);
-              }
-            }
-          } catch (e) {
-            // Cannot access popup location due to same-origin policy
-            // This is normal when the popup is on the OAuth provider domain
-          }
-        }
-      }, 500);
-
-      setIsLoading(true);
-    } 
-    catch (error) {
-      console.error('Error initiating WhatsApp login:', error);
-      setIsLoading(false);
-      toast.error("Connection Failed", {
-        description: "Could not initiate WhatsApp login. Please try again later."
-      });
-    }
-
+      }
+    });
   };
 
   // Process the auth callback code
@@ -305,20 +264,17 @@ const WhatsAppLoginDialog = () => {
       });
       
       if (response.status === 403) {
+        // ...existing code...
         const errorData = response.data as ErrorResponse;
-        const errorMessage = errorData.message || "This WhatsApp account is already connected to another organization. If you think this is incorrect, please contact us at support@heidelai.com for further assistance.";
+        const errorMessage = errorData.message || "This WhatsApp account is already connected to another organization.";
         throw new Error(errorMessage);
       }
 
       if (response.status !== 200 || (typeof response.data === "object" && response.data.status === "error")) {
+        // ...existing code...
         let errorMessage = "Failed to connect WhatsApp account";
-        const errorData = response.data as ErrorResponse | { status?: string; message?: string } | string;
-
-        if (typeof errorData === "object" && errorData.message) {
-          errorMessage = errorData.message;
-        } else if (typeof errorData === "string") {
-          errorMessage = errorData;
-        }
+        const errorData = response.data as ErrorResponse;
+        if (errorData?.message) errorMessage = errorData.message;
         throw new Error(errorMessage);
       }
 
@@ -343,19 +299,19 @@ const WhatsAppLoginDialog = () => {
         businessInfo: profileData.business_info || {}
       });
       
-      // Replace the ui/toast with sonner toast
       toast.success("WhatsApp connected successfully!", {
         description: "You can now receive and manage WhatsApp messages in HeidelAI"
       });
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       console.error('Error processing WhatsApp auth callback:', error);
       toast.error("Connection Failed", {
-        description: "Could not connect WhatsApp account. Please try again."
+        description: error.message || "Could not connect WhatsApp account. Please try again."
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   // Function to disconnect WhatsApp account
   const disconnectWhatsApp = async () => {
