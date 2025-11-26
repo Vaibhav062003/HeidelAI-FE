@@ -730,6 +730,7 @@ const ChatView = ({
   const audioChunksRef = useRef<Blob[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const typingThrottleRef = useRef<number>(0);
 
   const { reminders = [], refetchReminders } = useReminders(
     selectedConversationId
@@ -832,6 +833,15 @@ const ChatView = ({
 
     fetchCannedResponses();
   }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  setMessage(e.target.value);
+  const now = Date.now();
+  if (now - typingThrottleRef.current > 100) {
+    handleTyping();
+    typingThrottleRef.current = now;
+  }
+};
 
   useEffect(() => {
     if (message.startsWith("/")) {
@@ -1528,7 +1538,7 @@ const ChatView = ({
   }, [selectedConversationId]);
 
   const sendFn = (payload: Record<string, unknown>) => {
-    console.log("🚀 Trying to send:", payload, wsRef.current?.readyState);
+    // console.log("TypingIndicator payload sent to backend:", payload);
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       const msg = JSON.stringify(payload);
       wsRef.current.send(msg);
@@ -2279,11 +2289,11 @@ const ChatView = ({
                       </span>
                     ))}
                   </div>
-                  <span>{typingUsers.size === 1 ? "is" : "are"} typing...</span>
+                  <span>{typingUsers.size === 1 ? "is" : "are"} typing</span>
                   <div className="flex gap-1">
                     <span className="animate-bounce">.</span>
                     <span className="animate-bounce delay-100">.</span>
-                    <span className="animate-bounce delay-200">.</span>
+                    <span className="animate-bounce delay-200">.</span> 
                   </div>
                 </div>
               )}
@@ -2338,10 +2348,7 @@ const ChatView = ({
                     <textarea
                       ref={textareaRef}
                       value={message}
-                      onChange={(e) => {
-                        setMessage(e.target.value)
-                        handleTyping()
-                      }}
+                      onChange={handleInputChange}
                       onKeyDown={handleKeyDown}
                       placeholder={
                         mode === "reply"
