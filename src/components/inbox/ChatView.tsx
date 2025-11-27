@@ -630,7 +630,7 @@ const MessageItem = memo(
     isLast,
     index,
     isLatest,
-    isReplyMessage
+    isReplyMessage,
   }: {
     message: Message;
     isLast: boolean;
@@ -651,36 +651,45 @@ const MessageItem = memo(
       );
     }
 
-  return (
-    <>
-      <div
-        className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${message.role === "customer"
-            ? `bg-white/90 backdrop-blur-sm ${isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"} text-gray-900 border-gray-200/60`
-            : `bg-blue-600/90 backdrop-blur-sm ${isReplyMessage ? "rounded-tr-lg" : "rounded-br-lg"} text-white border-blue-500/60`
+    return (
+      <>
+        <div
+          className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${
+            message.role === "customer"
+              ? `bg-white/90 backdrop-blur-sm ${
+                  isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"
+                } text-gray-900 border-gray-200/60`
+              : `bg-blue-600/90 backdrop-blur-sm ${
+                  isReplyMessage ? "rounded-tr-lg" : "rounded-br-lg"
+                } text-white border-blue-500/60`
           }`}
-        style={{ wordBreak: "break-word" }}
-      >
-        <div className="break-words">
-          <p className="text-sm leading-relaxed">{message.content}</p>
-        </div>
-        <div className="flex justify-end mt-2">
-          <span
-            className={`text-xs ${message.role === "customer" ? "text-gray-500" : "text-white/70"
+          style={{ wordBreak: "break-word" }}
+        >
+          <div className="break-words">
+            <p className="text-sm leading-relaxed">{message.content}</p>
+          </div>
+          <div className="flex justify-end mt-2">
+            <span
+              className={`text-xs ${
+                message.role === "customer" ? "text-gray-500" : "text-white/70"
               }`}
-          >
-            {formatMessageTime(message.timestamp)}
-          </span>
+            >
+              {formatMessageTime(message.timestamp)}
+            </span>
+          </div>
         </div>
-      </div>
-
-      
-    </>
-  );
-}, (prevProps, nextProps) => {
-  return prevProps.message.id === nextProps.message.id &&
-    prevProps.isLast === nextProps.isLast &&
-    JSON.stringify(prevProps.message.reaction) === JSON.stringify(nextProps.message.reaction);
-});
+      </>
+    );
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.message.id === nextProps.message.id &&
+      prevProps.isLast === nextProps.isLast &&
+      JSON.stringify(prevProps.message.reaction) ===
+        JSON.stringify(nextProps.message.reaction)
+    );
+  }
+);
 MessageItem.displayName = "MessageItem";
 
 const ChatView = ({
@@ -690,7 +699,7 @@ const ChatView = ({
   isRightSidebarVisible,
   onOpenRightSidebar,
 }: ChatViewProps) => {
-  const {user, isLoaded} = useUser();
+  const { user, isLoaded } = useUser();
   const [isRecording, setIsRecording] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
   const [isAIEnabled, setIsAIEnabled] = useState(false);
@@ -750,9 +759,6 @@ const ChatView = ({
   const [activeMediaType, setActiveMediaType] = useState<
     "reel" | "story" | "video" | null
   >(null);
-
- 
-
 
   const handlePlay = (id: string, type: "reel" | "story" | "video") => {
     setActiveMediaId(id);
@@ -835,13 +841,13 @@ const ChatView = ({
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-  setMessage(e.target.value);
-  const now = Date.now();
-  if (now - typingThrottleRef.current > 100) {
-    handleTyping();
-    typingThrottleRef.current = now;
-  }
-};
+    setMessage(e.target.value);
+    const now = Date.now();
+    if (now - typingThrottleRef.current > 100) {
+      handleTyping();
+      typingThrottleRef.current = now;
+    }
+  };
 
   useEffect(() => {
     if (message.startsWith("/")) {
@@ -1384,72 +1390,98 @@ const ChatView = ({
             );
           };
 
-        ws.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          console.log("ChatView: Instagram WebSocket received message: ", data);
+          ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log(
+              "ChatView: Instagram WebSocket received message: ",
+              data
+            );
 
-          // Handle typing indicators
+            // Handle typing indicators
 
-          if (data.type === 'typing_indicator') {
-            const myClientId = localStorage.getItem('chat_client_id');
-            // Only show typing if it's for this conversation
+            if (data.type === "typing_indicator") {
+              const myClientId = localStorage.getItem("chat_client_id");
+              // Only show typing if it's for this conversation
+              if (
+                data.agent_id !== myClientId &&
+                data.conversation_id === selectedConversationId
+              ) {
+                if (data.is_typing) {
+                  setTypingUsers((prev) => {
+                    const next = new Map(prev);
+                    next.set(data.agent_id, {
+                      agent_name: data.user,
+                      timestamp: Date.now(),
+                    });
+                    return next;
+                  });
+                } else {
+                  setTypingUsers((prev) => {
+                    const next = new Map(prev);
+                    next.delete(data.agent_id);
+                    return next;
+                  });
+                }
+              }
+            }
+
             if (
-              data.agent_id !== myClientId &&
+              data.type === "new_message" &&
+              data.message.conversation_id === selectedConversationId
+            ) {
+              console.log(
+                "ChatView: new_message event type ✅ && data conv_id: ",
+                data.message.conversation_id
+              );
+
+              // Check if this message already exists in the messages array to avoid duplicates
+              const messageExists = messages.some(
+                (msg) =>
+                  msg.id === data.message.id ||
+                  (msg.content === data.message.content &&
+                    msg.timestamp === data.message.timestamp &&
+                    msg.sender_id === data.message.sender_id)
+              );
+
+              // Only add the message if it's not already in the messages array
+              if (!messageExists) {
+                setMessages((prev) => [...prev, data.message]);
+              }
+            }
+
+            if (
+              data.type === "message_reaction" &&
+              data.message.conversation_id === selectedConversationId
+            ) {
+              const updatedMessage = data.message;
+
+              setMessages((prev) =>
+                prev.map((message) => {
+                  if (
+                    message.id === updatedMessage.message_id ||
+                    message.id === updatedMessage.id
+                  ) {
+                    return {
+                      ...message,
+                      reaction: updatedMessage.reaction,
+                    };
+                  }
+                  return message;
+                })
+              );
+
+              console.log(
+                `ChatView: Reaction updated for message ${
+                  updatedMessage.message_id || updatedMessage.id
+                }`
+              );
+            } else if (
+              data.type === "message_deleted" &&
               data.conversation_id === selectedConversationId
             ) {
-              if (data.is_typing) {
-                setTypingUsers(prev => {
-                  const next = new Map(prev);
-                  next.set(data.agent_id, { agent_name: data.user, timestamp: Date.now() });
-                  return next;
-                });
-              } else {
-                setTypingUsers(prev => {
-                  const next = new Map(prev);
-                  next.delete(data.agent_id);
-                  return next;
-                });
-              }
-            }
-          }
-
-          if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
-            console.log("ChatView: new_message event type ✅ && data conv_id: ", data.message.conversation_id);
-
-            // Check if this message already exists in the messages array to avoid duplicates
-            const messageExists = messages.some(msg =>
-              msg.id === data.message.id ||
-              (msg.content === data.message.content &&
-                msg.timestamp === data.message.timestamp &&
-                msg.sender_id === data.message.sender_id)
-            );
-
-            // Only add the message if it's not already in the messages array
-            if (!messageExists) {
-              setMessages(prev => [...prev, data.message]);
-            }
-          }
-
-          if (data.type === 'message_reaction' && data.message.conversation_id === selectedConversationId) {
-            const updatedMessage = data.message;
-            
-            setMessages(prev => prev.map(message => {
-              if (message.id === updatedMessage.message_id || message.id === updatedMessage.id) {
-                return {
-                  ...message,
-                  reaction: updatedMessage.reaction
-                };
-              }
-              return message;
-            }));
-
-            console.log(`ChatView: Reaction updated for message ${updatedMessage.message_id || updatedMessage.id}`);
-          }
-
-          else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
-            setMessages(prev =>
-              prev.filter(msg => msg.id !== data.message_id)
-            );
+              setMessages((prev) =>
+                prev.filter((msg) => msg.id !== data.message_id)
+              );
 
               console.log(
                 `ChatView: Message with ID ${data.message_id} was deleted`
@@ -2107,36 +2139,42 @@ const ChatView = ({
                   />
                 </div>
 
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsFileModalOpen(false);
-                    setSelectedFile(null);
-                    setFileCaption("");
-                  }}
-                  disabled={uploading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  disabled={!selectedFile || uploading}
-                  onClick={() => handleFileUpload(selectedFile, selectedConversationId, fileCaption)}
-                >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Sending...
-                    </>
-                  ) : (
-                    'Send'
-                  )}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsFileModalOpen(false);
+                      setSelectedFile(null);
+                      setFileCaption("");
+                    }}
+                    disabled={uploading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={!selectedFile || uploading}
+                    onClick={() =>
+                      handleFileUpload(
+                        selectedFile,
+                        selectedConversationId,
+                        fileCaption
+                      )
+                    }
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Sending...
+                      </>
+                    ) : (
+                      "Send"
+                    )}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             <ReminderDialog
               open={showReminder}
@@ -2149,97 +2187,143 @@ const ChatView = ({
               conversationId={selectedConversationId}
             />
 
-          {/* Messages Area */}
-          <ScrollArea
-            ref={scrollAreaRef}
-            className="flex-1 h-full px-3 py-0.1 bg-gray-50"
-          >
-            <div className="space-y-3 max-w-full pb-4 sm:pb-0">
-              
+            {/* Messages Area */}
+            <ScrollArea
+              ref={scrollAreaRef}
+              className="flex-1 h-full px-3 py-0.1 bg-gray-50"
+            >
+              <div className="space-y-3 max-w-full pb-4 sm:pb-0">
                 <>
                   {messages.map((message, index) => {
                     const latestMediaMessage = [...messages]
                       .reverse()
-                      .find((m) => m.type === "ig_reel" || m.type === "ig_story");
+                      .find(
+                        (m) => m.type === "ig_reel" || m.type === "ig_story"
+                      );
 
-                      const latestMediaId = latestMediaMessage?.payload?.reel_video_id || latestMediaMessage?.payload?.story_media_id;
+                    const latestMediaId =
+                      latestMediaMessage?.payload?.reel_video_id ||
+                      latestMediaMessage?.payload?.story_media_id;
 
-                      const isLatest =
-                        (message.type === "ig_reel" &&
-                          message.payload?.reel_video_id === latestMediaId) ||
-                        (message.type === "ig_story" &&
-                          message.payload?.story_media_id === latestMediaId);
-                      return (
-                         <div
-                          key={message.id}
-                          className="relative group w-full message-item"
+                    const isLatest =
+                      (message.type === "ig_reel" &&
+                        message.payload?.reel_video_id === latestMediaId) ||
+                      (message.type === "ig_story" &&
+                        message.payload?.story_media_id === latestMediaId);
+                    return (
+                      <div
+                        key={message.id}
+                        className="relative group w-full message-item"
+                      >
+                        <div
+                          className={`flex ${
+                            message.role === "customer"
+                              ? "justify-start"
+                              : "justify-end"
+                          }`}
+                        >
+                          <div
+                            className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${
+                              message.role === "customer"
+                                ? "items-start"
+                                : "items-end"
+                            }`}
                           >
-                          <div className={`flex ${message.role === "customer" ? "justify-start" : "justify-end"}`}>
-                            <div
-                              className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === "customer" ? "items-start" : "items-end"
-                                }`}
+                            <MessageWrapper
+                              message={message}
+                              index={index}
+                              allMessages={messages}
                             >
-                              <MessageWrapper message={message} index={index} allMessages={messages}>
-                                {/* IG Media Messages */}
-                                <LazyMediaLoader key={index} index={index}>
-                                  {/* Render IG Posts */}
-                                  {message.type === "share" && message.payload && (
+                              {/* IG Media Messages */}
+                              <LazyMediaLoader key={index} index={index}>
+                                {/* Render IG Posts */}
+                                {message.type === "share" &&
+                                  message.payload && (
                                     <InstagramPost
                                       mediaUrl={message.payload.url}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
                                     />
                                   )}
 
-                                  {/* Render IG Reels */}
-                                  {message.type === "ig_reel" && message.payload && (
+                                {/* Render IG Reels */}
+                                {message.type === "ig_reel" &&
+                                  message.payload && (
                                     <InstagramReel
                                       key={index}
                                       id={message.payload.reel_video_id}
                                       reelVideoUrl={message.payload.url}
                                       title={message.payload.caption}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
                                       viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
                                       isLatest={isLatest}
                                       isActive={
                                         activeMediaType === "reel" &&
-                                        activeMediaId === message.payload.reel_video_id
+                                        activeMediaId ===
+                                          message.payload.reel_video_id
                                       }
                                       onPlay={(id) => handlePlay(id, "reel")} // stops others
                                       isMuted={globalMuted}
                                       onMuteToggle={handleMuteToggle}
-                                      isAgent={message.role.toLowerCase() === "agent"}
+                                      isAgent={
+                                        message.role.toLowerCase() === "agent"
+                                      }
                                     />
                                   )}
 
-                                  {/* Render IG Story */}
-                                  {(message.type === "ig_story" || message.type === "story_reply") && message.payload && (
+                                {/* Render IG Story */}
+                                {(message.type === "ig_story" ||
+                                  message.type === "story_reply") &&
+                                  message.payload && (
                                     <InstagramStory
                                       id={message.payload.story_media_id}
                                       sharedBy="You"
                                       storyOwnerName={"Instagram User"}
-                                      storyMediaUrl={message.payload.story_media_url}
+                                      storyMediaUrl={
+                                        message.payload.story_media_url
+                                      }
                                       isActive={
                                         activeMediaType === "story" &&
-                                        activeMediaId === message.payload.story_media_id
+                                        activeMediaId ===
+                                          message.payload.story_media_id
                                       } // only one plays
                                       onPlay={(id) => handlePlay(id, "story")}
                                       isMuted={globalMuted}
                                       isLatest={isLatest}
-                                      onMuteToggle={(muted) => setGlobalMuted(muted)}
-                                      isAgent={message.role.toLowerCase() === "agent"}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      onMuteToggle={(muted) =>
+                                        setGlobalMuted(muted)
+                                      }
+                                      isAgent={
+                                        message.role.toLowerCase() === "agent"
+                                      }
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
                                       content={message.content}
-                                      storyOwnerUsername={message.payload.owner_username}
+                                      storyOwnerUsername={
+                                        message.payload.owner_username
+                                      }
                                       type={message.type}
-                                      />
+                                    />
                                   )}
 
-                                  {/* Render Images / Videos */}
-                                  {(message.type === "image" || message.type === "video") && message.payload && (
+                                {/* Render Images / Videos */}
+                                {(message.type === "image" ||
+                                  message.type === "video") &&
+                                  message.payload && (
                                     <MediaMessage
-                                      type={message.type === "image" ? "image" : "video"}
+                                      type={
+                                        message.type === "image"
+                                          ? "image"
+                                          : "video"
+                                      }
                                       url={message.payload.url}
-                                      isAgent={message.role.toLowerCase() === "agent"}
+                                      isAgent={
+                                        message.role.toLowerCase() === "agent"
+                                      }
                                       isLatest={isLatest}
                                       isActive={
                                         activeMediaType === "video" &&
@@ -2247,54 +2331,108 @@ const ChatView = ({
                                       }
                                       onPlay={(id) => handlePlay(id, "video")}
                                       isMuted={globalMuted}
-                                      onMuteToggle={(muted) => setGlobalMuted(muted)}
+                                      onMuteToggle={(muted) =>
+                                        setGlobalMuted(muted)
+                                      }
                                       id={message.id}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
                                     />
                                   )}
-                                </LazyMediaLoader>
+                              </LazyMediaLoader>
 
-                                {/* Normal Messages */}
-                                {!["ig_story", "story_reply", "ig_reel", "share", "image", "video"].includes(message.type ?? "") && (
-                                  <MessageItem
-                                    key={message.id}
-                                    message={message}
-                                    index={index}
-                                    isLatest={isLatest}
-                                    isLast={index === messages.length - 1}
-                                    isReplyMessage={message.type == "message_reply"}
-                                  />
-                                )}
-                              </MessageWrapper>
+                              {/* Normal Messages */}
+                              {![
+                                "ig_story",
+                                "story_reply",
+                                "ig_reel",
+                                "share",
+                                "image",
+                                "video",
+                              ].includes(message.type ?? "") && (
+                                <MessageItem
+                                  key={message.id}
+                                  message={message}
+                                  index={index}
+                                  isLatest={isLatest}
+                                  isLast={index === messages.length - 1}
+                                  isReplyMessage={
+                                    message.type == "message_reply"
+                                  }
+                                />
+                              )}
+                            </MessageWrapper>
                           </div>
                         </div>
                       </div>
-                      )
-                    })}
+                    );
+                  })}
                   <div ref={lastMessageRef} />
                 </>
-            </div>
-          </ScrollArea>
+              </div>
+            </ScrollArea>
 
             {/* Input Section */}
-            <div className="flex-shrink-0 mb-3 bg-gray-50">
+            <div className="flex-shrink-0 mb-3">
               {/* Typing Users */}
               {typingUsers.size > 0 && (
-                <div className="flex items-center gap-2 text-sm text-gray-500 p-2">
-                  <div className="flex gap-1">
-                    {Array.from(typingUsers.values()).map((user, index) => (
-                      <span key={index}>
-                        {user.agent_name}
-                        {index < typingUsers.size - 1 ? "," : ""}
-                      </span>
-                    ))}
+                <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-5 py-2 rounded-xl border border-white/10 shadow-sm animate-fadeIn">
+                  {/* List of users typing */}
+                  <div className="flex items-center gap-x-2 flex-wrap text-sm">
+                    {Array.from(typingUsers.values()).map((user, index) => {
+                      const initials = user.agent_name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase();
+
+                      const bgColor = `hsl(${
+                        (user.agent_name.length * 37) % 360
+                      }, 70%, 55%)`; // unique color
+
+                      return (
+                        <span key={index} className="inline-flex items-center gap-2">
+                          {/* Avatar: image initials */}
+                            <div
+                              className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                              style={{ backgroundColor: bgColor }}
+                            >
+                              {initials}
+                            </div>
+                          {/* Name */}
+                          <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                            {user.agent_name}
+                          </span>
+
+                          {index < typingUsers.size - 1 && (
+                            <span className="text-gray-500 text-base">,</span>
+                          )}
+                        </span>
+                      );
+                    })}
+
+                    <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent ml-1">
+                      {typingUsers.size === 1 ? "is typing" : "are typing"}
+                    </span>
                   </div>
-                  <span>{typingUsers.size === 1 ? "is" : "are"} typing</span>
-                  <div className="flex gap-1">
-                    <span className="animate-bounce">.</span>
-                    <span className="animate-bounce delay-100">.</span>
-                    <span className="animate-bounce delay-200">.</span> 
+
+                  {/* Animated dots */}
+                  <div className="flex items-center gap-1 ml-1">
+                    <span className="w-2 h-2 bg-gradient-to-br from-pink-400 to-purple-400 rounded-full animate-bounce delay-0"></span>
+                    <span className="w-2 h-2 bg-gradient-to-br from-purple-400 to-cyan-400 rounded-full animate-bounce delay-150"></span>
+                    <span className="w-2 h-2 bg-gradient-to-br from-cyan-400 to-pink-400 rounded-full animate-bounce delay-300"></span>
                   </div>
+
+                  <style>{`
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.25s ease-out forwards;
+      }
+    `}</style>
                 </div>
               )}
 
