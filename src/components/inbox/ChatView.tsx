@@ -2410,7 +2410,6 @@ const ChatView = ({
                         </span>
                       );
                     })}
-
                     <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent ml-1">
                       {typingUsers.size === 1 ? "is typing" : "are typing"}
                     </span>
