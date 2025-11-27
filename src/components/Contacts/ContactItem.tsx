@@ -53,16 +53,12 @@ interface ContactItemProps {
   onDelete: (id: string) => void;
 }
 
-const shouldHideEmail = (email: string): boolean => {
-  if (!email) return false;
+// const shouldHideEmail = (email: string): boolean => {
+//   if (!email) return false;
   
-  const emailLower = email.toLowerCase();
-  return emailLower.includes('@whatsapp.user') || 
-         emailLower.includes('@instagram.user') ||
-         emailLower.includes('@telegram.user') ||
-         emailLower.includes('@facebook.user') ||
-         emailLower.includes('@discord.user');
-};
+//   const emailLower = email.toLowerCase();
+//   return emailLower.includes('Not available');
+// };
 
 const FlagImage = ({ country }: { country: string }) => {
   const countryCode = countryToCodes[country];
@@ -176,146 +172,151 @@ const PlatformLogo = ({ platform }: { platform: string }) => {
   return <MessageSquare className="w-4 h-4 text-gray-500" />;
 };
 
-const ProfileAvatar = ({ firstName, lastName }: { firstName: string; lastName?: string }) => {
-  const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
-  const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
-  const initials = lastInitial ? `${firstInitial}${lastInitial}` : firstInitial;
-  const colorIndex = firstName.charCodeAt(0) % avatarColors.length;
-  const bgColor = avatarColors[colorIndex];
-  
-  return (
-    <div className={`flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 rounded-full ${bgColor} text-white font-medium text-sm sm:text-lg flex-shrink-0`}>
-      {initials}
-    </div>
-  );
-};
+  const ProfileAvatar = ({ firstName, lastName, profileUrl }: { 
+    firstName: string; 
+    lastName?: string;
+    profileUrl?: string | null;
+  }) => {
+    const [imageError, setImageError] = useState(false);
+
+    const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
+    const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
+    const initials = lastInitial ? `${firstInitial}${lastInitial}` : firstInitial;
+    const colorIndex = firstName.charCodeAt(0) % avatarColors.length;
+    const bgColor = avatarColors[colorIndex];
+    
+    if (profileUrl && !imageError) {
+      return (
+        <img 
+          src={profileUrl} 
+          alt={`${firstName} ${lastName || ''}`}
+          className="w-10 h-10 sm:w-9 sm:h-9 rounded-full object-cover flex-shrink-0"
+          onError={() => setImageError(true)}
+        />
+      );
+    }
+
+    return (
+      <div className={`flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 rounded-full ${bgColor} text-white font-medium text-sm sm:text-lg flex-shrink-0`}>
+        {initials}
+      </div>
+    );
+  };
 
 export const ContactItem = ({ contact, onEdit, onDelete }: ContactItemProps) => {
-  const formattedTags = Array.isArray(contact.tags) && contact.tags.length > 0
-    ? contact.tags.join(', ')
+  const formattedTags = Array.isArray(contact.categories) && contact.categories.length > 0
+    ? contact.categories.join(', ')
     : '';
 
   const formattedPhone = contact.phone && contact.country
     ? `${countryPrefixes[contact.country] ?? ""} ${contact.phone}`
     : contact.phone;
 
-  // Check if email should be hidden
-  const hideEmail = shouldHideEmail(contact.email);
-  
-  return (
-    <div className="group bg-white rounded-xl shadow-sm p-2 sm:p-4 mb-2 sm:mb-0.5 transition-all border border-gray-100 hover:shadow-lg hover:border-indigo-50">
-      <div className="flex items-center gap-3 sm:gap-4">
-        <ProfileAvatar firstName={contact.firstName} lastName={contact.lastName} />
-        
-        <div className="flex-1 min-w-0 flex items-center gap-3 sm:gap-4">
-          {/* Customer Name */}
-          <div className="flex-shrink-0">
-            <h3 className="text-sm sm:text-base font-semibold text-gray-900 whitespace-nowrap">
-              {contact.firstName} {contact.lastName}
-            </h3>
-          </div>
-          
-          {/* Vertical separator */}
-          <div className="hidden sm:block w-px h-6 bg-gray-200"></div>
-          
-          {/* Details in horizontal flow */}
-          <div className="flex-1 min-w-0 flex items-center gap-2 sm:gap-3 overflow-hidden">
-            {/* Email */}
-            {!hideEmail && (
-              <div className="flex items-center min-w-0">
-                <span className="text-xs sm:text-sm text-gray-600 truncate">
-                  {contact.email}
-                </span>
-              </div>
-            )}
-            
-            {/* Company */}
-            {contact.company && (
-              <>
-                {!hideEmail && <span className="hidden sm:inline text-gray-300">•</span>}
-                <div className="flex items-center gap-1 min-w-0">
-                  <span className="text-indigo-500 text-xs">🏢</span>
-                  <span className="text-xs sm:text-sm text-gray-600 truncate">
-                    {contact.company}
-                  </span>
-                </div>
-              </>
-            )}
-            
-            {/* Phone */}
-            {formattedPhone && (
-              <>
-                {(!hideEmail || contact.company) && <span className="hidden sm:inline text-gray-300">•</span>}
-                <div className="flex items-center min-w-0">
-                  <span className="text-xs sm:text-sm text-gray-600 truncate">
-                    {formattedPhone}
-                  </span>
-                </div>
-              </>
-            )}
-            
-            {/* Platform with Logo */}
-            {contact.platform && (
-              <>
-                {(!hideEmail || contact.company || formattedPhone) && <span className="hidden sm:inline text-gray-300">•</span>}
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <PlatformLogo platform={contact.platform} />
-                  {/* <span className="text-xs sm:text-sm text-gray-600 truncate">
-                    {contact.platform}
-                  </span> */}
-                </div>
-              </>
-            )}
-            
-            {/* Country Flag */}
-            {contact.country && (
-              <>
-                {(!hideEmail || contact.company || formattedPhone || contact.platform) && 
-                  <span className="hidden sm:inline text-gray-300">•</span>}
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <FlagImage country={contact.country} />
-                </div>
-              </>
-            )}
-            
-            {/* Tags */}
-            {formattedTags && (
-              <>
-                {(!hideEmail || contact.company || formattedPhone || contact.platform || contact.country) && 
-                  <span className="hidden sm:inline text-gray-300">•</span>}
-                <div className="flex items-center gap-1 min-w-0">
-                  <span className="text-xs sm:text-sm text-indigo-600 truncate">
-                    {formattedTags}
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+  const showEmail = contact.email != null && contact.email !== '';
 
-        {/* Dropdown Menu */}
+  // const hideEmail = shouldHideEmail(contact.email);
+  
+return (
+  <div className="group bg-white rounded-xl shadow-sm p-2 sm:p-3 mb-2 sm:mb-0.5
+                  transition-all border border-gray-100 hover:shadow-lg hover:border-indigo-50
+                  h-[88px] sm:h-[80px]">
+    <div className="flex items-center gap-3 h-full">
+      {/* Profile Avatar */}
+      <div className="flex-shrink-0">
+        <ProfileAvatar 
+          firstName={contact.firstName} 
+          lastName={contact.lastName} 
+          profileUrl={contact.profile_url} 
+        />
+      </div>
+      
+      {/* Main Content */}
+<div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5 overflow-hidden">
+  {/* Top Row: Name */}
+  <div className="flex items-center justify-between gap-3">
+    <h3 className="font-sans text-xs font-medium">
+      {contact.firstName} {contact.lastName}
+    </h3>
+  </div>
+
+  {/* Middle Row: Contact Details */}
+  <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
+        {showEmail && contact.email && (
+      <span className="truncate max-w-[180px]">{contact.email}</span>
+    )}
+    {contact.username && (
+      <span className="truncate">@{contact.username}</span>
+    )}
+    {formattedPhone && (
+      <span className="truncate">{formattedPhone}</span>
+    )}
+
+    {/* Tags */}
+    {contact.tags && contact.tags.length > 0 && (
+      <div className="flex gap-1.5 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300 
+                      scrollbar-track-transparent hover:scrollbar-thumb-slate-400 mr-2">
+        {contact.tags.map((tag) => (
+          <span 
+            key={tag} 
+            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                       bg-blue-50 text-blue-700 border border-blue-200
+                       hover:bg-blue-100 whitespace-nowrap flex-shrink-0"
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {contact.platform && <PlatformLogo platform={contact.platform} />}
+            {contact.country && <FlagImage country={contact.country} />}
+          </div>
+
+      {/* Actions Dropdown */}
+      <div className="flex-shrink-0">
         <DropdownMenu>
-          <DropdownMenuTrigger className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex-shrink-0">
+          <DropdownMenuTrigger 
+            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 
+                       rounded-lg transition-colors
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            aria-label="Contact actions"
+          >
             <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-36">
+          
+          <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuItem 
               onClick={() => onEdit(contact.id)}
-              className="flex items-center px-3 py-2 text-sm text-gray-600 hover:bg-indigo-50 cursor-pointer"
+              className="flex items-center px-3 py-2 text-sm text-gray-700 
+                         hover:bg-indigo-50 hover:text-indigo-900 cursor-pointer
+                         focus:bg-indigo-50 focus:text-indigo-900"
             >
-              Edit
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit Contact
             </DropdownMenuItem>
+            
             <DropdownMenuItem 
               onClick={() => onDelete(contact.id)}
-              className="flex items-center px-3 py-2 text-sm text-red-500 hover:bg-red-50 cursor-pointer"
+              className="flex items-center px-3 py-2 text-sm text-red-600 
+                         hover:bg-red-50 hover:text-red-700 cursor-pointer
+                         focus:bg-red-50 focus:text-red-700"
             >
-              Delete
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Delete Contact
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default ContactItem;

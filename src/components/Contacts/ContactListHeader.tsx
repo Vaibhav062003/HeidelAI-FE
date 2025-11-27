@@ -133,7 +133,7 @@ const handleMessageSend = (data: MessageData) => {
           group relative
           flex items-center justify-center
           h-9 w-9 sm:h-10 sm:w-10
-          bg-gray-100 hover:bg-gray-200
+          hover:bg-gray-100
           text-gray-700 hover:text-gray-900
           rounded-2xl
           transition-all duration-200
@@ -227,106 +227,33 @@ const handleMessageSend = (data: MessageData) => {
     </div>
   );
 
-  const MessageButton: React.FC<{ 
-    size?: "sm" | "md" | "lg"; 
-  }> = ({ 
-    size = "md"
-  }) => (
-    <button
-      onClick={handleOpenMessageComposer}
-      className={`
-        flex items-center gap-2
-        bg-gradient-to-r
-        hover:bg-gray-100 active:bg-gray-200 hover:text-gray-900 text-black font-medium
-        rounded-2xl
-        shadow-md hover:shadow-lg
-        transition-all duration-200
-        hover:scale-10 active:scale-95
-        ${size === "sm" ? "px-3 py-2 text-sm" : 
-          size === "md" ? "px-4 py-2.5 text-sm" :
-          "px-6 py-3 text-base"
-        }
-      `}
-    >
-      <Send className={`${size === "sm" ? "h-3 w-3" : size === "md" ? "h-4 w-4" : "h-5 w-5"}`} />
-      <span>Message</span>
-    </button>
-  );
+const MessageButton: React.FC<{ 
+  size?: "sm" | "md" | "lg"; 
+}> = ({ 
+  size = "sm"  
+}) => (
+  <button
+    onClick={handleOpenMessageComposer}
+    className={`
+      flex items-center gap-2
+      bg-gradient-to-r
+      hover:bg-gray-100 active:bg-gray-200 hover:text-gray-900 text-black
+      font-sans text-xs font-medium                /* font */
+      rounded-2xl
+      shadow-md hover:shadow-lg
+      transition-all duration-200
+      hover:scale-105 active:scale-95
+      px-3 py-2                  
+      h-8 min-w-[80px]            
+    `}
+  >
+    <Send className="h-3 w-3" />
+    <span>Message</span>
+  </button>
+);
 
   return (
     <div className="w-full bg-white border-b border-gray-200">
-
-      {/* Tablet Layout */}
-      <div className="hidden sm:block lg:hidden">
-        <div className="px-6 py-4">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="
-                  flex items-center justify-center
-                  h-12 w-12
-                  bg-gradient-to-br from-blue-600 to-blue-700
-                  text-white
-                  rounded-2xl
-                  shadow-lg
-                ">
-                  <Users className="h-6 w-6" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Contacts</h1>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <MessageButton size="md" />
-                <QuickActionMenu />
-              </div>
-            </div>
-            
-            <div className="flex justify-center">
-              <div className="relative w-full max-w-lg">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search contacts..."
-                  className="
-                    w-full pl-12 pr-4 py-3
-                    border border-gray-300
-                    text-gray-900 placeholder-gray-500
-                    rounded-2xl
-                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                    transition-all duration-200
-                  "
-                  value={searchValue}
-                  onChange={(e) => onSearch(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* TABLET */}
-            {isMessageComposerOpen && (
-              <div className="animate-in slide-in-from-top duration-200">
-                <div className="relative p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl">
-                  <button
-                    onClick={() => setIsMessageComposerOpen(false)}
-                    className="absolute top-2 right-2 p-1 hover:bg-white/60 rounded-lg transition-colors z-10"
-                    aria-label="Close message composer"
-                  >
-                    <X className="h-4 w-4 text-gray-500" />
-                  </button>
-                  <MessageComposer 
-                    directMode={true}
-                    onMessageSend={(data) => {
-                      onMessageSend(data);
-                      setIsMessageComposerOpen(false);
-                    }} 
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* Desktop Layout */}
       <div className="hidden lg:block">
@@ -334,7 +261,7 @@ const handleMessageSend = (data: MessageData) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Contacts</h1>
+                <h1 className="font-sans text-l font-medium">Contacts</h1>
               </div>
             </div>
             
@@ -342,15 +269,16 @@ const handleMessageSend = (data: MessageData) => {
               <MessageButton size="lg" />
               
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search contacts..."
                   className="
                     pl-12 pr-4 py-3
-                    w-80 xl:w-96
+                    w-50 xl:w-66
                     text-gray-900 placeholder-gray-500
                     rounded-2xl
+                    font-sans text-xs font-medium
                   "
                   value={searchValue}
                   onChange={(e) => onSearch(e.target.value)}
@@ -372,7 +300,7 @@ const handleMessageSend = (data: MessageData) => {
       </button>
       <MessageComposer
         onMessageSend={handleMessageSend}
-        directMode={true}  // Set this to true
+        directMode={true}  
       />
     </div>
   </div>

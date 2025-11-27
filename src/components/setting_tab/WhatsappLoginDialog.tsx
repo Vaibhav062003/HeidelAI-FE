@@ -163,6 +163,7 @@ const WhatsAppLoginDialog = () => {
   useEffect(() => {
     // Listen for messages from popup window
     const handleMessage = (event: MessageEvent) => {
+      console.log('Received message event:', event);
       // Security check: only accept messages from Facebook
       if (event.origin !== "https://www.facebook.com" && event.origin !== "https://web.facebook.com") {
         return;
@@ -264,14 +265,12 @@ const WhatsAppLoginDialog = () => {
       });
       
       if (response.status === 403) {
-        // ...existing code...
         const errorData = response.data as ErrorResponse;
-        const errorMessage = errorData.message || "This WhatsApp account is already connected to another organization.";
+        const errorMessage = errorData.message || "This WhatsApp account is already connected to another organization.If you think this is incorrect, please contact us at support@heidelai.com for further assistance.";
         throw new Error(errorMessage);
       }
 
       if (response.status !== 200 || (typeof response.data === "object" && response.data.status === "error")) {
-        // ...existing code...
         let errorMessage = "Failed to connect WhatsApp account";
         const errorData = response.data as ErrorResponse;
         if (errorData?.message) errorMessage = errorData.message;

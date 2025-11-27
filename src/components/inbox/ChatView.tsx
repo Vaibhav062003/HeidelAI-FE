@@ -191,7 +191,6 @@ interface ChatViewProps {
   onClearSharedProduct: () => void;
   isRightSidebarVisible?: boolean;
   onOpenRightSidebar?: () => void;
-  isMobile?: boolean;
   onBackToList?: () => void;
 }
 
