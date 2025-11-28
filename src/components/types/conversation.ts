@@ -1,5 +1,6 @@
 // Type definition for conversation object
 export interface Conversation {
+  conversation_id: string
   id: string;
   platform: string;
   customer_id: string;
