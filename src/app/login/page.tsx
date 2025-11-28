@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Toaster, toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-// ...existing code...
 export default function LoginPage() {
   const { isLoaded, signIn, setActive } = useSignIn();
   const { isSignedIn } = useUser();
@@ -112,6 +111,16 @@ export default function LoginPage() {
               autoComplete="current-password"
               required
             />
+            {/* Forgot password link */}
+            <div className="text-right mt-1">
+              <button
+                type="button"
+                className="text-sm text-cyan-400 hover:underline"
+                onClick={() => router.push("/forgot_password")}
+              >
+                Forgot password?
+              </button>
+            </div>
           </LabelInputContainer>
           <button
             className={cn(

@@ -1,45 +1,68 @@
 import { useUser } from '@clerk/nextjs';
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 
-
-export function useTypingIndicator(sendFn: (payload: Record<string, unknown>) => void, conversationId: string) {
-  const [isTyping, setIsTyping] = useState(false);
+export function useTypingIndicator(
+  sendFn: (payload: Record<string, unknown>) => void,
+  conversationId: string
+) {
   const { user, isLoaded } = useUser();
-  const typingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const [agentId, setAgentId] = useState<string | null>(null);
+  const agentIdRef = useRef<string | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const stopTypingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isTypingRef = useRef(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setAgentId(localStorage.getItem('chat_client_id'));
+      agentIdRef.current = localStorage.getItem('chat_client_id');
     }
-  }, []);
-   
-  const handleTyping = useCallback(() => {
-    if (!isLoaded || !user) return;
-    const User = user.username;
-    if (!isTyping) {
-      sendFn({ type: 'typing_indicator', is_typing: true, agent_id: agentId, user:User , conversation_id: conversationId });
-      setIsTyping(true);
-    }
-    
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-    
-    typingTimeoutRef.current = setTimeout(() => {
-      sendFn({ type: 'typing_indicator', is_typing: false, agent_id: agentId, user:User, conversation_id: conversationId });
-      setIsTyping(false);
-    }, 2000);
-  }, [isTyping, sendFn, agentId, isLoaded, user , conversationId]);
-
-  // Cleanup on unmount
-  useEffect(() => {
     return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      if (stopTypingTimerRef.current) clearTimeout(stopTypingTimerRef.current);
+      // On unmount, send stop typing if needed
+      if (isTypingRef.current) {
+        sendFn({
+          type: 'typing_indicator',
+          is_typing: false,
+          agent_id: agentIdRef.current,
+          user: user?.username,
+          conversation_id: conversationId,
+        });
+        isTypingRef.current = false;
       }
     };
-  }, []);
+  }, [conversationId, user]);
 
-  return { isTyping, handleTyping };
+  const handleTyping = useCallback(() => {
+    if (!isLoaded || !user) return;
+    // Debounce start typing
+    if (!isTypingRef.current && !debounceTimerRef.current) {
+      debounceTimerRef.current = setTimeout(() => {
+        sendFn({
+          type: 'typing_indicator',
+          is_typing: true,
+          agent_id: agentIdRef.current,
+          user: user.username,
+          conversation_id: conversationId,
+        });
+        isTypingRef.current = true;
+        debounceTimerRef.current = null;
+      }, 300);
+    }
+    // Reset stop typing timer
+    if (stopTypingTimerRef.current) clearTimeout(stopTypingTimerRef.current);
+    stopTypingTimerRef.current = setTimeout(() => {
+      if (isTypingRef.current) {
+        sendFn({
+          type: 'typing_indicator',
+          is_typing: false,
+          agent_id: agentIdRef.current,
+          user: user.username,
+          conversation_id: conversationId,
+        });
+        isTypingRef.current = false;
+      }
+    }, 2000);
+  }, [sendFn, isLoaded, user, conversationId]);
+
+  return { handleTyping };
 }
