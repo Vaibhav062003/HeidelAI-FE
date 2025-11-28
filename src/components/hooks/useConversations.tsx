@@ -257,7 +257,7 @@ export const useConversations = (status?: "open" | "closed") => {
         const messageTimestamp = data.message.timestamp || new Date().toISOString();
 
         setConversations(prev => {
-          const conversationExists = prev.some(conv => conv.id === conversationId);
+          const conversationExists = prev.some(conv => conv.conversation_id === conversationId);
 
           if (!conversationExists) {
             fetchSingleConversation(conversationId);
@@ -265,7 +265,7 @@ export const useConversations = (status?: "open" | "closed") => {
           }
 
           return prev.map(conv => {
-            if (conv.id === conversationId) {
+            if (conv.conversation_id === conversationId) {
               return {
                 ...conv,
                 last_message: messageContent,
@@ -293,7 +293,7 @@ export const useConversations = (status?: "open" | "closed") => {
       const response = await conversationService.getConversation(conversationId);
       if (response.status === "success" && response.data) {
         setConversations(prev => {
-          const exists = prev.some(conv => conv.id === conversationId);
+          const exists = prev.some(conv => conv.conversation_id === conversationId);
           if (exists) return prev;
           return [...prev, normalizeConversation(response.data)];
         });
