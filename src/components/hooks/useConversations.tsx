@@ -38,6 +38,7 @@ const RETRY_DELAY = 3000;
 
 function normalizeConversation(conv: any): Conversation {
   return {
+    conversation_id : conv.id || conv.conversation_id || '',
     id: conv.id || conv.conversation_id || '',
     platform: conv.platform,
     customer_id: conv.customer_id || '',
@@ -214,6 +215,7 @@ export const useConversations = (status?: "open" | "closed") => {
       console.log("WebSocket message received:", data);
 
       const ensureValidConversation = (conv: any): Conversation => ({
+        conversation_id : conv.id || conv.conversation_id || '',
         id: conv.id || conv.conversation_id || '',
         platform: conv.platform || 'whatsapp',
         customer_id: conv.customer_id || '',
