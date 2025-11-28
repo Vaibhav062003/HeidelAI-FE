@@ -1034,7 +1034,6 @@ const ChatView = ({
 
     let contentToSend = message.trim();
     const platform = selectedConversationId.split("_")[0];
-    const sender_id = selectedConversationId.split("_")[1];
 
     if (contentToSend.startsWith("/")) {
       const shortcode = contentToSend.slice(1).toLowerCase();
@@ -1048,34 +1047,16 @@ const ChatView = ({
 
     setIsSending(true);
     try {
-      let response;
-      if (platform === "whatsapp") {
-        const whatsappId = localStorage.getItem("whatsapp_user_id");
-        if (!whatsappId) throw new Error("No WhatsApp ID found");
-
-        const payload = {
-          conversation_id: selectedConversationId,
-          content: contentToSend,
-          sender_id: sender_id,
-        };
-        response = await conversationService.sendWhatsAppMessage(
-          whatsappId,
-          payload
-        );
-        if (response.status !== "success")
-          throw new Error(response.message || "Failed to send message");
-      } else if (platform === "instagram") {
-        const data = {
-          conversation_id: selectedConversationId,
-          content: contentToSend,
-          sender_id: sender_id,
-        };
-        response = await api.post(
-          `/api/instagram/conversations/send_message`,
-          data
-        );
-        if (response.status !== 200) throw new Error("Failed to send message");
-      }
+      const data = {
+        conversation_id: selectedConversationId,
+        content: contentToSend,
+        platform: platform,
+      };
+      const response = await api.post(
+        `/api/conversations/send-message`,
+        data
+      );
+      if (response.status !== 200) throw new Error("Failed to send message");
       setMessage("");
     } catch (error) {
       toast.error(
@@ -1279,25 +1260,10 @@ const ChatView = ({
     const fetchConversation = async () => {
       try {
         setLoading(true);
-        const platform = selectedConversationId.split("_")[0];
-        let response;
-        if (platform === "instagram") {
-          response = await api.get(
-            `/api/instagram/conversations/${selectedConversationId}`
-          );
-          setConversation(response?.data);
-        } else if (platform === "whatsapp") {
-          const whatsappId = localStorage.getItem("whatsapp_user_id");
-          if (!whatsappId) return;
-          response = await conversationService.getWhatsAppConversations();
-          if (response.status === "success") {
-            const dataArray = Array.isArray(response.data) ? response.data : [];
-            const found = dataArray.find(
-              (c: Conversation) => c.id === selectedConversationId
-            );
-            setConversation(found || null);
-          }
-        }
+        const response = await api.get(
+          `/api/conversations/${selectedConversationId}`
+        );
+        setConversation(response?.data);
       } catch (error) {
         toast.error("Failed to load conversation");
       } finally {
@@ -1332,24 +1298,13 @@ const ChatView = ({
       if (!isLoaded || !user) return;
       const agent_username = user.username;
       try {
-        const platform = selectedConversationId.split("_")[0];
-        let response;
-        if (platform === "instagram") {
-          response = await api.get(
-            `/api/instagram/conversations/${selectedConversationId}/messages?agent_username=${agent_username}`
-          );
-          setMessages(response?.data.messages || []);
-        } else if (platform === "whatsapp") {
-          const whatsappId = localStorage.getItem("whatsapp_user_id");
-          if (!whatsappId) return;
-          response = await conversationService.getWhatsAppMessages(
-            whatsappId,
-            selectedConversationId
-          );
-          setMessages(Array.isArray(response.data) ? response.data : []);
-        }
+        const response = await api.get(
+          `/api/conversations/${selectedConversationId}/messages?agent_username=${agent_username}`
+        );
+        setMessages(response?.data.messages || []);
+       
       } catch (error) {
-        toast.error("Failed to load messages");
+        toast.error("Failed to load messages", {description: error as string} );
       }
     };
 
@@ -1475,8 +1430,10 @@ const ChatView = ({
       const clientId = `client-${Date.now()}-wa`;
 
       if (whatsappId) {
+        token().then((sessionToken) => {
         const ws = new WebSocket(
-          `${WS_BASE_URL}/ws2/whatsapp/${clientId}/${whatsappId}`
+          `${WS_BASE_URL}/ws2/whatsapp/${clientId}/${whatsappId}`,
+          [sessionToken]
         );
         wsRef.current = ws;
         console.log("Connected to WhatsApp WebSocket");
@@ -1522,6 +1479,7 @@ const ChatView = ({
             `ChatView: WebSocket closed with code ${event.code}: ${event.reason}`
           );
         };
+      });
       }
     }
 
