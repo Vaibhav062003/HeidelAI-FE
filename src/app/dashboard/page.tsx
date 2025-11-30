@@ -529,7 +529,7 @@ SidebarNavigation.displayName = 'SidebarNavigation';
 
 export default function DashboardPage() {
   const [isMounted, setIsMounted] = useState(false);
-
+  const { user } = useUser();  
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -543,6 +543,16 @@ export default function DashboardPage() {
     | 'Contacts'
     | 'influencerbot'
   >('inbox');
+
+    const currentAgentUsername = useMemo(() => {
+    return (
+      user?.username ||                 
+      user?.primaryEmailAddress?.emailAddress || 
+      user?.id || 
+      "unknown_agent"
+    );
+  }, [user]);
+
 
   const handleToggleNavExpanded = useCallback(() => {
     setIsNavExpanded(prev => !prev);
@@ -667,22 +677,24 @@ export default function DashboardPage() {
                 </section>
 
                 {isRightSidebarVisible && (
-                  <aside className="relative w-[260px] xl:w-[300px] flex-shrink-0">
-                    {selectedConversationId ? (
-                      <Sidebar
-                        selectedConversationId={selectedConversationId}
-                        conversation={conversation}
-                        onConversationSelect={handleConversationSelect}
-                        onShareProduct={handleShareProduct}
-                        onToggleVisibility={handleToggleRightSidebar}
-                      />
-                    ) : (
-                      <RemainderSideBar
-                        onToggleVisibility={handleToggleRightSidebar}
-                      />
-                    )}
-                  </aside>
-                )}
+  <aside className="relative w-[260px] xl:w-[300px] flex-shrink-0">
+    {selectedConversationId ? (
+      <Sidebar
+        selectedConversationId={selectedConversationId}
+        conversation={conversation}
+        onConversationSelect={handleConversationSelect}
+        onShareProduct={handleShareProduct}
+        onToggleVisibility={handleToggleRightSidebar}
+        currentAgentUsername={currentAgentUsername}
+      />
+    ) : (
+      <RemainderSideBar
+        onToggleVisibility={handleToggleRightSidebar}
+      />
+    )}
+  </aside>
+)}
+
               </div>
             )}
 
