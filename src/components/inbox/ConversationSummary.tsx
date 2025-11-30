@@ -86,7 +86,7 @@ const fetchConversation = async (conversationId: string) => {
   
   try {
     const endpoint = `/api/ai/chat-analysis/${conversationId}`;
-    console.log('endpoint:', endpoint);
+    // console.log('endpoint:', endpoint);
     
     const response = await api.get(endpoint);
     
