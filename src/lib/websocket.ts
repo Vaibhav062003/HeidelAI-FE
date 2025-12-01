@@ -1,24 +1,45 @@
-// lib/websocket.ts
-import { io } from 'socket.io-client';
+import { useEffect } from "react";
+import { useWebSocket } from "./WebsocketContext";
 
-const WEBSOCKET_URL = process.env.NEXT_PUBLIC_WS_URL;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useMainWebSocket(handlers?: any) {
+  const { addEventHandler, sendWsMessage } = useWebSocket();
 
-export const socket = io(WEBSOCKET_URL, {
-  autoConnect: false,
-});
+  useEffect(() => {
+    if (!handlers) return;
 
-export const connectWebSocket = () => {
-  socket.connect();
-  
-  socket.on('connect', () => {
-    console.log('Connected to WebSocket');
-  });
+    // Store cleanup functions
+    const cleanups: (() => void)[] = [];
 
-  socket.on('new_message', (message) => {
-    // Handle new message
-  });
+    if (handlers.onNewConversation) {
+      const remove = addEventHandler("new_conversation", handlers.onNewConversation);
+      cleanups.push(remove);
+    }
 
-  return () => {
-    socket.disconnect();
-  };
-};
+    if (handlers.onConversationUpdated) {
+      const remove = addEventHandler("conversation_updated", handlers.onConversationUpdated);
+      cleanups.push(remove);
+    }
+
+    if (handlers.onNewMessage) {
+      const remove = addEventHandler("new_message", handlers.onNewMessage);
+      cleanups.push(remove);
+    }
+
+    if (handlers.onTypingIndicator) {
+      const remove = addEventHandler("typing_indicator", handlers.onTypingIndicator);
+      cleanups.push(remove);
+    }
+
+    if(handlers.onMessageReaction) {
+      const remove = addEventHandler("message_reaction", handlers.onMessageReaction);
+      cleanups.push(remove);
+    }
+
+    return () => {
+      cleanups.forEach((cleanup) => cleanup());
+    };
+  }, [handlers]);
+
+  return { sendWsMessage }
+}

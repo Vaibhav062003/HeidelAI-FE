@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
+import { WebSocketProvider } from "@/lib/WebsocketContext";
 
 export default function DashboardLayout({
   children,
@@ -158,7 +159,11 @@ export default function DashboardLayout({
       )}
 
       {/* Content wrapper with padding to avoid overlap */}
-      <div className={!isOnline ? 'pt-10' : ''}>{children}</div>
+      <div className={!isOnline ? 'pt-10' : ''}>
+        <WebSocketProvider>
+        {children}
+        </WebSocketProvider>
+        </div>
     </div>
   )
 }
