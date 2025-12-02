@@ -2392,7 +2392,7 @@ const ChatView = ({
 
                       return (
                         <span key={index} className="inline-flex items-center gap-2">
-                          {/* Avatar: image initials */}
+                          {/* Avatar with initials */}
                           <div
                             className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
                             style={{ backgroundColor: bgColor }}
