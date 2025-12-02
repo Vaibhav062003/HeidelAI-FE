@@ -2393,12 +2393,12 @@ const ChatView = ({
                       return (
                         <span key={index} className="inline-flex items-center gap-2">
                           {/* Avatar: image initials */}
-                            <div
-                              className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
-                              style={{ backgroundColor: bgColor }}
-                            >
-                              {initials}
-                            </div>
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                            style={{ backgroundColor: bgColor }}
+                          >
+                            {initials}
+                          </div>
                           {/* Name */}
                           <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
                             {user.agent_name}
