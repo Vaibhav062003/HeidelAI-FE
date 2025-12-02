@@ -157,17 +157,17 @@ interface Message {
   conversation_id: string;
   status?: "sent" | "delivered" | "read";
   type?:
-    | "text"
-    | "image"
-    | "file"
-    | "voice"
-    | "video"
-    | "share"
-    | "ig_story"
-    | "ig_reel"
-    | "story_reply"
-    | "system"
-    | "message_reply";
+  | "text"
+  | "image"
+  | "file"
+  | "voice"
+  | "video"
+  | "share"
+  | "ig_story"
+  | "ig_reel"
+  | "story_reply"
+  | "system"
+  | "message_reply";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
   product_data?: ProductData[];
@@ -402,7 +402,7 @@ const RemindersPopover = ({
                           // Add IST offset (UTC+5:30)
                           new Date(
                             new Date(reminder.dateTime).getTime() +
-                              5.5 * 60 * 60 * 1000
+                            5.5 * 60 * 60 * 1000
                           ),
                           "MMM d, yyyy 'at' h:mm a"
                         )}
@@ -653,15 +653,12 @@ const MessageItem = memo(
     return (
       <>
         <div
-          className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${
-            message.role === "customer"
-              ? `bg-white/90 backdrop-blur-sm ${
-                  isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"
-                } text-gray-900 border-gray-200/60`
-              : `bg-blue-600/90 backdrop-blur-sm ${
-                  isReplyMessage ? "rounded-tr-lg" : "rounded-br-lg"
-                } text-white border-blue-500/60`
-          }`}
+          className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${message.role === "customer"
+              ? `bg-white/90 backdrop-blur-sm ${isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"
+              } text-gray-900 border-gray-200/60`
+              : `bg-blue-600/90 backdrop-blur-sm ${isReplyMessage ? "rounded-tr-lg" : "rounded-br-lg"
+              } text-white border-blue-500/60`
+            }`}
           style={{ wordBreak: "break-word" }}
         >
           <div className="break-words">
@@ -669,9 +666,8 @@ const MessageItem = memo(
           </div>
           <div className="flex justify-end mt-2">
             <span
-              className={`text-xs ${
-                message.role === "customer" ? "text-gray-500" : "text-white/70"
-              }`}
+              className={`text-xs ${message.role === "customer" ? "text-gray-500" : "text-white/70"
+                }`}
             >
               {formatMessageTime(message.timestamp)}
             </span>
@@ -685,7 +681,7 @@ const MessageItem = memo(
       prevProps.message.id === nextProps.message.id &&
       prevProps.isLast === nextProps.isLast &&
       JSON.stringify(prevProps.message.reaction) ===
-        JSON.stringify(nextProps.message.reaction)
+      JSON.stringify(nextProps.message.reaction)
     );
   }
 );
@@ -963,10 +959,10 @@ const ChatView = ({
           type: file.type.startsWith("image/")
             ? "image"
             : file.type.startsWith("video/")
-            ? "video"
-            : file.type.startsWith("audio/")
-            ? "voice"
-            : "file",
+              ? "video"
+              : file.type.startsWith("audio/")
+                ? "voice"
+                : "file",
           role: "agent",
           conversation_id: selectedConversationId,
           timestamp: new Date().toISOString(),
@@ -1260,7 +1256,7 @@ const ChatView = ({
   }, [selectedConversationId]);
 
   useEffect(() => {
-    if (!selectedConversationId) return () => {};
+    if (!selectedConversationId) return () => { };
 
     const setUnreadCount = async () => {
       try {
@@ -1470,8 +1466,7 @@ const ChatView = ({
               );
 
               console.log(
-                `ChatView: Reaction updated for message ${
-                  updatedMessage.message_id || updatedMessage.id
+                `ChatView: Reaction updated for message ${updatedMessage.message_id || updatedMessage.id
                 }`
               );
             } else if (
@@ -1601,7 +1596,7 @@ const ChatView = ({
 
   const isWindowExpired = lastCustomerMessage
     ? new Date().getTime() - new Date(lastCustomerMessage.timestamp).getTime() >
-      24 * 60 * 60 * 1000
+    24 * 60 * 60 * 1000
     : true;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1734,8 +1729,8 @@ const ChatView = ({
                         {conversationStatus === "closed"
                           ? "Closed"
                           : conversationStatus === "followup"
-                          ? "Follow-up"
-                          : "Open"}
+                            ? "Follow-up"
+                            : "Open"}
                       </span>
                       <ChevronDown className="h-4 w-4 text-gray-600" />
                     </Button>
@@ -1769,14 +1764,14 @@ const ChatView = ({
 
                     {(conversationStatus === "closed" ||
                       conversationStatus === "followup") && (
-                      <DropdownMenuItem
-                        onClick={handleReopen}
-                        className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-green-50 rounded-xl mx-2"
-                      >
-                        <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
-                        <span className="font-medium">Reopen Conversation</span>
-                      </DropdownMenuItem>
-                    )}
+                        <DropdownMenuItem
+                          onClick={handleReopen}
+                          className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-green-50 rounded-xl mx-2"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
+                          <span className="font-medium">Reopen Conversation</span>
+                        </DropdownMenuItem>
+                      )}
                   </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -1833,9 +1828,8 @@ const ChatView = ({
                   </TooltipTrigger>
                   <TooltipContent>
                     {reminders.length > 0
-                      ? `${reminders.length} reminder${
-                          reminders.length > 1 ? "s" : ""
-                        } set`
+                      ? `${reminders.length} reminder${reminders.length > 1 ? "s" : ""
+                      } set`
                       : "Set reminder"}
                   </TooltipContent>
                 </Tooltip>
@@ -1859,11 +1853,10 @@ const ChatView = ({
                         variant="ghost"
                         size="icon"
                         onClick={onOpenRightSidebar}
-                        className={`rounded-xl transition-all duration-200 ${
-                          isRightSidebarVisible
+                        className={`rounded-xl transition-all duration-200 ${isRightSidebarVisible
                             ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
                             : "hover:bg-gray-100"
-                        }`}
+                          }`}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -1934,8 +1927,8 @@ const ChatView = ({
                           {conversation?.platform === "instagram"
                             ? selectedConversationId?.split("_")[1]
                             : selectedConversationId
-                                ?.split("_")[1]
-                                ?.replace(/^(\d{2})(\d+)/, "+$1 $2")}
+                              ?.split("_")[1]
+                              ?.replace(/^(\d{2})(\d+)/, "+$1 $2")}
                         </div>
                       </div>
                     </div>
@@ -2215,18 +2208,16 @@ const ChatView = ({
                         className="relative group w-full message-item"
                       >
                         <div
-                          className={`flex ${
-                            message.role === "customer"
+                          className={`flex ${message.role === "customer"
                               ? "justify-start"
                               : "justify-end"
-                          }`}
+                            }`}
                         >
                           <div
-                            className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${
-                              message.role === "customer"
+                            className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === "customer"
                                 ? "items-start"
                                 : "items-end"
-                            }`}
+                              }`}
                           >
                             <MessageWrapper
                               message={message}
@@ -2262,7 +2253,7 @@ const ChatView = ({
                                       isActive={
                                         activeMediaType === "reel" &&
                                         activeMediaId ===
-                                          message.payload.reel_video_id
+                                        message.payload.reel_video_id
                                       }
                                       onPlay={(id) => handlePlay(id, "reel")} // stops others
                                       isMuted={globalMuted}
@@ -2287,7 +2278,7 @@ const ChatView = ({
                                       isActive={
                                         activeMediaType === "story" &&
                                         activeMediaId ===
-                                          message.payload.story_media_id
+                                        message.payload.story_media_id
                                       } // only one plays
                                       onPlay={(id) => handlePlay(id, "story")}
                                       isMuted={globalMuted}
@@ -2350,17 +2341,17 @@ const ChatView = ({
                                 "image",
                                 "video",
                               ].includes(message.type ?? "") && (
-                                <MessageItem
-                                  key={message.id}
-                                  message={message}
-                                  index={index}
-                                  isLatest={isLatest}
-                                  isLast={index === messages.length - 1}
-                                  isReplyMessage={
-                                    message.type == "message_reply"
-                                  }
-                                />
-                              )}
+                                  <MessageItem
+                                    key={message.id}
+                                    message={message}
+                                    index={index}
+                                    isLatest={isLatest}
+                                    isLast={index === messages.length - 1}
+                                    isReplyMessage={
+                                      message.type == "message_reply"
+                                    }
+                                  />
+                                )}
                             </MessageWrapper>
                           </div>
                         </div>
@@ -2386,19 +2377,18 @@ const ChatView = ({
                         .join("")
                         .toUpperCase();
 
-                      const bgColor = `hsl(${
-                        (user.agent_name.length * 37) % 360
-                      }, 70%, 55%)`; // unique color
+                      const bgColor = `hsl(${(user.agent_name.length * 37) % 360
+                        }, 70%, 55%)`; // unique color
 
                       return (
                         <span key={index} className="inline-flex items-center gap-2">
                           {/* Avatar: image initials */}
-                            <div
-                              className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
-                              style={{ backgroundColor: bgColor }}
-                            >
-                              {initials}
-                            </div>
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                            style={{ backgroundColor: bgColor }}
+                          >
+                            {initials}
+                          </div>
                           {/* Name */}
                           <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
                             {user.agent_name}
@@ -2458,21 +2448,19 @@ const ChatView = ({
                   {/* Mode Toggle */}
                   <div className="mb-5 w-40 bg-gray-100/80 rounded-2xl p-0.5 flex items-center">
                     <button
-                      className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${
-                        mode === "reply"
+                      className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${mode === "reply"
                           ? "bg-blue-600 text-white shadow-md"
                           : "text-gray-600 hover:text-blue-600"
-                      }`}
+                        }`}
                       onClick={() => setMode("reply")}
                     >
                       Reply
                     </button>
                     <button
-                      className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${
-                        mode === "private"
+                      className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${mode === "private"
                           ? "bg-purple-600 text-white shadow-md"
                           : "text-gray-600 hover:text-purple-600"
-                      }`}
+                        }`}
                       onClick={() => setMode("private")}
                     >
                       Private
@@ -2536,11 +2524,10 @@ const ChatView = ({
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
-                            className={`p-2.5 rounded-xl transition-colors ${
-                              isRecording
+                            className={`p-2.5 rounded-xl transition-colors ${isRecording
                                 ? "bg-red-100/80 hover:bg-red-200/80 text-red-600"
                                 : "bg-gray-100/80 hover:bg-gray-200/80 text-gray-600"
-                            }`}
+                              }`}
                             onClick={
                               isRecording ? stopRecording : startRecording
                             }
@@ -2561,13 +2548,12 @@ const ChatView = ({
                       </div>
 
                       <button
-                        className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${
-                          message.trim() || audioURL || sharedProduct
+                        className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${message.trim() || audioURL || sharedProduct
                             ? mode === "reply"
                               ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
                               : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
                             : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
-                        }`}
+                          }`}
                         onClick={() => {
                           if (sharedProduct) {
                             handleShareProduct(message, sharedProduct);
