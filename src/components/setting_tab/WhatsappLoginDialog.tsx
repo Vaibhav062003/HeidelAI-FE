@@ -182,7 +182,7 @@ const WhatsAppLoginDialog = () => {
         }
 
         if (data.type === 'WA_EMBEDDED_SIGNUP') {
-          if (data.event === 'FINISH') {
+          if (data.event === 'FINISH' || data.event === 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING') {
             console.log("Captured WhatsApp Session Data:", data.data);
             whatsappSignupDataRef.current = data.data as WhatsAppSignupData;
           } else if (data.event === 'CANCEL') {

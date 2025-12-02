@@ -42,7 +42,7 @@ export const MessageWrapper = ({ message, index, children, allMessages }: any) =
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      {showActions && (
+      {showActions && message.platform !== "whatsapp" && (
         <MessageActionsPopover
           isAgent={message.role === "agent"}
           onReact={handleReact}
