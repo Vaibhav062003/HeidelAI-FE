@@ -2357,7 +2357,7 @@ const ChatView = ({
                                   isLatest={isLatest}
                                   isLast={index === messages.length - 1}
                                   isReplyMessage={
-                                    message.type == "message_reply"
+                                    message.type === "message_reply"
                                   }
                                 />
                               )}
