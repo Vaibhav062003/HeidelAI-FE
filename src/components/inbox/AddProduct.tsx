@@ -1,5 +1,8 @@
 
+import { is } from "@react-three/fiber/dist/declarations/src/core/utils";
 import React, { useState, ChangeEvent, FormEvent } from "react";
+import { set } from "react-hook-form";
+import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 // Define the platform type
 type PlatformType = "pinecone" | "shopify" | "other" | undefined;
 
@@ -7,7 +10,9 @@ type PlatformType = "pinecone" | "shopify" | "other" | undefined;
 interface AddProductProps {
   closeForm: () => void;
   platform: PlatformType;
+  setIsModalOpen?: (isOpen: boolean) => void;
 }
+
 
 // Define form data interface
 interface ProductFormData {
@@ -52,7 +57,7 @@ function isProductFormField(key: string): key is keyof ProductFormData {
   ].includes(key);
 }
 
-const AddProduct: React.FC<AddProductProps> = ({ closeForm, platform }) => {
+const AddProduct: React.FC<AddProductProps> = ({ closeForm, platform, setIsModalOpen }) => {
   const [formData, setFormData] = useState<ProductFormData>({
     category: "",
     description: "",

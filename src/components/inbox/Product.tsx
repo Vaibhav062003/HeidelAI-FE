@@ -16,13 +16,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ExternalLink, Send, Plus, Search, Eye, Share2, AlertTriangle } from "lucide-react";
+import { ExternalLink, Send, Plus, Search, Eye, Share2, AlertTriangle, MoreVertical, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import api from "@/lib/session_api";
 import { Product } from "../types/product";
 import { useOrganization, useUser } from "@clerk/nextjs";
 import { m } from "framer-motion";
+import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
+import SingleProductForm from "./product/SingleProductForm";
+import BulkUploadForm from "./product/BulkUploadForm";
+import { toast } from "sonner";
 type PlatformType = "pinecone" | "shopify" | "other" | undefined;
 
 const WS_URL = 'wss://egenie-whatsapp.koyeb.app/cs';
@@ -106,6 +110,12 @@ const ProductsTab = ({
   const [retries, setRetries] = useState(0);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedMode, setSelectedMode] = useState<"single" | "bulk">("single");
+  const [openMenuProductId, setOpenMenuProductId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const {user} = useUser();
   const {organization} = useOrganization({
     memberships:true
@@ -123,6 +133,7 @@ const ProductsTab = ({
     setLoading(true);
     try {
       const response = await api.get(`/api/products`);
+      console.log('Fetched products:', response.data);
 
       if (response.status !== 200) {
         setError('Failed to fetch products');
@@ -145,6 +156,20 @@ const ProductsTab = ({
     }
   };
 
+
+  const deletProduct = async(productId: number | string) =>{
+    try{
+      const response = await api.delete(`/api/products/${productId}`);
+      if(response.status === 200){
+        setProducts((prev) => prev.filter((prod) => prod.product_id !== productId));
+        setFilteredProducts((prev) => prev.filter((prod) => prod.product_id !== productId));
+      }
+      toast.success('Product deleted successfully');
+    }catch(err){
+      console.error('Error deleting product:', err);
+      toast.error('Failed to delete product');  
+    }
+  }
       const checkRole= async ()=>{
       if(!organization || !user) return;
       try{
@@ -246,6 +271,39 @@ const ProductsTab = ({
     setShowOptions(false);
   };
 
+  const handleAddProductClick = () => {
+    setIsModalOpen(!isModalOpen);
+    setShowOptions(false);
+  }
+
+  // Update delete logic to use _id and refetch products
+const handleDeleteProduct = async () => {
+  if (!productToDelete) return;
+  setDeleting(true);
+  try {
+    const response = await api.delete(`/api/products/${productToDelete._id}`);
+    if (response.status === 200) {
+      toast.success('Product deleted successfully');
+      // Refetch products after deletion
+      await fetchProducts(selectedConversationId!);
+    } else {
+      toast.error('Failed to delete product');
+    }
+  } catch (err) {
+    console.error('Error deleting product:', err);
+    toast.error('Failed to delete product');
+  } finally {
+    setDeleting(false);
+    setDeleteDialogOpen(false);
+    setProductToDelete(null);
+  }
+};
+
+  const getDropdownDirection = (index: number) => {
+    // If product is in the last 3 items, open upwards
+    return index >= filteredProducts.length - 1 ? "up" : "down";
+  };
+
   if (loading) {
     return <LoadingState />;
   }
@@ -333,6 +391,11 @@ const ProductsTab = ({
                   >
                     Add to Wordpress
                   </button>
+                  <button
+                    onClick={() => handleAddProductClick()}
+                    className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all" >
+                      Add Product Manually
+                    </button>
                 </div>
               </div>
             )}
@@ -340,11 +403,11 @@ const ProductsTab = ({
         )}
       </div>
 
-        <div className="space-y-2">
-          {filteredProducts.map((product) => (
+        <div className="space-y-2 h-[400px] overflow-y-auto hide-scrollbar">
+          {filteredProducts.map((product, idx) => (
             <div
-              key={product.product_id}
-            className="group flex items-center gap-4 p-3 bg-white rounded-lg border hover:border-blue-200"
+              key={product._id}
+              className="group flex items-center gap-4 p-3 bg-white rounded-lg border hover:border-blue-200"
               onClick={() => onProductSelect(product)}
             >
               <div className="w-20 bg-gray-50 rounded-md overflow-hidden">
@@ -366,41 +429,60 @@ const ProductsTab = ({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2 ml-auto">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onProductSelect(product);
-                      }}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Preview</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onShareProduct(product);
-                      }}
-                    >
-                      <Share2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Share product</TooltipContent>
-                </Tooltip>
-              </div>
+              <div className="relative ml-auto">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpenMenuProductId(
+              openMenuProductId === product._id ? null : product._id
+            );
+          }}
+        >
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+        {openMenuProductId === product._id && (
+          <div
+            className={`absolute right-0 z-50 w-36 bg-white border border-gray-200 rounded-lg shadow-lg
+              ${getDropdownDirection(idx) === "up" ? "bottom-10" : "top-10"}
+            `}
+          >
+            <button
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+              onClick={(e) => {
+                e.stopPropagation();
+                onProductSelect(product);
+                setOpenMenuProductId(null);
+              }}
+            >
+              <Eye className="h-4 w-4" /> Preview
+            </button>
+            <button
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+              onClick={(e) => {
+                e.stopPropagation();
+                onShareProduct(product);
+                setOpenMenuProductId(null);
+              }}
+            >
+              <Share2 className="h-4 w-4" /> Share
+            </button>
+            <button
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 text-left"
+              onClick={(e) => {
+                e.stopPropagation();
+                setProductToDelete(product);
+                setDeleteDialogOpen(true);
+                setOpenMenuProductId(null);
+              }}
+            >
+              <Trash2 className="h-4 w-4" /> Delete
+            </button>
+          </div>
+        )}
+      </div>
             </div>
           ))}
         </div>
@@ -410,6 +492,68 @@ const ProductsTab = ({
             No products found matching your criteria
           </div>
         )}
+
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen} >
+ <DialogContent
+  className="w-full max-w-lg h-[650px] bg-white rounded-2xl p-6 shadow-xl border border-gray-200 overflow-hidden "
+>
+  <div className="flex flex-col h-full ">
+
+    <DialogTitle className="text-2xl font-semibold text-gray-900 mb-2">
+      Add Product
+    </DialogTitle>
+
+    <p className="text-sm text-gray-600 mb-3">
+      Choose how you want to add new product(s).
+    </p>
+
+    {/* Mode Buttons */}
+    <div className="flex gap-4 mb-4">
+      <Button
+        onClick={() => setSelectedMode("single")}
+        className={`w-full rounded-lg ${
+          selectedMode === "single"
+            ? "bg-gray-900 text-white"
+            : "bg-gray-100 text-gray-800"
+        }`}
+      >
+        Add Single
+      </Button>
+
+      <Button
+        onClick={() => setSelectedMode("bulk")}
+        className={`w-full rounded-lg ${
+          selectedMode === "bulk"
+            ? "bg-gray-900 text-white"
+            : "bg-gray-100 text-gray-800"
+        }`}
+      >
+        Bulk Upload
+      </Button>
+    </div>
+
+    {/* SCROLLABLE AREA — scrollbar hidden */}
+    <div className="flex-1 overflow-y-auto pr-1 hide-scrollbar">
+      {selectedMode === "single" && (
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 shadow-sm">
+          <SingleProductForm setIsModalOpen={setIsModalOpen} />
+        </div>
+      )}
+
+      {selectedMode === "bulk" && (
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 shadow-sm">
+          <BulkUploadForm />
+        </div>
+      )}
+    </div>
+  </div>
+</DialogContent>
+
+</Dialog>
+
+
+
 
       {showForm && (
         <div
@@ -424,10 +568,39 @@ const ProductsTab = ({
               setShowForm(false);
               setSelectedPlatform(undefined);
             }}
+            setIsModalOpen={setIsModalOpen}
             platform={selectedPlatform}
           />
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogTitle>Delete Product</DialogTitle>
+          <div className="py-2">
+            <p className="text-sm text-gray-700">
+              Are you sure you want to delete <span className="font-semibold">{productToDelete?.product_name}</span>?
+            </p>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleDeleteProduct}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
