@@ -21,6 +21,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import api from "@/lib/session_api";
 import { Product } from "../types/product";
+import { useOrganization, useUser } from "@clerk/nextjs";
+import { m } from "framer-motion";
 type PlatformType = "pinecone" | "shopify" | "other" | undefined;
 
 const WS_URL = 'wss://egenie-whatsapp.koyeb.app/cs';
@@ -103,20 +105,26 @@ const ProductsTab = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [retries, setRetries] = useState(0);
   const [ws, setWs] = useState<WebSocket | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const {user} = useUser();
+  const {organization} = useOrganization({
+    memberships:true
+  })
 
   const maxRetries = 5;
   const retryDelay = 3000;
+
+
+
 
   const fetchProducts = async (conversationId: string) => {
     if (!conversationId) return;
 
     setLoading(true);
     try {
-      const response = await api.post(`/api/ai/product-recommendations/${conversationId}`);
-      if (response.status !== 200) throw new Error("Failed to fetch products");
-      const data = await response.data();
+      const response = await api.get(`/api/products`);
 
-      if (data.status === "error") {
+      if (response.status !== 200) {
         setError('Failed to fetch products');
         setProducts([]);
         setFilteredProducts([]);
@@ -124,7 +132,7 @@ const ProductsTab = ({
       }
 
       setError(null);
-      const productsData = Array.isArray(data.data) ? data.data : [];
+      const productsData = Array.isArray(response.data.products) ? response.data.products : [];
       setProducts(productsData);
       setFilteredProducts(productsData);
     } catch (err) {
@@ -137,6 +145,29 @@ const ProductsTab = ({
     }
   };
 
+      const checkRole= async ()=>{
+      if(!organization || !user) return;
+      try{
+        const memberships = await organization.getMemberships()
+        const membership = memberships.data.find(
+        (m) => m.publicUserData?.userId === user.id
+        );
+        if(membership && (membership.role === 'org:admin' || membership.role === 'admin')){
+          setIsAdmin(true);
+        }else{
+          setIsAdmin(false);
+        }
+        console.log('User role:', membership?.role);
+        
+      
+      } catch(err){
+        console.error('Error checking user role:', err);
+      }
+    }
+    
+  useEffect(()=>{
+    checkRole();
+  }, [organization, user, selectedConversationId]);
   useEffect(() => {
     if (!selectedConversationId) {
       setLoading(false);
@@ -200,8 +231,7 @@ const ProductsTab = ({
 
   useEffect(() => {
     const filtered = products.filter((product) => {
-      const matchesSearch = product.name
-        .toLowerCase()
+      const matchesSearch = product.product_name
         .includes(searchProduct.toLowerCase());
       const matchesCategory =
         selectedCategory === "All" || product.category === selectedCategory;
@@ -231,7 +261,8 @@ const ProductsTab = ({
             />
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
           </div>
-          <div className="relative">
+          {isAdmin &&(
+             <div className="relative">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button size="icon" variant="outline">
@@ -241,6 +272,8 @@ const ProductsTab = ({
               <TooltipContent>Add new product</TooltipContent>
             </Tooltip>
           </div>
+          )}
+         
         </div>
         <div className="p-4 my-4 text-red-500 bg-white rounded-lg border border-red-200">
           <div className="flex items-center gap-2">
@@ -264,65 +297,67 @@ const ProductsTab = ({
           />
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
         </div>
-        <div className="relative" ref={dropdownRef}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={() => setShowOptions(!showOptions)}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Add new product</TooltipContent>
-          </Tooltip>
-
-          {showOptions && (
-            <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-xl border border-gray-200 z-50">
-              <div className="py-1">
-                <button
-                  onClick={() => handleOptionSelect("pinecone")}
-                  className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
+        {/* Only show Add Product button for admin */}
+        {isAdmin && (
+          <div className="relative" ref={dropdownRef}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={() => setShowOptions(!showOptions)}
                 >
-                  Add to Pinecone
-                </button>
-                <button
-                  onClick={() => handleOptionSelect("shopify")}
-                  className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
-                >
-                  Add to Shopify
-                </button>
-                <button
-                  onClick={() => handleOptionSelect("other")}
-                  className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
-                >
-                  Add to Wordpress
-                </button>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Add new product</TooltipContent>
+            </Tooltip>
+            {showOptions && (
+              <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-xl border border-gray-200 z-50">
+                <div className="py-1">
+                  <button
+                    onClick={() => handleOptionSelect("pinecone")}
+                    className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
+                  >
+                    Add to Pinecone
+                  </button>
+                  <button
+                    onClick={() => handleOptionSelect("shopify")}
+                    className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
+                  >
+                    Add to Shopify
+                  </button>
+                  <button
+                    onClick={() => handleOptionSelect("other")}
+                    className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
+                  >
+                    Add to Wordpress
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
         <div className="space-y-2">
           {filteredProducts.map((product) => (
             <div
-              key={product.id}
+              key={product.product_id}
             className="group flex items-center gap-4 p-3 bg-white rounded-lg border hover:border-blue-200"
               onClick={() => onProductSelect(product)}
             >
               <div className="w-20 bg-gray-50 rounded-md overflow-hidden">
                 <img
                   src={product.images}
-                  alt={product.name}
+                  alt={product.product_name}
                   className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
                 />
               </div>
 
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
-                  {product.name}
+                  {product.product_name}
                 </h3>
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-gray-900">

@@ -1,22 +1,13 @@
-
 export interface Product {
-  id: string;
-  category: string;
+  _id: string;
+  product_id: string; // Note: string type as per your data
+  product_name: string;
   description: string;
-  name: string;
-  onsale: string;
-  permalink: string;
   price: number;
-  productid: number;
-  purchasable: string;
-  regularprice: string;
-  saleprice: string;
-  slug: string;
-  stockquantity: number;
+  stock: number;
+  created_at?: string;
+  metadata?: Record<string, unknown>;
+  org_id?: string;
+  category: string;
   images: string;
-  on_sale: string;
-  product_id: number;
-  regular_price: string;
-  sale_price: string;
-  stock_quantity: number;
 }
