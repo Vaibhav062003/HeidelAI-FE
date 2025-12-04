@@ -1216,7 +1216,7 @@ const ChatView = ({
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onMessageDeleted: (data: any) => {
-      if (data.message.conversation_id === selectedConversationId) {
+      if (data.conversation_id === selectedConversationId) {
         setMessages(prev => prev.filter(msg => msg.id !== data.message_id));
 
         console.log(`ChatView: Message with ID ${data.message_id} was deleted`);

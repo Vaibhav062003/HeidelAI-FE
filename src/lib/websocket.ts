@@ -36,6 +36,11 @@ export function useMainWebSocket(handlers?: any) {
       cleanups.push(remove);
     }
 
+    if(handlers.onMessageDeleted) {
+      const remove = addEventHandler("message_deleted", handlers.onMessageDeleted);
+      cleanups.push(remove);
+    }
+
     return () => {
       cleanups.forEach((cleanup) => cleanup());
     };
