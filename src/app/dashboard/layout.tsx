@@ -161,9 +161,9 @@ export default function DashboardLayout({
       {/* Content wrapper with padding to avoid overlap */}
       <div className={!isOnline ? 'pt-10' : ''}>
         <WebSocketProvider>
-        {children}
+          {children}
         </WebSocketProvider>
-        </div>
+      </div>
     </div>
   )
 }
