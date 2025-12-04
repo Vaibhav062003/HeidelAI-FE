@@ -44,7 +44,6 @@ import {
 } from '@/components/ui/table';
 // import { Shopify } from '@shopify/shopify-api';
 import { toast } from 'sonner';
-import { connectWebSocket } from '../../lib/websocket';
 import WhatsAppLoginDialog from './WhatsappLoginDialog';
 import api from '@/lib/session_api';
 import { useUser, useOrganization } from '@clerk/nextjs';

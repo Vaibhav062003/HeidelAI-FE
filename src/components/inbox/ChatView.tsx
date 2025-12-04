@@ -1,95 +1,48 @@
 "use client";
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-  memo,
-} from "react";
+import React, { useState, useEffect, useRef, useCallback, memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Sidebar from "./Sidebar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+// import Sidebar from "./Sidebar";
+import {Popover,PopoverContent,PopoverTrigger,} from "@/components/ui/popover";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { toast, Toaster } from "sonner";
 import { Conversation } from "../types/conversation";
-import {
-  ShoppingCart,
-  MapPin,
-  Upload,
-  FileText,
-  FileImage,
-  FileVideo,
-  Music,
-  File,
-  Loader2,
-  X,
-  ChevronDown,
-  CheckCircle,
-  RefreshCw,
-  XCircle,
-  ChevronLeft,
-} from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-  DialogTrigger,
-} from "../ui/dialog";
+import { ShoppingCart, Plus, MapPin, Upload, FileText, FileImage, FileVideo, Music, File, Loader2, X, ChevronDown, RefreshCw, XCircle, Send, Paperclip, MoreVertical, Smile, Mic, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogTrigger } from "../ui/dialog";
 import dynamic from "next/dynamic";
 import { useReminders } from "../hooks/useReminders";
-import { H1, H2, H3, Body, Small } from "@/components/typography";
-import { Trash2, User, Plus } from "lucide-react";
-import TimerDisplay from "./TimerDisplay";
+// import { H1, H2, H3, Body, Small } from "@/components/typography";
+// import { Trash2, User, Menu } from "lucide-react";
+// import TimerDisplay from "./TimerDisplay";
 import { useTypingIndicator } from "../hooks/typingIndicator";
 import { createClient } from "@supabase/supabase-js";
-import {
-  conversationService,
-  WhatsAppMessage,
-} from "@/components/services/api";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from "@/components/ui/tooltip";
-import {
-  Send,
-  Paperclip,
-  MoreVertical,
-  Menu,
-  Smile,
-  Mic,
-  Clock,
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { conversationService } from "@/components/services/api";
+import {Tooltip,TooltipContent,TooltipTrigger,TooltipProvider,} from "@/components/ui/tooltip";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ReminderDialog from "./ReminderDialog";
 import "../../app/dashboard/dashboard.css";
 import Image from "next/image";
 import CustomerInfo from "./CustomerInfo";
 import LandingDashboard from "./LandingDashboard";
 import api from "@/lib/session_api";
-import { useConversations } from "../hooks/useConversations";
-import { storeData, getData, getAllKeys, deleteData } from "@/lib/indexedDB";
+// import { useConversations } from "../hooks/useConversations";
+// import { storeData, getData, getAllKeys, deleteData } from "@/lib/indexedDB";
 import { Product } from "../types/product";
+// import Conversation_Status from "./Conversation_Status";
+import InstagramPost from "../instagram/messaging/InstagramPost";
+import InstagramReel from "../instagram/messaging/InstagramReel";
+import InstagramStory from "../instagram/messaging/InstagramStory";
+import LazyMediaLoader from "../LazyMediaLoader";
+import { MessageWrapper } from "../messaging/MessageWrapper";
+import { useUser } from "@clerk/nextjs";
+import MediaMessage from "../messaging/MediaMessage";
+import { useMainWebSocket } from '@/lib/websocket';
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -103,14 +56,6 @@ const Picker = dynamic(
   { ssr: false }
 );
 
-import Conversation_Status from "./Conversation_Status";
-import InstagramPost from "../instagram/messaging/InstagramPost";
-import InstagramReel from "../instagram/messaging/InstagramReel";
-import InstagramStory from "../instagram/messaging/InstagramStory";
-import LazyMediaLoader from "../LazyMediaLoader";
-import { MessageWrapper } from "../messaging/MessageWrapper";
-import { useUser } from "@clerk/nextjs";
-import MediaMessage from "../messaging/MediaMessage";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
@@ -157,17 +102,17 @@ interface Message {
   conversation_id: string;
   status?: "sent" | "delivered" | "read";
   type?:
-    | "text"
-    | "image"
-    | "file"
-    | "voice"
-    | "video"
-    | "share"
-    | "ig_story"
-    | "ig_reel"
-    | "story_reply"
-    | "system"
-    | "message_reply";
+  | "text"
+  | "image"
+  | "file"
+  | "voice"
+  | "video"
+  | "share"
+  | "ig_story"
+  | "ig_reel"
+  | "story_reply"
+  | "system"
+  | "message_reply";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
   product_data?: ProductData[];
@@ -310,13 +255,10 @@ const LoadingState = () => (
 //   }
 // };
 
-const SharedProductPreview = ({
-  product,
-  onRemove,
-}: {
-  product: Product;
-  onRemove: () => void;
-}) => (
+const SharedProductPreview = ({ 
+  product, 
+  onRemove 
+}: { product: Product; onRemove: () => void; }) => (
   <div className="flex items-center w-fit gap-3 p-2 bg-gray-50 rounded-lg border border-gray-200 mb-2">
     <div className="w-15 h-15 relative">
       <Image
@@ -402,7 +344,7 @@ const RemindersPopover = ({
                           // Add IST offset (UTC+5:30)
                           new Date(
                             new Date(reminder.dateTime).getTime() +
-                              5.5 * 60 * 60 * 1000
+                            5.5 * 60 * 60 * 1000
                           ),
                           "MMM d, yyyy 'at' h:mm a"
                         )}
@@ -650,36 +592,36 @@ const MessageItem = memo(
       );
     }
 
-  return (
-    <>
-      <div
-        className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${message.role === "customer"
+    return (
+      <>
+        <div
+          className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${message.role === "customer"
             ? `bg-white/90 backdrop-blur-sm ${isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"} text-gray-900 border-gray-200/60`
             : `bg-blue-600/90 backdrop-blur-sm ${isReplyMessage ? "rounded-tr-lg" : "rounded-br-lg"} text-white border-blue-500/60`
-          }`}
-        style={{ wordBreak: "break-word" }}
-      >
-        <div className="break-words">
-          <p className="text-sm leading-relaxed">{message.content}</p>
+            }`}
+          style={{ wordBreak: "break-word" }}
+        >
+          <div className="break-words">
+            <p className="text-sm leading-relaxed">{message.content}</p>
+          </div>
+          <div className="flex justify-end mt-2">
+            <span
+              className={`text-xs ${message.role === "customer" ? "text-gray-500" : "text-white/70"
+                }`}
+            >
+              {formatMessageTime(message.timestamp)}
+            </span>
+          </div>
         </div>
-        <div className="flex justify-end mt-2">
-          <span
-            className={`text-xs ${message.role === "customer" ? "text-gray-500" : "text-white/70"
-              }`}
-          >
-            {formatMessageTime(message.timestamp)}
-          </span>
-        </div>
-      </div>
 
-      
-    </>
-  );
-}, (prevProps, nextProps) => {
-  return prevProps.message.id === nextProps.message.id &&
-    prevProps.isLast === nextProps.isLast &&
-    JSON.stringify(prevProps.message.reaction) === JSON.stringify(nextProps.message.reaction);
-});
+
+      </>
+    );
+  }, (prevProps, nextProps) => {
+    return prevProps.message.id === nextProps.message.id &&
+      prevProps.isLast === nextProps.isLast &&
+      JSON.stringify(prevProps.message.reaction) === JSON.stringify(nextProps.message.reaction);
+  });
 MessageItem.displayName = "MessageItem";
 
 const ChatView = ({
@@ -689,7 +631,7 @@ const ChatView = ({
   isRightSidebarVisible,
   onOpenRightSidebar,
 }: ChatViewProps) => {
-  const {user, isLoaded} = useUser();
+  const { user, isLoaded } = useUser();
   const [isRecording, setIsRecording] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
   const [isAIEnabled, setIsAIEnabled] = useState(false);
@@ -704,9 +646,7 @@ const ChatView = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
   const [showCannedResponses, setShowCannedResponses] = useState(false);
-  const [filteredResponses, setFilteredResponses] = useState<CannedResponse[]>(
-    []
-  );
+  const [filteredResponses, setFilteredResponses] = useState<CannedResponse[]>([]);
   const [showCustomerInfo, setShowCustomerInfo] = useState(false);
   const [audioURL, setAudioURL] = useState<string | null>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -715,27 +655,19 @@ const ChatView = ({
   const [currentTimer, setCurrentTimer] = useState(0);
   const [isResolved, setIsResolved] = useState(false);
   const [isFollowUp, setIsFollowUp] = useState(false);
-  const [conversationStatus, setConversationStatus] = useState<
-    "open" | "closed" | "followup"
-  >("open");
+  const [conversationStatus, setConversationStatus] = useState<"open" | "closed" | "followup">("open");
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [fileCaption, setFileCaption] = useState("");
-
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const inputFileRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const wsRef = useRef<WebSocket | null>(null);
   const typingThrottleRef = useRef<number>(0);
-
-  const { reminders = [], refetchReminders } = useReminders(
-    selectedConversationId
-  );
-  const [typingUsers, setTypingUsers] = useState<
-    Map<
+  const { reminders = [], refetchReminders } = useReminders(selectedConversationId);
+  const [typingUsers, setTypingUsers] = useState<Map<
       string,
       {
         agent_name: string;
@@ -743,14 +675,10 @@ const ChatView = ({
       }
     >
   >(new Map());
-
   const [globalMuted, setGlobalMuted] = useState(true);
   const [activeMediaId, setActiveMediaId] = useState<string | null>(null);
-  const [activeMediaType, setActiveMediaType] = useState<
-    "reel" | "story" | "video" | null
-  >(null);
-
- 
+  const [activeMediaType, setActiveMediaType] = useState<"reel" | "story" | "video" | null>(null);
+  const { sendWsMessage } = useMainWebSocket();
 
 
   const handlePlay = (id: string, type: "reel" | "story" | "video") => {
@@ -760,21 +688,6 @@ const ChatView = ({
 
   const handleMuteToggle = (muted: boolean) => {
     setGlobalMuted(muted);
-  };
-
-  const token = async () => {
-    const sessionId = localStorage.getItem("sessionId");
-    if (!sessionId) throw new Error("Session ID not found in localStorage");
-
-    const res = await fetch("api/session-token", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({ sessionId }),
-    });
-    const { token: sessionToken } = await res.json();
-    return sessionToken;
   };
 
   const startRecording = async () => {
@@ -834,14 +747,15 @@ const ChatView = ({
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-  setMessage(e.target.value);
-  const now = Date.now();
-  if (now - typingThrottleRef.current > 100) {
-    handleTyping();
-    typingThrottleRef.current = now;
-  }
-};
+    setMessage(e.target.value);
+    const now = Date.now();
+    if (now - typingThrottleRef.current > 100) {
+      handleTyping();
+      typingThrottleRef.current = now;
+    }
+  };
 
+  // Show canned responses
   useEffect(() => {
     if (message.startsWith("/")) {
       const query = message.substring(1).toLowerCase();
@@ -957,10 +871,10 @@ const ChatView = ({
           type: file.type.startsWith("image/")
             ? "image"
             : file.type.startsWith("video/")
-            ? "video"
-            : file.type.startsWith("audio/")
-            ? "voice"
-            : "file",
+              ? "video"
+              : file.type.startsWith("audio/")
+                ? "voice"
+                : "file",
           role: "agent",
           conversation_id: selectedConversationId,
           timestamp: new Date().toISOString(),
@@ -1067,6 +981,7 @@ const ChatView = ({
     }
   };
 
+  // Auto scroll to bottom on new message
   useEffect(() => {
     if (lastMessageRef.current) {
       lastMessageRef.current.scrollIntoView({
@@ -1234,272 +1149,175 @@ const ChatView = ({
     }, 100);
   }, [selectedConversationId]);
 
+  useMainWebSocket({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onTypingIndicator: (data: any) => {
+      const myClientId = localStorage.getItem('chat_client_id');
+
+      // Only show typing if it's for this conversation
+      if (
+        data.agent_id !== myClientId &&
+        data.conversation_id === selectedConversationId
+      ) {
+        if (data.is_typing) {
+          setTypingUsers(prev => {
+            const next = new Map(prev);
+            next.set(data.agent_id, { agent_name: data.user, timestamp: Date.now() });
+            return next;
+          });
+        } else {
+          setTypingUsers(prev => {
+            const next = new Map(prev);
+            next.delete(data.agent_id);
+            return next;
+          });
+        }
+      }
+    },
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onNewMessage: (data: any) => {
+      console.log("ChatView: New message received via WebSocket: ", data);
+      if (data.message.conversation_id === selectedConversationId) {
+        // Check if this message already exists in the messages array to avoid duplicates
+        const messageExists = messages.some(msg =>
+          msg.id === data.message.id ||
+          (msg.content === data.message.content &&
+            msg.timestamp === data.message.timestamp &&
+            msg.sender_id === data.message.sender_id)
+        );
+        console.log("ChatView: Message exists check: ", messageExists);
+        // Only add the message if it's not already in the messages array
+        if (!messageExists) {
+          console.log("ChatView: Adding new message to state: ", data.message);
+          setMessages(prev => [...prev, data.message]);
+        }
+      }
+    },
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onMessageReaction: (data: any) => {
+      if (data.message.conversation_id === selectedConversationId) {
+        const updatedMessage = data.message;
+
+        setMessages(prev => prev.map(message => {
+          if (message.id === updatedMessage.message_id || message.id === updatedMessage.id) {
+            return {
+              ...message,
+              reaction: updatedMessage.reaction
+            };
+          }
+          return message;
+        }));
+
+        console.log(`ChatView: Reaction updated for message ${updatedMessage.message_id || updatedMessage.id}`);
+      }
+    },
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onMessageDeleted: (data: any) => {
+      if (data.conversation_id === selectedConversationId) {
+        setMessages(prev => prev.filter(msg => msg.id !== data.message_id));
+
+        console.log(`ChatView: Message with ID ${data.message_id} was deleted`);
+      }
+    }
+  });
+
+  function getOrCreateChatClientId() {
+    let id = localStorage.getItem("chat_client_id");
+    if (!id) {
+      id = `chat-view-${Date.now()}`;
+      localStorage.setItem("chat_client_id", id);
+    }
+    return id;
+  }
+
+  const setUnreadCount = async () => {
+    try {
+      const platform = selectedConversationId.split("_")[0];
+      let url;
+      if (platform === "instagram") {
+        url = `/api/instagram/conversations/${selectedConversationId}/read`;
+        await api.get(url);
+      } else if (platform === "whatsapp") {
+        const whatsappId = localStorage.getItem("whatsapp_user_id");
+        if (!whatsappId) return;
+        url = `/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/read`;
+        await api.get(url);
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error setting unread count:", error);
+      }
+    }
+  };
+
+  const fetchConversation = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(
+        `/api/conversations/${selectedConversationId}`
+      );
+      setConversation(response?.data);
+    } catch {
+      toast.error("Failed to load conversation");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAIStatus = async () => {
+    try {
+      const platform = selectedConversationId.split("_")[0];
+      let response;
+      if (platform === "instagram") {
+        response = await api.get(
+          `/api/instagram/conversations/${selectedConversationId}/ai`
+        );
+        setIsAIEnabled(!!response?.data);
+      } else if (platform === "whatsapp") {
+        const whatsappId = localStorage.getItem("whatsapp_user_id");
+        if (!whatsappId) return;
+        response = await conversationService.getWhatsAppAiStatus(
+          whatsappId,
+          selectedConversationId
+        );
+        setIsAIEnabled(!!response.data);
+      }
+    } catch (error) {
+      setIsAIEnabled(true);
+    }
+  };
+
+  const fetchMessages = async () => {
+    if (!isLoaded || !user) return;
+    const agent_username = user.username;
+    try {
+      const response = await api.get(
+        `/api/conversations/${selectedConversationId}/messages?agent_username=${agent_username}`
+      );
+      setMessages(response?.data.messages || []);
+
+    } catch (error) {
+      toast.error("Failed to load messages", { description: error as string });
+    }
+  };
+
   useEffect(() => {
-    if (!selectedConversationId) return () => {};
+    if (!selectedConversationId) return () => { };
 
-    const setUnreadCount = async () => {
-      try {
-        const platform = selectedConversationId.split("_")[0];
-        let url;
-        if (platform === "instagram") {
-          url = `/api/instagram/conversations/${selectedConversationId}/read`;
-          await api.get(url);
-        } else if (platform === "whatsapp") {
-          const whatsappId = localStorage.getItem("whatsapp_user_id");
-          if (!whatsappId) return;
-          url = `/api/whatsapp/${whatsappId}/conversations/${selectedConversationId}/read`;
-          await api.get(url);
-        }
-      } catch (error) {
-        if (process.env.NODE_ENV === "development") {
-          console.error("Error setting unread count:", error);
-        }
-      }
-    };
-
-    const fetchConversation = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get(
-          `/api/conversations/${selectedConversationId}`
-        );
-        setConversation(response?.data);
-      } catch (error) {
-        toast.error("Failed to load conversation");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchAIStatus = async () => {
-      try {
-        const platform = selectedConversationId.split("_")[0];
-        let response;
-        if (platform === "instagram") {
-          response = await api.get(
-            `/api/instagram/conversations/${selectedConversationId}/ai`
-          );
-          setIsAIEnabled(!!response?.data);
-        } else if (platform === "whatsapp") {
-          const whatsappId = localStorage.getItem("whatsapp_user_id");
-          if (!whatsappId) return;
-          response = await conversationService.getWhatsAppAiStatus(
-            whatsappId,
-            selectedConversationId
-          );
-          setIsAIEnabled(!!response.data);
-        }
-      } catch (error) {
-        setIsAIEnabled(true);
-      }
-    };
-
-    const fetchMessages = async () => {
-      if (!isLoaded || !user) return;
-      const agent_username = user.username;
-      try {
-        const response = await api.get(
-          `/api/conversations/${selectedConversationId}/messages?agent_username=${agent_username}`
-        );
-        setMessages(response?.data.messages || []);
-       
-      } catch (error) {
-        toast.error("Failed to load messages", {description: error as string} );
-      }
-    };
-
-    const WS_BASE_URL = "wss://egenie-whatsapp.koyeb.app";
-    const platform = selectedConversationId.split("_")[0];
-
-    function getOrCreateChatClientId() {
-      let id = localStorage.getItem("chat_client_id");
-      if (!id) {
-        id = `chat-view-${Date.now()}`;
-        localStorage.setItem("chat_client_id", id);
-      }
-      return id;
-    }
-    const chatClientId = getOrCreateChatClientId();
-
-    if (platform === "instagram") {
-      token()
-        .then((sessionToken) => {
-          const clientId =
-            localStorage.getItem("chat_client_id") || chatClientId;
-          const ws = new WebSocket(
-            `${WS_BASE_URL}/ws2/${platform}/${clientId}`,
-            [sessionToken]
-          );
-          wsRef.current = ws;
-
-          ws.onopen = () => {
-            console.log(
-              `ChatView: Connected to Instagram WebSocket with ID ${clientId}`
-            );
-          };
-
-        ws.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          console.log("ChatView: Instagram WebSocket received message: ", data);
-
-          // Handle typing indicators
-
-          if (data.type === 'typing_indicator') {
-            const myClientId = localStorage.getItem('chat_client_id');
-            // Only show typing if it's for this conversation
-            if (
-              data.agent_id !== myClientId &&
-              data.conversation_id === selectedConversationId
-            ) {
-              if (data.is_typing) {
-                setTypingUsers(prev => {
-                  const next = new Map(prev);
-                  next.set(data.agent_id, { agent_name: data.user, timestamp: Date.now() });
-                  return next;
-                });
-              } else {
-                setTypingUsers(prev => {
-                  const next = new Map(prev);
-                  next.delete(data.agent_id);
-                  return next;
-                });
-              }
-            }
-          }
-
-          if (data.type === 'new_message' && data.message.conversation_id === selectedConversationId) {
-            console.log("ChatView: new_message event type ✅ && data conv_id: ", data.message.conversation_id);
-
-            // Check if this message already exists in the messages array to avoid duplicates
-            const messageExists = messages.some(msg =>
-              msg.id === data.message.id ||
-              (msg.content === data.message.content &&
-                msg.timestamp === data.message.timestamp &&
-                msg.sender_id === data.message.sender_id)
-            );
-
-            // Only add the message if it's not already in the messages array
-            if (!messageExists) {
-              setMessages(prev => [...prev, data.message]);
-            }
-          }
-
-          if (data.type === 'message_reaction' && data.message.conversation_id === selectedConversationId) {
-            const updatedMessage = data.message;
-            
-            setMessages(prev => prev.map(message => {
-              if (message.id === updatedMessage.message_id || message.id === updatedMessage.id) {
-                return {
-                  ...message,
-                  reaction: updatedMessage.reaction
-                };
-              }
-              return message;
-            }));
-
-            console.log(`ChatView: Reaction updated for message ${updatedMessage.message_id || updatedMessage.id}`);
-          }
-
-          else if (data.type === 'message_deleted' && data.conversation_id === selectedConversationId) {
-            setMessages(prev =>
-              prev.filter(msg => msg.id !== data.message_id)
-            );
-
-              console.log(
-                `ChatView: Message with ID ${data.message_id} was deleted`
-              );
-            }
-          };
-
-          ws.onerror = (error) => {
-            console.error("ChatView: WebSocket error: ", error);
-          };
-
-          ws.onclose = (event) => {
-            console.log(
-              `ChatView: WebSocket closed with code ${event.code}: ${event.reason}`
-            );
-          };
-        })
-        .catch((error) => {
-          console.error("Failed to get session token:", error);
-        });
-    }
-    if (platform === "whatsapp") {
-      const whatsappId = localStorage.getItem("whatsapp_user_id");
-      const clientId = `client-${Date.now()}-wa`;
-
-      if (whatsappId) {
-        token().then((sessionToken) => {
-        const ws = new WebSocket(
-          `${WS_BASE_URL}/ws2/whatsapp/${clientId}/${whatsappId}`,
-          [sessionToken]
-        );
-        wsRef.current = ws;
-        console.log("Connected to WhatsApp WebSocket");
-
-        ws.onopen = () => {
-          console.log(
-            `ChatView: Connected to WhatsApp WebSocket with ID ${clientId}`
-          );
-        };
-
-        ws.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          console.log("ChatView: WhatsApp WebSocket received message: ", data);
-
-          if (
-            data.type === "new_message" &&
-            data.message.conversation_id === selectedConversationId
-          ) {
-            console.log(
-              "ChatView: new_message event type ✅ && data conv_id: ",
-              data.message.conversation_id
-            );
-            setMessages((prev) => [...prev, data.message]);
-          } else if (
-            data.type === "message_deleted" &&
-            data.conversation_id === selectedConversationId
-          ) {
-            setMessages((prev) =>
-              prev.filter((msg) => msg.id !== data.message_id)
-            );
-            console.log(
-              `ChatView: Message with ID ${data.message_id} was deleted`
-            );
-          }
-        };
-
-        ws.onerror = (error) => {
-          console.error("ChatView: WebSocket error: ", error);
-        };
-
-        ws.onclose = (event) => {
-          console.log(
-            `ChatView: WebSocket closed with code ${event.code}: ${event.reason}`
-          );
-        };
-      });
-      }
-    }
-
+    getOrCreateChatClientId();
     fetchConversation();
     setUnreadCount();
     fetchAIStatus();
     fetchMessages();
     setTypingUsers(new Map());
-
-    return () => {
-      if (wsRef.current) wsRef.current.close();
-    };
   }, [selectedConversationId]);
 
   const sendFn = (payload: Record<string, unknown>) => {
     // console.log("TypingIndicator payload sent to backend:", payload);
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      const msg = JSON.stringify(payload);
-      wsRef.current.send(msg);
-    }
+    sendWsMessage(payload);
   };
 
   const { handleTyping } = useTypingIndicator(sendFn, selectedConversationId);
@@ -1527,7 +1345,7 @@ const ChatView = ({
 
   const isWindowExpired = lastCustomerMessage
     ? new Date().getTime() - new Date(lastCustomerMessage.timestamp).getTime() >
-      24 * 60 * 60 * 1000
+    24 * 60 * 60 * 1000
     : true;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1660,8 +1478,8 @@ const ChatView = ({
                         {conversationStatus === "closed"
                           ? "Closed"
                           : conversationStatus === "followup"
-                          ? "Follow-up"
-                          : "Open"}
+                            ? "Follow-up"
+                            : "Open"}
                       </span>
                       <ChevronDown className="h-4 w-4 text-gray-600" />
                     </Button>
@@ -1695,14 +1513,14 @@ const ChatView = ({
 
                     {(conversationStatus === "closed" ||
                       conversationStatus === "followup") && (
-                      <DropdownMenuItem
-                        onClick={handleReopen}
-                        className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-green-50 rounded-xl mx-2"
-                      >
-                        <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
-                        <span className="font-medium">Reopen Conversation</span>
-                      </DropdownMenuItem>
-                    )}
+                        <DropdownMenuItem
+                          onClick={handleReopen}
+                          className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-green-50 rounded-xl mx-2"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
+                          <span className="font-medium">Reopen Conversation</span>
+                        </DropdownMenuItem>
+                      )}
                   </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -1759,9 +1577,8 @@ const ChatView = ({
                   </TooltipTrigger>
                   <TooltipContent>
                     {reminders.length > 0
-                      ? `${reminders.length} reminder${
-                          reminders.length > 1 ? "s" : ""
-                        } set`
+                      ? `${reminders.length} reminder${reminders.length > 1 ? "s" : ""
+                      } set`
                       : "Set reminder"}
                   </TooltipContent>
                 </Tooltip>
@@ -1785,11 +1602,10 @@ const ChatView = ({
                         variant="ghost"
                         size="icon"
                         onClick={onOpenRightSidebar}
-                        className={`rounded-xl transition-all duration-200 ${
-                          isRightSidebarVisible
+                        className={`rounded-xl transition-all duration-200 ${isRightSidebarVisible
                             ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
                             : "hover:bg-gray-100"
-                        }`}
+                          }`}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -1860,8 +1676,8 @@ const ChatView = ({
                           {conversation?.platform === "instagram"
                             ? selectedConversationId?.split("_")[1]
                             : selectedConversationId
-                                ?.split("_")[1]
-                                ?.replace(/^(\d{2})(\d+)/, "+$1 $2")}
+                              ?.split("_")[1]
+                              ?.replace(/^(\d{2})(\d+)/, "+$1 $2")}
                         </div>
                       </div>
                     </div>
@@ -2064,36 +1880,36 @@ const ChatView = ({
                   />
                 </div>
 
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsFileModalOpen(false);
-                    setSelectedFile(null);
-                    setFileCaption("");
-                  }}
-                  disabled={uploading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  disabled={!selectedFile || uploading}
-                  onClick={() => handleFileUpload(selectedFile, selectedConversationId, fileCaption)}
-                >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Sending...
-                    </>
-                  ) : (
-                    'Send'
-                  )}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsFileModalOpen(false);
+                      setSelectedFile(null);
+                      setFileCaption("");
+                    }}
+                    disabled={uploading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={!selectedFile || uploading}
+                    onClick={() => handleFileUpload(selectedFile, selectedConversationId, fileCaption)}
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Sending...
+                      </>
+                    ) : (
+                      'Send'
+                    )}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             <ReminderDialog
               open={showReminder}
@@ -2106,41 +1922,42 @@ const ChatView = ({
               conversationId={selectedConversationId}
             />
 
-          {/* Messages Area */}
-          <ScrollArea
-            ref={scrollAreaRef}
-            className="flex-1 h-full px-3 py-0.1 bg-gray-50"
-          >
-            <div className="space-y-3 max-w-full pb-4 sm:pb-0">
-              
+            {/* Messages Area */}
+            <ScrollArea
+              ref={scrollAreaRef}
+              className="flex-1 h-full px-3 py-0.1 bg-gray-50"
+            >
+              <div className="space-y-3 max-w-full pb-4 sm:pb-0">
+
                 <>
                   {messages.map((message, index) => {
                     const latestMediaMessage = [...messages]
                       .reverse()
                       .find((m) => m.type === "ig_reel" || m.type === "ig_story");
 
-                      const latestMediaId = latestMediaMessage?.payload?.reel_video_id || latestMediaMessage?.payload?.story_media_id;
+                    const latestMediaId = latestMediaMessage?.payload?.reel_video_id || latestMediaMessage?.payload?.story_media_id;
 
-                      const isLatest =
-                        (message.type === "ig_reel" &&
-                          message.payload?.reel_video_id === latestMediaId) ||
-                        (message.type === "ig_story" &&
-                          message.payload?.story_media_id === latestMediaId);
-                      return (
-                         <div
-                          key={message.id}
-                          className="relative group w-full message-item"
+                    const isLatest =
+                      (message.type === "ig_reel" &&
+                        message.payload?.reel_video_id === latestMediaId) ||
+                      (message.type === "ig_story" &&
+                        message.payload?.story_media_id === latestMediaId);
+                    return (
+                      <div
+                        key={message.id}
+                        className="relative group w-full message-item"
+                      >
+                        <div className={`flex ${message.role === "customer" ? "justify-start" : "justify-end"}`}>
+                          <div
+                            className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === "customer" ? "items-start" : "items-end"
+                              }`}
                           >
-                          <div className={`flex ${message.role === "customer" ? "justify-start" : "justify-end"}`}>
-                            <div
-                              className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === "customer" ? "items-start" : "items-end"
-                                }`}
-                            >
-                              <MessageWrapper message={message} index={index} allMessages={messages}>
-                                {/* IG Media Messages */}
+                            <MessageWrapper message={message} index={index} allMessages={messages}>
+                              {/* IG Media Messages */}
+                              {message.payload && (
                                 <LazyMediaLoader key={index} index={index}>
                                   {/* Render IG Posts */}
-                                  {message.type === "share" && message.payload && (
+                                  {message.type === "share" && (
                                     <InstagramPost
                                       mediaUrl={message.payload.url}
                                       timestamp={formatMessageTime(message.timestamp)}
@@ -2148,7 +1965,7 @@ const ChatView = ({
                                   )}
 
                                   {/* Render IG Reels */}
-                                  {message.type === "ig_reel" && message.payload && (
+                                  {message.type === "ig_reel" && (
                                     <InstagramReel
                                       key={index}
                                       id={message.payload.reel_video_id}
@@ -2169,7 +1986,7 @@ const ChatView = ({
                                   )}
 
                                   {/* Render IG Story */}
-                                  {(message.type === "ig_story" || message.type === "story_reply") && message.payload && (
+                                  {(message.type === "ig_story" || message.type === "story_reply") && (
                                     <InstagramStory
                                       id={message.payload.story_media_id}
                                       sharedBy="You"
@@ -2188,11 +2005,11 @@ const ChatView = ({
                                       content={message.content}
                                       storyOwnerUsername={message.payload.owner_username}
                                       type={message.type}
-                                      />
+                                    />
                                   )}
 
                                   {/* Render Images / Videos */}
-                                  {(message.type === "image" || message.type === "video") && message.payload && (
+                                  {(message.type === "image" || message.type === "video") && (
                                     <MediaMessage
                                       type={message.type === "image" ? "image" : "video"}
                                       url={message.payload.url}
@@ -2210,28 +2027,29 @@ const ChatView = ({
                                     />
                                   )}
                                 </LazyMediaLoader>
+                              )}
 
-                                {/* Normal Messages */}
-                                {!["ig_story", "story_reply", "ig_reel", "share", "image", "video"].includes(message.type ?? "") && (
-                                  <MessageItem
-                                    key={message.id}
-                                    message={message}
-                                    index={index}
-                                    isLatest={isLatest}
-                                    isLast={index === messages.length - 1}
-                                    isReplyMessage={message.type == "message_reply"}
-                                  />
-                                )}
-                              </MessageWrapper>
+                              {/* Normal Messages */}
+                              {!["ig_story", "story_reply", "ig_reel", "share", "image", "video"].includes(message.type ?? "") && (
+                                <MessageItem
+                                  key={message.id}
+                                  message={message}
+                                  index={index}
+                                  isLatest={isLatest}
+                                  isLast={index === messages.length - 1}
+                                  isReplyMessage={message.type == "message_reply"}
+                                />
+                              )}
+                            </MessageWrapper>
                           </div>
                         </div>
                       </div>
-                      )
-                    })}
+                    )
+                  })}
                   <div ref={lastMessageRef} />
                 </>
-            </div>
-          </ScrollArea>
+              </div>
+            </ScrollArea>
 
             {/* Input Section */}
             <div className="flex-shrink-0 mb-3 bg-gray-50">
@@ -2250,7 +2068,7 @@ const ChatView = ({
                   <div className="flex gap-1">
                     <span className="animate-bounce">.</span>
                     <span className="animate-bounce delay-100">.</span>
-                    <span className="animate-bounce delay-200">.</span> 
+                    <span className="animate-bounce delay-200">.</span>
                   </div>
                 </div>
               )}
@@ -2279,21 +2097,19 @@ const ChatView = ({
                   {/* Mode Toggle */}
                   <div className="mb-5 w-40 bg-gray-100/80 rounded-2xl p-0.5 flex items-center">
                     <button
-                      className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${
-                        mode === "reply"
+                      className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${mode === "reply"
                           ? "bg-blue-600 text-white shadow-md"
                           : "text-gray-600 hover:text-blue-600"
-                      }`}
+                        }`}
                       onClick={() => setMode("reply")}
                     >
                       Reply
                     </button>
                     <button
-                      className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${
-                        mode === "private"
+                      className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${mode === "private"
                           ? "bg-purple-600 text-white shadow-md"
                           : "text-gray-600 hover:text-purple-600"
-                      }`}
+                        }`}
                       onClick={() => setMode("private")}
                     >
                       Private
@@ -2357,11 +2173,10 @@ const ChatView = ({
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
-                            className={`p-2.5 rounded-xl transition-colors ${
-                              isRecording
+                            className={`p-2.5 rounded-xl transition-colors ${isRecording
                                 ? "bg-red-100/80 hover:bg-red-200/80 text-red-600"
                                 : "bg-gray-100/80 hover:bg-gray-200/80 text-gray-600"
-                            }`}
+                              }`}
                             onClick={
                               isRecording ? stopRecording : startRecording
                             }
@@ -2382,13 +2197,12 @@ const ChatView = ({
                       </div>
 
                       <button
-                        className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${
-                          message.trim() || audioURL || sharedProduct
+                        className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${message.trim() || audioURL || sharedProduct
                             ? mode === "reply"
                               ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
                               : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
                             : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
-                        }`}
+                          }`}
                         onClick={() => {
                           if (sharedProduct) {
                             handleShareProduct(message, sharedProduct);
