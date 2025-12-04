@@ -602,7 +602,7 @@ const MessageItem = memo(
           style={{ wordBreak: "break-word" }}
         >
           <div className="break-words">
-            <p className="text-sm leading-relaxed">{message.content}</p>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
           </div>
           <div className="flex justify-end mt-2">
             <span
