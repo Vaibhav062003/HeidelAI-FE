@@ -3,8 +3,13 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import React, { useState } from "react";
 import api from "@/lib/session_api";
+import { toast } from "sonner";
 
-const BulkUploadForm = () => {
+interface BulkUploadFormProps {
+  setIsModalOpen: (open: boolean) => void;
+}
+
+const BulkUploadForm = ({ setIsModalOpen }: BulkUploadFormProps) => {
   const [loading, setLoading] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
 
@@ -19,12 +24,14 @@ const BulkUploadForm = () => {
         "Content-Type": "multipart/form-data",
       },
     });
-    console.log("Bulk upload response:", res.data);
-
     setLoading(false);
-    if (res.status !== 200) return alert("Bulk upload failed!");
+    if (res.status !== 200) {
+      toast.error("Bulk upload failed!");
+      return;
+    }
 
-    alert("Bulk upload successful!");
+    toast.success("Bulk upload successful!");
+    setIsModalOpen(false); // Close dialog after success
   };
 
   return (

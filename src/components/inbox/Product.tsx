@@ -255,8 +255,25 @@ const ProductsTab = ({
   }, [selectedConversationId]);
 
   useEffect(() => {
+    if (!searchProduct.trim()) {
+      setFilteredProducts(products);
+      return;
+    }
+
+    // Try to find by _id first
+    const byId = products.find(
+      (product) => product._id === searchProduct.trim()
+    );
+
+    if (byId) {
+      setFilteredProducts([byId]);
+      return;
+    }
+
+    // Otherwise, filter by name and category
     const filtered = products.filter((product) => {
       const matchesSearch = product.product_name
+        .toLowerCase()
         .includes(searchProduct.toLowerCase());
       const matchesCategory =
         selectedCategory === "All" || product.category === selectedCategory;
@@ -299,6 +316,7 @@ const handleDeleteProduct = async () => {
   }
 };
 
+  
   const getDropdownDirection = (index: number) => {
     // If product is in the last 3 items, open upwards
     return index >= filteredProducts.length - 1 ? "up" : "down";
@@ -354,6 +372,7 @@ const handleDeleteProduct = async () => {
             className="pl-8 pr-3 py-1.5 text-sm"
           />
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+         
         </div>
         {/* Only show Add Product button for admin */}
         {isAdmin && (
@@ -494,7 +513,15 @@ const handleDeleteProduct = async () => {
         )}
 
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen} >
+      <Dialog
+  open={isModalOpen}
+  onOpenChange={async (open) => {
+    setIsModalOpen(open);
+    if (!open && selectedConversationId) {
+      await fetchProducts(selectedConversationId);
+    }
+  }}
+>
  <DialogContent
   className="w-full max-w-lg h-[650px] bg-white rounded-2xl p-6 shadow-xl border border-gray-200 overflow-hidden "
 >
@@ -543,7 +570,7 @@ const handleDeleteProduct = async () => {
 
       {selectedMode === "bulk" && (
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 shadow-sm">
-          <BulkUploadForm />
+          <BulkUploadForm setIsModalOpen={setIsModalOpen} />
         </div>
       )}
     </div>

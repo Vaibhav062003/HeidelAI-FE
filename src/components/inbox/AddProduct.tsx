@@ -1,8 +1,4 @@
-
-import { is } from "@react-three/fiber/dist/declarations/src/core/utils";
 import React, { useState, ChangeEvent, FormEvent } from "react";
-import { set } from "react-hook-form";
-import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 // Define the platform type
 type PlatformType = "pinecone" | "shopify" | "other" | undefined;
 
