@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import React, { useState } from "react";
 import api from "@/lib/session_api";
 import { toast } from "sonner";
+import { Download, Upload, FileCheck, File } from "lucide-react";
 
 interface BulkUploadFormProps {
   setIsModalOpen: (open: boolean) => void;
@@ -13,12 +14,10 @@ const BulkUploadForm = ({ setIsModalOpen }: BulkUploadFormProps) => {
   const [loading, setLoading] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
 
-  const handleBulkUpload = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleBulkUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     const formData = new FormData(e.target as HTMLFormElement);
-
     const res = await api.post("/api/products/bulk-upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
@@ -29,92 +28,105 @@ const BulkUploadForm = ({ setIsModalOpen }: BulkUploadFormProps) => {
       toast.error("Bulk upload failed!");
       return;
     }
-
     toast.success("Bulk upload successful!");
-    setIsModalOpen(false); // Close dialog after success
+    setIsModalOpen(false);
   };
 
   return (
-    <form onSubmit={handleBulkUpload} className="space-y-6 mt-2">
-
-      {/* Download Template */}
-      <div className="flex justify-between items-center bg-gray-100 p-3 rounded-lg border border-gray-200">
-        <div>
-          <p className="text-gray-800 font-medium">Sample Template</p>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Use this file to format your product list correctly.
-          </p>
+    <div className="w-full mx-auto p-6">
+      <form onSubmit={handleBulkUpload} className="space-y-6">
+        {/* Header */}
+        <div className="space-y-2 mb-8">
+          <h2 className="text-2xl font-bold text-gray-900">Bulk Upload Products</h2>
+          <p className="text-gray-600">Upload multiple products at once using our template</p>
         </div>
 
-        <Button
-          type="button"
-          className="bg-gray-900 text-white rounded-lg px-4 py-2 hover:bg-gray-700"
-          onClick={() => window.open("add_product_template.xlsx", "_blank")}
-        >
-          Download
-        </Button>
-      </div>
-
-      {/* File Upload */}
-      <div>
-        <Label className="text-sm text-gray-800 mb-2 block">
-          Upload CSV or Excel File
-        </Label>
-
-        {/* Styled File Box */}
-        <label
-          htmlFor="file-upload"
-          className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition relative"
-        >
-          {!selectedFileName ? (
-            <div className="flex flex-col items-center justify-center pt-3 pb-4">
-              <svg
-                aria-hidden="true"
-                className="w-10 h-10 mb-2 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                viewBox="0 0 24 24"
-              >
-                <path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 7.5 7.5 12m4.5-4.5V15" />
-              </svg>
-              <p className="text-sm text-gray-600">
-                <span className="font-medium">Click to upload</span> or drag & drop
-              </p>
-              <p className="text-xs text-gray-500 mt-1">.csv or .xlsx only</p>
+        {/* Template Download Box */}
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg p-6">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <h3 className="font-semibold text-gray-900 text-lg flex items-center gap-2">
+                <File className="w-5 h-5 text-blue-600" />
+                Sample Template
+              </h3>
+              <p className="text-gray-700 text-sm">Download the Excel file and enter your product details following the format.</p>
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full px-4">
-              <p className="text-sm text-gray-800 font-medium truncate w-full text-center">
-                {selectedFileName}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">File selected</p>
-            </div>
-          )}
+            <Button
+              type="button"
+              onClick={() => window.open("add_product_template.xlsx", "_blank")}
+              className="bg-blue-600 hover:bg-blue-700 text-white gap-2 whitespace-nowrap"
+            >
+              <Download className="w-4 h-4" />
+              Download
+            </Button>
+          </div>
+        </div>
 
-          <Input
-            id="file-upload"
-            type="file"
-            name="file"
-            required
-            accept=".csv, .xlsx"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              setSelectedFileName(file ? file.name : null);
-            }}
-          />
-        </label>
-      </div>
+        {/* File Upload Section */}
+        <div className="space-y-3">
+          <Label className="text-gray-900 font-semibold">Upload Your File</Label>
+          
+          {/* Upload Box */}
+          <div className="relative">
+            <input
+              type="file"
+              name="file"
+              accept=".csv,.xlsx,.xls"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                setSelectedFileName(file ? file.name : null);
+              }}
+              className="hidden"
+              id="file-upload"
+            />
+            <label
+              htmlFor="file-upload"
+              className={`flex flex-col items-center justify-center w-full p-8 border-2 border-dashed rounded-lg cursor-pointer transition-all ${
+                selectedFileName
+                  ? "border-green-400 bg-green-50"
+                  : "border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400"
+              }`}
+            >
+              {!selectedFileName ? (
+                <div className="flex flex-col items-center gap-3">
+                  <Upload className="w-8 h-8 text-gray-400" />
+                  <div className="text-center">
+                    <p className="font-medium text-gray-900">Click to upload or drag & drop</p>
+                    <p className="text-sm text-gray-600">CSV or XLSX only (Max 10MB)</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <FileCheck className="w-8 h-8 text-green-600" />
+                  <p className="font-medium text-gray-900">{selectedFileName}</p>
+                  <p className="text-xs text-green-600">File selected</p>
+                </div>
+              )}
+            </label>
+          </div>
+        </div>
 
-      {/* Submit Button */}
-      <Button
-        type="submit"
-        className="w-full bg-blue-500 text-white py-2.5 rounded-lg hover:bg-blue-700"
-      >
-        {loading ? "Uploading..." : "Upload File"}
-      </Button>
-    </form>
+        {/* Submit Button */}
+        <div className="flex gap-3 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsModalOpen(false)}
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={!selectedFileName || loading}
+            className="flex-1 bg-green-600 hover:bg-green-700 text-white gap-2"
+          >
+            <Upload className="w-4 h-4" />
+            {loading ? "Uploading..." : "Upload File"}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
 

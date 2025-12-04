@@ -116,9 +116,9 @@ const ProductsTab = ({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const {user} = useUser();
-  const {organization} = useOrganization({
-    memberships:true
+  const { user } = useUser();
+  const { organization } = useOrganization({
+    memberships: true
   })
 
   const maxRetries = 5;
@@ -157,40 +157,40 @@ const ProductsTab = ({
   };
 
 
-  const deletProduct = async(productId: number | string) =>{
-    try{
+  const deletProduct = async (productId: number | string) => {
+    try {
       const response = await api.delete(`/api/products/${productId}`);
-      if(response.status === 200){
+      if (response.status === 200) {
         setProducts((prev) => prev.filter((prod) => prod.product_id !== productId));
         setFilteredProducts((prev) => prev.filter((prod) => prod.product_id !== productId));
       }
       toast.success('Product deleted successfully');
-    }catch(err){
+    } catch (err) {
       console.error('Error deleting product:', err);
-      toast.error('Failed to delete product');  
+      toast.error('Failed to delete product');
     }
   }
-      const checkRole= async ()=>{
-      if(!organization || !user) return;
-      try{
-        const memberships = await organization.getMemberships()
-        const membership = memberships.data.find(
+  const checkRole = async () => {
+    if (!organization || !user) return;
+    try {
+      const memberships = await organization.getMemberships()
+      const membership = memberships.data.find(
         (m) => m.publicUserData?.userId === user.id
-        );
-        if(membership && (membership.role === 'org:admin' || membership.role === 'admin')){
-          setIsAdmin(true);
-        }else{
-          setIsAdmin(false);
-        }
-        console.log('User role:', membership?.role);
-        
-      
-      } catch(err){
-        console.error('Error checking user role:', err);
+      );
+      if (membership && (membership.role === 'org:admin' || membership.role === 'admin')) {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
       }
+      console.log('User role:', membership?.role);
+
+
+    } catch (err) {
+      console.error('Error checking user role:', err);
     }
-    
-  useEffect(()=>{
+  }
+
+  useEffect(() => {
     checkRole();
   }, [organization, user, selectedConversationId]);
   useEffect(() => {
@@ -294,29 +294,29 @@ const ProductsTab = ({
   }
 
   // Update delete logic to use _id and refetch products
-const handleDeleteProduct = async () => {
-  if (!productToDelete) return;
-  setDeleting(true);
-  try {
-    const response = await api.delete(`/api/products/${productToDelete._id}`);
-    if (response.status === 200) {
-      toast.success('Product deleted successfully');
-      // Refetch products after deletion
-      await fetchProducts(selectedConversationId!);
-    } else {
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return;
+    setDeleting(true);
+    try {
+      const response = await api.delete(`/api/products/${productToDelete._id}`);
+      if (response.status === 200) {
+        toast.success('Product deleted successfully');
+        // Refetch products after deletion
+        await fetchProducts(selectedConversationId!);
+      } else {
+        toast.error('Failed to delete product');
+      }
+    } catch (err) {
+      console.error('Error deleting product:', err);
       toast.error('Failed to delete product');
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+      setProductToDelete(null);
     }
-  } catch (err) {
-    console.error('Error deleting product:', err);
-    toast.error('Failed to delete product');
-  } finally {
-    setDeleting(false);
-    setDeleteDialogOpen(false);
-    setProductToDelete(null);
-  }
-};
+  };
 
-  
+
   const getDropdownDirection = (index: number) => {
     // If product is in the last 3 items, open upwards
     return index >= filteredProducts.length - 1 ? "up" : "down";
@@ -337,19 +337,19 @@ const handleDeleteProduct = async () => {
             />
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
           </div>
-          {isAdmin &&(
-             <div className="relative">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="icon" variant="outline">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Add new product</TooltipContent>
-            </Tooltip>
-          </div>
+          {isAdmin && (
+            <div className="relative">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="icon" variant="outline">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Add new product</TooltipContent>
+              </Tooltip>
+            </div>
           )}
-         
+
         </div>
         <div className="p-4 my-4 text-red-500 bg-white rounded-lg border border-red-200">
           <div className="flex items-center gap-2">
@@ -362,7 +362,7 @@ const handleDeleteProduct = async () => {
   }
 
   return (
-       <div className="p-3 bg-white">
+    <div className="p-3 bg-white">
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <div className="flex-1 relative">
           <Input
@@ -372,7 +372,7 @@ const handleDeleteProduct = async () => {
             className="pl-8 pr-3 py-1.5 text-sm"
           />
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-         
+
         </div>
         {/* Only show Add Product button for admin */}
         {isAdmin && (
@@ -413,8 +413,8 @@ const handleDeleteProduct = async () => {
                   <button
                     onClick={() => handleAddProductClick()}
                     className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all" >
-                      Add Product Manually
-                    </button>
+                    Add Product Manually
+                  </button>
                 </div>
               </div>
             )}
@@ -422,163 +422,174 @@ const handleDeleteProduct = async () => {
         )}
       </div>
 
-        <div className="space-y-2 h-[400px] overflow-y-auto hide-scrollbar">
-          {filteredProducts.map((product, idx) => (
-            <div
-              key={product._id}
-              className="group flex items-center gap-4 p-3 bg-white rounded-lg border hover:border-blue-200"
-              onClick={() => onProductSelect(product)}
-            >
-              <div className="w-20 bg-gray-50 rounded-md overflow-hidden">
-                <img
-                  src={product.images}
-                  alt={product.product_name}
-                  className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
-                />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
-                  {product.product_name}
-                </h3>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-900">
-                    ₹{product.price}
-                  </p>
-                </div>
-              </div>
-
-              <div className="relative ml-auto">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
-          onClick={(e) => {
-            e.stopPropagation();
-            setOpenMenuProductId(
-              openMenuProductId === product._id ? null : product._id
-            );
-          }}
-        >
-          <MoreVertical className="h-4 w-4" />
-        </Button>
-        {openMenuProductId === product._id && (
+      <div className="space-y-2 h-[400px] overflow-y-auto hide-scrollbar">
+        {filteredProducts.map((product, idx) => (
           <div
-            className={`absolute right-0 z-50 w-36 bg-white border border-gray-200 rounded-lg shadow-lg
+            key={product._id}
+            className="group flex items-center gap-4 p-3 bg-white rounded-lg border hover:border-blue-200"
+            onClick={() => onProductSelect(product)}
+          >
+            <div className="w-20 bg-gray-50 rounded-md overflow-hidden">
+              <img
+                src={product.images}
+                alt={product.product_name}
+                className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
+              />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
+                {product.product_name}
+              </h3>
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-gray-900">
+                  ₹{product.price}
+                </p>
+              </div>
+            </div>
+
+            <div className="relative ml-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenMenuProductId(
+                    openMenuProductId === product._id ? null : product._id
+                  );
+                }}
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+              {openMenuProductId === product._id && (
+                <div
+                  className={`absolute right-0 z-50 w-36 bg-white border border-gray-200 rounded-lg shadow-lg
               ${getDropdownDirection(idx) === "up" ? "bottom-10" : "top-10"}
             `}
-          >
-            <button
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-              onClick={(e) => {
-                e.stopPropagation();
-                onProductSelect(product);
-                setOpenMenuProductId(null);
-              }}
-            >
-              <Eye className="h-4 w-4" /> Preview
-            </button>
-            <button
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-              onClick={(e) => {
-                e.stopPropagation();
-                onShareProduct(product);
-                setOpenMenuProductId(null);
-              }}
-            >
-              <Share2 className="h-4 w-4" /> Share
-            </button>
-            <button
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 text-left"
-              onClick={(e) => {
-                e.stopPropagation();
-                setProductToDelete(product);
-                setDeleteDialogOpen(true);
-                setOpenMenuProductId(null);
-              }}
-            >
-              <Trash2 className="h-4 w-4" /> Delete
-            </button>
-          </div>
-        )}
-      </div>
+                >
+                  <button
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onProductSelect(product);
+                      setOpenMenuProductId(null);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" /> Preview
+                  </button>
+                  <button
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onShareProduct(product);
+                      setOpenMenuProductId(null);
+                    }}
+                  >
+                    <Share2 className="h-4 w-4" /> Share
+                  </button>
+                  <button
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 text-left"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setProductToDelete(product);
+                      setDeleteDialogOpen(true);
+                      setOpenMenuProductId(null);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" /> Delete
+                  </button>
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-
-        {!loading && !error && filteredProducts.length === 0 && (
-          <div className="text-center py-6 text-sm text-gray-500">
-            No products found matching your criteria
           </div>
-        )}
+        ))}
+      </div>
+
+      {!loading && !error && filteredProducts.length === 0 && (
+        <div className="text-center py-6 text-sm text-gray-500">
+          No products found matching your criteria
+        </div>
+      )}
 
 
       <Dialog
-  open={isModalOpen}
-  onOpenChange={async (open) => {
-    setIsModalOpen(open);
-    if (!open && selectedConversationId) {
-      await fetchProducts(selectedConversationId);
-    }
-  }}
->
- <DialogContent
-  className="w-full max-w-lg h-[650px] bg-white rounded-2xl p-6 shadow-xl border border-gray-200 overflow-hidden "
->
-  <div className="flex flex-col h-full ">
-
-    <DialogTitle className="text-2xl font-semibold text-gray-900 mb-2">
-      Add Product
-    </DialogTitle>
-
-    <p className="text-sm text-gray-600 mb-3">
-      Choose how you want to add new product(s).
-    </p>
-
-    {/* Mode Buttons */}
-    <div className="flex gap-4 mb-4">
-      <Button
-        onClick={() => setSelectedMode("single")}
-        className={`w-full rounded-lg ${
-          selectedMode === "single"
-            ? "bg-gray-900 text-white"
-            : "bg-gray-100 text-gray-800"
-        }`}
+        open={isModalOpen}
+        onOpenChange={async (open) => {
+          setIsModalOpen(open);
+          if (!open && selectedConversationId) {
+            await fetchProducts(selectedConversationId);
+          }
+        }}
       >
-        Add Single
-      </Button>
+        <DialogContent
+          className="
+      w-[50vw]
+      max-w-none
+      h-[800px]
+      bg-white
+      rounded-2xl
+      p-6
+      shadow-xl
+      border border-gray-200
+      overflow-hidden
+    "
+        >
+          <div className="flex flex-col h-full">
 
-      <Button
-        onClick={() => setSelectedMode("bulk")}
-        className={`w-full rounded-lg ${
-          selectedMode === "bulk"
-            ? "bg-gray-900 text-white"
-            : "bg-gray-100 text-gray-800"
-        }`}
-      >
-        Bulk Upload
-      </Button>
-    </div>
+            {/* Title Section */}
+            <div className="mb-4">
+              <DialogTitle className="text-2xl font-semibold text-gray-900">
+                Add Product
+              </DialogTitle>
 
-    {/* SCROLLABLE AREA — scrollbar hidden */}
-    <div className="flex-1 overflow-y-auto pr-1 hide-scrollbar">
-      {selectedMode === "single" && (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 shadow-sm">
-          <SingleProductForm setIsModalOpen={setIsModalOpen} />
-        </div>
-      )}
+              <p className="text-sm text-gray-600 mt-1">
+                Choose how you want to add new product(s).
+              </p>
+            </div>
 
-      {selectedMode === "bulk" && (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 shadow-sm">
-          <BulkUploadForm setIsModalOpen={setIsModalOpen} />
-        </div>
-      )}
-    </div>
-  </div>
-</DialogContent>
+            {/* Mode Buttons */}
+            <div className="flex gap-4 mb-5">
+              <Button
+                onClick={() => setSelectedMode("single")}
+                className={`w-full rounded-lg ${selectedMode === "single"
+                    ? "bg-blue-900 text-white hover:bg-blue-500"
+                    : "bg-gray-100 text-gray-800"
+                  }`}
+              >
+                Add Single
+              </Button>
 
-</Dialog>
+              <Button
+                onClick={() => setSelectedMode("bulk")}
+                className={`w-full rounded-lg ${selectedMode === "bulk"
+                    ? "bg-blue-900 text-white hover:bg-blue-500"
+                    : "bg-gray-100 text-gray-800"
+                  }`}
+              >
+                Bulk Upload
+              </Button>
+            </div>
 
+            {/* Scrollable Form Area */}
+            <div className="flex-1 overflow-y-auto pr-1 hide-scrollbar">
+
+              {selectedMode === "single" && (
+                <div className="bg-gray-200 border border-gray-200 rounded-xl p-6 shadow-sm">
+                  <SingleProductForm setIsModalOpen={setIsModalOpen} />
+                </div>
+              )}
+
+              {selectedMode === "bulk" && (
+                <div className="bg-gray-200 border border-gray-200 rounded-xl p-6 shadow-sm">
+                  <BulkUploadForm setIsModalOpen={setIsModalOpen} />
+                </div>
+              )}
+
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
 
 
@@ -603,7 +614,7 @@ const handleDeleteProduct = async () => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="w-[50vw] bg-white rounded-lg p-6 shadow-lg border border-gray-200">
           <DialogTitle>Delete Product</DialogTitle>
           <div className="py-2">
             <p className="text-sm text-gray-700">
