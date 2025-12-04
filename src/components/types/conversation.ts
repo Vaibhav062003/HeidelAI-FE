@@ -1,4 +1,3 @@
-// Type definition for conversation object
 export interface Conversation {
   conversation_id: string
   id: string;
