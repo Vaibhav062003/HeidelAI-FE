@@ -8,29 +8,40 @@ import { PaginationFooter } from "../Contacts/PaginationFooter";
 import { ContactForm } from "../Contacts/ContactFormModal";
 import { Spinner } from "../Contacts/Spinner";
 import TagSidebar from "./TagSidebar";
+import api from "@/lib/session_api";
+import { ApiContact, Contact } from "../types/contacts";
 
-interface Contact {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  country?: string;
-  tags: string[];
-}
-
-interface Tag {
-  id: string;
-  name: string;
-  tag_description: string;
-  created_at?: string;
-}
+type Tag = string;
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
+
+    const mapApiContactToContact = (apiContact: ApiContact): Contact => {
+    const fullName = apiContact.full_name || "Unknown";
+    const nameParts = fullName.trim().split(" ");
+    const firstName = nameParts[0] || "Unknown";
+    const lastName = nameParts.slice(1).join(" ") || "";
+
+    return {
+      id: apiContact.conversation_id,
+      firstName,
+      lastName,
+      email: apiContact.email || "",
+      phone: apiContact.phone_number,
+      company: undefined,
+      country: apiContact.country || undefined,
+      tags: apiContact.categories || [],
+      platform: apiContact.platform,
+      profile_url: apiContact.profile_url,
+      username: apiContact.username,
+      instagram_id: apiContact.instagram_id,
+      full_name: fullName,
+      conversation_id: apiContact.conversation_id,
+      categories: apiContact.categories,
+    };
+  };
 
 const ContactsDashboard = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -47,28 +58,39 @@ const ContactsDashboard = () => {
   const [tagsLoading, setTagsLoading] = useState(true);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const fetchContacts = useCallback(async () => {
-    try {
-      let query = supabase.from('contacts').select('*');
-      
-      if (selectedTag) {
-        query = query.contains('tags', [selectedTag]);
-      }
-  
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      setContacts(data?.map(c => ({
-        ...c,
-        tags: Array.isArray(c.tags) ? c.tags : []
-      })) || []);
-    } catch (err) {
-      console.error("Failed to fetch contacts:", err);
-      setError("Failed to load contacts. Please try again.");
-    } finally {
+const fetchContacts = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+
+  try {
+    const response = await api.get("/api/contacts");
+
+    if (!response.data || !Array.isArray(response.data.contacts)) {
+      setContacts([]);
+      setError("Invalid response format");
       setLoading(false);
+      return;
     }
-  }, [selectedTag]);
+
+    const contactsArray: ApiContact[] = response.data.contacts;
+    const mappedContacts = contactsArray.map((contact: ApiContact) => {
+      return mapApiContactToContact(contact);
+    });
+
+    setContacts(mappedContacts);
+    setError(null);
+
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      setError(err.message || "Failed to load contacts");
+    } else {
+      setError("Failed to load contacts");
+    }
+    setContacts([]);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -82,21 +104,17 @@ const ContactsDashboard = () => {
     fetchContacts();
   }, [selectedTag, fetchContacts]);
 
-  const fetchTags = async () => {
-    setTagsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("tags")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      setTags(data || []);
-    } catch (err) {
-      setError("Failed to load tags");
-    } finally {
-      setTagsLoading(false);
-    }
-  };
+const fetchTags = async () => {
+  setTagsLoading(true);
+  try {
+    const response = await api.get<{ tags: string[] }>("/api/org/metadata/tags");
+    setTags(response.data.tags || []);
+  } catch (err) {
+    setError("Failed to load tags");
+  } finally {
+    setTagsLoading(false);
+  }
+};
 
   const handleFileUpload = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,103 +207,116 @@ const ContactsDashboard = () => {
     }
   };
 
-  const handleSaveContact = useCallback(
-    (newContact: Partial<Contact>) => {
-      const updatedContact = {
-        ...newContact,
-        tags: newContact.tags || [],
-      };
+const handleSaveContact = useCallback(
+  (newContact: Partial<Contact>) => {
+    const updatedContact = {
+      ...newContact,
+      tags: newContact.tags || [],
+    };
 
-      setContacts((prev) => {
-        if (selectedContact?.id) {
-          return prev.map((c) =>
-            c.id === selectedContact.id
-              ? ({ ...c, ...updatedContact } as Contact)
-              : c
-          );
-        }
-        return [
-          ...prev,
-          { ...updatedContact, id: `manual-${Date.now()}` } as Contact,
-        ];
-      });
-      setSelectedContact(null);
-    },
-    [selectedContact]
-  );
-
-  const handleCreateTag = async (name: string, description: string) => {
-    try {
-      const { data: existingTags } = await supabase
-        .from("tags")
-        .select("id")
-        .ilike("name", name);
-
-      if (existingTags && existingTags.length > 0) {
-        throw new Error("Tag name already exists");
+    setContacts((prev) => {
+      if (selectedContact?.id) {
+        return prev.map((c) =>
+          c.id === selectedContact.id
+            ? { ...c, ...updatedContact } as Contact
+            : c
+        );
       }
-
-      const { data, error } = await supabase
-        .from("tags")
-        .insert([{ name, tag_description: description }])
-        .select();
-
-      if (error) throw error;
-      setTags((prev) => [data[0], ...prev]);
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  };
-
-  const handleEditTag = async (
-    id: string,
-    name: string,
-    description: string
-  ) => {
-    try {
-      const { data: existingTags } = await supabase
-        .from("tags")
-        .select("id")
-        .ilike("name", name)
-        .neq("id", id);
-
-      if (existingTags && existingTags.length > 0) {
-        throw new Error("Tag name already exists");
-      }
-
-      const { data, error } = await supabase
-        .from("tags")
-        .update({ name, tag_description: description })
-        .eq("id", id)
-        .select();
-
-      if (error) throw error;
-      setTags((prev) => prev.map((tag) => (tag.id === id ? data[0] : tag)));
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  };
-
-  const handleDeleteTag = async (id: string) => {
-    try {
-      if (!window.confirm("Are you sure you want to delete this tag?")) return;
-
-      const { error } = await supabase.from("tags").delete().eq("id", id);
-
-      if (error) throw error;
-      setTags((prev) => prev.filter((tag) => tag.id !== id));
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  };
-
-  const filteredContacts = useMemo(() => {
-    return contacts.filter((contact) => {
-      return `${contact.firstName} ${contact.lastName} ${contact.email}`
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+      return [
+        ...prev,
+        { ...updatedContact, id: `manual-${Date.now()}` } as Contact,
+      ];
     });
-  }, [contacts, searchQuery]);
+      },
+  [selectedContact]
+);
+
+const handleCreateTag = async (name: string) => {
+  try {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      throw new Error("Tag name is required");
+    }
+
+    await api.patch("/api/org/metadata/tags/add", null, {
+      params: { tag: trimmedName },
+    });
+
+    setTags((prev) =>
+      prev.includes(trimmedName) ? prev : [trimmedName, ...prev]
+    );
+  } catch (err) {
+    setError(
+      err instanceof Error ? err.message : "Failed to create tag"
+    );
+  }
+};
+
+  // const handleEditTag = async (
+  //   id: string,
+  //   name: string,
+  //   description: string
+  // ) => {
+  //   try {
+  //     const { data: existingTags } = await supabase
+  //       .from("tags")
+  //       .select("id")
+  //       .ilike("name", name)
+  //       .neq("id", id);
+
+  //     if (existingTags && existingTags.length > 0) {
+  //       throw new Error("Tag name already exists");
+  //     }
+
+  //     const { data, error } = await supabase
+  //       .from("tags")
+  //       .update({ name, tag_description: description })
+  //       .eq("id", id)
+  //       .select();
+
+  //     if (error) throw error;
+  //     setTags((prev) => prev.map((tag) => (tag.id === id ? data[0] : tag)));
+  //   } catch (err) {
+  //     setError((err as Error).message);
+  //   }
+  // };
+
+const handleDeleteTag = async (tagName: string) => {
+  try {
+    if (!window.confirm(`Are you sure you want to delete the tag "${tagName}"?`)) {
+      return;
+    }
+
+    await api.patch("/api/org/metadata/tags/remove", null, {
+      params: { tag: tagName },
+    });
+
+    setTags((prev) => prev.filter((tag) => tag !== tagName));
+  } catch (err) {
+    setError(
+      err instanceof Error ? err.message : "Failed to delete tag"
+    );
+  }
+};
+
+ const filteredContacts = useMemo(() => {
+    let filtered = contacts;
+    
+    if (selectedTag) {
+      filtered = filtered.filter((contact) =>
+        contact.tags.includes(selectedTag)
+      );
+    }
+    
+    if (searchQuery) {
+      filtered = filtered.filter((contact) => {
+        const searchText = `${contact.firstName} ${contact.lastName} ${contact.email} ${contact.username || ""}`;
+        return searchText.toLowerCase().includes(searchQuery.toLowerCase());
+      });
+    }
+    
+    return filtered;
+  }, [contacts, searchQuery, selectedTag]);
 
   const paginatedContacts = filteredContacts.slice(
     (currentPage - 1) * itemsPerPage,
@@ -305,7 +336,6 @@ const ContactsDashboard = () => {
           tags={tags}
           tagsLoading={tagsLoading}
           onCreateTag={handleCreateTag}
-          onEditTag={handleEditTag}
           onDeleteTag={handleDeleteTag}
           onTagSelect={setSelectedTag}
           selectedTag={selectedTag}

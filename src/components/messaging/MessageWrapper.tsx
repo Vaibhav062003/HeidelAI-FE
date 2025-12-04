@@ -7,7 +7,6 @@ import { toast } from "sonner";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const MessageWrapper = ({ message, index, children, allMessages }: any) => {
-  console.log(allMessages);
 
   const [showActions, setShowActions] = useState(false);
 
@@ -42,7 +41,7 @@ export const MessageWrapper = ({ message, index, children, allMessages }: any) =
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      {showActions && (
+      {showActions && message.platform !== "whatsapp" && (
         <MessageActionsPopover
           isAgent={message.role === "agent"}
           onReact={handleReact}

@@ -4,7 +4,19 @@ import { storeData, getData, DB_KEYS } from "@/lib/indexedDB";
 
 interface Integrations {
     instagram: false | InstagramData;
-    whatsapp: boolean;
+    whatsapp: false | WhatsappData;
+}
+
+export interface WhatsappData {
+    status: boolean;
+    name: string;
+    phone: string;
+    userId: string;
+    businessInfo?: {
+        account_type?: string;
+        status?: string;
+    };
+    lastUpdated?: number;
 }
 
 interface InstagramData {
@@ -119,6 +131,20 @@ export const useIntegrations = () => {
                 "integrations",
                 DB_KEYS.INTEGRATIONS.INSTAGRAM
             );
+
+            const whatsappData = await getData<WhatsappData>(
+                "integrations",
+                DB_KEYS.INTEGRATIONS.WHATSAPP
+            );
+
+            if (whatsappData && whatsappData.status) {
+                console.log("Loaded WhatsApp from IndexedDB:", whatsappData);
+                setIntegrations((prev) => ({
+                    ...prev,
+                    whatsapp: whatsappData || false,
+                }));
+                setLoading(false); // don’t block UI, show cached instantly
+            }
 
             if (instagramData && instagramData.status) {
                 console.log("Loaded Instagram from IndexedDB:", instagramData);
