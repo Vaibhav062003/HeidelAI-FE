@@ -321,7 +321,7 @@ const SharedProductPreview = ({
     <div className="w-15 h-15 relative">
       <Image
         src={product.images}
-        alt={product.name}
+        alt={product.product_name}
         height={80}
         width={80}
         className="rounded object-cover"
@@ -329,9 +329,9 @@ const SharedProductPreview = ({
     </div>
     <div className="flex-1 min-w-0">
       <p className="text-base font-medium text-gray-900 ">
-        {product.name.length > 50
-          ? `${product.name.substring(0, 50)}...`
-          : product.name}
+        {product.product_name.length > 50
+          ? `${product.product_name.substring(0, 50)}...`
+          : product.product_name}
       </p>
       <p className="text-sm text-gray-500">₹{product.price}</p>
     </div>

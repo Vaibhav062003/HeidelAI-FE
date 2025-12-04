@@ -9,9 +9,9 @@ export interface Product {
   metadata?: Record<string, unknown>;
   category: string;
   images: string;
-  onsale: string;
+  onsale: boolean;
   permalink: string;
-  purchasable: string;
+  purchasable: boolean;
   regularprice: string;
   saleprice: string;
   slug: string;
