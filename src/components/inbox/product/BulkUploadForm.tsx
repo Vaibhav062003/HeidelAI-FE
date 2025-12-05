@@ -42,7 +42,7 @@ const BulkUploadForm = ({ setIsModalOpen }: BulkUploadFormProps) => {
         </div>
 
         {/* Template Download Box */}
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg p-6">
+        <div className="bg-white border-dashed border-2 rounded-lg p-6">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
               <h3 className="font-semibold text-gray-900 text-lg flex items-center gap-2">
@@ -119,7 +119,7 @@ const BulkUploadForm = ({ setIsModalOpen }: BulkUploadFormProps) => {
           <Button
             type="submit"
             disabled={!selectedFileName || loading}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white gap-2"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white gap-2"
           >
             <Upload className="w-4 h-4" />
             {loading ? "Uploading..." : "Upload File"}

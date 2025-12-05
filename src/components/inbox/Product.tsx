@@ -23,7 +23,7 @@ import api from "@/lib/session_api";
 import { Product } from "../types/product";
 import { useOrganization, useUser } from "@clerk/nextjs";
 import { m } from "framer-motion";
-import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import SingleProductForm from "./product/SingleProductForm";
 import BulkUploadForm from "./product/BulkUploadForm";
 import { toast } from "sonner";
@@ -513,83 +513,75 @@ const ProductsTab = ({
       )}
 
 
-      <Dialog
-        open={isModalOpen}
-        onOpenChange={async (open) => {
-          setIsModalOpen(open);
-          if (!open && selectedConversationId) {
-            await fetchProducts(selectedConversationId);
-          }
-        }}
-      >
-        <DialogContent
-          className="
-      w-[50vw]
-      max-w-none
-      h-[800px]
-      bg-white
-      rounded-2xl
-      p-6
-      shadow-xl
-      border border-gray-200
-      overflow-hidden
-    "
-        >
-          <div className="flex flex-col h-full">
+<Dialog
+  open={isModalOpen}
+  onOpenChange={async (open) => {
+    setIsModalOpen(open);
+    if (!open && selectedConversationId) {
+      await fetchProducts(selectedConversationId);
+    }
+  }}
+>
+  <DialogContent className="sm:max-w-[950px] rounded-xl p-6">
+    
+    {/* Header */}
+    <DialogHeader className="pb-3 border-b">
+      <DialogTitle className="text-2xl font-semibold text-gray-900">
+        Add Product
+      </DialogTitle>
+      <DialogDescription className="text-gray-600">
+        Add a single product manually or upload multiple items using a CSV file.
+      </DialogDescription>
+    </DialogHeader>
 
-            {/* Title Section */}
-            <div className="mb-4">
-              <DialogTitle className="text-2xl font-semibold text-gray-900">
-                Add Product
-              </DialogTitle>
+    {/* Main Section */}
+    <div className="">
 
-              <p className="text-sm text-gray-600 mt-1">
-                Choose how you want to add new product(s).
-              </p>
-            </div>
+      {/* LEFT SIDE FORM */}
+      <div className="space-y-6">
 
-            {/* Mode Buttons */}
-            <div className="flex gap-4 mb-5">
-              <Button
-                onClick={() => setSelectedMode("single")}
-                className={`w-full rounded-lg ${selectedMode === "single"
-                    ? "bg-blue-900 text-white hover:bg-blue-500"
-                    : "bg-gray-100 text-gray-800"
-                  }`}
-              >
-                Add Single
-              </Button>
+        {/* Segmented Control */}
+        <div className="bg-gray-100 p-1 rounded-lg grid grid-cols-2">
+          <button
+            onClick={() => setSelectedMode("single")}
+            className={`py-2 rounded-md font-medium transition ${
+              selectedMode === "single"
+                ? "bg-blue-900 text-white"
+                : "text-gray-700"
+            }`}
+          >
+            Single Product
+          </button>
 
-              <Button
-                onClick={() => setSelectedMode("bulk")}
-                className={`w-full rounded-lg ${selectedMode === "bulk"
-                    ? "bg-blue-900 text-white hover:bg-blue-500"
-                    : "bg-gray-100 text-gray-800"
-                  }`}
-              >
-                Bulk Upload
-              </Button>
-            </div>
+          <button
+            onClick={() => setSelectedMode("bulk")}
+            className={`py-2 rounded-md font-medium transition ${
+              selectedMode === "bulk"
+                ? "bg-blue-900 text-white"
+                : "text-gray-700"
+            }`}
+          >
+            Bulk Upload
+          </button>
+        </div>
 
-            {/* Scrollable Form Area */}
-            <div className="flex-1 overflow-y-auto pr-1 hide-scrollbar">
+        {/* Form Card */}
+        <div className="border border-gray-200 bg-white p-5 rounded-xl shadow-sm">
 
-              {selectedMode === "single" && (
-                <div className="bg-gray-200 border border-gray-200 rounded-xl p-6 shadow-sm">
-                  <SingleProductForm setIsModalOpen={setIsModalOpen} />
-                </div>
-              )}
+          {selectedMode === "single" && (
+            <SingleProductForm setIsModalOpen={setIsModalOpen} />
+          )}
 
-              {selectedMode === "bulk" && (
-                <div className="bg-gray-200 border border-gray-200 rounded-xl p-6 shadow-sm">
-                  <BulkUploadForm setIsModalOpen={setIsModalOpen} />
-                </div>
-              )}
+          {selectedMode === "bulk" && (
+            <BulkUploadForm setIsModalOpen={setIsModalOpen} />
+          )}
 
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
+    </div>
+
+  </DialogContent>
+</Dialog>
 
 
 

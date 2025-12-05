@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import api from "@/lib/session_api";
 import { toast } from "sonner";
 import { Upload, Package, FileImage, Link as LinkIcon } from "lucide-react";
+import Image from "next/image";
 
 interface SingleProductFormProps {
   setIsModalOpen: (isOpen: boolean) => void;
@@ -66,9 +67,6 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
       
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="bg-blue-100 p-2.5 rounded-lg">
-          <Package className="w-6 h-6 text-blue-600" />
-        </div>
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Create New Product</h2>
           <p className="text-sm text-gray-600">Fill in the details below</p>
@@ -149,53 +147,6 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
           <LinkIcon className="w-4 h-4 text-gray-500 absolute left-3 top-3" />
         </div>
       </div>
-
-      {/* Image Upload OR URL Preview */}
-      <div className="space-y-2.5">
-        <Label>Product Image</Label>
-
-        <input
-          id="image"
-          name="image"
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="hidden"
-        />
-
-        {!imagePreview ? (
-          <label
-            htmlFor="image"
-            className="flex items-center justify-center w-full p-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition"
-          >
-            <div className="flex flex-col items-center">
-              <FileImage className="w-6 h-6 text-gray-400 mb-2" />
-              <p className="text-sm font-medium text-gray-700">
-                Click to upload OR enter a URL
-              </p>
-              <p className="text-xs text-gray-600">JPG, PNG • Up to 5MB</p>
-            </div>
-          </label>
-        ) : (
-          <div className="relative group">
-            <img
-              src={imagePreview}
-              alt="Preview"
-              className="w-full h-48 object-cover rounded-lg border-2 border-green-300"
-            />
-            <label
-              htmlFor="image"
-              className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 transition flex items-center justify-center cursor-pointer"
-            >
-              <div className="text-center">
-                <Upload className="w-6 h-6 text-white mb-2" />
-                <p className="text-white text-sm">Change image</p>
-              </div>
-            </label>
-          </div>
-        )}
-      </div>
-
       {/* Buttons */}
       <div className="flex gap-3 pt-4">
         <Button
