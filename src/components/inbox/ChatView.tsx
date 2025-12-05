@@ -1307,12 +1307,24 @@ const ChatView = ({
   useEffect(() => {
     if (!selectedConversationId) return () => { };
 
+    sendWsMessage({
+      type: "join_conversation",
+      conversation_id: selectedConversationId,
+    });
+
     getOrCreateChatClientId();
     fetchConversation();
     setUnreadCount();
     fetchAIStatus();
     fetchMessages();
     setTypingUsers(new Map());
+
+    return () => {
+      sendWsMessage({
+        type: "leave_conversation",
+        conversation_id: selectedConversationId,
+      });
+    }
   }, [selectedConversationId]);
 
   const sendFn = (payload: Record<string, unknown>) => {
