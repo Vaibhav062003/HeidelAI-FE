@@ -58,12 +58,11 @@ export const useIntegrations = () => {
             const apiData = response.data;
 
             setIntegrations({
-                instagram: apiData.instagram || false,
-                whatsapp: apiData.whatsapp || false,
+                instagram: apiData.instagram,
+                whatsapp: apiData.whatsapp,
             });
 
             if (apiData.instagram) {
-
                 const profileResponse = await api.get(`/api/instagram/profile`);
 
                 if (profileResponse.status === 200) {
@@ -117,6 +116,43 @@ export const useIntegrations = () => {
                 }
             }
 
+            if (apiData.whatsapp) {
+                const profileResponse = await api.get(`/api/whatsapp/profile`);
+
+                 if (profileResponse.status === 200) {
+                    const profileData = profileResponse.data;
+
+                    const whatsappData: WhatsappData = {
+                        status: true,
+                        name: profileData.name || "",
+                        phone: profileData.phone_number || "",
+                        userId: profileData.id || "",
+                        businessInfo: profileData.business_account || {},
+                        lastUpdated: Date.now(),
+                    };
+                    
+                    setIntegrations((prev) => ({
+                        ...prev,
+                        whatsapp: whatsappData,
+                    }));
+
+                    await storeData("integrations", DB_KEYS.INTEGRATIONS.WHATSAPP, whatsappData);
+                }
+            } else {
+                // mark as disconnected but keep last profile data
+                const existingData = await getData<WhatsappData>(
+                    "integrations",
+                    DB_KEYS.INTEGRATIONS.WHATSAPP
+                );
+                if (existingData && existingData.status) {
+                    await storeData("integrations", DB_KEYS.INTEGRATIONS.WHATSAPP, {
+                        ...existingData,
+                        status: false,
+                        lastUpdated: Date.now(),
+                    });
+                }
+            }
+
             setError(null);
         } catch (err) {
             console.error("API error:", err);
@@ -144,6 +180,20 @@ export const useIntegrations = () => {
                     whatsapp: whatsappData || false,
                 }));
                 setLoading(false); // don’t block UI, show cached instantly
+
+                const isFresh =
+                    whatsappData.lastUpdated &&
+                    Date.now() - whatsappData.lastUpdated < 5 * 60 * 1000;
+
+                // refresh silently if stale
+                if (!isFresh) {
+                    fetchFromApi();
+                }
+            } else {
+                // no cache → show loading until API resolves
+                setLoading(true);
+                await fetchFromApi();
+                setLoading(false);
             }
 
             if (instagramData && instagramData.status) {
