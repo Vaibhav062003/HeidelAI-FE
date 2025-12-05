@@ -81,10 +81,10 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
                 <div className="aspect-square relative rounded-lg border overflow-hidden">
                   <img
                     src={product.images}
-                    alt={product.name}
+                    alt={product.product_name}
                     className="w-full h-full object-cover"
                   />
-                  {product.on_sale === 'true' && (
+                  {product.onsale && (
                     <Badge className="absolute top-2 left-2" variant="destructive">
                       On Sale
                     </Badge>
@@ -99,13 +99,13 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
                   <TooltipTrigger asChild>
                     <h2 className="text-xl font-normal">
                       {/* {product.name.length > 50 
-                        ? `${product.name.substring(0, 50)}...` 
-                        : product.name} */}
-                        {product.name}
+                        ? `${product.product_name.substring(0, 50)}...` 
+                        : product.product_name} */}
+                        {product.product_name}
                     </h2>
                   </TooltipTrigger>
                   <TooltipContent className="max-w-[300px] break-words">
-                    <p>{product.name}</p>
+                    <p>{product.product_name}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -113,18 +113,18 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
                 {/* Pricing */}
                 <div className="space-y-2">
                   <div className="flex items-baseline gap-2">
-                    {product.sale_price ? (
+                    {product.saleprice ? (
                       <>
                         <span className="text-2xl font-bold text-green-600">
-                          ₹{product.sale_price}
+                          ₹{product.saleprice}
                         </span>
                         <span className="text-sm text-gray-500 line-through">
-                          ₹{product.regular_price}
+                          ₹{product.regularprice}
                         </span>
                       </>
                     ) : (
                       <span className="text-2xl font-bold">
-                        ₹{product.regular_price}
+                        ₹{product.regularprice}
                       </span>
                     )}
                   </div>
@@ -133,9 +133,9 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
                 {/* Stock Status */}
                 <div className="flex items-center gap-2">
                   <Warehouse className="h-4 w-4 text-gray-500" />
-                  <Badge variant={product.purchasable === 'true' ? "success" : "destructive"}>
-                    {product.purchasable === 'true' 
-                      ? `In Stock (${product.stock_quantity})` 
+                  <Badge variant={product.purchasable ? "success" : "destructive"}>
+                    {product.purchasable 
+                      ? `In Stock (${product.stock})` 
                       : "Out of Stock"}
                   </Badge>
                 </div>
