@@ -4,8 +4,7 @@ import { Inter } from 'next/font/google'
 
 import { ClerkProvider } from '@clerk/nextjs'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { SecurityProvider } from './providers';
-
+import { LogoutHandler } from '@/components/LogoutHandler'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -65,9 +64,11 @@ export default function RootLayout({
       <body className={`bg-white text-black`}>
         <AuthProvider> 
           <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!} afterSignOutUrl="/">
-            <SecurityProvider>
-              {children}
-            </SecurityProvider>
+
+            <LogoutHandler />
+
+            {children}
+            
           </ClerkProvider>
         </AuthProvider>
       </body>
