@@ -1,10 +1,7 @@
 /**
- * Secure IndexedDB service for HeidelAI application
- * Provides an encrypted interface for storing and retrieving data from IndexedDB
+ * IndexedDB service for HeidelAI application
+ * Provides an interface for storing and retrieving data from IndexedDB
  */
-import api from "@/lib/session_api";
-import { useAuth } from "@clerk/nextjs";
-import CryptoJS from 'crypto-js';
 
 /**
  * Define the database configuration
@@ -16,78 +13,6 @@ const DB_CONFIG = {
     integrations: "integrations",
     conversations: "conversations",
     messages: "messages",
-  }
-};
-
-// Memory-only variable to store encryption key (not accessible via devtools)
-// This will be lost when the page refreshes, which is good for security
-let encryptionKey: string | null = null;
-
-/**
- * Fetch encryption key from the server
- * This should be called on app initialization and after session changes
- */
-export const fetchEncryptionKey = async (): Promise<void> => {
-  try {
-    // Make an authenticated request to the backend to get encryption key
-    const response = await api.get('/api/security/encryption-key');
-    
-    if (response.status !== 200) {
-      throw new Error('Failed to fetch encryption key');
-    }
-    
-    // Store the key in memory only (not localStorage or sessionStorage)
-    encryptionKey = response.data.key;
-    
-    // Log success but not the actual key
-    console.log('Encryption key fetched successfully');
-  } catch (error) {
-    console.error('Error fetching encryption key:', error);
-    throw error;
-  }
-};
-
-/**
- * Encrypt data using the server-provided key
- * @param data - Data to encrypt
- * @returns Encrypted string
- */
-const encryptData = <T>(data: T): string => {
-  if (!encryptionKey) {
-    throw new Error('Encryption key not available. Call fetchEncryptionKey() first.');
-  }
-  
-  // Convert data to JSON string
-  const jsonData = JSON.stringify(data);
-  
-  // Encrypt the data with AES using the server-provided key
-  const encrypted = CryptoJS.AES.encrypt(jsonData, encryptionKey).toString();
-  
-  return encrypted;
-};
-
-/**
- * Decrypt data using the server-provided key
- * @param encryptedData - Encrypted string to decrypt
- * @returns Decrypted data
- */
-const decryptData = <T>(encryptedData: string): T => {
-  if (!encryptionKey) {
-    throw new Error('Encryption key not available. Call fetchEncryptionKey() first.');
-  }
-  
-  try {
-    // Decrypt the data with AES using the server-provided key
-    const decrypted = CryptoJS.AES.decrypt(encryptedData, encryptionKey);
-    
-    // Convert decrypted data to UTF-8 string
-    const jsonData = decrypted.toString(CryptoJS.enc.Utf8);
-    
-    // Parse the JSON string back to an object
-    return JSON.parse(jsonData) as T;
-  } catch (error) {
-    console.error('Error decrypting data:', error);
-    throw new Error('Failed to decrypt data. The encryption key might have changed.');
   }
 };
 
@@ -120,10 +45,10 @@ export const initDB = (): Promise<IDBDatabase> => {
 };
 
 /**
- * Store encrypted data in the specified store with the given key
+ * Store data in the specified store with the given key
  * @param storeName - The name of the store to use
  * @param key - The key to store the data under
- * @param data - The data to store (will be encrypted)
+ * @param data - The data to store
  */
 export const storeData = async <T>(
   storeName: keyof typeof DB_CONFIG.stores, 
@@ -131,20 +56,13 @@ export const storeData = async <T>(
   data: T
 ): Promise<void> => {
   try {
-    // Check if encryption key is available
-    if (!encryptionKey) {
-      await fetchEncryptionKey();
-    }
-    
-    // Encrypt the data
-    const encryptedData = encryptData(data);
-    
     const db = await initDB();
     const transaction = db.transaction(DB_CONFIG.stores[storeName], "readwrite");
     const store = transaction.objectStore(DB_CONFIG.stores[storeName]);
     
     return new Promise((resolve, reject) => {
-      const request = store.put(encryptedData, key);
+      // IndexedDB can store objects directly, no need to stringify
+      const request = store.put(data, key);
       
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
@@ -153,27 +71,22 @@ export const storeData = async <T>(
       transaction.oncomplete = () => db.close();
     });
   } catch (error) {
-    console.error(`Error storing encrypted data in ${storeName}:`, error);
+    console.error(`Error storing data in ${storeName}:`, error);
     throw error;
   }
 };
 
 /**
- * Retrieve and decrypt data from the specified store with the given key
+ * Retrieve data from the specified store with the given key
  * @param storeName - The name of the store to retrieve from
  * @param key - The key to retrieve
- * @returns The decrypted data stored under the key, or null if not found
+ * @returns The data stored under the key, or null if not found
  */
 export const getData = async <T>(
   storeName: keyof typeof DB_CONFIG.stores, 
   key: string
 ): Promise<T | null> => {
   try {
-    // Check if encryption key is available
-    if (!encryptionKey) {
-      await fetchEncryptionKey();
-    }
-    
     const db = await initDB();
     const transaction = db.transaction(DB_CONFIG.stores[storeName], "readonly");
     const store = transaction.objectStore(DB_CONFIG.stores[storeName]);
@@ -182,23 +95,9 @@ export const getData = async <T>(
       const request = store.get(key);
       
       request.onsuccess = () => {
-        const encryptedData = request.result;
-        
-        // If no data found, return null
-        if (!encryptedData) {
-          resolve(null);
-          return;
-        }
-        
-        try {
-          // Decrypt the data
-          const decryptedData = decryptData<T>(encryptedData);
-          resolve(decryptedData);
-        } catch (decryptError) {
-          console.error('Failed to decrypt data:', decryptError);
-          // If decryption fails (possibly due to key change), return null
-          resolve(null);
-        }
+        // If no data found, result is undefined
+        const result = request.result;
+        resolve(result === undefined ? null : result);
       };
       
       request.onerror = () => reject(request.error);
@@ -207,7 +106,7 @@ export const getData = async <T>(
       transaction.oncomplete = () => db.close();
     });
   } catch (error) {
-    console.error(`Error retrieving encrypted data from ${storeName}:`, error);
+    console.error(`Error retrieving data from ${storeName}:`, error);
     throw error;
   }
 };
@@ -274,19 +173,14 @@ export const getAllKeys = async (
 };
 
 /**
- * Get all data from a specific store and decrypt it
+ * Get all data from a specific store
  * @param storeName - The name of the store to get data from
- * @returns Array of all decrypted values in the store
+ * @returns Array of all values in the store
  */
 export const getAllData = async <T>(
   storeName: keyof typeof DB_CONFIG.stores
 ): Promise<T[]> => {
   try {
-    // Check if encryption key is available
-    if (!encryptionKey) {
-      await fetchEncryptionKey();
-    }
-    
     const db = await initDB();
     const transaction = db.transaction(DB_CONFIG.stores[storeName], "readonly");
     const store = transaction.objectStore(DB_CONFIG.stores[storeName]);
@@ -295,24 +189,9 @@ export const getAllData = async <T>(
       const request = store.getAll();
       
       request.onsuccess = () => {
-        const encryptedDataArray = request.result as string[];
-        
-        try {
-          // Decrypt all items
-          const decryptedData = encryptedDataArray.map(item => {
-            try {
-              return decryptData<T>(item);
-            } catch (decryptError) {
-              console.error('Failed to decrypt item:', decryptError);
-              return null;
-            }
-          }).filter((item): item is T => item !== null);
-          
-          resolve(decryptedData);
-        } catch (decryptError) {
-          console.error('Failed to decrypt data array:', decryptError);
-          resolve([]);
-        }
+        // Result is already an array of T
+        const result = request.result as T[];
+        resolve(result);
       };
       
       request.onerror = () => reject(request.error);
@@ -321,7 +200,7 @@ export const getAllData = async <T>(
       transaction.oncomplete = () => db.close();
     });
   } catch (error) {
-    console.error(`Error getting all encrypted data from ${storeName}:`, error);
+    console.error(`Error getting all data from ${storeName}:`, error);
     throw error;
   }
 };
@@ -367,19 +246,4 @@ export const DB_KEYS = {
     THEME: "theme_preference",
     LANGUAGE: "language_preference"
   }
-};
-
-/**
- * Check if the encryption key is available and valid
- * @returns True if encryption key is available
- */
-export const isEncryptionKeyAvailable = (): boolean => {
-  return encryptionKey !== null;
-};
-
-/**
- * Clear the encryption key from memory (useful for logout)
- */
-export const clearEncryptionKey = (): void => {
-  encryptionKey = null;
 };
