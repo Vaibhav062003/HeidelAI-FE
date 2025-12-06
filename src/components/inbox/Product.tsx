@@ -512,7 +512,6 @@ const ProductsTab = ({
         </div>
       )}
 
-
 <Dialog
   open={isModalOpen}
   onOpenChange={async (open) => {
@@ -522,66 +521,93 @@ const ProductsTab = ({
     }
   }}
 >
-  <DialogContent className="sm:max-w-[950px] rounded-xl p-6">
-    
+  <DialogContent
+    className="
+      w-[95%]              /* always leave margin on small & laptop screens */
+      max-w-[300px]        /* default for small screens */
+      sm:max-w-[400px]     /* small laptops */
+      md:max-w-[500px]     /* 13–14 inch laptops */
+      lg:max-w-[720px]     /* 15–16 inch laptops */
+      xl:max-w-[1000px]    /* 1080p / larger displays */
+      2xl:max-w-[1150px]   /* wide monitors */
+      rounded-xl 
+       max-h-[88vh]        /* never exceed screen */
+      overflow-y-auto     /* scroll inside */
+      min-h-[350px]
+      p-4 sm:p-6
+      hide-scrollbar
+    "
+  >
+
     {/* Header */}
     <DialogHeader className="pb-3 border-b">
-      <DialogTitle className="text-2xl font-semibold text-gray-900">
+      <DialogTitle className="text-xl sm:text-2xl font-semibold text-gray-900">
         Add Product
       </DialogTitle>
-      <DialogDescription className="text-gray-600">
+      <DialogDescription className="text-gray-600 text-sm sm:text-base">
         Add a single product manually or upload multiple items using a CSV file.
       </DialogDescription>
     </DialogHeader>
 
     {/* Main Section */}
-    <div className="">
+    <div className="mt-4 space-y-6">
 
-      {/* LEFT SIDE FORM */}
-      <div className="space-y-6">
+      {/* Segmented Control */}
+      <div
+        className="
+          bg-gray-100 
+          p-1 
+          rounded-lg 
+          grid grid-cols-2 
+          text-sm sm:text-base
+        "
+      >
+        <button
+          onClick={() => setSelectedMode("single")}
+          className={`py-2 rounded-md font-medium transition ${
+            selectedMode === "single"
+              ? "bg-blue-900 text-white"
+              : "text-gray-700"
+          }`}
+        >
+          Single Product
+        </button>
 
-        {/* Segmented Control */}
-        <div className="bg-gray-100 p-1 rounded-lg grid grid-cols-2">
-          <button
-            onClick={() => setSelectedMode("single")}
-            className={`py-2 rounded-md font-medium transition ${
-              selectedMode === "single"
-                ? "bg-blue-900 text-white"
-                : "text-gray-700"
-            }`}
-          >
-            Single Product
-          </button>
+        <button
+          onClick={() => setSelectedMode("bulk")}
+          className={`py-2 rounded-md font-medium transition ${
+            selectedMode === "bulk"
+              ? "bg-blue-900 text-white"
+              : "text-gray-700"
+          }`}
+        >
+          Bulk Upload
+        </button>
+      </div>
 
-          <button
-            onClick={() => setSelectedMode("bulk")}
-            className={`py-2 rounded-md font-medium transition ${
-              selectedMode === "bulk"
-                ? "bg-blue-900 text-white"
-                : "text-gray-700"
-            }`}
-          >
-            Bulk Upload
-          </button>
-        </div>
+      {/* Form */}
+      <div
+        className="
+          border border-gray-200 
+          bg-white 
+          rounded-xl 
+          shadow-sm 
+          p-4 sm:p-5
+        "
+      >
+        {selectedMode === "single" && (
+          <SingleProductForm setIsModalOpen={setIsModalOpen} />
+        )}
 
-        {/* Form Card */}
-        <div className="border border-gray-200 bg-white p-5 rounded-xl shadow-sm">
-
-          {selectedMode === "single" && (
-            <SingleProductForm setIsModalOpen={setIsModalOpen} />
-          )}
-
-          {selectedMode === "bulk" && (
-            <BulkUploadForm setIsModalOpen={setIsModalOpen} />
-          )}
-
-        </div>
+        {selectedMode === "bulk" && (
+          <BulkUploadForm setIsModalOpen={setIsModalOpen} />
+        )}
       </div>
     </div>
 
   </DialogContent>
 </Dialog>
+
 
 
 
