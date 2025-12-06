@@ -125,9 +125,9 @@ export const useIntegrations = () => {
                     const whatsappData: WhatsappData = {
                         status: true,
                         name: profileData.name || "",
-                        phone: profileData.phone_number || "",
-                        userId: profileData.id || "",
-                        businessInfo: profileData.business_account || {},
+                        phone: profileData.phone || "",
+                        userId: profileData.user_id || "",
+                        businessInfo: profileData.business_info || {},
                         lastUpdated: Date.now(),
                     };
                     

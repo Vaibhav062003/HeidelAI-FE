@@ -680,7 +680,6 @@ const ChatView = ({
   const [activeMediaType, setActiveMediaType] = useState<"reel" | "story" | "video" | null>(null);
   const { sendWsMessage } = useMainWebSocket();
 
-
   const handlePlay = (id: string, type: "reel" | "story" | "video") => {
     setActiveMediaId(id);
     setActiveMediaType(type);
