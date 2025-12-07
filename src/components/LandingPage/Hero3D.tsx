@@ -2,19 +2,24 @@ import React from 'react';
 import { Scene } from '@/components/LandingPage/ui/hero-section';
 // import { Button } from './ui/button';
 import { Badge } from '@/components/LandingPage/ui/badge';
-import { Button } from '@/components/LandingPage/ui/flow-hover-button';
+// import { Button } from '@/components/LandingPage/ui/flow-hover-button';
 import { HoverBorderGradientDemo } from '@/components/HoverBorderGradientDemo';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image'
+import CountDownTimer from './CountDownTimer';
 
 const Hero3D = () => {
   const router = useRouter();
+
   return (
     <section id="home" className="min-h-screen w-full bg-gradient-to-br from-[#000] to-[#0A0A0A] text-white flex flex-col items-center justify-center p-8 pt-16 sm:pt-24 relative overflow-hidden">
       <div className="w-full max-w-6xl space-y-12 relative z-10">
         <div className="flex flex-col items-center text-center space-y-8">
           <Badge variant="secondary" className="backdrop-blur-sm bg-white/10 border border-white/20 text-white hover:bg-white/20 px-4 py-2 rounded-full">
-            🚀 Transform Your Business with AI
+          <CountDownTimer 
+            targetDate={new Date('2026-01-07T00:00:00')}
+          />
+            
           </Badge>
           
           <div className="space-y-6 flex items-center justify-center flex-col">
