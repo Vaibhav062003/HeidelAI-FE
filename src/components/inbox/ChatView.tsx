@@ -42,7 +42,7 @@ import { MessageWrapper } from "../messaging/MessageWrapper";
 import { useUser } from "@clerk/nextjs";
 import MediaMessage from "../messaging/MediaMessage";
 import { useMainWebSocket } from '@/lib/websocket';
-
+import { storeData, getData } from "@/lib/indexedDB";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -100,7 +100,7 @@ interface Message {
   role: "customer" | "ai" | "agent" | "system";
   sender_id: string;
   conversation_id: string;
-  status?: "sent" | "delivered" | "read";
+  status?: "sent" | "delivered" | "read" | "sending";
   type?:
   | "text"
   | "image"
@@ -571,7 +571,7 @@ const MessageItem = memo(
     isLast,
     index,
     isLatest,
-    isReplyMessage
+    isReplyMessage,
   }: {
     message: Message;
     isLast: boolean;
@@ -613,6 +613,11 @@ const MessageItem = memo(
             </span>
           </div>
         </div>
+        {message.status && message.status == "sending" && (
+          <div className="flex justify-end mt-1">
+            <span className="text-xs text-gray-500">Sending...</span>
+            </div>
+        )}
 
 
       </>
@@ -679,7 +684,6 @@ const ChatView = ({
   const [activeMediaId, setActiveMediaId] = useState<string | null>(null);
   const [activeMediaType, setActiveMediaType] = useState<"reel" | "story" | "video" | null>(null);
   const { sendWsMessage } = useMainWebSocket();
-
 
   const handlePlay = (id: string, type: "reel" | "story" | "video") => {
     setActiveMediaId(id);
@@ -944,13 +948,16 @@ const ChatView = ({
   };
 
   const sendMessage = async () => {
-    if (!message.trim() || !selectedConversationId || isSending) return;
+    // 1. Basic Validation (Allow sending even if isSending is true)
+    if (!message.trim() || !selectedConversationId) return;
 
-    let contentToSend = message.trim();
+    const currentContent = message.trim();
     const platform = selectedConversationId.split("_")[0];
-
-    if (contentToSend.startsWith("/")) {
-      const shortcode = contentToSend.slice(1).toLowerCase();
+    
+    // Handle Slash Commands (Canned Responses)
+    let contentToSend = currentContent;
+    if (currentContent.startsWith("/")) {
+      const shortcode = currentContent.slice(1).toLowerCase();
       const cannedResponse = cannedResponses.find(
         (cr) => cr.shortcode.toLowerCase() === shortcode
       );
@@ -959,26 +966,67 @@ const ChatView = ({
       }
     }
 
-    setIsSending(true);
+    // 2. Create Optimistic Message
+    const tempId = `temp-${Date.now()}`; // Temporary ID
+    const optimisticMessage: Message = {
+      id: tempId,
+      content: contentToSend,
+      // Assuming 'user' is available from your auth context
+      sender_id: user?.id || "agent", 
+      // Usually 'agent' or 'assistant' depending on your backend enum
+      role: "agent", 
+      conversation_id: selectedConversationId,
+      timestamp: new Date().toISOString(),
+      type: "text",
+      status: "sending" // Optional: You can use this to show a gray clock icon
+    };
+
+    // 3. OPTIMISTIC UPDATE: Update UI & IDB Immediately
+    setMessage(""); // Clear input immediately
+    
+    setMessages(prev => {
+      const newState = [...prev, optimisticMessage];
+      persistMessages(newState); // Save to IDB immediately
+      return newState;
+    });
+
+    // Scroll to bottom immediately
+    setTimeout(() => lastMessageRef.current?.scrollIntoView({ behavior: "smooth" }), 10);
+
+    // 4. Send to Backend
+    // We do NOT set isSending(true) globally, so the user can keep typing
     try {
       const data = {
         conversation_id: selectedConversationId,
         content: contentToSend,
         platform: platform,
       };
+
       const response = await api.post(
         `/api/conversations/send-message`,
         data
       );
-      if (response.status !== 200) throw new Error("Failed to send message");
-      setMessage("");
+
+      if (response.status !== 200) throw new Error("Failed to send");
+
+      // Note: We don't remove the temp message here manually. 
+      // We let the WebSocket 'onNewMessage' event handle the replacement
+      // to ensure data consistency with the server.
+
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to send message"
-      );
-    } finally {
-      setIsSending(false);
-    }
+      console.error("Send failed:", error);
+      toast.error("Failed to send message");
+      
+      // Rollback: Remove the temp message if API fails
+      setMessages(prev => {
+        const newState = prev.filter(m => m.id !== tempId);
+        persistMessages(newState);
+        return newState;
+      });
+      
+      // Restore text to input so user doesn't lose it
+      setMessage(contentToSend);
+    } 
   };
 
   // Auto scroll to bottom on new message
@@ -1177,21 +1225,40 @@ const ChatView = ({
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onNewMessage: (data: any) => {
-      console.log("ChatView: New message received via WebSocket: ", data);
       if (data.message.conversation_id === selectedConversationId) {
-        // Check if this message already exists in the messages array to avoid duplicates
-        const messageExists = messages.some(msg =>
-          msg.id === data.message.id ||
-          (msg.content === data.message.content &&
-            msg.timestamp === data.message.timestamp &&
-            msg.sender_id === data.message.sender_id)
-        );
-        console.log("ChatView: Message exists check: ", messageExists);
-        // Only add the message if it's not already in the messages array
-        if (!messageExists) {
-          console.log("ChatView: Adding new message to state: ", data.message);
-          setMessages(prev => [...prev, data.message]);
-        }
+        setMessages(prev => {
+          const incomingMsg = data.message;
+
+          // 1. Check if we have an optimistic message (temp ID) with matching content
+          // We look for a temp message sent by US (agent) with the SAME text
+          const tempMatchIndex = prev.findIndex(msg => 
+            msg.id.toString().startsWith("temp-") && 
+            msg.content === incomingMsg.content &&
+            // Optional: Check if timestamp is within last 10 seconds to be safe
+            (new Date().getTime() - new Date(msg.timestamp).getTime() < 10000)
+          );
+
+          if (tempMatchIndex !== -1) {
+            // RECONCILIATION: Replace the temp message with the real one
+            // This keeps the chat smooth and prevents "jumping"
+            const newState = [...prev];
+            newState[tempMatchIndex] = incomingMsg;
+            
+            persistMessages(newState); // Update IDB
+            return newState;
+          }
+
+          // 2. Standard Duplicate Check (for normal incoming messages)
+          const messageExists = prev.some(msg => msg.id === incomingMsg.id);
+          
+          if (!messageExists) {
+            const newState = [...prev, incomingMsg];
+            persistMessages(newState);
+            return newState;
+          }
+
+          return prev;
+        });
       }
     },
 
@@ -1199,27 +1266,27 @@ const ChatView = ({
     onMessageReaction: (data: any) => {
       if (data.message.conversation_id === selectedConversationId) {
         const updatedMessage = data.message;
-
-        setMessages(prev => prev.map(message => {
-          if (message.id === updatedMessage.message_id || message.id === updatedMessage.id) {
-            return {
-              ...message,
-              reaction: updatedMessage.reaction
-            };
-          }
-          return message;
-        }));
-
-        console.log(`ChatView: Reaction updated for message ${updatedMessage.message_id || updatedMessage.id}`);
+        setMessages(prev => {
+          const newState = prev.map(message => {
+            if (message.id === updatedMessage.message_id || message.id === updatedMessage.id) {
+              return { ...message, reaction: updatedMessage.reaction };
+            }
+            return message;
+          });
+          persistMessages(newState); // <--- SAVE TO IDB
+          return newState;
+        });
       }
     },
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onMessageDeleted: (data: any) => {
       if (data.conversation_id === selectedConversationId) {
-        setMessages(prev => prev.filter(msg => msg.id !== data.message_id));
-
-        console.log(`ChatView: Message with ID ${data.message_id} was deleted`);
+        setMessages(prev => {
+           const newState = prev.filter(msg => msg.id !== data.message_id);
+           persistMessages(newState); // <--- SAVE TO IDB
+           return newState;
+        });
       }
     }
   });
@@ -1290,14 +1357,45 @@ const ChatView = ({
     }
   };
 
+  const MESSAGE_STORAGE_KEY = `messages_${selectedConversationId}`;
+
+  // Helper to save messages to IDB in background
+  const persistMessages = useCallback(async (msgs: Message[]) => {
+    if (!selectedConversationId) return;
+    try {
+      await storeData("messages", MESSAGE_STORAGE_KEY, msgs);
+    } catch (err) {
+      console.warn("Failed to cache messages:", err);
+    }
+  }, [selectedConversationId, MESSAGE_STORAGE_KEY]);
+
   const fetchMessages = async () => {
-    if (!isLoaded || !user) return;
+    if (!isLoaded || !user || !selectedConversationId) return;
+    
+    // 1. Load from Cache immediately
+    try {
+      const cachedMessages = await getData<Message[]>("messages", MESSAGE_STORAGE_KEY);
+      if (cachedMessages && Array.isArray(cachedMessages) && cachedMessages.length > 0) {
+        setMessages(cachedMessages);
+        // Optional: Scroll to bottom immediately upon loading cache
+        // setTimeout(() => lastMessageRef.current?.scrollIntoView(), 100);
+      }
+    } catch (err) {
+      console.warn("Error loading cached messages:", err);
+    }
+
+    // 2. Fetch from API (Network Sync)
     const agent_username = user.username;
     try {
       const response = await api.get(
         `/api/conversations/${selectedConversationId}/messages?agent_username=${agent_username}`
       );
-      setMessages(response?.data.messages || []);
+      
+      const newMessages = response?.data.messages || [];
+      setMessages(newMessages);
+
+      // 3. Update Cache
+      await persistMessages(newMessages);
 
     } catch (error) {
       toast.error("Failed to load messages", { description: error as string });
@@ -1940,12 +2038,13 @@ const ChatView = ({
               className="flex-1 h-full px-3 py-0.1 bg-gray-50"
             >
               <div className="space-y-3 max-w-full pb-4 sm:pb-0">
-
                 <>
                   {messages.map((message, index) => {
                     const latestMediaMessage = [...messages]
                       .reverse()
-                      .find((m) => m.type === "ig_reel" || m.type === "ig_story");
+                      .find(
+                        (m) => m.type === "ig_reel" || m.type === "ig_story"
+                      );
 
                     const latestMediaId = latestMediaMessage?.payload?.reel_video_id || latestMediaMessage?.payload?.story_media_id;
 
@@ -1972,7 +2071,9 @@ const ChatView = ({
                                   {message.type === "share" && (
                                     <InstagramPost
                                       mediaUrl={message.payload.url}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
                                     />
                                   )}
 
@@ -1983,17 +2084,22 @@ const ChatView = ({
                                       id={message.payload.reel_video_id}
                                       reelVideoUrl={message.payload.url}
                                       title={message.payload.caption}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
                                       viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
                                       isLatest={isLatest}
                                       isActive={
                                         activeMediaType === "reel" &&
-                                        activeMediaId === message.payload.reel_video_id
+                                        activeMediaId ===
+                                          message.payload.reel_video_id
                                       }
                                       onPlay={(id) => handlePlay(id, "reel")} // stops others
                                       isMuted={globalMuted}
                                       onMuteToggle={handleMuteToggle}
-                                      isAgent={message.role.toLowerCase() === "agent"}
+                                      isAgent={
+                                        message.role.toLowerCase() === "agent"
+                                      }
                                     />
                                   )}
 
@@ -2003,19 +2109,30 @@ const ChatView = ({
                                       id={message.payload.story_media_id}
                                       sharedBy="You"
                                       storyOwnerName={"Instagram User"}
-                                      storyMediaUrl={message.payload.story_media_url}
+                                      storyMediaUrl={
+                                        message.payload.story_media_url
+                                      }
                                       isActive={
                                         activeMediaType === "story" &&
-                                        activeMediaId === message.payload.story_media_id
+                                        activeMediaId ===
+                                          message.payload.story_media_id
                                       } // only one plays
                                       onPlay={(id) => handlePlay(id, "story")}
                                       isMuted={globalMuted}
                                       isLatest={isLatest}
-                                      onMuteToggle={(muted) => setGlobalMuted(muted)}
-                                      isAgent={message.role.toLowerCase() === "agent"}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      onMuteToggle={(muted) =>
+                                        setGlobalMuted(muted)
+                                      }
+                                      isAgent={
+                                        message.role.toLowerCase() === "agent"
+                                      }
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
                                       content={message.content}
-                                      storyOwnerUsername={message.payload.owner_username}
+                                      storyOwnerUsername={
+                                        message.payload.owner_username
+                                      }
                                       type={message.type}
                                     />
                                   )}
@@ -2023,9 +2140,15 @@ const ChatView = ({
                                   {/* Render Images / Videos */}
                                   {(message.type === "image" || message.type === "video") && (
                                     <MediaMessage
-                                      type={message.type === "image" ? "image" : "video"}
+                                      type={
+                                        message.type === "image"
+                                          ? "image"
+                                          : "video"
+                                      }
                                       url={message.payload.url}
-                                      isAgent={message.role.toLowerCase() === "agent"}
+                                      isAgent={
+                                        message.role.toLowerCase() === "agent"
+                                      }
                                       isLatest={isLatest}
                                       isActive={
                                         activeMediaType === "video" &&
@@ -2033,9 +2156,13 @@ const ChatView = ({
                                       }
                                       onPlay={(id) => handlePlay(id, "video")}
                                       isMuted={globalMuted}
-                                      onMuteToggle={(muted) => setGlobalMuted(muted)}
+                                      onMuteToggle={(muted) =>
+                                        setGlobalMuted(muted)
+                                      }
                                       id={message.id}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
                                     />
                                   )}
                                 </LazyMediaLoader>
@@ -2064,24 +2191,64 @@ const ChatView = ({
             </ScrollArea>
 
             {/* Input Section */}
-            <div className="flex-shrink-0 mb-3 bg-gray-50">
+            <div className="flex-shrink-0 mb-3">
               {/* Typing Users */}
               {typingUsers.size > 0 && (
-                <div className="flex items-center gap-2 text-sm text-gray-500 p-2">
-                  <div className="flex gap-1">
-                    {Array.from(typingUsers.values()).map((user, index) => (
-                      <span key={index}>
-                        {user.agent_name}
-                        {index < typingUsers.size - 1 ? "," : ""}
-                      </span>
-                    ))}
+                <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-5 py-2 rounded-xl border border-white/10 shadow-sm animate-fadeIn">
+                  {/* List of users typing */}
+                  <div className="flex items-center gap-x-2 flex-wrap text-sm">
+                    {Array.from(typingUsers.values()).map((user, index) => {
+                      const initials = user.agent_name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase();
+
+                      const bgColor = `hsl(${
+                        (user.agent_name.length * 37) % 360
+                      }, 70%, 55%)`; // unique color
+
+                      return (
+                        <span key={index} className="inline-flex items-center gap-2">
+                          {/* Avatar with initials */}
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                            style={{ backgroundColor: bgColor }}
+                          >
+                            {initials}
+                          </div>
+                          {/* Name */}
+                          <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                            {user.agent_name}
+                          </span>
+
+                          {index < typingUsers.size - 1 && (
+                            <span className="text-gray-500 text-base">,</span>
+                          )}
+                        </span>
+                      );
+                    })}
+                    <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent ml-1">
+                      {typingUsers.size === 1 ? "is typing" : "are typing"}
+                    </span>
                   </div>
-                  <span>{typingUsers.size === 1 ? "is" : "are"} typing</span>
-                  <div className="flex gap-1">
-                    <span className="animate-bounce">.</span>
-                    <span className="animate-bounce delay-100">.</span>
-                    <span className="animate-bounce delay-200">.</span>
+
+                  {/* Animated dots */}
+                  <div className="flex items-center gap-1 ml-1">
+                    <span className="w-2 h-2 bg-gradient-to-br from-pink-400 to-purple-400 rounded-full animate-bounce delay-0"></span>
+                    <span className="w-2 h-2 bg-gradient-to-br from-purple-400 to-cyan-400 rounded-full animate-bounce delay-150"></span>
+                    <span className="w-2 h-2 bg-gradient-to-br from-cyan-400 to-pink-400 rounded-full animate-bounce delay-300"></span>
                   </div>
+
+                  <style>{`
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.25s ease-out forwards;
+      }
+    `}</style>
                 </div>
               )}
 
@@ -2209,12 +2376,13 @@ const ChatView = ({
                       </div>
 
                       <button
-                        className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${message.trim() || audioURL || sharedProduct
+                        className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${
+                          message.trim() || audioURL || sharedProduct
                             ? mode === "reply"
                               ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
                               : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
                             : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
-                          }`}
+                        }`}
                         onClick={() => {
                           if (sharedProduct) {
                             handleShareProduct(message, sharedProduct);
@@ -2224,12 +2392,13 @@ const ChatView = ({
                             sendMessage();
                           }
                         }}
-                        disabled={
-                          isSending ||
-                          (!message.trim() && !audioURL && !sharedProduct)
-                        }
+                        // ONLY disable if input is empty. 
+                        // We removed 'isSending' so you can spam click like WhatsApp.
+                        disabled={!message.trim() && !audioURL && !sharedProduct}
                       >
-                        {isSending ? (
+                        {/* Only show spinner for Audio/Product which might be slower, 
+                            but for Text, we show the Send Icon always */}
+                        {isSending && (audioURL || sharedProduct) ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <>

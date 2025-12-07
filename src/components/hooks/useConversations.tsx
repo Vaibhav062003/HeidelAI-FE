@@ -73,5 +73,15 @@ export const useConversations = (status?: "open" | "closed") => {
     fetchConversations();
   }, [fetchConversations]);
 
-  return { conversations, loading, error };
+  const markAsRead = useCallback((conversationId: string) => {
+    setConversations(prev => prev.map(c => {
+      // Check both id fields based on your normalization logic
+      if (c.id === conversationId || c.conversation_id === conversationId) {
+        return { ...c, unread_count: 0 };
+      }
+      return c;
+    }));
+  }, []);
+  
+  return { conversations, loading, error, markAsRead };
 };
