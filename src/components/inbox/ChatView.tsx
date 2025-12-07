@@ -43,6 +43,7 @@ import { useUser } from "@clerk/nextjs";
 import MediaMessage from "../messaging/MediaMessage";
 import { useMainWebSocket } from '@/lib/websocket';
 import { storeData, getData } from "@/lib/indexedDB";
+import User_Status from "./User_Status";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -664,6 +665,8 @@ const ChatView = ({
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [fileCaption, setFileCaption] = useState("");
+  const [statusLoading, setStatusLoading] = useState(false);
+
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const inputFileRef = useRef<HTMLInputElement>(null);
@@ -773,6 +776,18 @@ const ChatView = ({
     }
   }, [message, cannedResponses]);
 
+  useEffect(()=>{
+    const setConversatioStatus= async ()=>{
+      if(!selectedConversationId) return;
+      const status = conversation?.status
+      if(status){
+        setConversationStatus(status as "open" | "closed" | "followup");
+        setIsResolved(status === "closed");
+        setIsFollowUp(status === "followup");
+    }
+  }
+    setConversatioStatus();
+  },[selectedConversationId, conversation]);
   const handleSendAudio = async () => {
     if (!audioURL || !selectedConversationId) return;
 
@@ -1110,11 +1125,12 @@ const ChatView = ({
     }
   };
 
-  const handleResolve = useCallback(() => {
+  const handleResolve = useCallback(async(selectedConversationId:string) => {
     setIsResolved(true);
     setIsFollowUp(false);
     setConversationStatus("closed");
     setIsStatusDropdownOpen(false);
+    setStatusLoading(true);
     const agentName = "You";
 
     const systemMessage: Message = {
@@ -1137,6 +1153,40 @@ const ChatView = ({
         });
       }
     }, 100);
+
+    try {
+    // Use encodeURIComponent to be safe with IDs that contain special chars
+    const res = await api.post(
+      `/api/conversations/${encodeURIComponent(selectedConversationId)}/close`
+    );
+
+    // handle non-2xx as error
+    if (!(res && (res.status === 200 || res.status === 204))) {
+      throw new Error(
+        `Unexpected response from server: ${res?.status ?? "no status"}`
+      );
+    }
+
+    toast.success("Closed conversation successfully");
+  } catch (err) {
+    // Rollback optimistic UI: remove system message we added earlier
+    console.error("Error closing conversation:", err);
+    setMessages((prev) =>
+      prev.filter((msg) => msg.id !== systemMessage.id)
+    );
+
+    // rollback other state if you want (optional — uncomment to revert)
+    // setIsResolved(false);
+    // setConversationStatus("open");
+
+    const message =
+      (typeof err === "object" && err !== null && "response" in err && typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === "string")
+        ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
+        : "Failed to close conversation. Try again.";
+    toast.error(message);
+  } finally{
+     setStatusLoading(false);
+  }
   }, [selectedConversationId]);
 
   const handleReopen = useCallback(() => {
@@ -1144,7 +1194,9 @@ const ChatView = ({
     setIsFollowUp(false);
     setConversationStatus("open");
     setIsStatusDropdownOpen(false);
+    // setStatusLoading(true); 
     const agentName = "You";
+
 
     const systemMessage: Message = {
       id: `system-${Date.now()}`,
@@ -1168,12 +1220,41 @@ const ChatView = ({
     }, 100);
   }, [selectedConversationId]);
 
-  const handleFollowUp = useCallback(() => {
+  const handleFollowUp = useCallback(async(selectedConversationId:string) => {
     setIsResolved(false);
     setIsFollowUp(true);
     setConversationStatus("followup");
     setIsStatusDropdownOpen(false);
+    setStatusLoading(true);
     const agentName = "You";
+
+    try{
+      const res = await api.post(`/api/ai/schedule-message/${selectedConversationId}`);
+
+      if (!(res && (res.status === 200 || res.status === 204))) {
+      throw new Error(
+        `Unexpected response from server: ${res?.status ?? "no status"}`
+      );
+    }
+      toast.success("Marked conversation for follow-up successfully");
+    }catch (err){
+      console.error("Error scheduling message for follow-up:", err);
+    setMessages((prev) =>
+      prev.filter((msg) => msg.id !== systemMessage.id)
+    );
+
+    // rollback other state if you want (optional — uncomment to revert)
+    // setIsResolved(false);
+    // setConversationStatus("open");
+
+    const message =
+      (typeof err === "object" && err !== null && "response" in err && typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === "string")
+        ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
+        : "Failed to set conversation for follow-up. Try again.";
+    toast.error(message);
+    }finally{
+      setStatusLoading(false);
+    }
 
     const systemMessage: Message = {
       id: `system-${Date.now()}`,
@@ -1424,6 +1505,7 @@ const ChatView = ({
       });
     }
   }, [selectedConversationId]);
+  
 
   const sendFn = (payload: Record<string, unknown>) => {
     // console.log("TypingIndicator payload sent to backend:", payload);
@@ -1567,15 +1649,30 @@ const ChatView = ({
 
               {/* Action Buttons Section */}
               <div className="flex items-center space-x-2">
-                {/* Status Dropdown */}
+                 <User_Status
+                  conversationStatus={conversationStatus}
+                  isStatusDropdownOpen={isStatusDropdownOpen}
+                  setIsStatusDropdownOpen={setIsStatusDropdownOpen}
+                  selectedConversationId={selectedConversationId!}
+                  statusLoading={statusLoading}
+                  message={messages}
+                  setMessages={setMessages}
+                  lastMessageRef={lastMessageRef}
+                  setConversationStatus={setConversationStatus}
+                  handleResolve={handleResolve}
+                  handleFollowUp={handleFollowUp}
+                  handleReopen={handleReopen}
+                  />
+                {/* Status Dropdown
                 <DropdownMenu
                   open={isStatusDropdownOpen}
                   onOpenChange={setIsStatusDropdownOpen}
                 >
                   <DropdownMenuTrigger asChild>
                     <Button
-                      variant="ghost"
+                      variant="ghost
                       className="rounded-2xl hover:bg-gray-100 flex items-center space-x-1 px-3 py-2.5 bg-white"
+                      disabled={statusLoading}
                     >
                       {conversationStatus === "closed" ? (
                         <div className="w-2 h-2 bg-red-500 rounded-full"></div>
@@ -1592,6 +1689,9 @@ const ChatView = ({
                             : "Open"}
                       </span>
                       <ChevronDown className="h-4 w-4 text-gray-600" />
+                      {statusLoading && (
+                        <Loader2 className="h-4 w-4 ml-2 animate-spin text-blue-600" />
+                      )}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
@@ -1601,8 +1701,9 @@ const ChatView = ({
                     {conversationStatus === "open" && (
                       <>
                         <DropdownMenuItem
-                          onClick={handleResolve}
+                          onClick={() => handleResolve(selectedConversationId)}
                           className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-red-50 rounded-xl mx-2"
+                          disabled={statusLoading}
                         >
                           <XCircle className="h-4 w-4 mr-3 text-red-600" />
                           <span className="font-medium">
@@ -1610,8 +1711,9 @@ const ChatView = ({
                           </span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={handleFollowUp}
+                          onClick={() => handleFollowUp(selectedConversationId)}
                           className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-amber-50 rounded-xl mx-2"
+                          disabled={statusLoading}
                         >
                           <Clock className="h-4 w-4 mr-3 text-amber-600" />
                           <span className="font-medium">
@@ -1623,16 +1725,17 @@ const ChatView = ({
 
                     {(conversationStatus === "closed" ||
                       conversationStatus === "followup") && (
-                        <DropdownMenuItem
-                          onClick={handleReopen}
-                          className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-green-50 rounded-xl mx-2"
-                        >
-                          <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
-                          <span className="font-medium">Reopen Conversation</span>
-                        </DropdownMenuItem>
-                      )}
+                      <DropdownMenuItem
+                        onClick={handleReopen}
+                        className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-green-50 rounded-xl mx-2"
+                        disabled={statusLoading}
+                      >
+                        <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
+                        <span className="font-medium">Reopen Conversation</span>
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
-                </DropdownMenu>
+                </DropdownMenu> */}
 
                 {/* Reminders Button */}
                 <Tooltip>

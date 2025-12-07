@@ -15,10 +15,56 @@ export const useConversations = (status?: "open" | "closed") => {
   const fetchConversations = useCallback(async () => {
     setLoading(true);
     try {
-      const allres = await conversationService.getConversationByStatus(status);
-      if (allres.status === "success" && Array.isArray(allres.data)) {
-        setConversations(allres.data);
+      let allConversations: Conversation[] = [];
+      //all conversations
+      try{
+        const allres = await conversationService.getConversationByStatus(status);
+        // Example: in useConversations or API service
+        // console.log("Fetching conversations with status:", status);
+        if (allres.status === "success" && Array.isArray(allres.data)) {
+          allConversations = [
+            ...allConversations,
+            ...allres.data.map((conv: any) => normalizeConversation({ ...conv }))
+          ];
+        }
+        // console.log("All conversations fetched and status: ", allConversations.slice(0,5),status); // Log first 5 for brevity
       }
+      catch (error){
+         if (process.env.NODE_ENV === 'development') {
+          console.error("All fetch error:", error);
+        }
+      }
+      // Instagram
+      // try {
+      //   const igRes = await conversationService.getInstagramConversations();
+      //   if (igRes.status === "success" && Array.isArray(igRes.data)) {
+      //     allConversations = [
+      //       ...allConversations,
+      //       ...igRes.data.map((conv: any) => normalizeConversation({ ...conv, platform: 'instagram' }))
+      //     ];
+      //   }
+      // } catch (igError) {
+      //   if (process.env.NODE_ENV === 'development') {
+      //     console.error("Instagram fetch error:", igError);
+      //   }
+      // }
+
+      // // WhatsApp
+      // try {
+      //   const waRes = await conversationService.getWhatsAppConversations();
+      //   if (waRes.status === "success" && Array.isArray(waRes.data)) {
+      //     allConversations = [
+      //       ...allConversations,
+      //       ...waRes.data.map((conv: any) => normalizeConversation({ ...conv, platform: 'whatsapp' }))
+      //     ];
+      //   }
+      // } catch (waError) {
+      //   if (process.env.NODE_ENV === 'development') {
+      //     console.error("WhatsApp fetch error:", waError);
+      //   }
+      // }
+
+      setConversations(allConversations);
       setError(null);
     } catch (err) {
       console.error("Fetch error:", err);
