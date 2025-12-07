@@ -1,6 +1,7 @@
 development:
 cloned using testing
 Prithal fixed the whitespace issue for messages
+Prithal's typing indicator new UI updated finally merged
 
 testing:
 merged vaibhav's changes with development branch
