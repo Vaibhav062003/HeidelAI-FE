@@ -2135,7 +2135,6 @@ const ChatView = ({
                                       }
                                       type={message.type}
                                     />
-                                    />
                                   )}
 
                                   {/* Render Images / Videos */}
