@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
 import { Plus, Reply } from "lucide-react";
+import { createPortal } from "react-dom";
 
 interface MessageActionsPopoverProps {
   onReact: (emoji: string) => void;
   onReply: () => void;
   onClose: () => void; 
   isAgent: boolean;
+  anchorRef: React.RefObject<HTMLDivElement | null>;
 }
 
 const defaultEmojis = ["❤️"];
@@ -18,9 +20,31 @@ export const MessageActionsPopover: React.FC<MessageActionsPopoverProps> = ({
   onReact,
   onReply,
   onClose,
+  anchorRef,
 }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [hoveredEmoji, setHoveredEmoji] = useState<string | null>(null);
+  
+  const [pos, setPos] = useState({top: 20, left: 50});
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [isReady, setIsReady] = useState(false);
+
+
+   useEffect(() => {
+  const anchor = anchorRef?.current;
+  const pop = popoverRef?.current;
+  if (!anchor || !pop) return;
+
+  const rect = anchor.getBoundingClientRect();
+
+  const top = rect.top - 25; 
+  const left = isAgent ? rect.right - pop.offsetWidth : rect.left;
+
+
+  setPos({ top, left });
+  setIsReady(true); // <-- show popover only when positioned
+}, [anchorRef, isAgent]);
+
 
   const handleReact = (emoji: string) => {
     onReact(emoji);
@@ -45,9 +69,19 @@ export const MessageActionsPopover: React.FC<MessageActionsPopoverProps> = ({
     btn.style.transform = "";
   };
 
-  return (
+  const PopoverUI = (
     <div
-      className={`absolute animate-in fade-in duration-200 -top-8 ${
+      ref={popoverRef}
+       style={{
+      position: "fixed",
+      top: pos.top,
+      left: pos.left,
+      opacity: isReady ? 1 : 0,        // hide until position calculated
+      pointerEvents: isReady ? "auto" : "none",
+      transition: "opacity 120ms ease", // fade only, no sliding
+      zIndex: 9999,
+    }}
+      className={`absolute animate-in fade-in duration-200  ${
         isAgent ? "right-0" : "left-0"
       } flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-300 rounded-full px-2 py-1 shadow-md z-50`}
     >
@@ -103,5 +137,7 @@ export const MessageActionsPopover: React.FC<MessageActionsPopoverProps> = ({
         </div>
       )}
     </div>
-  );
+    );
+
+   return createPortal(PopoverUI, document.body)
 };

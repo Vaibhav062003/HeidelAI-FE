@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { MessageActionsPopover } from "./MessageActionPopover";
 import MessageReaction  from "./MessageReaction";
 import api from "@/lib/session_api";
@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const MessageWrapper = ({ message, index, children, allMessages }: any) => {
-
+  const anchorRef = useRef(null);
   const [showActions, setShowActions] = useState(false);
 
   const handleReact = async (emoji: string) => {
@@ -38,11 +38,13 @@ export const MessageWrapper = ({ message, index, children, allMessages }: any) =
 
   return (
     <div
+      ref={anchorRef}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
       {showActions && message.platform !== "whatsapp" && (
         <MessageActionsPopover
+          anchorRef={anchorRef}
           isAgent={message.role === "agent"}
           onReact={handleReact}
           onReply={handleReply}

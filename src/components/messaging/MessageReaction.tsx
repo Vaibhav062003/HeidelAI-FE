@@ -38,7 +38,7 @@ const ReactionPopover = memo(({
     <div 
       className="fixed z-[9999]"
       style={{
-        top: position.top + 30, // Position below the emoji
+        bottom: position.top, // Position below the emoji
         left: Math.max(10, position.left - 150), // Center horizontally with min margin
       }}
       onMouseEnter={onMouseEnter}
@@ -103,10 +103,10 @@ const MessageReaction = memo(({
       hideTimeoutRef.current = null;
     }
 
-    if (buttonRef.current) {
+       if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setPosition({
-        top: rect.top + window.scrollY,
+        top: rect.bottom + window.scrollY, // <-- use rect.bottom here
         left: rect.left + window.scrollX + rect.width / 2
       });
     }
