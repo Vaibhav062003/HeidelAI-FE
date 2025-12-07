@@ -779,6 +779,7 @@ const ChatView = ({
   useEffect(()=>{
     const setConversatioStatus= async ()=>{
       if(!selectedConversationId) return;
+      console.log("conversation", selectedConversationId, conversation);
       const status = conversation?.status
       if(status){
         setConversationStatus(status as "open" | "closed" | "followup");
@@ -1230,6 +1231,7 @@ const ChatView = ({
 
     try{
       const res = await api.post(`/api/ai/schedule-message/${selectedConversationId}`);
+      console.log(res)
 
       if (!(res && (res.status === 200 || res.status === 204))) {
       throw new Error(
