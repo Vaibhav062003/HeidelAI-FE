@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 // import Sidebar from "./Sidebar";
-import {Popover,PopoverContent,PopoverTrigger,} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger, } from "@/components/ui/popover";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
@@ -22,7 +22,7 @@ import { useReminders } from "../hooks/useReminders";
 import { useTypingIndicator } from "../hooks/typingIndicator";
 import { createClient } from "@supabase/supabase-js";
 import { conversationService } from "@/components/services/api";
-import {Tooltip,TooltipContent,TooltipTrigger,TooltipProvider,} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ReminderDialog from "./ReminderDialog";
 import "../../app/dashboard/dashboard.css";
@@ -255,9 +255,9 @@ const LoadingState = () => (
 //   }
 // };
 
-const SharedProductPreview = ({ 
-  product, 
-  onRemove 
+const SharedProductPreview = ({
+  product,
+  onRemove
 }: { product: Product; onRemove: () => void; }) => (
   <div className="flex items-center w-fit gap-3 p-2 bg-gray-50 rounded-lg border border-gray-200 mb-2">
     <div className="w-15 h-15 relative">
@@ -616,7 +616,7 @@ const MessageItem = memo(
         {message.status && message.status == "sending" && (
           <div className="flex justify-end mt-1">
             <span className="text-xs text-gray-500">Sending...</span>
-            </div>
+          </div>
         )}
 
 
@@ -673,12 +673,12 @@ const ChatView = ({
   const typingThrottleRef = useRef<number>(0);
   const { reminders = [], refetchReminders } = useReminders(selectedConversationId);
   const [typingUsers, setTypingUsers] = useState<Map<
-      string,
-      {
-        agent_name: string;
-        timestamp: number;
-      }
-    >
+    string,
+    {
+      agent_name: string;
+      timestamp: number;
+    }
+  >
   >(new Map());
   const [globalMuted, setGlobalMuted] = useState(true);
   const [activeMediaId, setActiveMediaId] = useState<string | null>(null);
@@ -953,7 +953,7 @@ const ChatView = ({
 
     const currentContent = message.trim();
     const platform = selectedConversationId.split("_")[0];
-    
+
     // Handle Slash Commands (Canned Responses)
     let contentToSend = currentContent;
     if (currentContent.startsWith("/")) {
@@ -972,9 +972,9 @@ const ChatView = ({
       id: tempId,
       content: contentToSend,
       // Assuming 'user' is available from your auth context
-      sender_id: user?.id || "agent", 
+      sender_id: user?.id || "agent",
       // Usually 'agent' or 'assistant' depending on your backend enum
-      role: "agent", 
+      role: "agent",
       conversation_id: selectedConversationId,
       timestamp: new Date().toISOString(),
       type: "text",
@@ -983,7 +983,7 @@ const ChatView = ({
 
     // 3. OPTIMISTIC UPDATE: Update UI & IDB Immediately
     setMessage(""); // Clear input immediately
-    
+
     setMessages(prev => {
       const newState = [...prev, optimisticMessage];
       persistMessages(newState); // Save to IDB immediately
@@ -1016,17 +1016,17 @@ const ChatView = ({
     } catch (error) {
       console.error("Send failed:", error);
       toast.error("Failed to send message");
-      
+
       // Rollback: Remove the temp message if API fails
       setMessages(prev => {
         const newState = prev.filter(m => m.id !== tempId);
         persistMessages(newState);
         return newState;
       });
-      
+
       // Restore text to input so user doesn't lose it
       setMessage(contentToSend);
-    } 
+    }
   };
 
   // Auto scroll to bottom on new message
@@ -1231,8 +1231,8 @@ const ChatView = ({
 
           // 1. Check if we have an optimistic message (temp ID) with matching content
           // We look for a temp message sent by US (agent) with the SAME text
-          const tempMatchIndex = prev.findIndex(msg => 
-            msg.id.toString().startsWith("temp-") && 
+          const tempMatchIndex = prev.findIndex(msg =>
+            msg.id.toString().startsWith("temp-") &&
             msg.content === incomingMsg.content &&
             // Optional: Check if timestamp is within last 10 seconds to be safe
             (new Date().getTime() - new Date(msg.timestamp).getTime() < 10000)
@@ -1243,14 +1243,14 @@ const ChatView = ({
             // This keeps the chat smooth and prevents "jumping"
             const newState = [...prev];
             newState[tempMatchIndex] = incomingMsg;
-            
+
             persistMessages(newState); // Update IDB
             return newState;
           }
 
           // 2. Standard Duplicate Check (for normal incoming messages)
           const messageExists = prev.some(msg => msg.id === incomingMsg.id);
-          
+
           if (!messageExists) {
             const newState = [...prev, incomingMsg];
             persistMessages(newState);
@@ -1283,9 +1283,9 @@ const ChatView = ({
     onMessageDeleted: (data: any) => {
       if (data.conversation_id === selectedConversationId) {
         setMessages(prev => {
-           const newState = prev.filter(msg => msg.id !== data.message_id);
-           persistMessages(newState); // <--- SAVE TO IDB
-           return newState;
+          const newState = prev.filter(msg => msg.id !== data.message_id);
+          persistMessages(newState); // <--- SAVE TO IDB
+          return newState;
         });
       }
     }
@@ -1371,7 +1371,7 @@ const ChatView = ({
 
   const fetchMessages = async () => {
     if (!isLoaded || !user || !selectedConversationId) return;
-    
+
     // 1. Load from Cache immediately
     try {
       const cachedMessages = await getData<Message[]>("messages", MESSAGE_STORAGE_KEY);
@@ -1390,7 +1390,7 @@ const ChatView = ({
       const response = await api.get(
         `/api/conversations/${selectedConversationId}/messages?agent_username=${agent_username}`
       );
-      
+
       const newMessages = response?.data.messages || [];
       setMessages(newMessages);
 
@@ -1713,8 +1713,8 @@ const ChatView = ({
                         size="icon"
                         onClick={onOpenRightSidebar}
                         className={`rounded-xl transition-all duration-200 ${isRightSidebarVisible
-                            ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                            : "hover:bg-gray-100"
+                          ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                          : "hover:bg-gray-100"
                           }`}
                       >
                         <svg
@@ -2194,9 +2194,10 @@ const ChatView = ({
             <div className="flex-shrink-0 mb-3">
               {/* Typing Users */}
               {typingUsers.size > 0 && (
-                <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-5 py-2 rounded-xl border border-white/10 shadow-sm animate-fadeIn">
-                  {/* List of users typing */}
-                  <div className="flex items-center gap-x-2 flex-wrap text-sm">
+                <div className="inline-flex items-center ml-5 px-3 text-sm !bg-transparent !backdrop-filter-none">
+
+                  {/* Names + "is typing" */}
+                  <div className="flex items-center gap-1 flex-wrap">
                     {Array.from(typingUsers.values()).map((user, index) => {
                       const initials = user.agent_name
                         .split(" ")
@@ -2204,52 +2205,57 @@ const ChatView = ({
                         .join("")
                         .toUpperCase();
 
-                      const bgColor = `hsl(${(user.agent_name.length * 37) % 360
-                        }, 70%, 55%)`; // unique color
+                      const bgColor = `hsl(${(user.agent_name.length * 37) % 360}, 70%, 45%)`;
 
                       return (
-                        <span key={index} className="inline-flex items-center gap-2">
-                          {/* Avatar with initials */}
+                        <span key={index} className="flex items-center gap-1">
                           <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                            className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold"
                             style={{ backgroundColor: bgColor }}
                           >
                             {initials}
                           </div>
-                          {/* Name */}
-                          <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                            {user.agent_name}
-                          </span>
-
-                          {index < typingUsers.size - 1 && (
-                            <span className="text-gray-500 text-base">,</span>
-                          )}
+                          <span>{user.agent_name}</span>
                         </span>
                       );
                     })}
-                    <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent ml-1">
+
+                    <span>
                       {typingUsers.size === 1 ? "is typing" : "are typing"}
                     </span>
                   </div>
 
-                  {/* Animated dots */}
-                  <div className="flex items-center gap-1 ml-1">
-                    <span className="w-2 h-2 bg-gradient-to-br from-pink-400 to-purple-400 rounded-full animate-bounce delay-0"></span>
-                    <span className="w-2 h-2 bg-gradient-to-br from-purple-400 to-cyan-400 rounded-full animate-bounce delay-150"></span>
-                    <span className="w-2 h-2 bg-gradient-to-br from-cyan-400 to-pink-400 rounded-full animate-bounce delay-300"></span>
+                  {/* Dots */}
+                  <div className="flex justify-end gap-1 ml-1">
+                    <span className="dot animate-dot"></span>
+                    <span className="dot animate-dot delay-150"></span>
+                    <span className="dot animate-dot delay-300"></span>
                   </div>
 
                   <style>{`
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(4px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      .animate-fadeIn {
-        animation: fadeIn 0.25s ease-out forwards;
-      }
-    `}</style>
+                    .dot {
+                      width: 3px;
+                      height: 3px;
+                      border-radius: 50%;
+                      background-color: #555;
+                    }
+
+                    @keyframes dot {
+                      0% { opacity: 0.3; transform: translateY(0); }
+                      50% { opacity: 1; transform: translateY(-2px); }
+                      100% { opacity: 0.3; transform: translateY(0); }
+                    }
+
+                    .animate-dot {
+                      animation: dot 1s infinite ease-in-out;
+                    }
+
+                    .delay-150 { animation-delay: 0.15s; }
+                    .delay-300 { animation-delay: 0.3s; }
+                  `}</style>
                 </div>
               )}
+
 
               {sharedProduct && (
                 <div className="mb-3 px-3">
@@ -2276,8 +2282,8 @@ const ChatView = ({
                   <div className="mb-5 w-40 bg-gray-100/80 rounded-2xl p-0.5 flex items-center">
                     <button
                       className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${mode === "reply"
-                          ? "bg-blue-600 text-white shadow-md"
-                          : "text-gray-600 hover:text-blue-600"
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "text-gray-600 hover:text-blue-600"
                         }`}
                       onClick={() => setMode("reply")}
                     >
@@ -2285,8 +2291,8 @@ const ChatView = ({
                     </button>
                     <button
                       className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${mode === "private"
-                          ? "bg-purple-600 text-white shadow-md"
-                          : "text-gray-600 hover:text-purple-600"
+                        ? "bg-purple-600 text-white shadow-md"
+                        : "text-gray-600 hover:text-purple-600"
                         }`}
                       onClick={() => setMode("private")}
                     >
@@ -2352,8 +2358,8 @@ const ChatView = ({
                         <TooltipTrigger asChild>
                           <button
                             className={`p-2.5 rounded-xl transition-colors ${isRecording
-                                ? "bg-red-100/80 hover:bg-red-200/80 text-red-600"
-                                : "bg-gray-100/80 hover:bg-gray-200/80 text-gray-600"
+                              ? "bg-red-100/80 hover:bg-red-200/80 text-red-600"
+                              : "bg-gray-100/80 hover:bg-gray-200/80 text-gray-600"
                               }`}
                             onClick={
                               isRecording ? stopRecording : startRecording
@@ -2376,10 +2382,10 @@ const ChatView = ({
 
                       <button
                         className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${message.trim() || audioURL || sharedProduct
-                            ? mode === "reply"
-                              ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
-                              : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
-                            : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
+                          ? mode === "reply"
+                            ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
+                            : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
+                          : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
                           }`}
                         onClick={() => {
                           if (sharedProduct) {
