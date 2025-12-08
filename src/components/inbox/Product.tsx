@@ -402,7 +402,7 @@ const ProductsTab = ({
               <TooltipContent>Add new product</TooltipContent>
             </Tooltip>
             {showOptions && (
-              <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-xl border border-gray-200 z-50">
+              <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-xl border border-gray-00 z-50">
                 <div className="py-1">
                   <button
                     onClick={() => handleOptionSelect("pinecone")}
@@ -568,7 +568,7 @@ const ProductsTab = ({
           onClick={() => setSelectedMode("single")}
           className={`py-2 rounded-md font-medium transition ${
             selectedMode === "single"
-              ? "bg-white-900 text-gray-700 border border-gray-300 shadow-sm  "
+              ? "bg-white-900 text-gray-700 border border-gray-500 shadow-sm  "
               : "text-gray-700"
           }`}
         >
@@ -579,7 +579,7 @@ const ProductsTab = ({
           onClick={() => setSelectedMode("bulk")}
           className={`py-2 rounded-md font-medium transition ${
             selectedMode === "bulk"
-              ? "bg-white-900 text-gray-700 border border-gray-300 shadow-sm  "
+              ? "bg-white-900 text-gray-700 border border-gray-500 shadow-sm  "
               : "text-gray-700"
           }`}
         >
