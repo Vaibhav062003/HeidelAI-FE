@@ -171,7 +171,7 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
         <Button
           type="submit"
           disabled={loading}
-          className="flex-1 h-9 sm:h-10 text-sm sm:text-base bg-blue-600 hover:bg-blue-700 text-white"
+          className="flex-1 h-9 sm:h-10 text-sm sm:text-base bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 shadow-sm  "
         >
           {loading ? "Creating..." : "Create Product"}
         </Button>

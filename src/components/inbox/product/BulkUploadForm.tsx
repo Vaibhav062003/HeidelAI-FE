@@ -38,23 +38,7 @@ const BulkUploadForm = ({ setIsModalOpen }: BulkUploadFormProps) => {
 
   return (
     <div
-      className="
-        w-full 
-        max-w-full 
-        mx-auto
-
-        max-h-[70vh]
-        overflow-y-auto
-        pr-2
-
-        space-y-8
-        sm:space-y-6
-        md:space-y-7
-
-        px-2 sm:px-0
-        hide-scrollbar
-      "
-    >
+      className="w-full max-w-full mx-auto max-h-[70vh] overflow-y-auto pr-2 space-y-8 sm:space-y-6 md:space-y-7 px-2 sm:px-0 hide-scrollbar">
       <form onSubmit={handleBulkUpload} className="space-y-8">
 
         {/* Header */}
@@ -172,7 +156,7 @@ const BulkUploadForm = ({ setIsModalOpen }: BulkUploadFormProps) => {
           <Button
             type="submit"
             disabled={!selectedFileName || loading}
-            className="flex-1 h-9 sm:h-10 text-sm sm:text-base bg-blue-600 hover:bg-blue-700 text-white gap-2"
+            className="flex-1 h-9 sm:h-10 text-sm sm:text-base bg-white hover:bg-gray-100 text-gray-700 gap-2"
           >
             <Upload className="w-4 h-4" />
             {loading ? "Uploading..." : "Upload File"}

@@ -7,7 +7,7 @@ function extractSubdomain(request: NextRequest): string | null {
   const host = request.headers.get('host') || '';
   const hostname = host.split(':')[0];
   const { pathname } = request.nextUrl;
-  const isDashboard = pathname.startsWith('/dashboard');
+
 
   // Local development environment
   if (url.includes('localhost') || url.includes('127.0.0.1')) {
@@ -26,13 +26,8 @@ function extractSubdomain(request: NextRequest): string | null {
     return null;
   }
 
-  const token = request.cookies.get('session-token')?.value;
 
-  if (isDashboard && !token) {
-    // Redirect to login if not authenticated
-    const loginUrl = new URL('/login', request.url);
-    NextResponse.redirect(loginUrl);
-  }
+
 
   // Production environment
   const rootDomainFormatted = rootDomain.split(':')[0];

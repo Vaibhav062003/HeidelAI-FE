@@ -256,6 +256,16 @@ const ProductsTab = ({
     };
   }, [selectedConversationId]);
 
+   useEffect(() => {
+    if (!selectedConversationId || isModalOpen) {
+      setLoading(false);
+      return;
+    }
+    fetchProducts(selectedConversationId);
+    // WebSocket logic is already handled in the previous useEffect
+    // so we don't need to duplicate it here.
+  }, [selectedConversationId, isModalOpen]);
+
   useEffect(() => {
     if (!searchProduct.trim()) {
       setFilteredProducts(products);
@@ -558,7 +568,7 @@ const ProductsTab = ({
           onClick={() => setSelectedMode("single")}
           className={`py-2 rounded-md font-medium transition ${
             selectedMode === "single"
-              ? "bg-blue-900 text-white"
+              ? "bg-white-900 text-gray-700 border border-gray-300 shadow-sm  "
               : "text-gray-700"
           }`}
         >
@@ -569,7 +579,7 @@ const ProductsTab = ({
           onClick={() => setSelectedMode("bulk")}
           className={`py-2 rounded-md font-medium transition ${
             selectedMode === "bulk"
-              ? "bg-blue-900 text-white"
+              ? "bg-white-900 text-gray-700 border border-gray-300 shadow-sm  "
               : "text-gray-700"
           }`}
         >
