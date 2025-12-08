@@ -27,6 +27,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import SingleProductForm from "./product/SingleProductForm";
 import BulkUploadForm from "./product/BulkUploadForm";
 import { toast } from "sonner";
+import { useRole } from "@/contexts/RoleContext";
 type PlatformType = "pinecone" | "shopify" | "other" | undefined;
 
 const WS_URL = 'wss://egenie-whatsapp.koyeb.app/cs';
@@ -65,14 +66,14 @@ const LoadingState = () => (
         <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
       </div>
       <div className="relative">
-        <Tooltip>
+        {/* <Tooltip>
           <TooltipTrigger asChild>
             <Button size="icon" variant="outline">
               <Plus className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Add new product</TooltipContent>
-        </Tooltip>
+        </Tooltip> */}
       </div>
     </div>
     <div className="space-y-4">
@@ -109,7 +110,7 @@ const ProductsTab = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [retries, setRetries] = useState(0);
   const [ws, setWs] = useState<WebSocket | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  // const [isAdmin, setIsAdmin] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMode, setSelectedMode] = useState<"single" | "bulk">("single");
   const [openMenuProductId, setOpenMenuProductId] = useState<string | null>(null);
@@ -120,6 +121,7 @@ const ProductsTab = ({
   const { organization } = useOrganization({
     memberships: true
   })
+  const {isAdmin} = useRole();
 
   const maxRetries = 5;
   const retryDelay = 3000;
@@ -170,29 +172,29 @@ const ProductsTab = ({
       toast.error('Failed to delete product');
     }
   }
-  const checkRole = async () => {
-    if (!organization || !user) return;
-    try {
-      const memberships = await organization.getMemberships()
-      const membership = memberships.data.find(
-        (m) => m.publicUserData?.userId === user.id
-      );
-      if (membership && (membership.role === 'org:admin' || membership.role === 'admin')) {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
-      console.log('User role:', membership?.role);
+  // const checkRole = async () => {
+  //   if (!organization || !user) return;
+  //   try {
+  //     const memberships = await organization.getMemberships()
+  //     const membership = memberships.data.find(
+  //       (m) => m.publicUserData?.userId === user.id
+  //     );
+  //     if (membership && (membership.role === 'org:admin' || membership.role === 'admin')) {
+  //       setIsAdmin(true);
+  //     } else {
+  //       setIsAdmin(false);
+  //     }
+  //     console.log('User role:', membership?.role);
 
 
-    } catch (err) {
-      console.error('Error checking user role:', err);
-    }
-  }
+  //   } catch (err) {
+  //     console.error('Error checking user role:', err);
+  //   }
+  // }
 
-  useEffect(() => {
-    checkRole();
-  }, [organization, user, selectedConversationId]);
+  // useEffect(() => {
+  //   checkRole();
+  // }, [organization, user, selectedConversationId]);
   useEffect(() => {
     if (!selectedConversationId) {
       setLoading(false);

@@ -138,17 +138,6 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
         </div>
       </div>
 
-      {/* Product ID */}
-      <div className="space-y-2">
-        <Label className="text-sm sm:text-base" htmlFor="product_id">Unique Product ID</Label>
-        <Input
-          id="product_id"
-          name="product_id"
-          required
-          placeholder="SKU-XXXXXXX"
-          className="h-9 sm:h-10 text-sm sm:text-base"
-        />
-      </div>
 
       {/* Image URL */}
       <div className="space-y-2">
