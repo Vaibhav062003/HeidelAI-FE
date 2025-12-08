@@ -232,7 +232,7 @@ export const TeamManagement = () => {
   const inviteDisabled = membersCount >= maxAllowedMemberships;
 
   return (
-    <div className="w-full min-h-screen bg-white">
+    <div className="w-full min-h-screen bg-white overflow-hidden">
       <div className="w-full max-w-10xl mx-auto px-6 py-10">
         {/* Header */}
        <div className="mb-10">
@@ -282,7 +282,7 @@ export const TeamManagement = () => {
               
               {inviteDisabled && showTooltip && (
                 <div className="absolute left-1/2 -translate-x-1/2 mt-2 px-4 py-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 whitespace-nowrap">
-                  You have reached the maximum of {maxAllowedMemberships} members for this organization.
+                  limit of {maxAllowedMemberships} members for this organization.
                 </div>
               )}
             </div>
