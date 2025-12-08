@@ -571,7 +571,7 @@ const MessageItem = memo(
     isLast,
     index,
     isLatest,
-    isReplyMessage
+    isReplyMessage,
   }: {
     message: Message;
     isLast: boolean;
@@ -2038,12 +2038,13 @@ const ChatView = ({
               className="flex-1 h-full px-3 py-0.1 bg-gray-50"
             >
               <div className="space-y-3 max-w-full pb-4 sm:pb-0">
-
                 <>
                   {messages.map((message, index) => {
                     const latestMediaMessage = [...messages]
                       .reverse()
-                      .find((m) => m.type === "ig_reel" || m.type === "ig_story");
+                      .find(
+                        (m) => m.type === "ig_reel" || m.type === "ig_story"
+                      );
 
                     const latestMediaId = latestMediaMessage?.payload?.reel_video_id || latestMediaMessage?.payload?.story_media_id;
 
@@ -2070,7 +2071,9 @@ const ChatView = ({
                                   {message.type === "share" && (
                                     <InstagramPost
                                       mediaUrl={message.payload.url}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
                                     />
                                   )}
 
@@ -2081,17 +2084,22 @@ const ChatView = ({
                                       id={message.payload.reel_video_id}
                                       reelVideoUrl={message.payload.url}
                                       title={message.payload.caption}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
                                       viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
                                       isLatest={isLatest}
                                       isActive={
                                         activeMediaType === "reel" &&
-                                        activeMediaId === message.payload.reel_video_id
+                                        activeMediaId ===
+                                          message.payload.reel_video_id
                                       }
                                       onPlay={(id) => handlePlay(id, "reel")} // stops others
                                       isMuted={globalMuted}
                                       onMuteToggle={handleMuteToggle}
-                                      isAgent={message.role.toLowerCase() === "agent"}
+                                      isAgent={
+                                        message.role.toLowerCase() === "agent"
+                                      }
                                     />
                                   )}
 
@@ -2101,19 +2109,30 @@ const ChatView = ({
                                       id={message.payload.story_media_id}
                                       sharedBy="You"
                                       storyOwnerName={"Instagram User"}
-                                      storyMediaUrl={message.payload.story_media_url}
+                                      storyMediaUrl={
+                                        message.payload.story_media_url
+                                      }
                                       isActive={
                                         activeMediaType === "story" &&
-                                        activeMediaId === message.payload.story_media_id
+                                        activeMediaId ===
+                                          message.payload.story_media_id
                                       } // only one plays
                                       onPlay={(id) => handlePlay(id, "story")}
                                       isMuted={globalMuted}
                                       isLatest={isLatest}
-                                      onMuteToggle={(muted) => setGlobalMuted(muted)}
-                                      isAgent={message.role.toLowerCase() === "agent"}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      onMuteToggle={(muted) =>
+                                        setGlobalMuted(muted)
+                                      }
+                                      isAgent={
+                                        message.role.toLowerCase() === "agent"
+                                      }
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
                                       content={message.content}
-                                      storyOwnerUsername={message.payload.owner_username}
+                                      storyOwnerUsername={
+                                        message.payload.owner_username
+                                      }
                                       type={message.type}
                                     />
                                   )}
@@ -2121,9 +2140,15 @@ const ChatView = ({
                                   {/* Render Images / Videos */}
                                   {(message.type === "image" || message.type === "video") && (
                                     <MediaMessage
-                                      type={message.type === "image" ? "image" : "video"}
+                                      type={
+                                        message.type === "image"
+                                          ? "image"
+                                          : "video"
+                                      }
                                       url={message.payload.url}
-                                      isAgent={message.role.toLowerCase() === "agent"}
+                                      isAgent={
+                                        message.role.toLowerCase() === "agent"
+                                      }
                                       isLatest={isLatest}
                                       isActive={
                                         activeMediaType === "video" &&
@@ -2131,9 +2156,13 @@ const ChatView = ({
                                       }
                                       onPlay={(id) => handlePlay(id, "video")}
                                       isMuted={globalMuted}
-                                      onMuteToggle={(muted) => setGlobalMuted(muted)}
+                                      onMuteToggle={(muted) =>
+                                        setGlobalMuted(muted)
+                                      }
                                       id={message.id}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
                                     />
                                   )}
                                 </LazyMediaLoader>
@@ -2162,24 +2191,64 @@ const ChatView = ({
             </ScrollArea>
 
             {/* Input Section */}
-            <div className="flex-shrink-0 mb-3 bg-gray-50">
+            <div className="flex-shrink-0 mb-3">
               {/* Typing Users */}
               {typingUsers.size > 0 && (
-                <div className="flex items-center gap-2 text-sm text-gray-500 p-2">
-                  <div className="flex gap-1">
-                    {Array.from(typingUsers.values()).map((user, index) => (
-                      <span key={index}>
-                        {user.agent_name}
-                        {index < typingUsers.size - 1 ? "," : ""}
-                      </span>
-                    ))}
+                <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-5 py-2 rounded-xl border border-white/10 shadow-sm animate-fadeIn">
+                  {/* List of users typing */}
+                  <div className="flex items-center gap-x-2 flex-wrap text-sm">
+                    {Array.from(typingUsers.values()).map((user, index) => {
+                      const initials = user.agent_name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase();
+
+                      const bgColor = `hsl(${
+                        (user.agent_name.length * 37) % 360
+                      }, 70%, 55%)`; // unique color
+
+                      return (
+                        <span key={index} className="inline-flex items-center gap-2">
+                          {/* Avatar with initials */}
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                            style={{ backgroundColor: bgColor }}
+                          >
+                            {initials}
+                          </div>
+                          {/* Name */}
+                          <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                            {user.agent_name}
+                          </span>
+
+                          {index < typingUsers.size - 1 && (
+                            <span className="text-gray-500 text-base">,</span>
+                          )}
+                        </span>
+                      );
+                    })}
+                    <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent ml-1">
+                      {typingUsers.size === 1 ? "is typing" : "are typing"}
+                    </span>
                   </div>
-                  <span>{typingUsers.size === 1 ? "is" : "are"} typing</span>
-                  <div className="flex gap-1">
-                    <span className="animate-bounce">.</span>
-                    <span className="animate-bounce delay-100">.</span>
-                    <span className="animate-bounce delay-200">.</span>
+
+                  {/* Animated dots */}
+                  <div className="flex items-center gap-1 ml-1">
+                    <span className="w-2 h-2 bg-gradient-to-br from-pink-400 to-purple-400 rounded-full animate-bounce delay-0"></span>
+                    <span className="w-2 h-2 bg-gradient-to-br from-purple-400 to-cyan-400 rounded-full animate-bounce delay-150"></span>
+                    <span className="w-2 h-2 bg-gradient-to-br from-cyan-400 to-pink-400 rounded-full animate-bounce delay-300"></span>
                   </div>
+
+                  <style>{`
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.25s ease-out forwards;
+      }
+    `}</style>
                 </div>
               )}
 
