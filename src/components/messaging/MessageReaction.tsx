@@ -1,3 +1,4 @@
+
 "use client"
 import React, { useState, memo, useRef, useEffect } from "react";
 import { format, parseISO } from "date-fns";
@@ -38,9 +39,12 @@ const ReactionPopover = memo(({
     <div 
       className="fixed z-[9999]"
       style={{
-        bottom: position.top, // Position below the emoji
-        left: Math.max(10, position.left - 150), // Center horizontally with min margin
-      }}
+      top: position.top + 30,
+      left: Math.max(
+        10,
+        Math.min(position.left - 100, window.innerWidth - 320) // 340 = popover width + margin
+      ),
+    }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
@@ -103,10 +107,10 @@ const MessageReaction = memo(({
       hideTimeoutRef.current = null;
     }
 
-       if (buttonRef.current) {
+    if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setPosition({
-        top: rect.bottom + window.scrollY, // <-- use rect.bottom here
+        top: rect.top + window.scrollY,
         left: rect.left + window.scrollX + rect.width / 2
       });
     }

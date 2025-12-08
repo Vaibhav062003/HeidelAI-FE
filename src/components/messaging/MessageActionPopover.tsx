@@ -81,9 +81,7 @@ export const MessageActionsPopover: React.FC<MessageActionsPopoverProps> = ({
       transition: "opacity 120ms ease", // fade only, no sliding
       zIndex: 9999,
     }}
-      className={`absolute animate-in fade-in duration-200  ${
-        isAgent ? "right-0" : "left-0"
-      } flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-300 rounded-full px-2 py-1 shadow-md z-50`}
+      className={`animate-in fade-in duration-200 flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-300 rounded-lg px-1 py-0.5 shadow-md z-50`}
     >
       {!showPicker ? (
         <>
