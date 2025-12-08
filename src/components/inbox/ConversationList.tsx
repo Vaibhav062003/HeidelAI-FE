@@ -138,7 +138,7 @@ const ConversationList = ({
     hasQuery: false,
   });
 
-  const showSkeleton = loading && conversations.length === 0;
+  const showSkeleton = loading
 
   const filteredConversations = useMemo(() => {
     if (!conversations.length) return [];

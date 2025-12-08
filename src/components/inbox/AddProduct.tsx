@@ -1,4 +1,3 @@
-
 import React, { useState, ChangeEvent, FormEvent } from "react";
 // Define the platform type
 type PlatformType = "pinecone" | "shopify" | "other" | undefined;
@@ -7,7 +6,9 @@ type PlatformType = "pinecone" | "shopify" | "other" | undefined;
 interface AddProductProps {
   closeForm: () => void;
   platform: PlatformType;
+  setIsModalOpen?: (isOpen: boolean) => void;
 }
+
 
 // Define form data interface
 interface ProductFormData {
@@ -52,7 +53,7 @@ function isProductFormField(key: string): key is keyof ProductFormData {
   ].includes(key);
 }
 
-const AddProduct: React.FC<AddProductProps> = ({ closeForm, platform }) => {
+const AddProduct: React.FC<AddProductProps> = ({ closeForm, platform, setIsModalOpen }) => {
   const [formData, setFormData] = useState<ProductFormData>({
     category: "",
     description: "",

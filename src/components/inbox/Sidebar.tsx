@@ -43,6 +43,9 @@ import { WhatsAppTemplate } from "../types/template";
 import WhatsAppAnalyticsContent from "@/components/inbox/WhatsAppAnalyticsContent";
 import { Conversation } from "../types/conversation";
 import { Product } from "../types/product";
+import AssignDropdown from "./AssignToAgent";
+import api from "@/lib/session_api";
+import AnalyticsSection from "./AnalyticsSection";
 
 interface SidebarProps {
   selectedConversationId: string;
@@ -50,6 +53,7 @@ interface SidebarProps {
   onConversationSelect: (id: string) => void;
   onToggleVisibility?: () => void;
   conversation?: Conversation | null;
+  currentAgentUsername: string;
 }
 
 const fluidStyles = `
@@ -84,68 +88,6 @@ const ContactDetail = memo(
   )
 );
 ContactDetail.displayName = "ContactDetail";
-
-const AnalyticsCard = memo(
-  ({
-    icon: Icon,
-    title,
-    subtitle,
-    value,
-    color,
-  }: {
-    icon: React.ComponentType<{ className?: string }>;
-    title: string;
-    subtitle: string;
-    value: string;
-    color: string;
-  }) => (
-    <Card
-      className="bg-white/80 backdrop-blur-sm border border-gray-100/60 rounded-xl hover:shadow-sm transition-all duration-300"
-      style={{ padding: "var(--sidebar-padding)" }}
-    >
-      <div
-        className="flex items-center mb-1.5"
-        style={{ gap: "var(--sidebar-gap)" }}
-      >
-        <div
-          className={`bg-${color}-100/80 rounded-lg flex items-center justify-center`}
-          style={{
-            width: "calc(var(--avatar-size) * 0.7)",
-            height: "calc(var(--avatar-size) * 0.7)",
-          }}
-        >
-          <Icon
-            className={`text-${color}-600 w-[var(--icon-size)] h-[var(--icon-size)]`}
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3
-            className="font-semibold text-gray-900 truncate"
-            style={{ fontSize: "var(--sidebar-text-sm)" }}
-          >
-            {title}
-          </h3>
-          <p
-            className="text-gray-500 truncate"
-            style={{ fontSize: "var(--sidebar-text-xs)" }}
-          >
-            {subtitle}
-          </p>
-        </div>
-      </div>
-      <p
-        className="font-bold text-gray-900"
-        style={{
-          fontSize: "clamp(1rem, 2.5vw, 1.25rem)",
-          marginLeft: "calc(var(--avatar-size) * 0.7 + var(--sidebar-gap))",
-        }}
-      >
-        {value}
-      </p>
-    </Card>
-  )
-);
-AnalyticsCard.displayName = "AnalyticsCard";
 
 const TemplateCard = memo(
   ({
@@ -239,6 +181,7 @@ const Sidebar = ({
   onShareProduct,
   conversation: passedConversation,
   onToggleVisibility,
+  currentAgentUsername
 }: SidebarProps) => {
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
   const [accordionValue, setAccordionValue] = useState("summary");
@@ -396,15 +339,6 @@ const Sidebar = ({
     [templates, searchTemplate]
   );
 
-  const analytics = useMemo(
-    () => ({
-      responseTime: "2m 30s",
-      resolutionRate: "94%",
-      customerSatisfaction: "4.8/5",
-    }),
-    []
-  );
-
   const contactPhone = useMemo(
     () => selectedConversationId?.split("_")[1] || "Not Available",
     [selectedConversationId]
@@ -516,65 +450,34 @@ const Sidebar = ({
           />
         ),
       },
-      {
-        value: "analytics",
-        icon: BarChart3,
-        title: "Analytics",
-        subtitle: "Metrics",
-        color: "green",
-        content: selectedConversationId ? (
-          <WhatsAppAnalyticsContent
-            selectedConversationId={selectedConversationId}
-          />
-        ) : (
-          <div className="space-y-[var(--sidebar-gap)] px-[var(--sidebar-padding)]">
-            <AnalyticsCard
-              icon={Clock}
-              title="Response Time"
-              subtitle="Average"
-              value={analytics.responseTime}
-              color="blue"
-            />
-            <AnalyticsCard
-              icon={TrendingUp}
-              title="Resolution Rate"
-              subtitle="Success rate"
-              value={analytics.resolutionRate}
-              color="green"
-            />
-            <AnalyticsCard
-              icon={Users}
-              title="Satisfaction"
-              subtitle="Customer rating"
-              value={analytics.customerSatisfaction}
-              color="purple"
-            />
-            <div className="text-center mt-4 p-[var(--sidebar-padding)]">
-              <div className="bg-gray-100/80 rounded-2xl flex items-center justify-center mx-auto mb-2 w-[calc(var(--avatar-size)*1.2)] h-[calc(var(--avatar-size)*1.2)]">
-                <MessageSquare className="text-gray-500 h-[calc(var(--icon-size)*1.5)] w-[calc(var(--icon-size)*1.5)]" />
-              </div>
-              <p className="text-gray-600 leading-relaxed text-[var(--sidebar-text-sm)]">
-                Select a conversation to view detailed analytics
-              </p>
-            </div>
-          </div>
-        ),
-      },
-    ],
-    [
-      selectedConversationId,
-      loading,
-      error,
-      filteredTemplates,
-      handleTemplateSelect,
-      handleProductSelect,
-      onShareProduct,
-      analytics,
-      searchTemplate,
-      handleSearchChange,
-      handleShowTemplateBuilder,
-    ]
-  );
+{
+  value: "analytics",
+  icon: BarChart3,
+  title: "Analytics",
+  subtitle: "Metrics",
+  color: "green" as const,
+  content: (
+    <AnalyticsSection
+      selectedConversationId={selectedConversationId}
+      currentAgentUsername={currentAgentUsername} 
+    />
+  ),
+},
+  ],
+  [
+    selectedConversationId,
+    currentAgentUsername,
+    loading,
+    error,
+    filteredTemplates,
+    handleTemplateSelect,
+    handleProductSelect,
+    onShareProduct,
+    searchTemplate,
+    handleSearchChange,
+    handleShowTemplateBuilder,
+  ]
+);
 
   const orderedSections = useMemo(() => {
     if (!accordionValue) return accordionSections;
@@ -721,19 +624,21 @@ const Sidebar = ({
             </div>
 
             {/* Contact Details */}
-            <div className="space-y-0 border-t border-gray-100 mt-[var(--sidebar-gap)] pt-[var(--sidebar-gap)]">
-              <ContactDetail
-                icon={conversation?.platform === "whatsapp" ? Phone : IdCard}
-                label="Phone"
-                text={contactPhone}
-              />
-              <ContactDetail icon={Mail} label="Email" text={contactEmail} />
-              <ContactDetail
-                icon={MapPin}
-                label="Location"
-                text="Not Available"
-              />
-            </div>
+<div className="grid grid-cols-2 gap-2 border-t border-gray-100 mt-[var(--sidebar-gap)] pt-[var(--sidebar-gap)]">
+  <ContactDetail
+    icon={conversation?.platform === "whatsapp" ? Phone : IdCard}
+    label="Phone"
+    text={contactPhone}
+  />
+  <ContactDetail icon={Mail} label="Email" text={contactEmail} />
+  <ContactDetail
+    icon={MapPin}
+    label="Location"
+    text="Not Available"
+  />
+  <AssignDropdown />
+</div>
+
           </div>
 
           {/* Accordion */}

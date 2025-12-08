@@ -22,6 +22,7 @@ export function useTypingIndicator(
       if (isTypingRef.current) {
         sendFn({
           type: 'typing_indicator',
+          platform: conversationId.split('_')[0],
           is_typing: false,
           agent_id: agentIdRef.current,
           user: user?.username,
@@ -39,6 +40,7 @@ export function useTypingIndicator(
       debounceTimerRef.current = setTimeout(() => {
         sendFn({
           type: 'typing_indicator',
+          platform: conversationId.split('_')[0],
           is_typing: true,
           agent_id: agentIdRef.current,
           user: user.username,
@@ -54,6 +56,7 @@ export function useTypingIndicator(
       if (isTypingRef.current) {
         sendFn({
           type: 'typing_indicator',
+          platform: conversationId.split('_')[0],
           is_typing: false,
           agent_id: agentIdRef.current,
           user: user.username,

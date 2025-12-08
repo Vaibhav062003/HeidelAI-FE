@@ -16,11 +16,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ExternalLink, Send, Plus, Search, Eye, Share2, AlertTriangle } from "lucide-react";
+import { ExternalLink, Send, Plus, Search, Eye, Share2, AlertTriangle, MoreVertical, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import api from "@/lib/session_api";
 import { Product } from "../types/product";
+import { useOrganization, useUser } from "@clerk/nextjs";
+import { m } from "framer-motion";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import SingleProductForm from "./product/SingleProductForm";
+import BulkUploadForm from "./product/BulkUploadForm";
+import { toast } from "sonner";
 type PlatformType = "pinecone" | "shopify" | "other" | undefined;
 
 const WS_URL = 'wss://egenie-whatsapp.koyeb.app/cs';
@@ -103,20 +109,33 @@ const ProductsTab = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [retries, setRetries] = useState(0);
   const [ws, setWs] = useState<WebSocket | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedMode, setSelectedMode] = useState<"single" | "bulk">("single");
+  const [openMenuProductId, setOpenMenuProductId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const { user } = useUser();
+  const { organization } = useOrganization({
+    memberships: true
+  })
 
   const maxRetries = 5;
   const retryDelay = 3000;
+
+
+
 
   const fetchProducts = async (conversationId: string) => {
     if (!conversationId) return;
 
     setLoading(true);
     try {
-      const response = await api.post(`/api/ai/product-recommendations/${conversationId}`);
-      if (response.status !== 200) throw new Error("Failed to fetch products");
-      const data = await response.data();
+      const response = await api.get(`/api/products`);
+      console.log('Fetched products:', response.data);
 
-      if (data.status === "error") {
+      if (response.status !== 200) {
         setError('Failed to fetch products');
         setProducts([]);
         setFilteredProducts([]);
@@ -124,7 +143,7 @@ const ProductsTab = ({
       }
 
       setError(null);
-      const productsData = Array.isArray(data.data) ? data.data : [];
+      const productsData = Array.isArray(response.data.products) ? response.data.products : [];
       setProducts(productsData);
       setFilteredProducts(productsData);
     } catch (err) {
@@ -137,6 +156,43 @@ const ProductsTab = ({
     }
   };
 
+
+  const deletProduct = async (productId: number | string) => {
+    try {
+      const response = await api.delete(`/api/products/${productId}`);
+      if (response.status === 200) {
+        setProducts((prev) => prev.filter((prod) => prod.product_id !== productId));
+        setFilteredProducts((prev) => prev.filter((prod) => prod.product_id !== productId));
+      }
+      toast.success('Product deleted successfully');
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      toast.error('Failed to delete product');
+    }
+  }
+  const checkRole = async () => {
+    if (!organization || !user) return;
+    try {
+      const memberships = await organization.getMemberships()
+      const membership = memberships.data.find(
+        (m) => m.publicUserData?.userId === user.id
+      );
+      if (membership && (membership.role === 'org:admin' || membership.role === 'admin')) {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+      console.log('User role:', membership?.role);
+
+
+    } catch (err) {
+      console.error('Error checking user role:', err);
+    }
+  }
+
+  useEffect(() => {
+    checkRole();
+  }, [organization, user, selectedConversationId]);
   useEffect(() => {
     if (!selectedConversationId) {
       setLoading(false);
@@ -199,8 +255,24 @@ const ProductsTab = ({
   }, [selectedConversationId]);
 
   useEffect(() => {
+    if (!searchProduct.trim()) {
+      setFilteredProducts(products);
+      return;
+    }
+
+    // Try to find by _id first
+    const byId = products.find(
+      (product) => product._id === searchProduct.trim()
+    );
+
+    if (byId) {
+      setFilteredProducts([byId]);
+      return;
+    }
+
+    // Otherwise, filter by name and category
     const filtered = products.filter((product) => {
-      const matchesSearch = product.name
+      const matchesSearch = product.product_name
         .toLowerCase()
         .includes(searchProduct.toLowerCase());
       const matchesCategory =
@@ -214,6 +286,40 @@ const ProductsTab = ({
     setSelectedPlatform(platform);
     setShowForm(true);
     setShowOptions(false);
+  };
+
+  const handleAddProductClick = () => {
+    setIsModalOpen(!isModalOpen);
+    setShowOptions(false);
+  }
+
+  // Update delete logic to use _id and refetch products
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return;
+    setDeleting(true);
+    try {
+      const response = await api.delete(`/api/products/${productToDelete._id}`);
+      if (response.status === 200) {
+        toast.success('Product deleted successfully');
+        // Refetch products after deletion
+        await fetchProducts(selectedConversationId!);
+      } else {
+        toast.error('Failed to delete product');
+      }
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      toast.error('Failed to delete product');
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+      setProductToDelete(null);
+    }
+  };
+
+
+  const getDropdownDirection = (index: number) => {
+    // If product is in the last 3 items, open upwards
+    return index >= filteredProducts.length - 1 ? "up" : "down";
   };
 
   if (loading) {
@@ -231,16 +337,19 @@ const ProductsTab = ({
             />
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
           </div>
-          <div className="relative">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="icon" variant="outline">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Add new product</TooltipContent>
-            </Tooltip>
-          </div>
+          {isAdmin && (
+            <div className="relative">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="icon" variant="outline">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Add new product</TooltipContent>
+              </Tooltip>
+            </div>
+          )}
+
         </div>
         <div className="p-4 my-4 text-red-500 bg-white rounded-lg border border-red-200">
           <div className="flex items-center gap-2">
@@ -253,7 +362,7 @@ const ProductsTab = ({
   }
 
   return (
-       <div className="p-3 bg-white">
+    <div className="p-3 bg-white">
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <div className="flex-1 relative">
           <Input
@@ -263,118 +372,244 @@ const ProductsTab = ({
             className="pl-8 pr-3 py-1.5 text-sm"
           />
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+
         </div>
-        <div className="relative" ref={dropdownRef}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={() => setShowOptions(!showOptions)}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Add new product</TooltipContent>
-          </Tooltip>
-
-          {showOptions && (
-            <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-xl border border-gray-200 z-50">
-              <div className="py-1">
-                <button
-                  onClick={() => handleOptionSelect("pinecone")}
-                  className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
+        {/* Only show Add Product button for admin */}
+        {isAdmin && (
+          <div className="relative" ref={dropdownRef}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={() => setShowOptions(!showOptions)}
                 >
-                  Add to Pinecone
-                </button>
-                <button
-                  onClick={() => handleOptionSelect("shopify")}
-                  className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
-                >
-                  Add to Shopify
-                </button>
-                <button
-                  onClick={() => handleOptionSelect("other")}
-                  className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
-                >
-                  Add to Wordpress
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-        <div className="space-y-2">
-          {filteredProducts.map((product) => (
-            <div
-              key={product.id}
-            className="group flex items-center gap-4 p-3 bg-white rounded-lg border hover:border-blue-200"
-              onClick={() => onProductSelect(product)}
-            >
-              <div className="w-20 bg-gray-50 rounded-md overflow-hidden">
-                <img
-                  src={product.images}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
-                />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
-                  {product.name}
-                </h3>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-900">
-                    ₹{product.price}
-                  </p>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Add new product</TooltipContent>
+            </Tooltip>
+            {showOptions && (
+              <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-xl border border-gray-200 z-50">
+                <div className="py-1">
+                  <button
+                    onClick={() => handleOptionSelect("pinecone")}
+                    className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
+                  >
+                    Add to Pinecone
+                  </button>
+                  <button
+                    onClick={() => handleOptionSelect("shopify")}
+                    className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
+                  >
+                    Add to Shopify
+                  </button>
+                  <button
+                    onClick={() => handleOptionSelect("other")}
+                    className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
+                  >
+                    Add to Wordpress
+                  </button>
+                  <button
+                    onClick={() => handleAddProductClick()}
+                    className="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-transparent hover:border-gray-300 hover:bg-gray-50 text-left transition-all" >
+                    Add Product Manually
+                  </button>
                 </div>
               </div>
-
-              <div className="flex flex-col gap-2 ml-auto">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onProductSelect(product);
-                      }}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Preview</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onShareProduct(product);
-                      }}
-                    >
-                      <Share2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Share product</TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {!loading && !error && filteredProducts.length === 0 && (
-          <div className="text-center py-6 text-sm text-gray-500">
-            No products found matching your criteria
+            )}
           </div>
         )}
+      </div>
+
+      <div className="space-y-2 h-[400px] overflow-y-auto hide-scrollbar">
+        {filteredProducts.map((product, idx) => (
+          <div
+            key={product._id}
+            className="group flex items-center gap-4 p-3 bg-white rounded-lg border hover:border-blue-200"
+            onClick={() => onProductSelect(product)}
+          >
+            <div className="w-20 bg-gray-50 rounded-md overflow-hidden">
+              <img
+                src={product.images}
+                alt={product.product_name}
+                className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
+              />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
+                {product.product_name}
+              </h3>
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-gray-900">
+                  ₹{product.price}
+                </p>
+              </div>
+            </div>
+
+            <div className="relative ml-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenMenuProductId(
+                    openMenuProductId === product._id ? null : product._id
+                  );
+                }}
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+              {openMenuProductId === product._id && (
+                <div
+                  className={`absolute right-0 z-50 w-36 bg-white border border-gray-200 rounded-lg shadow-lg
+              ${getDropdownDirection(idx) === "up" ? "bottom-10" : "top-10"}
+            `}
+                >
+                  <button
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onProductSelect(product);
+                      setOpenMenuProductId(null);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" /> Preview
+                  </button>
+                  <button
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onShareProduct(product);
+                      setOpenMenuProductId(null);
+                    }}
+                  >
+                    <Share2 className="h-4 w-4" /> Share
+                  </button>
+                  <button
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 text-left"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setProductToDelete(product);
+                      setDeleteDialogOpen(true);
+                      setOpenMenuProductId(null);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" /> Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {!loading && !error && filteredProducts.length === 0 && (
+        <div className="text-center py-6 text-sm text-gray-500">
+          No products found matching your criteria
+        </div>
+      )}
+
+<Dialog
+  open={isModalOpen}
+  onOpenChange={async (open) => {
+    setIsModalOpen(open);
+    if (!open && selectedConversationId) {
+      await fetchProducts(selectedConversationId);
+    }
+  }}
+>
+  <DialogContent
+    className="
+      w-[95%]              /* always leave margin on small & laptop screens */
+      max-w-[300px]        /* default for small screens */
+      sm:max-w-[400px]     /* small laptops */
+      md:max-w-[500px]     /* 13–14 inch laptops */
+      lg:max-w-[720px]     /* 15–16 inch laptops */
+      xl:max-w-[1000px]    /* 1080p / larger displays */
+      2xl:max-w-[1150px]   /* wide monitors */
+      rounded-xl 
+       max-h-[88vh]        /* never exceed screen */
+      overflow-y-auto     /* scroll inside */
+      min-h-[350px]
+      p-4 sm:p-6
+      hide-scrollbar
+    "
+  >
+
+    {/* Header */}
+    <DialogHeader className="pb-3 border-b">
+      <DialogTitle className="text-xl sm:text-2xl font-semibold text-gray-900">
+        Add Product
+      </DialogTitle>
+      <DialogDescription className="text-gray-600 text-sm sm:text-base">
+        Add a single product manually or upload multiple items using a CSV file.
+      </DialogDescription>
+    </DialogHeader>
+
+    {/* Main Section */}
+    <div className="mt-4 space-y-6">
+
+      {/* Segmented Control */}
+      <div
+        className="
+          bg-gray-100 
+          p-1 
+          rounded-lg 
+          grid grid-cols-2 
+          text-sm sm:text-base
+        "
+      >
+        <button
+          onClick={() => setSelectedMode("single")}
+          className={`py-2 rounded-md font-medium transition ${
+            selectedMode === "single"
+              ? "bg-blue-900 text-white"
+              : "text-gray-700"
+          }`}
+        >
+          Single Product
+        </button>
+
+        <button
+          onClick={() => setSelectedMode("bulk")}
+          className={`py-2 rounded-md font-medium transition ${
+            selectedMode === "bulk"
+              ? "bg-blue-900 text-white"
+              : "text-gray-700"
+          }`}
+        >
+          Bulk Upload
+        </button>
+      </div>
+
+      {/* Form */}
+      <div
+        className="
+          border border-gray-200 
+          bg-white 
+          rounded-xl 
+          shadow-sm 
+          p-4 sm:p-5
+        "
+      >
+        {selectedMode === "single" && (
+          <SingleProductForm setIsModalOpen={setIsModalOpen} />
+        )}
+
+        {selectedMode === "bulk" && (
+          <BulkUploadForm setIsModalOpen={setIsModalOpen} />
+        )}
+      </div>
+    </div>
+
+  </DialogContent>
+</Dialog>
+
+
+
 
       {showForm && (
         <div
@@ -389,10 +624,39 @@ const ProductsTab = ({
               setShowForm(false);
               setSelectedPlatform(undefined);
             }}
+            setIsModalOpen={setIsModalOpen}
             platform={selectedPlatform}
           />
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="w-[50vw] bg-white rounded-lg p-6 shadow-lg border border-gray-200">
+          <DialogTitle>Delete Product</DialogTitle>
+          <div className="py-2">
+            <p className="text-sm text-gray-700">
+              Are you sure you want to delete <span className="font-semibold">{productToDelete?.product_name}</span>?
+            </p>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleDeleteProduct}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

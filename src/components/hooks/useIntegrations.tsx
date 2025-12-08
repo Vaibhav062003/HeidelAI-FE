@@ -1,5 +1,5 @@
 import api from "@/lib/session_api";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { storeData, getData, DB_KEYS } from "@/lib/indexedDB";
 
 interface Integrations {
@@ -49,26 +49,28 @@ export const useIntegrations = () => {
         instagram: false,
         whatsapp: false,
     });
-    const [loading, setLoading] = useState(true); // true only if nothing cached
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    
+    // Ref to prevent double-fetching in React Strict Mode or rapid updates
+    const isFetchingRef = useRef(false);
 
     const fetchFromApi = useCallback(async () => {
+        if (isFetchingRef.current) return;
+        isFetchingRef.current = true;
+
         try {
+            // 1. Get High-Level Status
             const response = await api.get("/api/integrations/status");
-            const apiData = response.data;
+            const apiData = response.data; // e.g. { instagram: true, whatsapp: true }
 
-            setIntegrations({
-                instagram: apiData.instagram || false,
-                whatsapp: apiData.whatsapp || false,
-            });
+            // We do NOT set state here yet to avoid type errors (boolean vs Object)
 
+            // 2. Handle Instagram
             if (apiData.instagram) {
-
                 const profileResponse = await api.get(`/api/instagram/profile`);
-
                 if (profileResponse.status === 200) {
                     const profileData = profileResponse.data;
-
                     const instagramData: InstagramData = {
                         status: true,
                         username: profileData.username || "",
@@ -85,107 +87,117 @@ export const useIntegrations = () => {
                         lastUpdated: Date.now(),
                     };
 
-                    setIntegrations((prev) => ({
-                        ...prev,
-                        instagram: instagramData,
-                    }));
+                    // Update State & DB
+                    setIntegrations(prev => ({ ...prev, instagram: instagramData }));
                     await storeData("integrations", DB_KEYS.INTEGRATIONS.INSTAGRAM, instagramData);
 
-                    const postsResponse = await api.get(`/api/instagram/posts`);
-                    if (postsResponse.status == 200) {
-                        console.log("Fetched Instagram posts:", postsResponse.data);
-                        const posts: InstagramPost[] = postsResponse.data.data;
-
-                        await storeData('integrations', DB_KEYS.INTEGRATIONS.INSTAGRAM_POSTS, {
-                            posts,
-                            lastUpdated: Date.now()
-                        });
-                    }
+                    // Fetch posts in background (fire and forget)
+                    api.get(`/api/instagram/posts`).then(async (postsResponse) => {
+                         if (postsResponse.status === 200) {
+                             await storeData('integrations', DB_KEYS.INTEGRATIONS.INSTAGRAM_POSTS, {
+                                 posts: postsResponse.data.data,
+                                 lastUpdated: Date.now()
+                             });
+                         }
+                    }).catch(console.error);
                 }
             } else {
-                // mark as disconnected but keep last profile data
-                const existingData = await getData<InstagramData>(
-                    "integrations",
-                    DB_KEYS.INTEGRATIONS.INSTAGRAM
-                );
-                if (existingData && existingData.status) {
-                    await storeData("integrations", DB_KEYS.INTEGRATIONS.INSTAGRAM, {
-                        ...existingData,
-                        status: false,
+                // Handle Disconnect
+                setIntegrations(prev => ({ ...prev, instagram: false }));
+                // Optional: Update DB to reflect disconnected status if needed
+            }
+
+            // 3. Handle WhatsApp
+            if (apiData.whatsapp) {
+                const profileResponse = await api.get(`/api/whatsapp/profile`);
+                if (profileResponse.status === 200) {
+                    const profileData = profileResponse.data;
+                    const whatsappData: WhatsappData = {
+                        status: true,
+                        name: profileData.name || "",
+                        phone: profileData.phone || "",
+                        userId: profileData.user_id || "",
+                        businessInfo: profileData.business_info || {},
                         lastUpdated: Date.now(),
-                    });
+                    };
+
+                    setIntegrations(prev => ({ ...prev, whatsapp: whatsappData }));
+                    await storeData("integrations", DB_KEYS.INTEGRATIONS.WHATSAPP, whatsappData);
                 }
+            } else {
+                 setIntegrations(prev => ({ ...prev, whatsapp: false }));
             }
 
             setError(null);
         } catch (err) {
             console.error("API error:", err);
             setError(err instanceof Error ? err.message : "Failed to fetch from API");
+        } finally {
+            isFetchingRef.current = false;
+            setLoading(false); // Ensure loading is off after API is done
         }
     }, []);
 
-    const fetchIntegrations = useCallback(async () => {
+    const initIntegrations = useCallback(async () => {
         try {
-            // load cached data immediately
-            const instagramData = await getData<InstagramData>(
-                "integrations",
-                DB_KEYS.INTEGRATIONS.INSTAGRAM
-            );
+            setLoading(true);
 
-            const whatsappData = await getData<WhatsappData>(
-                "integrations",
-                DB_KEYS.INTEGRATIONS.WHATSAPP
-            );
+            // 1. Parallel Load from IDB
+            const [instagramData, whatsappData] = await Promise.all([
+                getData<InstagramData>("integrations", DB_KEYS.INTEGRATIONS.INSTAGRAM),
+                getData<WhatsappData>("integrations", DB_KEYS.INTEGRATIONS.WHATSAPP)
+            ]);
 
-            if (whatsappData && whatsappData.status) {
-                console.log("Loaded WhatsApp from IndexedDB:", whatsappData);
-                setIntegrations((prev) => ({
-                    ...prev,
-                    whatsapp: whatsappData || false,
-                }));
-                setLoading(false); // don’t block UI, show cached instantly
-            }
+            let shouldFetch = false;
+            const FIVE_MINUTES = 5 * 60 * 1000;
 
+            // 2. Evaluate Instagram Cache
             if (instagramData && instagramData.status) {
-                console.log("Loaded Instagram from IndexedDB:", instagramData);
-                setIntegrations((prev) => ({
-                    ...prev,
-                    instagram: instagramData || false,
-                }));
-                setLoading(false); // don’t block UI, show cached instantly
-
-                const isFresh =
-                    instagramData.lastUpdated &&
-                    Date.now() - instagramData.lastUpdated < 5 * 60 * 1000;
-
-                // refresh silently if stale
-                if (!isFresh) {
-                    fetchFromApi();
+                setIntegrations(prev => ({ ...prev, instagram: instagramData }));
+                if (!instagramData.lastUpdated || Date.now() - instagramData.lastUpdated > FIVE_MINUTES) {
+                    shouldFetch = true;
                 }
             } else {
-                // no cache → show loading until API resolves
-                setLoading(true);
-                await fetchFromApi();
-                setLoading(false);
+                shouldFetch = true; // No data, so we must fetch
             }
+
+            // 3. Evaluate WhatsApp Cache
+            if (whatsappData && whatsappData.status) {
+                setIntegrations(prev => ({ ...prev, whatsapp: whatsappData }));
+                if (!whatsappData.lastUpdated || Date.now() - whatsappData.lastUpdated > FIVE_MINUTES) {
+                    shouldFetch = true;
+                }
+            } else {
+                shouldFetch = true; // No data, so we must fetch
+            }
+
+            // 4. If we found data for both, stop loading immediately (Optimistic UI)
+            if (instagramData || whatsappData) {
+                setLoading(false); 
+            }
+
+            // 5. Trigger Network Sync if needed
+            if (shouldFetch) {
+                await fetchFromApi();
+            } else {
+                setLoading(false); // Make sure to turn off loading if we didn't fetch
+            }
+
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to fetch integrations");
-            setLoading(false);
+            console.error("IDB Init Error", err);
+            // If IDB fails, fallback to API
+            await fetchFromApi(); 
         }
     }, [fetchFromApi]);
 
     useEffect(() => {
-        fetchIntegrations();
-    }, [fetchIntegrations]);
-
-    const refreshIntegrations = () => {
-        fetchFromApi(); // always force refresh in background, no loading spinner
-    };
+        initIntegrations();
+    }, [initIntegrations]);
 
     return {
         integrations,
         loading,
         error,
-        refreshIntegrations,
+        refreshIntegrations: fetchFromApi,
     };
 };

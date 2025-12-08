@@ -19,7 +19,6 @@ interface ConversationPreviewProps {
   onClick?: () => void;
   isAiEnabled?: boolean;
   assignedAgentId?: string | null;
-  isMobile?: boolean; 
 }
 
 const ConversationPreview = ({
