@@ -1167,7 +1167,8 @@ const ChatView = ({
         `Unexpected response from server: ${res?.status ?? "no status"}`
       );
     }
-
+    setConversation((prev)=> prev ? {...prev, status: "closed"} : prev);
+    setConversationStatus("closed");
     toast.success("Closed conversation successfully");
   } catch (err) {
     // Rollback optimistic UI: remove system message we added earlier
@@ -1190,7 +1191,7 @@ const ChatView = ({
   }
   }, [selectedConversationId]);
 
-  const handleReopen = useCallback(() => {
+  const handleReopen = useCallback(async () => {
     setIsResolved(false);
     setIsFollowUp(false);
     setConversationStatus("open");
@@ -1219,6 +1220,34 @@ const ChatView = ({
         });
       }
     }, 100);
+
+    try{
+      const res = await api.post(`/api/conversations/${encodeURIComponent(selectedConversationId)}/reopen`);
+      console.log("res:",res)
+
+      if (!(res && (res.status === 200 || res.status === 204))) {
+      throw new Error(
+        `Unexpected response from server: ${res?.status ?? "no status"}`
+      );
+      }
+
+      setConversation((prev)=> prev ? {...prev, status: "open"} : prev);
+      setConversationStatus("open");
+      toast.success("Reopened conversation successfully");
+    }
+    catch (err){
+      console.error("Error reopening conversation:", err);
+      setMessages((prev) =>
+        prev.filter((msg) => msg.id !== systemMessage.id)
+      );
+      const message =
+        (typeof err === "object" && err !== null && "response" in err && typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === "string")
+          ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
+          : "Failed to reopen conversation. Try again.";
+      toast.error(message);
+    } finally{
+      setStatusLoading(false);
+    }
   }, [selectedConversationId]);
 
   const handleFollowUp = useCallback(async(selectedConversationId:string) => {
@@ -1231,13 +1260,16 @@ const ChatView = ({
 
     try{
       const res = await api.post(`/api/ai/schedule-message/${selectedConversationId}`);
-      console.log(res)
+      console.log("res:",res)
 
       if (!(res && (res.status === 200 || res.status === 204))) {
       throw new Error(
         `Unexpected response from server: ${res?.status ?? "no status"}`
       );
     }
+
+      setConversation((prev)=> prev ? {...prev, status: "followup"} : prev);
+      setConversationStatus("followup");
       toast.success("Marked conversation for follow-up successfully");
     }catch (err){
       console.error("Error scheduling message for follow-up:", err);
@@ -1278,7 +1310,7 @@ const ChatView = ({
         });
       }
     }, 100);
-  }, [selectedConversationId]);
+  }, [ ]);
 
   useMainWebSocket({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1410,6 +1442,12 @@ const ChatView = ({
         `/api/conversations/${selectedConversationId}`
       );
       setConversation(response?.data);
+      const status = response?.data?.status;
+      if(status){
+        setConversationStatus(status as "open" | "closed" | "followup");
+        setIsResolved(status === "closed");
+        setIsFollowUp(status === "followup");
+      }
     } catch {
       toast.error("Failed to load conversation");
     } finally {
