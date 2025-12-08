@@ -77,9 +77,9 @@ const LoadingState = () => (
       </div>
     </div>
     <div className="space-y-4">
-      {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+      {[1, 2, 3].map((i) => (
         <div key={i} className="flex items-center gap-4 p-3 bg-white rounded-lg border border-gray-200">
-          <Skeleton className="w-20 h-12 rounded-md" />
+          <Skeleton className="w-10 h-12 rounded-md" />
           <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-3/4" />
             <div className="flex justify-between">
@@ -433,7 +433,7 @@ const ProductsTab = ({
           >
             <div className="w-20 bg-gray-50 rounded-md overflow-hidden">
               <img
-                src={product.images}
+                src={product.image_url}
                 alt={product.product_name}
                 className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
               />
@@ -451,7 +451,8 @@ const ProductsTab = ({
             </div>
 
             <div className="relative ml-auto">
-              <Button
+              
+                 <Button
                 variant="ghost"
                 size="sm"
                 className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
@@ -462,8 +463,10 @@ const ProductsTab = ({
                   );
                 }}
               >
+
                 <MoreVertical className="h-4 w-4" />
               </Button>
+                
               {openMenuProductId === product._id && (
                 <div
                   className={`absolute right-0 z-50 w-36 bg-white border border-gray-200 rounded-lg shadow-lg
@@ -490,7 +493,8 @@ const ProductsTab = ({
                   >
                     <Share2 className="h-4 w-4" /> Share
                   </button>
-                  <button
+                  {isAdmin && (
+                     <button
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 text-left"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -501,6 +505,8 @@ const ProductsTab = ({
                   >
                     <Trash2 className="h-4 w-4" /> Delete
                   </button>
+                  )}
+                 
                 </div>
               )}
             </div>
@@ -524,23 +530,7 @@ const ProductsTab = ({
   }}
 >
   <DialogContent
-    className="
-      w-[95%]              /* always leave margin on small & laptop screens */
-      max-w-[300px]        /* default for small screens */
-      sm:max-w-[400px]     /* small laptops */
-      md:max-w-[500px]     /* 13–14 inch laptops */
-      lg:max-w-[720px]     /* 15–16 inch laptops */
-      xl:max-w-[1000px]    /* 1080p / larger displays */
-      2xl:max-w-[1150px]   /* wide monitors */
-      rounded-xl 
-       max-h-[88vh]        /* never exceed screen */
-      overflow-y-auto     /* scroll inside */
-      min-h-[350px]
-      p-4 sm:p-6
-      hide-scrollbar
-    "
-  >
-
+    className="w-[95%] max-w-[300px] sm:max-w-[400px]  md:max-w-[500px] lg:max-w-[720px] xl:max-w-[1000px]  2xl:max-w-[1150px] rounded- max-h-[88vh]      overflow-y-auto   min-h-[350] p-4 sm: hide-scrollbar">
     {/* Header */}
     <DialogHeader className="pb-3 border-b">
       <DialogTitle className="text-xl sm:text-2xl font-semibold text-gray-900">

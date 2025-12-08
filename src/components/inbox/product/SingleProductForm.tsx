@@ -61,36 +61,23 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="
-        w-full 
-        max-w-[650px] 
-        mx-auto
-
-        max-h-[70vh]
-        overflow-y-auto
-        pr-2
-
-        space-y-6
-        sm:space-y-5
-        md:space-y-6
-        lg:space-y-7
-
-        px-2 sm:px-0
-        hide-scrollbar
-        mt-2
-      "
-    >
+      className=" w-full max-w-full mx-auto max-h-[70vh] overflow-y-auto pr-2 space-y-6 sm:space-y-5 md:space-y-6 lg:space-y-7 px-2 sm:px-0 hide-scrollbar mt-2"
+>
       {/* Header */}
       <div>
         <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">
           Create New Product
         </h2>
-        <p className="text-sm sm:text-base text-gray-600">Fill in the details below</p>
+        <p className="text-sm sm:text-base text-gray-600">
+          Fill in the details below
+        </p>
       </div>
 
       {/* Product Name */}
       <div className="space-y-2">
-        <Label className="text-sm sm:text-base" htmlFor="product_name">Product Name</Label>
+        <Label className="text-sm sm:text-base" htmlFor="product_name">
+          Product Name
+        </Label>
         <Input
           id="product_name"
           name="product_name"
@@ -102,7 +89,9 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
 
       {/* Description */}
       <div className="space-y-2">
-        <Label className="text-sm sm:text-base" htmlFor="description">Description</Label>
+        <Label className="text-sm sm:text-base" htmlFor="description">
+          Description
+        </Label>
         <Input
           id="description"
           name="description"
@@ -114,7 +103,9 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
       {/* Price + Stock */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="space-y-2">
-          <Label className="text-sm sm:text-base" htmlFor="price">Price (₹)</Label>
+          <Label className="text-sm sm:text-base" htmlFor="price">
+            Price (₹)
+          </Label>
           <Input
             id="price"
             name="price"
@@ -127,7 +118,9 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
         </div>
 
         <div className="space-y-2">
-          <Label className="text-sm sm:text-base" htmlFor="stock">Stock Quantity</Label>
+          <Label className="text-sm sm:text-base" htmlFor="stock">
+            Stock Quantity
+          </Label>
           <Input
             id="stock"
             name="stock"
@@ -138,10 +131,11 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
         </div>
       </div>
 
-
       {/* Image URL */}
       <div className="space-y-2">
-        <Label className="text-sm sm:text-base" htmlFor="image_url">Image URL (Optional)</Label>
+        <Label className="text-sm sm:text-base" htmlFor="image_url">
+          Image URL (Optional)
+        </Label>
         <Input
           id="image_url"
           name="image_url"
@@ -154,11 +148,11 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
 
       {/* Image Preview */}
       {imagePreview && (
-        <div className="flex justify-center">
+        <div className="flex justify-center  object-cover transition-opacity group-hover:opacity-90">
           <img
             src={imagePreview}
             alt="Preview"
-            className="w-28 h-28 sm:w-32 sm:h-32 object-cover rounded-md border shadow-sm"
+            className="w-[700px] h-[450px] object-cover transition-opacity group-hover:opacity-90"
           />
         </div>
       )}

@@ -40,7 +40,7 @@ const BulkUploadForm = ({ setIsModalOpen }: BulkUploadFormProps) => {
     <div
       className="
         w-full 
-        max-w-[650px] 
+        max-w-full 
         mx-auto
 
         max-h-[70vh]
