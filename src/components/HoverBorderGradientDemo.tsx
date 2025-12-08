@@ -16,7 +16,7 @@ import { Message, storeMessage } from "@/components/services/chatService";
 import ReactMarkdown from "react-markdown";
 
 import { Toaster, toast as sonnerToast } from 'sonner'
-import { is } from './../../.next/server/chunks/4681';
+;
 import { data } from "react-router-dom";
 
 export function HoverBorderGradientDemo() {
@@ -72,7 +72,7 @@ export function HoverBorderGradientDemo() {
         body: formData,
       });
 
-      const response = await fetch("http://localhost:8000/api/clerk/waitlist", {
+      const response = await fetch("https://egenie-whatsapp.koyeb.app/api/clerk/waitlist", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
