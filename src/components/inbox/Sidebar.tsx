@@ -6,7 +6,16 @@ import { Input } from "@/components/ui/input";
 import ProductPreview from "./PreviewProduct";
 import ProductsTab from "./Product";
 import CustomerInfo from "./CustomerInfo";
-import { User, Mail, Users, TrendingUp, Clock, Phone, IdCard, MapPin } from "lucide-react";
+import {
+  User,
+  Mail,
+  Users,
+  TrendingUp,
+  Clock,
+  Phone,
+  IdCard,
+  MapPin,
+} from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -158,8 +167,8 @@ const AccordionSection = memo(
               className={`text-${color}-600 w-[calc(var(--icon-size)*0.85)] h-[calc(var(--icon-size)*0.85)]`}
             />
           </div>
-          <div className="text-left min-w-0 flex-1">
-            <span className="font-semibold text-gray-900 block truncate text-[calc(var(--sidebar-text-sm)*0.9)]">
+          <div className="text-left min-w-0 flex-1 flex items-center gap-2">
+            <span className="font-semibold text-gray-900 truncate text-[calc(var(--sidebar-text-sm)*0.9)]">
               {title}
             </span>
             <p className="text-gray-500 truncate text-[calc(var(--sidebar-text-xs)*0.95)]">
@@ -181,7 +190,7 @@ const Sidebar = ({
   onShareProduct,
   conversation: passedConversation,
   onToggleVisibility,
-  currentAgentUsername
+  currentAgentUsername,
 }: SidebarProps) => {
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
   const [accordionValue, setAccordionValue] = useState("summary");
@@ -191,7 +200,8 @@ const Sidebar = ({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showCustomerInfo, setShowCustomerInfo] = useState(false);
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<WhatsAppTemplate | null>(null);
   const [conversation, setConversation] = useState<Conversation | null>(null);
 
   useEffect(() => {
@@ -362,7 +372,11 @@ const Sidebar = ({
         title: "Summary",
         subtitle: "Insights",
         color: "orange",
-        content: <ConversationSummary selectedConversationId={selectedConversationId} />,
+        content: (
+          <ConversationSummary
+            selectedConversationId={selectedConversationId}
+          />
+        ),
       },
       {
         value: "templates",
@@ -450,34 +464,34 @@ const Sidebar = ({
           />
         ),
       },
-{
-  value: "analytics",
-  icon: BarChart3,
-  title: "Analytics",
-  subtitle: "Metrics",
-  color: "green" as const,
-  content: (
-    <AnalyticsSection
-      selectedConversationId={selectedConversationId}
-      currentAgentUsername={currentAgentUsername} 
-    />
-  ),
-},
-  ],
-  [
-    selectedConversationId,
-    currentAgentUsername,
-    loading,
-    error,
-    filteredTemplates,
-    handleTemplateSelect,
-    handleProductSelect,
-    onShareProduct,
-    searchTemplate,
-    handleSearchChange,
-    handleShowTemplateBuilder,
-  ]
-);
+      {
+        value: "analytics",
+        icon: BarChart3,
+        title: "Transfers",
+        subtitle: "Metrics",
+        color: "green" as const,
+        content: (
+          <AnalyticsSection
+            selectedConversationId={selectedConversationId}
+            currentAgentUsername={currentAgentUsername}
+          />
+        ),
+      },
+    ],
+    [
+      selectedConversationId,
+      currentAgentUsername,
+      loading,
+      error,
+      filteredTemplates,
+      handleTemplateSelect,
+      handleProductSelect,
+      onShareProduct,
+      searchTemplate,
+      handleSearchChange,
+      handleShowTemplateBuilder,
+    ]
+  );
 
   const orderedSections = useMemo(() => {
     if (!accordionValue) return accordionSections;
@@ -487,7 +501,9 @@ const Sidebar = ({
     const otherSections = accordionSections.filter(
       (s) => s.value !== accordionValue
     );
-    return activeSection ? [activeSection, ...otherSections] : accordionSections;
+    return activeSection
+      ? [activeSection, ...otherSections]
+      : accordionSections;
   }, [accordionValue, accordionSections]);
 
   return (
@@ -558,22 +574,20 @@ const Sidebar = ({
         </DialogContent>
       </Dialog>
 
-      <Card className="h-full max-h-screen bg-white/95 backdrop-blur-sm overflow-hidden flex flex-col rounded-l-3xl border-l border-gray-200/60 shadow-lg">
+      <Card className="h-full max-h-screen bg-white/95 backdrop-blur-sm flex flex-col border-l border-gray-200/60 shadow-lg">
         {/* Header */}
-        <div className="bg-white/40 backdrop-blur-sm border-b border-gray-100/60 flex-shrink-0 flex items-center justify-between px-[var(--sidebar-padding)] py-[var(--sidebar-padding)]">
-          <h2 className="font-semibold text-gray-900 text-[clamp(1rem,2.5vw,1.125rem)]">
-            Contact
-          </h2>
+        <div className="bg-white/40 backdrop-blur-sm border-b border-gray-200 flex-shrink-0 flex items-center justify-between px-[var(--sidebar-padding)] py-2">
+          <h2 className="font-semibold text-gray-900 text-sm">Contact</h2>
 
           {onToggleVisibility && (
             <Button
               onClick={onToggleVisibility}
               variant="ghost"
               size="icon"
-              className="bg-white/60 hover:bg-white/90 rounded-xl transition-all duration-200 hover:scale-105 flex items-center justify-center h-[clamp(2rem,4vw,2.5rem)] w-[clamp(2rem,4vw,2.5rem)]"
+              className="bg-white/60 hover:bg-white/90 rounded-xl transition-all duration-200 hover:scale-105 flex items-center justify-center h-8 w-8"
               aria-label="Hide details sidebar"
             >
-              <X className="text-gray-600 h-[calc(var(--icon-size)*0.9)] w-[calc(var(--icon-size)*0.9)]" />
+              <X className="text-gray-600 h-4 w-4" />
             </Button>
           )}
         </div>
@@ -581,7 +595,7 @@ const Sidebar = ({
         {/* Scrollable Content */}
         <ScrollArea className="flex-1 ios-scrollbar min-h-0">
           {/* Customer Profile Section */}
-          <div className="bg-white border-b border-gray-100/60 p-[var(--sidebar-padding)]">
+          <div className="bg-white p-[var(--sidebar-padding)]">
             <div className="flex items-start gap-[var(--sidebar-gap)]">
               <div className="bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 w-[calc(var(--avatar-size)*0.95)] h-[calc(var(--avatar-size)*0.95)]">
                 <span className="text-white font-semibold text-[calc(var(--sidebar-text-sm)*0.85)]">
@@ -624,21 +638,20 @@ const Sidebar = ({
             </div>
 
             {/* Contact Details */}
-<div className="grid grid-cols-2 gap-2 border-t border-gray-100 mt-[var(--sidebar-gap)] pt-[var(--sidebar-gap)]">
-  <ContactDetail
-    icon={conversation?.platform === "whatsapp" ? Phone : IdCard}
-    label="Phone"
-    text={contactPhone}
-  />
-  <ContactDetail icon={Mail} label="Email" text={contactEmail} />
-  <ContactDetail
+            <div className="grid grid-cols-2 gap-2 border-t border-gray-100 mt-[var(--sidebar-gap)] pt-[var(--sidebar-gap)]">
+              <ContactDetail
+                icon={conversation?.platform === "whatsapp" ? Phone : IdCard}
+                label="Phone"
+                text={contactPhone}
+              />
+              {/* <ContactDetail icon={Mail} label="Email" text={contactEmail} /> */}
+              {/* <ContactDetail
     icon={MapPin}
     label="Location"
     text="Not Available"
-  />
-  <AssignDropdown />
-</div>
-
+  /> */}
+              <AssignDropdown />
+            </div>
           </div>
 
           {/* Accordion */}
