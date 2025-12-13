@@ -18,7 +18,7 @@ export default function Home() {
       <Hero3D />
       <Features />
       <Integrations />
-      <TestimonialsMarquee />
+      {/* <TestimonialsMarquee /> */}
       <Pricing />
       <CTA />
       <Footer />
