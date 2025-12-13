@@ -1,5 +1,13 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Clock, TrendingUp, UserCircle, MessageSquare, AlertCircle, ArrowRight, User } from "lucide-react";
+import {
+  Clock,
+  TrendingUp,
+  UserCircle,
+  MessageSquare,
+  AlertCircle,
+  ArrowRight,
+  User,
+} from "lucide-react";
 import AnalyticsCard from "./AnalyticsCard";
 import api from "@/lib/session_api";
 
@@ -50,24 +58,14 @@ const AnalyticsSection: React.FC<AnalyticsSectionProps> = ({
         setError(null);
         setBackendReturnsNull(false);
 
-        console.log("Fetching assignment for:", {
-          conversationId: selectedConversationId,
-          agent: currentAgentUsername
-        });
-
         const res = await api.get(
-          `/api/instagram/conversations/${selectedConversationId}`,
+          `/api/conversations/${selectedConversationId}`,
           { params: { agent_username: currentAgentUsername } }
         );
 
-        console.log("Full response:", res.data);
-
         const assignmentBlock = res.data;
 
-        console.log("Assignment block:", assignmentBlock);
-
         if (assignmentBlock === null || assignmentBlock === undefined) {
-          console.warn("Backend returned null for assignment");
           setBackendReturnsNull(true);
           setAssignment(null);
           return;
@@ -80,7 +78,6 @@ const AnalyticsSection: React.FC<AnalyticsSectionProps> = ({
             : [],
         });
       } catch (err) {
-        console.error("Failed to load assignment/analytics", err);
         setError("Failed to load analytics");
         setAssignment(null);
       } finally {
@@ -99,13 +96,16 @@ const AnalyticsSection: React.FC<AnalyticsSectionProps> = ({
 
   const assignedAt = useMemo(() => {
     if (!assignment?.assigned_agent?.assigned_at) return null;
-    return new Date(assignment.assigned_agent.assigned_at).toLocaleString(undefined, {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return new Date(assignment.assigned_agent.assigned_at).toLocaleString(
+      undefined,
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
   }, [assignment]);
 
   const historyEntries = useMemo(() => {
@@ -264,29 +264,31 @@ const AnalyticsSection: React.FC<AnalyticsSectionProps> = ({
 
       {/* Current Assignment Info */}
       {assignment.assigned_agent && (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 shadow-sm" style={{ padding: "10px 12px" }}>
-  <div className="flex items-start gap-2.5">
-    <div className="flex-shrink-0 mt-0.5">
-      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
-        <span className="font-sans text-[10px] font-medium text-white">
-          {assignment.assigned_agent.username.charAt(0).toUpperCase()}
-        </span>
-      </div>
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="font-sans text-xs font-medium text-gray-900 mb-0.5">
-        {currentAgentLabel}
-      </p>
-      {assignedAt && (
-        <p className="font-sans text-[11px] text-gray-600 flex items-center gap-1">
-          <Clock className="w-3 h-3" />
-          Assigned on {assignedAt}
-        </p>
-      )}
-    </div>
-  </div>
-</div>
-
+        <div
+          className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 shadow-sm"
+          style={{ padding: "10px 12px" }}
+        >
+          <div className="flex items-start gap-2.5">
+            <div className="flex-shrink-0 mt-0.5">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
+                <span className="font-sans text-[10px] font-medium text-white">
+                  {assignment.assigned_agent.username.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-sans text-xs font-medium text-gray-900 mb-0.5">
+                {currentAgentLabel}
+              </p>
+              {assignedAt && (
+                <p className="font-sans text-[11px] text-gray-600 flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  Assigned on {assignedAt}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Transfer History */}
@@ -297,39 +299,43 @@ const AnalyticsSection: React.FC<AnalyticsSectionProps> = ({
               Transfer History
             </h4>
             <span className="font-sans text-[11px] text-gray-500">
-              {historyEntries.length} transfer{historyEntries.length !== 1 ? "s" : ""}
+              {historyEntries.length} transfer
+              {historyEntries.length !== 1 ? "s" : ""}
             </span>
           </div>
 
           <div className="space-y-2">
-            {historyEntries.map((entry, idx) => (
-              <div
-                key={idx}
-                className="bg-white rounded-lg p-2.5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200"
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-sans text-xs text-gray-700">
-                    {entry.from}
-                  </span>
-                  <ArrowRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                  <span className="font-sans text-xs text-blue-600">
-                    {entry.to}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-[11px] text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {entry.when}
-                  </span>
-                  {entry.by && (
-                    <span className="flex items-center gap-1">
-                      <User className="w-3 h-3" />
-                      by {entry.by}
+            {historyEntries
+              .slice()
+              .reverse()
+              .map((entry, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white rounded-lg p-2.5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-sans text-xs text-gray-700">
+                      {entry.from}
                     </span>
-                  )}
+                    <ArrowRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                    <span className="font-sans text-xs text-blue-600">
+                      {entry.to}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 text-[11px] text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {entry.when}
+                    </span>
+                    {entry.by && (
+                      <span className="flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        by {entry.by}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       )}

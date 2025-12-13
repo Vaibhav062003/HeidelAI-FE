@@ -254,54 +254,54 @@ const fetchConversation = async (conversationId: string) => {
     );
   }
 
-  return (
-    <Card className="p-4 bg-white h-full">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Image height={30} width={30} src='/icons/summary_icon.png' alt="summary_icon"/>
-            <h3 className="font-semibold">Conversation Summary</h3>
-          </div>
-          <Badge
-            variant="secondary"
-            className={getSentimentColor(conversation.sentiment)}
-          >
-            {conversation.sentiment.charAt(0).toUpperCase() + conversation.sentiment.slice(1)}
-          </Badge>
+return (
+  <Card className="p-4 bg-white h-full">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Image height={30} width={30} src='/icons/summary_icon.png' alt="summary_icon"/>
+          <h3 className="font-sans text-xs text-gray-600 leading-relaxed font-semibold">Conversation Summary</h3>
         </div>
+        <Badge
+          variant="secondary"
+          className={getSentimentColor(conversation.sentiment)}
+        >
+          {conversation.sentiment.charAt(0).toUpperCase() + conversation.sentiment.slice(1)}
+        </Badge>
+      </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className={getUrgencyColor(conversation.priority)}>
-            {conversation.priority.toUpperCase()} Priority
-          </Badge>
-        </div>
+      <div className="flex flex-wrap gap-2">
+        <Badge variant="outline" className={getUrgencyColor(conversation.priority)}>
+          {conversation.priority.toUpperCase()} Priority
+        </Badge>
+      </div>
 
-        <div>
-          <h4 className="text-base font-medium mb-2">Summary Points</h4>
+      <div className="px-4">
+        <h4 className="font-sans text-xs text-gray-600 leading-relaxed font-medium mb-2">Summary Points</h4>
+        <ul className="space-y-1">
+          {conversation.summary.map((point, index) => (
+            <li key={index} className="font-sans text-xs text-gray-600 leading-relaxed">
+              • {point}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {conversation.suggestions && conversation.suggestions.length > 0 && (
+        <div className="px-4">
+          <h4 className="font-sans text-xs text-gray-600 leading-relaxed font-medium mb-2">AI Suggestions</h4>
           <ul className="space-y-1">
-            {conversation.summary.map((point, index) => (
-              <li key={index} className="text-sm text-gray-600">
-                • {point}
+            {conversation.suggestions.map((suggestion, index) => (
+              <li key={index} className="font-sans text-xs text-gray-600 leading-relaxed">
+                • {suggestion}
               </li>
             ))}
           </ul>
         </div>
-
-        {conversation.suggestions && conversation.suggestions.length > 0 && (
-          <div>
-            <h4 className="text-base font-medium mb-2">AI Suggestions</h4>
-            <ul className="space-y-1">
-              {conversation.suggestions.map((suggestion, index) => (
-                <li key={index} className="text-sm text-gray-600">
-                  • {suggestion}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    </Card>
-  );
+      )}
+    </div>
+  </Card>
+);
 };
 
 export default ConversationSummary;

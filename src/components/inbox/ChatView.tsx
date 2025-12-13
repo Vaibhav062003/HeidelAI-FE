@@ -43,6 +43,7 @@ import { useUser } from "@clerk/nextjs";
 import MediaMessage from "../messaging/MediaMessage";
 import { useMainWebSocket } from '@/lib/websocket';
 import { storeData, getData } from "@/lib/indexedDB";
+import CountDownTimer from "../LandingPage/CountDownTimer";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -1567,6 +1568,15 @@ const ChatView = ({
 
               {/* Action Buttons Section */}
               <div className="flex items-center space-x-2">
+                {/* Count down clock */}
+                {conversation?.reply_window_ends_at && (
+                  <Badge variant="secondary" className="backdrop-blur-sm bg-green-100 border border-green-200 text-black hover:bg-green-200 hover:cursor-pointer px-2  rounded-full">
+                    <CountDownTimer
+                      targetDate={String(conversation?.reply_window_ends_at)}
+                    />
+                  </Badge>
+                )}
+
                 {/* Status Dropdown */}
                 <DropdownMenu
                   open={isStatusDropdownOpen}
