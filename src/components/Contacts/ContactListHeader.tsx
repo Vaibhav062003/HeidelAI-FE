@@ -278,7 +278,7 @@ export const ContactListHeader = ({
       hover:bg-gray-100 active:bg-gray-200 hover:text-gray-900 text-black
       font-sans text-xs font-medium
       rounded-2xl
-      shadow-md hover:shadow-lg
+      hover:shadow-lg
       transition-all duration-200
       hover:scale-105 active:scale-95
       px-3 py-2                  
@@ -300,11 +300,11 @@ export const ContactListHeader = ({
           ${
             selectedTags.length > 0
               ? "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              : "bg-gray-10 text-gray-900 hover:bg-gray-100"
           }
           font-sans text-xs font-medium
           rounded-2xl
-          shadow-sm hover:shadow-md
+          hover:shadow-md
           transition-all duration-200
           hover:scale-105 active:scale-95
           px-3 py-2

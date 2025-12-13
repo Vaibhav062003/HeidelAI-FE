@@ -252,35 +252,6 @@ const ContactsDashboard = () => {
     }
   };
 
-  // const handleEditTag = async (
-  //   id: string,
-  //   name: string,
-  //   description: string
-  // ) => {
-  //   try {
-  //     const { data: existingTags } = await supabase
-  //       .from("tags")
-  //       .select("id")
-  //       .ilike("name", name)
-  //       .neq("id", id);
-
-  //     if (existingTags && existingTags.length > 0) {
-  //       throw new Error("Tag name already exists");
-  //     }
-
-  //     const { data, error } = await supabase
-  //       .from("tags")
-  //       .update({ name, tag_description: description })
-  //       .eq("id", id)
-  //       .select();
-
-  //     if (error) throw error;
-  //     setTags((prev) => prev.map((tag) => (tag.id === id ? data[0] : tag)));
-  //   } catch (err) {
-  //     setError((err as Error).message);
-  //   }
-  // };
-
   const handleDeleteTag = async (tagName: string) => {
     try {
       if (
