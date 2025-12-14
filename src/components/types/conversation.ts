@@ -19,4 +19,5 @@ export interface Conversation {
   query?: string;
   status?: string;
   reply_window_ends_at?: string;
+  categories?: string[]; 
 }
