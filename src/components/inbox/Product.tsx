@@ -256,15 +256,19 @@ const ProductsTab = ({
     };
   }, [selectedConversationId]);
 
-   useEffect(() => {
-    if (!selectedConversationId || isModalOpen) {
-      setLoading(false);
-      return;
+  // If we need to refresh products after the modal closes (e.g., after adding/editing),
+  // use a ref to track previous isModalOpen value and only fetch when it transitions from true to false.
+  const prevModalOpenRef = useRef(isModalOpen);
+  useEffect(() => {
+    if (
+      prevModalOpenRef.current === true &&
+      isModalOpen === false &&
+      selectedConversationId
+    ) {
+      fetchProducts(selectedConversationId);
     }
-    fetchProducts(selectedConversationId);
-    // WebSocket logic is already handled in the previous useEffect
-    // so we don't need to duplicate it here.
-  }, [selectedConversationId, isModalOpen]);
+    prevModalOpenRef.current = isModalOpen;
+  }, [isModalOpen, selectedConversationId]);
 
   useEffect(() => {
     if (!searchProduct.trim()) {
