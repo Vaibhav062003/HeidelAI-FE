@@ -150,6 +150,7 @@ const ConversationList = ({
 
   const filteredConversations = useMemo(() => {
     if (!conversations.length) return [];
+    
 
     const hasFilters = filters.unreadOnly || filters.hasQuery || 
                        filters.platform.length || filters.priority.length || 
