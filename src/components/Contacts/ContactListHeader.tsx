@@ -119,36 +119,6 @@ export const ContactListHeader = ({
     onTagsChange([]);
   };
 
-  const ActionButton: React.FC<ActionButtonProps> = ({
-    onClick,
-    icon: Icon,
-    label,
-    variant = "default",
-    className = "",
-  }) => (
-    <button
-      onClick={onClick}
-      className={`
-        group relative
-        flex items-center justify-center
-        h-9 w-9 sm:h-10 sm:w-10
-        rounded-2xl
-        transition-all duration-200
-        hover:scale-105 active:scale-95
-        ${
-          variant === "primary"
-            ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
-            : variant === "success"
-            ? "bg-gray-100 hover:bg-gray-200 text-black shadow-md hover:shadow-lg"
-            : "bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900"
-        }
-        ${className}
-      `}
-      aria-label={label}
-    >
-      <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-    </button>
-  );
 
   interface QuickActionMenuProps {
     className?: string;
@@ -300,7 +270,7 @@ export const ContactListHeader = ({
           ${
             selectedTags.length > 0
               ? "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
-              : "bg-gray-10 text-gray-900 hover:bg-gray-100"
+              : "bg-gray-100 text-gray-900 hover:bg-gray-100"
           }
           font-sans text-xs font-medium
           rounded-2xl

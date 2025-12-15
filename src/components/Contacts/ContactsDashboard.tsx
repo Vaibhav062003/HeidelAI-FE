@@ -10,6 +10,7 @@ import { Spinner } from "../Contacts/Spinner";
 import TagSidebar from "./TagSidebar";
 import api from "@/lib/session_api";
 import { ApiContact, Contact } from "../types/contacts";
+import { TagIcon } from "lucide-react";
 
 type Tag = string;
 
@@ -57,7 +58,6 @@ const ContactsDashboard = () => {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [tagsLoading, setTagsLoading] = useState(true);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const fetchContacts = useCallback(async () => {
     setLoading(true);
@@ -98,11 +98,7 @@ const ContactsDashboard = () => {
       await fetchTags();
     };
     fetchInitialData();
-  }, [selectedTag]);
-
-  useEffect(() => {
-    fetchContacts();
-  }, [selectedTag, fetchContacts]);
+  }, []);
 
   const fetchTags = async () => {
     setTagsLoading(true);
@@ -195,20 +191,6 @@ const ContactsDashboard = () => {
     setSelectedContact(contact);
   };
 
-  // const handleDelete = async (contactId: string) => {
-  //   try {
-  //     const { error } = await supabase
-  //       .from("contacts")
-  //       .delete()
-  //       .eq("id", contactId);
-
-  //     if (error) throw error;
-  //     setContacts((prev) => prev.filter((contact) => contact.id !== contactId));
-  //   } catch (err) {
-  //     setError((err as Error).message);
-  //   }
-  // };
-
   const handleSaveContact = useCallback(
     (newContact: Partial<Contact>) => {
       const updatedContact = {
@@ -265,31 +247,41 @@ const ContactsDashboard = () => {
       });
 
       setTags((prev) => prev.filter((tag) => tag !== tagName));
+
+      // Reset selectedTag if the deleted tag was selected
+      if (selectedTag === tagName) {
+        setSelectedTag(null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete tag");
     }
   };
 
+  //  filtering to include selectedTag from sidebar
   const filteredContacts = useMemo(() => {
     let filtered = contacts;
 
-    if (selectedTags.length > 0) {
-      filtered = filtered.filter((contact) =>
-        selectedTags.some((tag) => contact.tags.includes(tag))
+    // Filter by selected tag from TagSidebar
+    if (selectedTag) {
+      filtered = filtered.filter(
+        (contact) =>
+          contact.tags?.includes(selectedTag) ||
+          contact.categories?.includes(selectedTag)
       );
     }
 
+    // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter((contact) => {
         const searchText = `${contact.firstName} ${contact.lastName} ${
           contact.email
-        } ${contact.username || ""}`;
+        } ${contact.username || ""} ${contact.phone || ""}`;
         return searchText.toLowerCase().includes(searchQuery.toLowerCase());
       });
     }
 
     return filtered;
-  }, [contacts, searchQuery, selectedTags]);
+  }, [contacts, searchQuery, selectedTag]);
 
   const paginatedContacts = filteredContacts.slice(
     (currentPage - 1) * itemsPerPage,
@@ -300,6 +292,11 @@ const ContactsDashboard = () => {
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1);
   }, []);
+
+  //  Reset to page 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedTag, searchQuery]);
 
   return (
     <div className="h-full w-full flex bg-white overflow-hidden">
@@ -328,10 +325,37 @@ const ContactsDashboard = () => {
             onImportCSV={handleFileUpload}
             onMessageSend={() => {}}
             tags={tags}
-            selectedTags={selectedTags}
-            onTagsChange={setSelectedTags}
+            selectedTags={selectedTag ? [selectedTag] : []}
+            onTagsChange={(tags) => {
+              setSelectedTag(tags.length > 0 ? tags[0] : null);
+            }}
           />
         </div>
+
+        {/* Filter Status Banner */}
+        {selectedTag && (
+          <div className="flex-shrink-0 bg-blue-50 border-b border-blue-100 px-4 py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <TagIcon className="w-4 h-4 text-blue-600" />
+                <span className="text-sm text-blue-900">
+                  Filtered by tag:{" "}
+                  <span className="font-semibold">{selectedTag}</span>
+                </span>
+                <span className="text-xs text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                  {filteredContacts.length} contact
+                  {filteredContacts.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <button
+                onClick={() => setSelectedTag(null)}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
+              >
+                Clear filter
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden min-h-0">
@@ -341,11 +365,26 @@ const ContactsDashboard = () => {
             </div>
           ) : filteredContacts.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
-              <p className="text-gray-500 text-sm">
-                {searchQuery
-                  ? "No matching contacts found 🔍"
-                  : "No contacts found 🔍"}
-              </p>
+              <div className="text-center">
+                <p className="text-gray-500 text-sm mb-2">
+                  {selectedTag
+                    ? `No contacts with tag "${selectedTag}" 🔍`
+                    : searchQuery
+                    ? "No matching contacts found 🔍"
+                    : "No contacts found 🔍"}
+                </p>
+                {(selectedTag || searchQuery) && (
+                  <button
+                    onClick={() => {
+                      setSelectedTag(null);
+                      setSearchQuery("");
+                    }}
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium hover:underline"
+                  >
+                    Clear all filters
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <>
