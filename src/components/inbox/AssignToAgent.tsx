@@ -8,7 +8,10 @@ const AssignDropdown: React.FC = () => {
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -23,11 +26,13 @@ const AssignDropdown: React.FC = () => {
         aria-haspopup="true"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((open) => !open)}
-        className={`w-full flex items-center justify-between gap-2 px-4 py-2 border rounded-lg bg-white shadow-sm hover:bg-gray-50 transition-all duration-150 font-sans text-xs font-medium`}
+        className={`w-full flex items-center justify-between gap-2 px-4 py-2 rounded-lg bg-white shadow-sm hover:bg-gray-50 transition-all duration-150 font-sans text-xs font-medium`}
       >
         {activeTab === "assign" ? "Transfer" : "History"}
         <svg
-          className={`h-3 w-3 text-gray-500 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          className={`h-3 w-3 text-gray-500 transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
           fill="none"
           viewBox="0 0 20 20"
         >
