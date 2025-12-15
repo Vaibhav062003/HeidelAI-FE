@@ -27,6 +27,7 @@ export default function MediaMessage({
   timestamp,
 }: MediaMessageProps) {
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  const [mediaHeight, setMediaHeight] = useState<number | null>(null);
   const [showOverlay, setShowOverlay] = useState(false);
   const [loopCount, setLoopCount] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -48,6 +49,7 @@ export default function MediaMessage({
 
       img.onload = () => {
         setAspectRatio(img.width / img.height);
+        setMediaHeight(img.height);
         setIsUnavailable(false);
       };
       img.onerror = () => {
@@ -59,6 +61,7 @@ export default function MediaMessage({
 
       vid.onloadedmetadata = () => {
         setAspectRatio(vid.videoWidth / vid.videoHeight);
+        setMediaHeight(vid.videoHeight);
         setIsUnavailable(false);
       };
       vid.onerror = () => {
@@ -144,7 +147,6 @@ export default function MediaMessage({
   };
 
   const isVertical = aspectRatio !== null && aspectRatio < 1;
-  const mediaHeight = isVertical ? 330 : 220;
   const mediaWidth = isVertical ? 190 : 410;
 
   return (
@@ -154,10 +156,12 @@ export default function MediaMessage({
       } rounded-2xl w-fit max-w-[350px] p-1`}
     >
       <div
-        className={`relative overflow-hidden rounded-2xl bg-gray-200 shadow-sm cursor-pointer flex items-center justify-center`}
+        className={`relative h-fit overflow-hidden rounded-2xl bg-gray-200 shadow-sm cursor-pointer flex items-center justify-center`}
         style={{
           width: isUnavailable? "190px" : mediaWidth,
-          height: mediaHeight,
+          height: mediaHeight
+            ? Math.min(mediaWidth / (aspectRatio || 1), 400)
+            : 200,
           transition: "all 0.2s ease-in-out",
         }}
       >
