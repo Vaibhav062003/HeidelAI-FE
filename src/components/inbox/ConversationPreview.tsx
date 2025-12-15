@@ -51,14 +51,14 @@ const ConversationPreview = ({
 
 return (
   <div
-    className={`py-0.5 px-2.5 w-full cursor-pointer border-b border-gray-100 ${
+    className={`py-2 px-2.5 w-full cursor-pointer border-b border-gray-100 hover:bg-gray-50 transition-colors ${
       isSelected ? "bg-gray-100" : ""
     }`}
     onClick={onClick}
   >
-    <div className="flex items-start gap-2">
+    <div className="flex items-start gap-2.5">
       {/* Avatar */}
-      <div className="w-7 h-7 flex-shrink-0 rounded-full overflow-hidden bg-gray-200">
+      <div className="w-6 h-6 flex-shrink-0 rounded-full overflow-hidden bg-gray-200 mt-0.5">
         <img 
           src={
             channelType === "whatsapp" ? "/features/whatsapp.png" :
@@ -72,36 +72,41 @@ return (
       </div>
       
       <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-1.5">
-          <h3 className="font-semibold text-gray-900 text-[14px] truncate">
+        <div className="flex items-start justify-between gap-1.5 mb-0.5">
+          <h3 className={`text-gray-900 text-[15px] truncate leading-tight ${
+            unreadCount > 0 ? "font-bold" : "font-normal"
+          }`}>
             {customerName}
           </h3>
-          <span className="text-[11px] text-gray-500 flex-shrink-0">
-            {timestamp}
-          </span>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {priority && (
+              <span
+                className={`${getPriorityBadgeStyles(priority)} text-[9px] px-1.5 py-0.5 rounded capitalize font-medium border`}
+              >
+                {priority}
+              </span>
+            )}
+            <span className="text-[11px] text-gray-500 font-normal">
+              {timestamp}
+            </span>
+          </div>
         </div>
         
         <div className="flex items-center justify-between gap-1.5">
-          <p className="text-[14px] text-gray-600 truncate flex-1">
+          <p className={`text-[13px] text-gray-600 truncate flex-1 leading-relaxed ${
+            unreadCount > 0 ? "font-bold" : "font-normal"
+          }`}>
             {lastMessage}
           </p>
           
           {unreadCount > 0 && (
-            <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-[8px] text-white font-semibold">
+            <div className="w-[18px] h-[18px] bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-[10px] text-white font-semibold">
                 {unreadCount > 9 ? '9' : unreadCount}
               </span>
             </div>
           )}
         </div>
-
-        {priority && (
-          <span
-            className={`${getPriorityBadgeStyles(priority)} text-[8px] px-1 rounded-sm capitalize font-medium inline-block border mt-0.5`}
-          >
-            {priority}
-          </span>
-        )}
       </div>
     </div>
   </div>
