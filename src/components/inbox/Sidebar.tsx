@@ -570,7 +570,6 @@ const Sidebar = ({
             ? [...prev, tag]
             : prev.filter((t) => t !== tag);
         });
-        alert("Failed to update tags. Please try again.");
       } finally {
         setIsUpdatingTags(false);
       }
