@@ -256,15 +256,17 @@ const ProductsTab = ({
     };
   }, [selectedConversationId]);
 
-   useEffect(() => {
-    if (!selectedConversationId || isModalOpen) {
-      setLoading(false);
-      return;
+   const prevModalOpenRef = useRef(isModalOpen);
+  useEffect(() => {
+    if (
+      prevModalOpenRef.current === true &&
+      isModalOpen === false &&
+      selectedConversationId
+    ) {
+      fetchProducts(selectedConversationId);
     }
-    fetchProducts(selectedConversationId);
-    // WebSocket logic is already handled in the previous useEffect
-    // so we don't need to duplicate it here.
-  }, [selectedConversationId, isModalOpen]);
+    prevModalOpenRef.current = isModalOpen;
+  }, [isModalOpen, selectedConversationId]);
 
   useEffect(() => {
     if (!searchProduct.trim()) {
@@ -402,7 +404,7 @@ const ProductsTab = ({
               <TooltipContent>Add new product</TooltipContent>
             </Tooltip>
             {showOptions && (
-              <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-xl border border-gray-00 z-50">
+              <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-xl border border-gray-200 z-50">
                 <div className="py-1">
                   <button
                     onClick={() => handleOptionSelect("pinecone")}
@@ -540,7 +542,7 @@ const ProductsTab = ({
   }}
 >
   <DialogContent
-    className="w-[95%] max-w-[300px] sm:max-w-[400px]  md:max-w-[500px] lg:max-w-[720px] xl:max-w-[1000px]  2xl:max-w-[1150px] rounded- max-h-[88vh]      overflow-y-auto   min-h-[350] p-4 sm: hide-scrollbar">
+    className="w-[95%] max-w-[300px] sm:max-w-[400px]  md:max-w-[500px] lg:max-w-[720px] xl:max-w-[1000px]  2xl:max-w-[1150px] rounded- max-h-[88vh]  overflow-y-auto   min-h-[350px] p-4 sm:p-6 hide-scrollbar">
     {/* Header */}
     <DialogHeader className="pb-3 border-b">
       <DialogTitle className="text-xl sm:text-2xl font-semibold text-gray-900">
@@ -568,7 +570,7 @@ const ProductsTab = ({
           onClick={() => setSelectedMode("single")}
           className={`py-2 rounded-md font-medium transition ${
             selectedMode === "single"
-              ? "bg-white-900 text-gray-700 border border-gray-500 shadow-sm  "
+              ? "bg-white text-gray-700 border border-gray-500 shadow-sm  "
               : "text-gray-700"
           }`}
         >
@@ -579,7 +581,7 @@ const ProductsTab = ({
           onClick={() => setSelectedMode("bulk")}
           className={`py-2 rounded-md font-medium transition ${
             selectedMode === "bulk"
-              ? "bg-white-900 text-gray-700 border border-gray-500 shadow-sm  "
+              ? "bg-white text-gray-700 border border-gray-500 shadow-sm  "
               : "text-gray-700"
           }`}
         >
