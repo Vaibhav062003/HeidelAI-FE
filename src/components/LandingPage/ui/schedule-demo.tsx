@@ -16,6 +16,8 @@ import { Message, storeMessage } from "@/components/services/chatService";
 import ReactMarkdown from "react-markdown";
 
 import { Toaster, toast as sonnerToast } from 'sonner'
+import { set } from "react-hook-form";
+import { Toast } from "@radix-ui/react-toast";
 
 export function ScheduleDemo() {
 
@@ -26,45 +28,71 @@ export function ScheduleDemo() {
   const [userEmail, setUserEmail] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleDemoRequest = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     // Basic validation checks
     if (!userName.trim() || !userEmail.trim() || !userPhone.trim() || !companyName.trim()) {
       sonnerToast.error('Please fill all the details.');
+      setIsSubmitting(false);
       return;
     }
 
-    // Email validation
+    // Email validation 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(userEmail.trim())) {
       sonnerToast.error('Please enter a valid email address.');
+      setIsSubmitting(false);
       return;
     }
 
     // Phone number validation (basic check for digits and common formats)
     const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-    const cleanedPhone = userPhone.replace(/[\s\-\(\)]/g, ''); // Remove spaces, dashes, parentheses
-    
+    const cleanedPhone = userPhone.replace(/[\s\-\(\)]/g, '');
+
     if (!phoneRegex.test(cleanedPhone) || cleanedPhone.length < 8) {
       sonnerToast.error('Please enter a valid phone number (minimum 8 digits).');
+      setIsSubmitting(false);
       return;
     }
 
     // Create form data to match Google Form's expected format
     const formData = new FormData();
-    formData.append('entry.545040562', userName.trim());       // Name
-    formData.append('entry.1231199003', userEmail.trim());     // Email
-    formData.append('entry.1154213412', cleanedPhone);         // Phone (cleaned)
-    formData.append('entry.1081121699', companyName.trim());   // Company
+    formData.append('entry.545040562', userName.trim());
+    formData.append('entry.1231199003', userEmail.trim());
+    formData.append('entry.1154213412', cleanedPhone);
+    formData.append('entry.1081121699', companyName.trim());
 
     try {
+      // Google Forms (no-cors, can't check result)
       await fetch("https://docs.google.com/forms/d/e/1FAIpQLSdB_mtDsubutUM_y1draxzdbfzcsqcIz9Ok_hTwPayBukJPNg/formResponse", {
         method: 'POST',
-        mode: 'no-cors',  // Required to bypass CORS errors
+        mode: 'no-cors',
         body: formData,
       });
+
+      // Your backend
+      const response = await fetch("https://egenie-whatsapp.koyeb.app/api/clerk/waitlist", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: userEmail.trim(),
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.data.status === 'rejected') {
+        sonnerToast.error('Your previous request was rejected. Please contact support for more information.');
+        setIsOpen(true);
+        setIsSubmitting(false);
+        return;
+      }
 
       sonnerToast.success('Request received! We will contact you shortly.');
 
@@ -73,12 +101,14 @@ export function ScheduleDemo() {
       setUserEmail('');
       setUserPhone('');
       setCompanyName('');
-      
+
       // Close the drawer after successful submission
       setIsOpen(false);
     } catch (error) {
       sonnerToast.error('Failed to submit the form. Please try again.');
       console.error('Error:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -92,6 +122,7 @@ export function ScheduleDemo() {
   const [isInitializing, setIsInitializing] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
 
   useEffect(() => {
     const initializeChat = async () => {
@@ -179,13 +210,14 @@ export function ScheduleDemo() {
       <Drawer.Root repositionInputs={false} open={isOpen} onOpenChange={setIsOpen}>
         <Drawer.Trigger className="focus-visible:border-none">
             <button className="inline-flex items-center px-6 py-3 bg-transparent text-white text-sm font-medium rounded-xl border-2 border-white/30 hover:bg-white/10 hover:border-white/50 transition-all duration-300 hover:scale-105 shadow-lg backdrop-blur-sm">
-              Schedule Demo
+              Join Beta
             </button>
 
       </Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40" />
         <Drawer.Content className="bg-white flex flex-col  fixed bottom-0  left-0 right-0 max-h-[85vh] rounded-t-[10px] z-[999]">
+          <Toaster richColors position="bottom-right" className="z-[10000]"/>
           <div className="max-w-md flex justify-center flex-col w-full mx-auto overflow-auto p-4 mb-4 rounded-t-[10px]">
             <div aria-hidden className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-4" />
 
@@ -245,7 +277,39 @@ export function ScheduleDemo() {
             <p className="text-neutral-600  text-xs  mt-2 mb-8">
             By submitting you agree to our Terms & Conditions.
           </p>
-            <button onClick={() => setIsOpen(false)} type="submit" className="h-[44px] bg-black mx-auto rounded-xl sticky bottom-0 text-gray-50  mt-4 w-full font-medium">Submit</button>
+            <button
+                    type="submit"
+                    className="h-[44px] bg-black mx-auto rounded-xl sticky bottom-0 text-gray-50 mt-4 w-full font-medium flex items-center justify-center"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <svg
+                          className="animate-spin h-5 w-5 mr-2 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                          ></path>
+                        </svg>
+                        Submitting...
+                      </>
+                    ) : (
+                      "Submit"
+                    )}
+                  </button>
             </form>
           </div>
         </Drawer.Content>

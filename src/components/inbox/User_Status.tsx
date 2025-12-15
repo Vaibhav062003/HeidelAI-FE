@@ -59,7 +59,7 @@ interface MessageReactions {
 
 
 interface UserStatusProps {
-  conversationStatus: "open" | "closed" | "followup";
+  conversationStatus: "open" | "closed" | "follow-up";
   isStatusDropdownOpen: boolean;
   setIsStatusDropdownOpen: (open: boolean) => void;
   selectedConversationId: string;
@@ -67,7 +67,7 @@ interface UserStatusProps {
   message: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   lastMessageRef: React.RefObject<HTMLDivElement | null>;
-  setConversationStatus: (status: "open" | "closed" | "followup") => void;
+  setConversationStatus: (status: "open" | "closed" | "follow-up") => void;
   handleResolve: (id: string) => void;
   handleFollowUp: (id: string) => void;
   handleReopen: () => void;
@@ -87,7 +87,7 @@ const User_Status: React.FC<UserStatusProps> = ({
   handleFollowUp,
   handleReopen,
 }) => {
-
+  // console.log("conversationStatus in User_Status:", conversationStatus);
   return (
     <div>
       <DropdownMenu
@@ -102,7 +102,7 @@ const User_Status: React.FC<UserStatusProps> = ({
           >
             {conversationStatus === "closed" ? (
               <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-            ) : conversationStatus === "followup" ? (
+            ) : conversationStatus === "follow-up" ? (
               <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
             ) : (
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -110,7 +110,7 @@ const User_Status: React.FC<UserStatusProps> = ({
             <span className="text-sm font-medium text-gray-800">
               {conversationStatus === "closed"
                 ? "Closed"
-                : conversationStatus === "followup"
+                : conversationStatus === "follow-up"
                 ? "Follow-up"
                 : "Open"}
             </span>
@@ -145,7 +145,7 @@ const User_Status: React.FC<UserStatusProps> = ({
             </>
           )}
           {(conversationStatus === "closed" ||
-            conversationStatus === "followup") && (
+            conversationStatus === "follow-up") && (
             <DropdownMenuItem
               onClick={handleReopen}
               className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-green-50 rounded-xl mx-2"

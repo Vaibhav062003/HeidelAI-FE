@@ -6,14 +6,47 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 // import Sidebar from "./Sidebar";
-import {Popover,PopoverContent,PopoverTrigger,} from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { toast, Toaster } from "sonner";
 import { Conversation } from "../types/conversation";
-import { ShoppingCart, Plus, MapPin, Upload, FileText, FileImage, FileVideo, Music, File, Loader2, X, ChevronDown, RefreshCw, XCircle, Send, Paperclip, MoreVertical, Smile, Mic, Clock } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogTrigger } from "../ui/dialog";
+import {
+  ShoppingCart,
+  Plus,
+  MapPin,
+  Upload,
+  FileText,
+  FileImage,
+  FileVideo,
+  Music,
+  File,
+  Loader2,
+  X,
+  ChevronDown,
+  RefreshCw,
+  XCircle,
+  Send,
+  Paperclip,
+  MoreVertical,
+  Smile,
+  Mic,
+  Clock,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+  DialogTrigger,
+} from "../ui/dialog";
 import dynamic from "next/dynamic";
 import { useReminders } from "../hooks/useReminders";
 // import { H1, H2, H3, Body, Small } from "@/components/typography";
@@ -22,8 +55,18 @@ import { useReminders } from "../hooks/useReminders";
 import { useTypingIndicator } from "../hooks/typingIndicator";
 import { createClient } from "@supabase/supabase-js";
 import { conversationService } from "@/components/services/api";
-import {Tooltip,TooltipContent,TooltipTrigger,TooltipProvider,} from "@/components/ui/tooltip";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import ReminderDialog from "./ReminderDialog";
 import "../../app/dashboard/dashboard.css";
 import Image from "next/image";
@@ -41,8 +84,9 @@ import LazyMediaLoader from "../LazyMediaLoader";
 import { MessageWrapper } from "../messaging/MessageWrapper";
 import { useUser } from "@clerk/nextjs";
 import MediaMessage from "../messaging/MediaMessage";
-import { useMainWebSocket } from '@/lib/websocket';
+import { useMainWebSocket } from "@/lib/websocket";
 import { storeData, getData } from "@/lib/indexedDB";
+import CountDownTimer from "../LandingPage/CountDownTimer";
 import User_Status from "./User_Status";
 
 const supabase = createClient(
@@ -103,17 +147,17 @@ interface Message {
   conversation_id: string;
   status?: "sent" | "delivered" | "read" | "sending";
   type?:
-  | "text"
-  | "image"
-  | "file"
-  | "voice"
-  | "video"
-  | "share"
-  | "ig_story"
-  | "ig_reel"
-  | "story_reply"
-  | "system"
-  | "message_reply";
+    | "text"
+    | "image"
+    | "file"
+    | "voice"
+    | "video"
+    | "share"
+    | "ig_story"
+    | "ig_reel"
+    | "story_reply"
+    | "system"
+    | "message_reply";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
   product_data?: ProductData[];
@@ -180,10 +224,11 @@ interface AddressData {
 }
 
 interface CannedResponse {
-  id: string;
-  shortcode: string;
-  message: string;
-  created_at: string;
+  _id: string;
+  org_id: string;
+  shortcut: string;
+  response: string;
+  updated_at: string;
 }
 
 // Skeletons
@@ -256,10 +301,13 @@ const LoadingState = () => (
 //   }
 // };
 
-const SharedProductPreview = ({ 
-  product, 
-  onRemove 
-}: { product: Product; onRemove: () => void; }) => (
+const SharedProductPreview = ({
+  product,
+  onRemove,
+}: {
+  product: Product;
+  onRemove: () => void;
+}) => (
   <div className="flex items-center w-fit gap-3 p-2 bg-gray-50 rounded-lg border border-gray-200 mb-2">
     <div className="w-15 h-15 relative">
       <Image
@@ -345,7 +393,7 @@ const RemindersPopover = ({
                           // Add IST offset (UTC+5:30)
                           new Date(
                             new Date(reminder.dateTime).getTime() +
-                            5.5 * 60 * 60 * 1000
+                              5.5 * 60 * 60 * 1000
                           ),
                           "MMM d, yyyy 'at' h:mm a"
                         )}
@@ -572,7 +620,7 @@ const MessageItem = memo(
     isLast,
     index,
     isLatest,
-    isReplyMessage
+    isReplyMessage,
   }: {
     message: Message;
     isLast: boolean;
@@ -596,19 +644,27 @@ const MessageItem = memo(
     return (
       <>
         <div
-          className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${message.role === "customer"
-            ? `bg-white/90 backdrop-blur-sm ${isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"} text-gray-900 border-gray-200/60`
-            : `bg-blue-600/90 backdrop-blur-sm ${isReplyMessage ? "rounded-tr-lg" : "rounded-br-lg"} text-white border-blue-500/60`
-            }`}
+          className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${
+            message.role === "customer"
+              ? `bg-white/90 backdrop-blur-sm ${
+                  isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"
+                } text-gray-900 border-gray-200/60`
+              : `bg-blue-600/90 backdrop-blur-sm ${
+                  isReplyMessage ? "rounded-tr-lg" : "rounded-br-lg"
+                } text-white border-blue-500/60`
+          }`}
           style={{ wordBreak: "break-word" }}
         >
           <div className="break-words">
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              {message.content}
+            </p>
           </div>
           <div className="flex justify-end mt-2">
             <span
-              className={`text-xs ${message.role === "customer" ? "text-gray-500" : "text-white/70"
-                }`}
+              className={`text-xs ${
+                message.role === "customer" ? "text-gray-500" : "text-white/70"
+              }`}
             >
               {formatMessageTime(message.timestamp)}
             </span>
@@ -617,17 +673,20 @@ const MessageItem = memo(
         {message.status && message.status == "sending" && (
           <div className="flex justify-end mt-1">
             <span className="text-xs text-gray-500">Sending...</span>
-            </div>
+          </div>
         )}
-
-
       </>
     );
-  }, (prevProps, nextProps) => {
-    return prevProps.message.id === nextProps.message.id &&
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.message.id === nextProps.message.id &&
       prevProps.isLast === nextProps.isLast &&
-      JSON.stringify(prevProps.message.reaction) === JSON.stringify(nextProps.message.reaction);
-  });
+      JSON.stringify(prevProps.message.reaction) ===
+        JSON.stringify(nextProps.message.reaction)
+    );
+  }
+);
 MessageItem.displayName = "MessageItem";
 
 const ChatView = ({
@@ -652,7 +711,11 @@ const ChatView = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
   const [showCannedResponses, setShowCannedResponses] = useState(false);
-  const [filteredResponses, setFilteredResponses] = useState<CannedResponse[]>([]);
+  const [filteredResponses, setFilteredResponses] = useState<CannedResponse[]>(
+    []
+  );
+  const [selectedCannedIndex, setSelectedCannedIndex] = useState(0);
+
   const [showCustomerInfo, setShowCustomerInfo] = useState(false);
   const [audioURL, setAudioURL] = useState<string | null>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -661,7 +724,9 @@ const ChatView = ({
   const [currentTimer, setCurrentTimer] = useState(0);
   const [isResolved, setIsResolved] = useState(false);
   const [isFollowUp, setIsFollowUp] = useState(false);
-  const [conversationStatus, setConversationStatus] = useState<"open" | "closed" | "followup">("open");
+  const [conversationStatus, setConversationStatus] = useState<
+    "open" | "closed" | "follow-up"
+  >("open");
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [fileCaption, setFileCaption] = useState("");
@@ -674,8 +739,11 @@ const ChatView = ({
   const audioChunksRef = useRef<Blob[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingThrottleRef = useRef<number>(0);
-  const { reminders = [], refetchReminders } = useReminders(selectedConversationId);
-  const [typingUsers, setTypingUsers] = useState<Map<
+  const { reminders = [], refetchReminders } = useReminders(
+    selectedConversationId
+  );
+  const [typingUsers, setTypingUsers] = useState<
+    Map<
       string,
       {
         agent_name: string;
@@ -685,7 +753,10 @@ const ChatView = ({
   >(new Map());
   const [globalMuted, setGlobalMuted] = useState(true);
   const [activeMediaId, setActiveMediaId] = useState<string | null>(null);
-  const [activeMediaType, setActiveMediaType] = useState<"reel" | "story" | "video" | null>(null);
+  const [activeMediaType, setActiveMediaType] = useState<
+    "reel" | "story" | "video" | null
+  >(null);
+  const [fullscreenMediaId, setFullscreenMediaId] = useState<string | null>(null);
   const { sendWsMessage } = useMainWebSocket();
 
   const handlePlay = (id: string, type: "reel" | "story" | "video") => {
@@ -739,19 +810,34 @@ const ChatView = ({
     }
   };
 
+  const LINE_HEIGHT = 20;
+  const MIN_LINES = 2;
+  const MAX_LINES = 5;
+  const MIN_HEIGHT = LINE_HEIGHT * MIN_LINES;
+  const MAX_HEIGHT = LINE_HEIGHT * MAX_LINES;
+
   useEffect(() => {
-    const fetchCannedResponses = async () => {
-      const { data, error } = await supabase
-        .from("canned_responses")
-        .select("*");
+    const textarea = textareaRef.current;
+    if (!textarea) return;
 
-      if (!error && data) {
-        setCannedResponses(data);
-      }
-    };
+    textarea.style.height = "auto";
 
-    fetchCannedResponses();
-  }, []);
+    const scrollHeight = textarea.scrollHeight;
+
+    if (scrollHeight <= MIN_HEIGHT) {
+      // 2 lines
+      textarea.style.height = `${MIN_HEIGHT}px`;
+      textarea.style.overflowY = "hidden";
+    } else if (scrollHeight >= MAX_HEIGHT) {
+      // More than 5 lines
+      textarea.style.height = `${MAX_HEIGHT}px`;
+      textarea.style.overflowY = "auto";
+    } else {
+      // Between 2-5 lines
+      textarea.style.height = `${scrollHeight}px`;
+      textarea.style.overflowY = "hidden";
+    }
+  }, [message]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
@@ -764,27 +850,69 @@ const ChatView = ({
 
   // Show canned responses
   useEffect(() => {
-    if (message.startsWith("/")) {
-      const query = message.substring(1).toLowerCase();
-      const filtered = cannedResponses.filter((response) =>
-        response.shortcode.toLowerCase().includes(query)
-      );
-      setFilteredResponses(filtered);
-      setShowCannedResponses(true);
-    } else {
+    let mounted = true;
+
+    const fetchCannedResponses = async () => {
+      try {
+        const response = await api.get<{ canned_responses: CannedResponse[] }>(
+          "/api/canned_responses"
+        );
+
+        if (mounted && response.data?.canned_responses) {
+          setCannedResponses(response.data.canned_responses);
+        }
+      } catch (error) {
+        console.error("[CannedResponses] Fetch error:", error);
+      }
+    };
+
+    fetchCannedResponses();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    // Don't show dropdown if message doesn't start with "/"
+    if (!message.startsWith("/")) {
       setShowCannedResponses(false);
+      setFilteredResponses([]);
+      return;
     }
+
+    // Get the search query after "/"
+    const searchQuery = message.slice(1).toLowerCase().trim();
+
+    // If just "/" (empty after slash), show ALL responses
+    if (searchQuery === "") {
+      setFilteredResponses(cannedResponses);
+      setShowCannedResponses(cannedResponses.length > 0);
+      setSelectedCannedIndex(0);
+      return;
+    }
+
+    // Filter responses by shortcut
+    const filtered = cannedResponses.filter((response) =>
+      response.shortcut.toLowerCase().includes(searchQuery)
+    );
+
+    setFilteredResponses(filtered);
+    setShowCannedResponses(filtered.length > 0);
+    setSelectedCannedIndex(0);
   }, [message, cannedResponses]);
+
+  // console.log("conversationStatus", conversationStatus);
 
   useEffect(()=>{
     const setConversatioStatus= async ()=>{
       if(!selectedConversationId) return;
-      console.log("conversation", selectedConversationId, conversation);
+      // console.log("conversation", selectedConversationId, conversation);
       const status = conversation?.status
       if(status){
-        setConversationStatus(status as "open" | "closed" | "followup");
+        setConversationStatus(status as "open" | "closed" | "follow-up");
         setIsResolved(status === "closed");
-        setIsFollowUp(status === "followup");
+        setIsFollowUp(status === "follow-up");
     }
   }
     setConversatioStatus();
@@ -891,10 +1019,10 @@ const ChatView = ({
           type: file.type.startsWith("image/")
             ? "image"
             : file.type.startsWith("video/")
-              ? "video"
-              : file.type.startsWith("audio/")
-                ? "voice"
-                : "file",
+            ? "video"
+            : file.type.startsWith("audio/")
+            ? "voice"
+            : "file",
           role: "agent",
           conversation_id: selectedConversationId,
           timestamp: new Date().toISOString(),
@@ -964,53 +1092,67 @@ const ChatView = ({
   };
 
   const sendMessage = async () => {
-    // 1. Basic Validation (Allow sending even if isSending is true)
+    // 1. Basic Validation
     if (!message.trim() || !selectedConversationId) return;
 
     const currentContent = message.trim();
     const platform = selectedConversationId.split("_")[0];
-    
-    // Handle Slash Commands (Canned Responses)
+
+    // Handle Canned Responses (Slash Commands)
     let contentToSend = currentContent;
+
     if (currentContent.startsWith("/")) {
-      const shortcode = currentContent.slice(1).toLowerCase();
+      const shortcutQuery = currentContent.slice(1).toLowerCase();
+
+      // Find matching canned response by shortcut
       const cannedResponse = cannedResponses.find(
-        (cr) => cr.shortcode.toLowerCase() === shortcode
+        (cr) => cr.shortcut.toLowerCase() === shortcutQuery
       );
+
       if (cannedResponse) {
-        contentToSend = cannedResponse.message;
+        // Use the canned response message
+        contentToSend = cannedResponse.response;
+      } else {
+        // If no matching canned response found, show error and don't send
+        toast.error(`No canned response found for "/${shortcutQuery}"`);
+        return;
       }
     }
 
-    // 2. Create Optimistic Message
-    const tempId = `temp-${Date.now()}`; // Temporary ID
+    // If contentToSend is empty after processing, don't send
+    if (!contentToSend.trim()) return;
+
+    // 3. Create Optimistic Message
+    const tempId = `temp-${Date.now()}`;
     const optimisticMessage: Message = {
       id: tempId,
       content: contentToSend,
-      // Assuming 'user' is available from your auth context
-      sender_id: user?.id || "agent", 
-      // Usually 'agent' or 'assistant' depending on your backend enum
-      role: "agent", 
+      sender_id: user?.id || "agent",
+      role: "agent",
       conversation_id: selectedConversationId,
       timestamp: new Date().toISOString(),
       type: "text",
-      status: "sending" // Optional: You can use this to show a gray clock icon
+      status: "sending",
     };
 
-    // 3. OPTIMISTIC UPDATE: Update UI & IDB Immediately
+    // 4. OPTIMISTIC UPDATE: Update UI immediately
     setMessage(""); // Clear input immediately
-    
-    setMessages(prev => {
+    setShowCannedResponses(false); // Hide canned responses dropdown
+    setFilteredResponses([]); // Clear filtered responses
+
+    setMessages((prev) => {
       const newState = [...prev, optimisticMessage];
       persistMessages(newState); // Save to IDB immediately
       return newState;
     });
 
     // Scroll to bottom immediately
-    setTimeout(() => lastMessageRef.current?.scrollIntoView({ behavior: "smooth" }), 10);
+    setTimeout(
+      () => lastMessageRef.current?.scrollIntoView({ behavior: "smooth" }),
+      10
+    );
 
-    // 4. Send to Backend
-    // We do NOT set isSending(true) globally, so the user can keep typing
+    // 5. Send to Backend
     try {
       const data = {
         conversation_id: selectedConversationId,
@@ -1018,31 +1160,25 @@ const ChatView = ({
         platform: platform,
       };
 
-      const response = await api.post(
-        `/api/conversations/send-message`,
-        data
-      );
+      const response = await api.post(`/api/conversations/send-message`, data);
 
       if (response.status !== 200) throw new Error("Failed to send");
 
-      // Note: We don't remove the temp message here manually. 
-      // We let the WebSocket 'onNewMessage' event handle the replacement
-      // to ensure data consistency with the server.
-
+      // Success - WebSocket will handle the real message update
     } catch (error) {
       console.error("Send failed:", error);
       toast.error("Failed to send message");
-      
+
       // Rollback: Remove the temp message if API fails
-      setMessages(prev => {
-        const newState = prev.filter(m => m.id !== tempId);
+      setMessages((prev) => {
+        const newState = prev.filter((m) => m.id !== tempId);
         persistMessages(newState);
         return newState;
       });
-      
+
       // Restore text to input so user doesn't lose it
-      setMessage(contentToSend);
-    } 
+      setMessage(currentContent); // Restore original message (with /)
+    }
   };
 
   // Auto scroll to bottom on new message
@@ -1253,7 +1389,7 @@ const ChatView = ({
   const handleFollowUp = useCallback(async(selectedConversationId:string) => {
     setIsResolved(false);
     setIsFollowUp(true);
-    setConversationStatus("followup");
+    setConversationStatus("follow-up");
     setIsStatusDropdownOpen(false);
     setStatusLoading(true);
     const agentName = "You";
@@ -1268,8 +1404,8 @@ const ChatView = ({
       );
     }
 
-      setConversation((prev)=> prev ? {...prev, status: "followup"} : prev);
-      setConversationStatus("followup");
+      setConversation((prev)=> prev ? {...prev, status: "follow-up"} : prev);
+      setConversationStatus("follow-up");
       toast.success("Marked conversation for follow-up successfully");
     }catch (err){
       console.error("Error scheduling message for follow-up:", err);
@@ -1315,7 +1451,7 @@ const ChatView = ({
   useMainWebSocket({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onTypingIndicator: (data: any) => {
-      const myClientId = localStorage.getItem('chat_client_id');
+      const myClientId = localStorage.getItem("chat_client_id");
 
       // Only show typing if it's for this conversation
       if (
@@ -1323,13 +1459,16 @@ const ChatView = ({
         data.conversation_id === selectedConversationId
       ) {
         if (data.is_typing) {
-          setTypingUsers(prev => {
+          setTypingUsers((prev) => {
             const next = new Map(prev);
-            next.set(data.agent_id, { agent_name: data.user, timestamp: Date.now() });
+            next.set(data.agent_id, {
+              agent_name: data.user,
+              timestamp: Date.now(),
+            });
             return next;
           });
         } else {
-          setTypingUsers(prev => {
+          setTypingUsers((prev) => {
             const next = new Map(prev);
             next.delete(data.agent_id);
             return next;
@@ -1341,16 +1480,17 @@ const ChatView = ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onNewMessage: (data: any) => {
       if (data.message.conversation_id === selectedConversationId) {
-        setMessages(prev => {
+        setMessages((prev) => {
           const incomingMsg = data.message;
 
           // 1. Check if we have an optimistic message (temp ID) with matching content
           // We look for a temp message sent by US (agent) with the SAME text
-          const tempMatchIndex = prev.findIndex(msg => 
-            msg.id.toString().startsWith("temp-") && 
-            msg.content === incomingMsg.content &&
-            // Optional: Check if timestamp is within last 10 seconds to be safe
-            (new Date().getTime() - new Date(msg.timestamp).getTime() < 10000)
+          const tempMatchIndex = prev.findIndex(
+            (msg) =>
+              msg.id.toString().startsWith("temp-") &&
+              msg.content === incomingMsg.content &&
+              // Optional: Check if timestamp is within last 10 seconds to be safe
+              new Date().getTime() - new Date(msg.timestamp).getTime() < 10000
           );
 
           if (tempMatchIndex !== -1) {
@@ -1358,14 +1498,14 @@ const ChatView = ({
             // This keeps the chat smooth and prevents "jumping"
             const newState = [...prev];
             newState[tempMatchIndex] = incomingMsg;
-            
+
             persistMessages(newState); // Update IDB
             return newState;
           }
 
           // 2. Standard Duplicate Check (for normal incoming messages)
-          const messageExists = prev.some(msg => msg.id === incomingMsg.id);
-          
+          const messageExists = prev.some((msg) => msg.id === incomingMsg.id);
+
           if (!messageExists) {
             const newState = [...prev, incomingMsg];
             persistMessages(newState);
@@ -1381,9 +1521,12 @@ const ChatView = ({
     onMessageReaction: (data: any) => {
       if (data.message.conversation_id === selectedConversationId) {
         const updatedMessage = data.message;
-        setMessages(prev => {
-          const newState = prev.map(message => {
-            if (message.id === updatedMessage.message_id || message.id === updatedMessage.id) {
+        setMessages((prev) => {
+          const newState = prev.map((message) => {
+            if (
+              message.id === updatedMessage.message_id ||
+              message.id === updatedMessage.id
+            ) {
               return { ...message, reaction: updatedMessage.reaction };
             }
             return message;
@@ -1397,13 +1540,13 @@ const ChatView = ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onMessageDeleted: (data: any) => {
       if (data.conversation_id === selectedConversationId) {
-        setMessages(prev => {
-           const newState = prev.filter(msg => msg.id !== data.message_id);
-           persistMessages(newState); // <--- SAVE TO IDB
-           return newState;
+        setMessages((prev) => {
+          const newState = prev.filter((msg) => msg.id !== data.message_id);
+          persistMessages(newState); // <--- SAVE TO IDB
+          return newState;
         });
       }
-    }
+    },
   });
 
   function getOrCreateChatClientId() {
@@ -1444,9 +1587,9 @@ const ChatView = ({
       setConversation(response?.data);
       const status = response?.data?.status;
       if(status){
-        setConversationStatus(status as "open" | "closed" | "followup");
+        setConversationStatus(status as "open" | "closed" | "follow-up");
         setIsResolved(status === "closed");
-        setIsFollowUp(status === "followup");
+        setIsFollowUp(status === "follow-up");
       }
     } catch {
       toast.error("Failed to load conversation");
@@ -1481,22 +1624,32 @@ const ChatView = ({
   const MESSAGE_STORAGE_KEY = `messages_${selectedConversationId}`;
 
   // Helper to save messages to IDB in background
-  const persistMessages = useCallback(async (msgs: Message[]) => {
-    if (!selectedConversationId) return;
-    try {
-      await storeData("messages", MESSAGE_STORAGE_KEY, msgs);
-    } catch (err) {
-      console.warn("Failed to cache messages:", err);
-    }
-  }, [selectedConversationId, MESSAGE_STORAGE_KEY]);
+  const persistMessages = useCallback(
+    async (msgs: Message[]) => {
+      if (!selectedConversationId) return;
+      try {
+        await storeData("messages", MESSAGE_STORAGE_KEY, msgs);
+      } catch (err) {
+        console.warn("Failed to cache messages:", err);
+      }
+    },
+    [selectedConversationId, MESSAGE_STORAGE_KEY]
+  );
 
   const fetchMessages = async () => {
     if (!isLoaded || !user || !selectedConversationId) return;
-    
+
     // 1. Load from Cache immediately
     try {
-      const cachedMessages = await getData<Message[]>("messages", MESSAGE_STORAGE_KEY);
-      if (cachedMessages && Array.isArray(cachedMessages) && cachedMessages.length > 0) {
+      const cachedMessages = await getData<Message[]>(
+        "messages",
+        MESSAGE_STORAGE_KEY
+      );
+      if (
+        cachedMessages &&
+        Array.isArray(cachedMessages) &&
+        cachedMessages.length > 0
+      ) {
         setMessages(cachedMessages);
         // Optional: Scroll to bottom immediately upon loading cache
         // setTimeout(() => lastMessageRef.current?.scrollIntoView(), 100);
@@ -1511,20 +1664,19 @@ const ChatView = ({
       const response = await api.get(
         `/api/conversations/${selectedConversationId}/messages?agent_username=${agent_username}`
       );
-      
+
       const newMessages = response?.data.messages || [];
       setMessages(newMessages);
 
       // 3. Update Cache
       await persistMessages(newMessages);
-
     } catch (error) {
       toast.error("Failed to load messages", { description: error as string });
     }
   };
 
   useEffect(() => {
-    if (!selectedConversationId) return () => { };
+    if (!selectedConversationId) return () => {};
 
     sendWsMessage({
       type: "join_conversation",
@@ -1543,7 +1695,7 @@ const ChatView = ({
         type: "leave_conversation",
         conversation_id: selectedConversationId,
       });
-    }
+    };
   }, [selectedConversationId]);
   
 
@@ -1577,13 +1729,42 @@ const ChatView = ({
 
   const isWindowExpired = lastCustomerMessage
     ? new Date().getTime() - new Date(lastCustomerMessage.timestamp).getTime() >
-    24 * 60 * 60 * 1000
+      24 * 60 * 60 * 1000
     : true;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Handle canned response dropdown navigation
+    if (showCannedResponses && filteredResponses.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedCannedIndex((prev) =>
+          prev < filteredResponses.length - 1 ? prev + 1 : prev
+        );
+        return;
+      }
+
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedCannedIndex((prev) => (prev > 0 ? prev - 1 : 0));
+        return;
+      }
+
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSelectCannedResponse(filteredResponses[selectedCannedIndex]);
+        return;
+      }
+
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setShowCannedResponses(false);
+        return;
+      }
+    }
+
+    // Default Enter key behavior (send message)
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-
       if (sharedProduct) {
         handleShareProduct(message, sharedProduct);
       } else if (audioURL) {
@@ -1592,10 +1773,19 @@ const ChatView = ({
         sendMessage();
       }
     }
+  };
 
-    if (e.key === "/" && message === "") {
-      setShowCannedResponses(true);
-    }
+  // Handle canned response selection
+  const handleSelectCannedResponse = (response: CannedResponse) => {
+    setMessage(response.response);
+    setShowCannedResponses(false);
+    setFilteredResponses([]);
+    setSelectedCannedIndex(0);
+
+    // Focus back on textarea
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
   };
 
   return (
@@ -1689,6 +1879,18 @@ const ChatView = ({
 
               {/* Action Buttons Section */}
               <div className="flex items-center space-x-2">
+                {/* Count down clock */}
+                {conversation?.reply_window_ends_at && (
+                  <Badge
+                    variant="secondary"
+                    className="backdrop-blur-sm bg-green-100 border border-green-200 text-black hover:bg-green-200 hover:cursor-pointer px-2  rounded-full"
+                  >
+                    <CountDownTimer
+                      targetDate={String(conversation?.reply_window_ends_at)}
+                    />
+                  </Badge>
+                )}
+
                  <User_Status
                   conversationStatus={conversationStatus}
                   isStatusDropdownOpen={isStatusDropdownOpen}
@@ -1725,8 +1927,8 @@ const ChatView = ({
                         {conversationStatus === "closed"
                           ? "Closed"
                           : conversationStatus === "followup"
-                            ? "Follow-up"
-                            : "Open"}
+                          ? "Follow-up"
+                          : "Open"}
                       </span>
                       <ChevronDown className="h-4 w-4 text-gray-600" />
                       {statusLoading && (
@@ -1830,8 +2032,9 @@ const ChatView = ({
                   </TooltipTrigger>
                   <TooltipContent>
                     {reminders.length > 0
-                      ? `${reminders.length} reminder${reminders.length > 1 ? "s" : ""
-                      } set`
+                      ? `${reminders.length} reminder${
+                          reminders.length > 1 ? "s" : ""
+                        } set`
                       : "Set reminder"}
                   </TooltipContent>
                 </Tooltip>
@@ -1855,10 +2058,11 @@ const ChatView = ({
                         variant="ghost"
                         size="icon"
                         onClick={onOpenRightSidebar}
-                        className={`rounded-xl transition-all duration-200 ${isRightSidebarVisible
+                        className={`rounded-xl transition-all duration-200 ${
+                          isRightSidebarVisible
                             ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
                             : "hover:bg-gray-100"
-                          }`}
+                        }`}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -1929,8 +2133,8 @@ const ChatView = ({
                           {conversation?.platform === "instagram"
                             ? selectedConversationId?.split("_")[1]
                             : selectedConversationId
-                              ?.split("_")[1]
-                              ?.replace(/^(\d{2})(\d+)/, "+$1 $2")}
+                                ?.split("_")[1]
+                                ?.replace(/^(\d{2})(\d+)/, "+$1 $2")}
                         </div>
                       </div>
                     </div>
@@ -2149,7 +2353,13 @@ const ChatView = ({
                   <Button
                     type="button"
                     disabled={!selectedFile || uploading}
-                    onClick={() => handleFileUpload(selectedFile, selectedConversationId, fileCaption)}
+                    onClick={() =>
+                      handleFileUpload(
+                        selectedFile,
+                        selectedConversationId,
+                        fileCaption
+                      )
+                    }
                   >
                     {uploading ? (
                       <>
@@ -2157,7 +2367,7 @@ const ChatView = ({
                         Sending...
                       </>
                     ) : (
-                      'Send'
+                      "Send"
                     )}
                   </Button>
                 </div>
@@ -2181,14 +2391,17 @@ const ChatView = ({
               className="flex-1 h-full px-3 py-0.1 bg-gray-50"
             >
               <div className="space-y-3 max-w-full pb-4 sm:pb-0">
-
                 <>
                   {messages.map((message, index) => {
                     const latestMediaMessage = [...messages]
                       .reverse()
-                      .find((m) => m.type === "ig_reel" || m.type === "ig_story");
+                      .find(
+                        (m) => m.type === "ig_reel" || m.type === "ig_story"
+                      );
 
-                    const latestMediaId = latestMediaMessage?.payload?.reel_video_id || latestMediaMessage?.payload?.story_media_id;
+                    const latestMediaId =
+                      latestMediaMessage?.payload?.reel_video_id ||
+                      latestMediaMessage?.payload?.story_media_id;
 
                     const isLatest =
                       (message.type === "ig_reel" &&
@@ -2200,12 +2413,26 @@ const ChatView = ({
                         key={message.id}
                         className="relative group w-full message-item"
                       >
-                        <div className={`flex ${message.role === "customer" ? "justify-start" : "justify-end"}`}>
+                        <div
+                          className={`flex ${
+                            message.role === "customer"
+                              ? "justify-start"
+                              : "justify-end"
+                          }`}
+                        >
                           <div
-                            className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === "customer" ? "items-start" : "items-end"
-                              }`}
+                            className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${
+                              message.role === "customer"
+                                ? "items-start"
+                                : "items-end"
+                            }`}
                           >
-                            <MessageWrapper message={message} index={index} allMessages={messages}>
+                            <MessageWrapper 
+                              message={message} 
+                              index={index} 
+                              allMessages={messages}
+                              forceHide={fullscreenMediaId === message.id}
+                            >
                               {/* IG Media Messages */}
                               {message.payload && (
                                 <LazyMediaLoader key={index} index={index}>
@@ -2213,7 +2440,9 @@ const ChatView = ({
                                   {message.type === "share" && (
                                     <InstagramPost
                                       mediaUrl={message.payload.url}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
                                     />
                                   )}
 
@@ -2224,49 +2453,73 @@ const ChatView = ({
                                       id={message.payload.reel_video_id}
                                       reelVideoUrl={message.payload.url}
                                       title={message.payload.caption}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
                                       viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
                                       isLatest={isLatest}
                                       isActive={
                                         activeMediaType === "reel" &&
-                                        activeMediaId === message.payload.reel_video_id
+                                        activeMediaId ===
+                                          message.payload.reel_video_id
                                       }
                                       onPlay={(id) => handlePlay(id, "reel")} // stops others
                                       isMuted={globalMuted}
                                       onMuteToggle={handleMuteToggle}
-                                      isAgent={message.role.toLowerCase() === "agent"}
+                                      isAgent={
+                                        message.role.toLowerCase() === "agent"
+                                      }
                                     />
                                   )}
 
                                   {/* Render IG Story */}
-                                  {(message.type === "ig_story" || message.type === "story_reply") && (
+                                  {(message.type === "ig_story" ||
+                                    message.type === "story_reply") && (
                                     <InstagramStory
                                       id={message.payload.story_media_id}
                                       sharedBy="You"
                                       storyOwnerName={"Instagram User"}
-                                      storyMediaUrl={message.payload.story_media_url}
+                                      storyMediaUrl={
+                                        message.payload.story_media_url
+                                      }
                                       isActive={
                                         activeMediaType === "story" &&
-                                        activeMediaId === message.payload.story_media_id
+                                        activeMediaId ===
+                                          message.payload.story_media_id
                                       } // only one plays
                                       onPlay={(id) => handlePlay(id, "story")}
                                       isMuted={globalMuted}
                                       isLatest={isLatest}
-                                      onMuteToggle={(muted) => setGlobalMuted(muted)}
-                                      isAgent={message.role.toLowerCase() === "agent"}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      onMuteToggle={(muted) =>
+                                        setGlobalMuted(muted)
+                                      }
+                                      isAgent={
+                                        message.role.toLowerCase() === "agent"
+                                      }
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
                                       content={message.content}
-                                      storyOwnerUsername={message.payload.owner_username}
+                                      storyOwnerUsername={
+                                        message.payload.owner_username
+                                      }
                                       type={message.type}
                                     />
                                   )}
 
                                   {/* Render Images / Videos */}
-                                  {(message.type === "image" || message.type === "video") && (
+                                  {(message.type === "image" ||
+                                    message.type === "video") && (
                                     <MediaMessage
-                                      type={message.type === "image" ? "image" : "video"}
+                                      type={
+                                        message.type === "image"
+                                          ? "image"
+                                          : "video"
+                                      }
                                       url={message.payload.url}
-                                      isAgent={message.role.toLowerCase() === "agent"}
+                                      isAgent={
+                                        message.role.toLowerCase() === "agent"
+                                      }
                                       isLatest={isLatest}
                                       isActive={
                                         activeMediaType === "video" &&
@@ -2274,30 +2527,50 @@ const ChatView = ({
                                       }
                                       onPlay={(id) => handlePlay(id, "video")}
                                       isMuted={globalMuted}
-                                      onMuteToggle={(muted) => setGlobalMuted(muted)}
+                                      onMuteToggle={(muted) =>
+                                        setGlobalMuted(muted)
+                                      }
                                       id={message.id}
-                                      timestamp={formatMessageTime(message.timestamp)}
+                                      timestamp={formatMessageTime(
+                                        message.timestamp
+                                      )}
+                                      onFullscreenToggle={(isFullscreen) => {
+                                        if (isFullscreen) {
+                                          setFullscreenMediaId(message.id);
+                                        } else {
+                                          setFullscreenMediaId(null);
+                                        }
+                                      }}
                                     />
                                   )}
                                 </LazyMediaLoader>
                               )}
 
                               {/* Normal Messages */}
-                              {!["ig_story", "story_reply", "ig_reel", "share", "image", "video"].includes(message.type ?? "") && (
+                              {![
+                                "ig_story",
+                                "story_reply",
+                                "ig_reel",
+                                "share",
+                                "image",
+                                "video",
+                              ].includes(message.type ?? "") && (
                                 <MessageItem
                                   key={message.id}
                                   message={message}
                                   index={index}
                                   isLatest={isLatest}
                                   isLast={index === messages.length - 1}
-                                  isReplyMessage={message.type == "message_reply"}
+                                  isReplyMessage={
+                                    message.type == "message_reply"
+                                  }
                                 />
                               )}
                             </MessageWrapper>
                           </div>
                         </div>
                       </div>
-                    )
+                    );
                   })}
                   <div ref={lastMessageRef} />
                 </>
@@ -2305,24 +2578,67 @@ const ChatView = ({
             </ScrollArea>
 
             {/* Input Section */}
-            <div className="flex-shrink-0 mb-3 bg-gray-50">
+            <div className="flex-shrink-0 mb-3 relative">
               {/* Typing Users */}
               {typingUsers.size > 0 && (
-                <div className="flex items-center gap-2 text-sm text-gray-500 p-2">
-                  <div className="flex gap-1">
-                    {Array.from(typingUsers.values()).map((user, index) => (
-                      <span key={index}>
-                        {user.agent_name}
-                        {index < typingUsers.size - 1 ? "," : ""}
-                      </span>
-                    ))}
+                <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-5 py-2 rounded-xl border border-white/10 shadow-sm animate-fadeIn">
+                  {/* List of users typing */}
+                  <div className="flex items-center gap-x-2 flex-wrap text-sm">
+                    {Array.from(typingUsers.values()).map((user, index) => {
+                      const initials = user.agent_name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase();
+
+                      const bgColor = `hsl(${
+                        (user.agent_name.length * 37) % 360
+                      }, 70%, 55%)`; // unique color
+
+                      return (
+                        <span
+                          key={index}
+                          className="inline-flex items-center gap-2"
+                        >
+                          {/* Avatar with initials */}
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                            style={{ backgroundColor: bgColor }}
+                          >
+                            {initials}
+                          </div>
+                          {/* Name */}
+                          <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                            {user.agent_name}
+                          </span>
+
+                          {index < typingUsers.size - 1 && (
+                            <span className="text-gray-500 text-base">,</span>
+                          )}
+                        </span>
+                      );
+                    })}
+                    <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent ml-1">
+                      {typingUsers.size === 1 ? "is typing" : "are typing"}
+                    </span>
                   </div>
-                  <span>{typingUsers.size === 1 ? "is" : "are"} typing</span>
-                  <div className="flex gap-1">
-                    <span className="animate-bounce">.</span>
-                    <span className="animate-bounce delay-100">.</span>
-                    <span className="animate-bounce delay-200">.</span>
+
+                  {/* Animated dots */}
+                  <div className="flex items-center gap-1 ml-1">
+                    <span className="w-2 h-2 bg-gradient-to-br from-pink-400 to-purple-400 rounded-full animate-bounce delay-0"></span>
+                    <span className="w-2 h-2 bg-gradient-to-br from-purple-400 to-cyan-400 rounded-full animate-bounce delay-150"></span>
+                    <span className="w-2 h-2 bg-gradient-to-br from-cyan-400 to-pink-400 rounded-full animate-bounce delay-300"></span>
                   </div>
+
+                  <style>{`
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.25s ease-out forwards;
+      }
+    `}</style>
                 </div>
               )}
 
@@ -2346,143 +2662,275 @@ const ChatView = ({
                   </button>
                 </div>
               ) : (
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-3 hover:border-gray-300/60 flex flex-col shadow-xl mx-3">
-                  {/* Mode Toggle */}
-                  <div className="mb-5 w-40 bg-gray-100/80 rounded-2xl p-0.5 flex items-center">
-                    <button
-                      className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${mode === "reply"
-                          ? "bg-blue-600 text-white shadow-md"
-                          : "text-gray-600 hover:text-blue-600"
-                        }`}
-                      onClick={() => setMode("reply")}
-                    >
-                      Reply
-                    </button>
-                    <button
-                      className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${mode === "private"
-                          ? "bg-purple-600 text-white shadow-md"
-                          : "text-gray-600 hover:text-purple-600"
-                        }`}
-                      onClick={() => setMode("private")}
-                    >
-                      Private
-                    </button>
-                  </div>
-
-                  {/* Textarea */}
-                  <div className="flex-1 mb-1.5">
-                    <textarea
-                      ref={textareaRef}
-                      value={message}
-                      onChange={handleInputChange}
-                      onKeyDown={handleKeyDown}
-                      placeholder={
-                        mode === "reply"
-                          ? sharedProduct
-                            ? "Add a message about this product..."
-                            : "Type your message..."
-                          : "Add a private note..."
-                      }
-                      rows={2}
-                      className="w-full bg-transparent border-none outline-none focus:outline-none resize-none max-h-32 overflow-y-auto text-gray-800 placeholder-gray-500 text-sm leading-relaxed p-0"
-                    />
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className="flex justify-between items-center">
-                    <div className="flex gap-2">
-                      {/* Emoji picker */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button className="p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors">
-                            <Smile className="h-4 w-4 text-gray-600" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent
-                          className="w-80 p-0 rounded-2xl shadow-xl border-0 bg-white/95 backdrop-blur-xl"
-                          side="top"
-                          align="start"
-                        >
-                          {/* Emoji picker content */}
-                        </PopoverContent>
-                      </Popover>
-
-                      {/* File attachment */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            className="p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors"
-                            onClick={() => setIsFileModalOpen(true)}
-                          >
-                            <Paperclip className="h-4 w-4 text-gray-600" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl">
-                          Attach media
-                        </TooltipContent>
-                      </Tooltip>
-
-                      {/* Voice recording */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            className={`p-2.5 rounded-xl transition-colors ${isRecording
-                                ? "bg-red-100/80 hover:bg-red-200/80 text-red-600"
-                                : "bg-gray-100/80 hover:bg-gray-200/80 text-gray-600"
-                              }`}
-                            onClick={
-                              isRecording ? stopRecording : startRecording
-                            }
-                          >
-                            <Mic className="h-4 w-4" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl">
-                          {isRecording ? "Stop recording" : "Record message"}
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-
-                    {/* Character count and send button */}
-                    <div className="flex items-center gap-4">
-                      <div className="text-xs text-gray-500 font-medium">
-                        {message.length}/1000
+                <div className="relative">
+                  {/* Canned Responses Dropdown */}
+                  {showCannedResponses && filteredResponses.length > 0 && (
+                    <div className="absolute bottom-full left-3 right-3 mb-2 bg-white rounded-xl border border-gray-200 shadow-2xl max-h-[280px] overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                      {/* Header */}
+                      <div className="px-4 py-2 border-b border-gray-100 bg-gray-50 flex items-center justify-between sticky top-0">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                          <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            Canned Responses
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {filteredResponses.length} found
+                        </span>
                       </div>
 
+                      {/* Scrollable List - Show max 3 items */}
+                      <div className="overflow-y-auto max-h-[220px] custom-scroll">
+                        {filteredResponses.map((response, index) => (
+                          <button
+                            key={response._id}
+                            onClick={() => handleSelectCannedResponse(response)}
+                            className={`w-full text-left px-4 py-3 border-b border-gray-50 last:border-0 transition-all hover:bg-blue-50 group ${
+                              index === selectedCannedIndex
+                                ? "bg-blue-50 border-l-4 border-l-blue-500"
+                                : ""
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span
+                                    className={`text-sm font-mono font-semibold px-2 py-0.5 rounded ${
+                                      index === selectedCannedIndex
+                                        ? "bg-blue-100 text-blue-700"
+                                        : "bg-gray-100 text-gray-700 group-hover:bg-blue-100 group-hover:text-blue-700"
+                                    }`}
+                                  >
+                                    {response.shortcut}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                                  {response.response}
+                                </p>
+                              </div>
+                              {index === selectedCannedIndex && (
+                                <div className="flex-shrink-0 text-blue-600">
+                                  <svg
+                                    className="w-5 h-5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M9 5l7 7-7 7"
+                                    />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Footer with keyboard hints */}
+                      <div className="px-4 py-2 border-t border-gray-100 bg-gray-50 flex items-center gap-4 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-xs">
+                            ↑↓
+                          </kbd>
+                          Navigate
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-xs">
+                            ↵
+                          </kbd>
+                          Select
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-xs">
+                            Esc
+                          </kbd>
+                          Close
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* No results message */}
+                  {showCannedResponses && filteredResponses.length === 0 && (
+                    <div className="absolute bottom-full left-3 right-3 mb-2 bg-white rounded-xl border border-gray-200 shadow-xl p-4 z-50 animate-in fade-in duration-200">
+                      <div className="text-center">
+                        <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-gray-100 flex items-center justify-center">
+                          <svg
+                            className="w-5 h-5 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                          </svg>
+                        </div>
+                        <p className="text-sm font-medium text-gray-700 mb-1">
+                          No matching shortcuts
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Try a different keyword or press ESC
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-3 hover:border-gray-300/60 flex flex-col shadow-xl mx-3">
+                    {/* Mode Toggle */}
+                    <div className="mb-5 w-40 bg-gray-100/80 rounded-2xl p-0.5 flex items-center">
                       <button
-                        className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${
-                          message.trim() || audioURL || sharedProduct
-                            ? mode === "reply"
-                              ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
-                              : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
-                            : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
+                        className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${
+                          mode === "reply"
+                            ? "bg-blue-600 text-white shadow-md"
+                            : "text-gray-600 hover:text-blue-600"
                         }`}
-                        onClick={() => {
-                          if (sharedProduct) {
-                            handleShareProduct(message, sharedProduct);
-                          } else if (audioURL) {
-                            handleSendAudio();
-                          } else {
-                            sendMessage();
-                          }
-                        }}
-                        // ONLY disable if input is empty. 
-                        // We removed 'isSending' so you can spam click like WhatsApp.
-                        disabled={!message.trim() && !audioURL && !sharedProduct}
+                        onClick={() => setMode("reply")}
                       >
-                        {/* Only show spinner for Audio/Product which might be slower, 
-                            but for Text, we show the Send Icon always */}
-                        {isSending && (audioURL || sharedProduct) ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <>
-                            <Send className="h-4 w-4" />
-                            <span className="ml-2">
-                              {mode === "reply" ? "Send" : "Add Note"}
-                            </span>
-                          </>
-                        )}
+                        Reply
                       </button>
+                      <button
+                        className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${
+                          mode === "private"
+                            ? "bg-purple-600 text-white shadow-md"
+                            : "text-gray-600 hover:text-purple-600"
+                        }`}
+                        onClick={() => setMode("private")}
+                      >
+                        Private
+                      </button>
+                    </div>
+
+                    {/* Textarea */}
+                    <div className="flex-1 mb-1.5">
+                      <textarea
+                        ref={textareaRef}
+                        value={message}
+                        onChange={handleInputChange}
+                        onKeyDown={handleKeyDown}
+                        placeholder={
+                          mode === "reply"
+                            ? sharedProduct
+                              ? "Add a message about this product..."
+                              : "Type your message... (Use / for quick replies)"
+                            : "Add a private note..."
+                        }
+                        rows={2}
+                        style={{
+                          minHeight: "40px", // 2 lines
+                          maxHeight: "120px", // 5 lines
+                          lineHeight: "20px",
+                        }}
+                        className="w-full bg-transparent border-none outline-none focus:outline-none resize-none overflow-y-hidden text-gray-800 placeholder-gray-500 text-sm p-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent transition-all duration-150"
+                      />
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-2">
+                        {/* Emoji picker */}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors">
+                              <Smile className="h-4 w-4 text-gray-600" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            className="w-80 p-0 rounded-2xl shadow-xl border-0 bg-white/95 backdrop-blur-xl"
+                            side="top"
+                            align="start"
+                          >
+                            {/* Emoji picker content */}
+                          </PopoverContent>
+                        </Popover>
+
+                        {/* File attachment */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              className="p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors"
+                              onClick={() => setIsFileModalOpen(true)}
+                            >
+                              <Paperclip className="h-4 w-4 text-gray-600" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl">
+                            Attach media
+                          </TooltipContent>
+                        </Tooltip>
+
+                        {/* Voice recording */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              className={`p-2.5 rounded-xl transition-colors ${
+                                isRecording
+                                  ? "bg-red-100/80 hover:bg-red-200/80 text-red-600"
+                                  : "bg-gray-100/80 hover:bg-gray-200/80 text-gray-600"
+                              }`}
+                              onClick={
+                                isRecording ? stopRecording : startRecording
+                              }
+                            >
+                              <Mic className="h-4 w-4" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl">
+                            {isRecording ? "Stop recording" : "Record message"}
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+
+                      {/* Character count and send button */}
+                      <div className="flex items-center gap-4">
+                        <div className="text-xs text-gray-500 font-medium">
+                          {message.length}/1000
+                        </div>
+
+                        <button
+                          className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${
+                            message.trim() || audioURL || sharedProduct
+                              ? mode === "reply"
+                                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
+                                : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
+                              : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
+                          }`}
+                          onClick={() => {
+                            if (sharedProduct) {
+                              handleShareProduct(message, sharedProduct);
+                            } else if (audioURL) {
+                              handleSendAudio();
+                            } else {
+                              sendMessage();
+                            }
+                          }}
+                          // ONLY disable if input is empty.
+                          // We removed 'isSending' so you can spam click like WhatsApp.
+                          disabled={
+                            !message.trim() && !audioURL && !sharedProduct
+                          }
+                        >
+                          {/* Only show spinner for Audio/Product which might be slower, 
+                            but for Text, we show the Send Icon always */}
+                          {isSending && (audioURL || sharedProduct) ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Send className="h-4 w-4" />
+                              <span className="ml-2">
+                                {mode === "reply" ? "Send" : "Add Note"}
+                              </span>
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
