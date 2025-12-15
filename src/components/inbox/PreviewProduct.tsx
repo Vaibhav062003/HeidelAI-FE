@@ -63,7 +63,7 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
               {/* LEFT IMAGE */}
               <div className="w-full lg:w-1/2">
                 <div
-                  className="w-full h-56 sm:h-64 md:h-72 lg:h-80 xl:h-96bg-gray-100 border rounded-lg overflow-hidden flex items-center justify-center">
+                  className="w-full h-56 sm:h-64 md:h-72 lg:h-80 xl:h-96 bg-gray-100 border rounded-lg overflow-hidden flex items-center justify-center">
                   <img
                     src={product.image_url}
                     alt={product.product_name}
