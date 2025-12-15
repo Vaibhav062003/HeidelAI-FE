@@ -96,8 +96,6 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
     setError(null);
 
     try {
-      // For update, you might need a PUT/PATCH endpoint
-      // Since you only have POST, we'll use POST and the API should handle it
       const payload = {
         shortcut: newShortcode.trim(),
         response: newMessage.trim(),

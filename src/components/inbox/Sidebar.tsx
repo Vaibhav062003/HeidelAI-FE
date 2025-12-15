@@ -49,7 +49,7 @@ import { Product } from "../types/product";
 import AssignDropdown from "./AssignToAgent";
 import api from "@/lib/session_api";
 import AnalyticsSection from "./AnalyticsSection";
-import { Contact, ApiContact } from "../types/contacts";
+import { ApiContact } from "../types/contacts";
 
 interface SidebarProps {
   selectedConversationId: string;
@@ -646,10 +646,6 @@ const Sidebar = ({
 
   const handleShowCustomerInfo = useCallback(
     () => setShowCustomerInfo(true),
-    []
-  );
-  const handleCloseCustomerInfo = useCallback(
-    () => setShowCustomerInfo(false),
     []
   );
   const handleShowTemplateBuilder = useCallback(
