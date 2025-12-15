@@ -668,6 +668,7 @@ export default function DashboardPage() {
                 <section className="flex-1 min-w-0 h-full border-r border-gray-200 min-h-0">
                   <ChatView
                     selectedConversationId={selectedConversationId}
+                    conversation={conversation}
                     sharedProduct={sharedProduct}
                     onClearSharedProduct={handleClearSharedProduct}
                     isRightSidebarVisible={isRightSidebarVisible}
