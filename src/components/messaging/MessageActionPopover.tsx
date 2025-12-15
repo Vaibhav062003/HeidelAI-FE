@@ -7,7 +7,7 @@ import { createPortal } from "react-dom";
 interface MessageActionsPopoverProps {
   onReact: (emoji: string) => void;
   onReply: () => void;
-  onClose: () => void; 
+  onClose: () => void;
   isAgent: boolean;
   anchorRef: React.RefObject<HTMLDivElement | null>;
 }
@@ -24,36 +24,36 @@ export const MessageActionsPopover: React.FC<MessageActionsPopoverProps> = ({
 }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [hoveredEmoji, setHoveredEmoji] = useState<string | null>(null);
-  
-  const [pos, setPos] = useState({top: 20, left: 50});
+
+  const [pos, setPos] = useState({ top: 20, left: 50 });
   const popoverRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
 
 
-   useEffect(() => {
-  const anchor = anchorRef?.current;
-  const pop = popoverRef?.current;
-  if (!anchor || !pop) return;
+  useEffect(() => {
+    const anchor = anchorRef?.current;
+    const pop = popoverRef?.current;
+    if (!anchor || !pop) return;
 
-  const rect = anchor.getBoundingClientRect();
+    const rect = anchor.getBoundingClientRect();
 
-  const top = rect.top - 25; 
-  const left = isAgent ? rect.right - pop.offsetWidth : rect.left;
+    const top = rect.top - 25;
+    const left = isAgent ? rect.right - pop.offsetWidth : rect.left;
 
 
-  setPos({ top, left });
-  setIsReady(true); // <-- show popover only when positioned
-}, [anchorRef, isAgent]);
+    setPos({ top, left });
+    setIsReady(true); // <-- show popover only when positioned
+  }, [anchorRef, isAgent]);
 
 
   const handleReact = (emoji: string) => {
     onReact(emoji);
-    onClose(); 
+    onClose();
   };
 
   const handleReply = () => {
     onReply();
-    onClose(); 
+    onClose();
   };
 
   const handleEmojiMouseEnter = (emoji: string, e: React.MouseEvent<HTMLButtonElement>) => {
@@ -72,15 +72,15 @@ export const MessageActionsPopover: React.FC<MessageActionsPopoverProps> = ({
   const PopoverUI = (
     <div
       ref={popoverRef}
-       style={{
-      position: "fixed",
-      top: pos.top,
-      left: pos.left,
-      opacity: isReady ? 1 : 0,        // hide until position calculated
-      pointerEvents: isReady ? "auto" : "none",
-      transition: "opacity 120ms ease", // fade only, no sliding
-      zIndex: 9999,
-    }}
+      style={{
+        position: "fixed",
+        top: pos.top,
+        left: pos.left,
+        opacity: isReady ? 1 : 0,        // hide until position calculated
+        pointerEvents: isReady ? "auto" : "none",
+        transition: "opacity 120ms ease", // fade only, no sliding
+        zIndex: 9999,
+      }}
       className={`animate-in fade-in duration-200 flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-300 rounded-lg px-1 py-0.5 shadow-md z-50`}
     >
       {!showPicker ? (
@@ -91,11 +91,10 @@ export const MessageActionsPopover: React.FC<MessageActionsPopoverProps> = ({
               onClick={() => handleReact(emoji)}
               onMouseEnter={(e) => handleEmojiMouseEnter(emoji, e)}
               onMouseLeave={handleEmojiMouseLeave}
-              className={`text-xl hover:scale-110 transition-all duration-180 ${
-                hoveredEmoji && hoveredEmoji !== emoji 
-                  ? 'opacity-100 brightness-75' 
+              className={`text-xl hover:scale-110 transition-all duration-180 ${hoveredEmoji && hoveredEmoji !== emoji
+                  ? 'opacity-100 brightness-75'
                   : 'opacity-100'
-              }`}
+                }`}
             >
               {emoji}
             </button>
@@ -135,7 +134,7 @@ export const MessageActionsPopover: React.FC<MessageActionsPopoverProps> = ({
         </div>
       )}
     </div>
-    );
+  );
 
-   return createPortal(PopoverUI, document.body)
+  return createPortal(PopoverUI, document.body)
 };
