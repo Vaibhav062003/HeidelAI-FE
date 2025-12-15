@@ -270,7 +270,7 @@ export const ContactListHeader = ({
           ${
             selectedTags.length > 0
               ? "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
-              : "bg-gray-100 text-gray-900 hover:bg-gray-100"
+              : "bg-gray-10 text-gray-900 hover:bg-gray-100"
           }
           font-sans text-xs font-medium
           rounded-2xl
