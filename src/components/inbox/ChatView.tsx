@@ -684,6 +684,7 @@ const ChatView = ({
   const [globalMuted, setGlobalMuted] = useState(true);
   const [activeMediaId, setActiveMediaId] = useState<string | null>(null);
   const [activeMediaType, setActiveMediaType] = useState<"reel" | "story" | "video" | null>(null);
+  const [fullscreenMediaId, setFullscreenMediaId] = useState<string | null>(null);
   const { sendWsMessage } = useMainWebSocket();
 
   const handlePlay = (id: string, type: "reel" | "story" | "video") => {
@@ -2073,7 +2074,12 @@ const ChatView = ({
                             className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === "customer" ? "items-start" : "items-end"
                               }`}
                           >
-                            <MessageWrapper message={message} index={index} allMessages={messages}>
+                            <MessageWrapper 
+                              message={message} 
+                              index={index} 
+                              allMessages={messages}
+                              forceHide={fullscreenMediaId === message.id}
+                            >
                               {/* IG Media Messages */}
                               {message.payload && (
                                 <LazyMediaLoader key={index} index={index}>
@@ -2173,6 +2179,13 @@ const ChatView = ({
                                       timestamp={formatMessageTime(
                                         message.timestamp
                                       )}
+                                      onFullscreenToggle={(isFullscreen) => {
+                                        if (isFullscreen) {
+                                          setFullscreenMediaId(message.id);
+                                        } else {
+                                          setFullscreenMediaId(null);
+                                        }
+                                      }}
                                     />
                                   )}
                                 </LazyMediaLoader>

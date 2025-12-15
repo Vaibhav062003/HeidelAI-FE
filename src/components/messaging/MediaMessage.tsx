@@ -12,6 +12,7 @@ interface MediaMessageProps {
   isMuted?: boolean;
   id: string;
   timestamp: string;
+  onFullscreenToggle?: (isFullscreen: boolean) => void;
 }
 
 export default function MediaMessage({
@@ -25,6 +26,7 @@ export default function MediaMessage({
   isMuted = true,
   id,
   timestamp,
+  onFullscreenToggle,
 }: MediaMessageProps) {
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const [mediaHeight, setMediaHeight] = useState<number | null>(null);
@@ -175,6 +177,10 @@ export default function MediaMessage({
             className="object-cover"
             sizes="(max-width: 350px) 100vw"
             onError={() => setIsUnavailable(true)}
+            onClick={() => {
+              setIsFullscreen(true);
+              onFullscreenToggle?.(true);
+            }}
           />
         ) : (
           <>
@@ -253,6 +259,48 @@ export default function MediaMessage({
           {timestamp}
         </p>
       </div>
+
+      {isFullscreen && type === "image" && (
+        <div
+          className="fixed inset-0 z-[99999999999] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => {
+            setIsFullscreen(false);
+            onFullscreenToggle?.(false);
+          }}
+        >
+          <div className="relative w-full h-full flex items-center justify-center p-4">
+            <Image
+              fill
+              src={url}
+              alt="Full screen media"
+              className=" p-10 max-w-full max-h-full object-contain"
+            />
+            <button
+              className="absolute top-4 right-4 text-white bg-white/10 hover:bg-white/20 rounded-full p-2 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsFullscreen(false);
+                onFullscreenToggle?.(false);
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
