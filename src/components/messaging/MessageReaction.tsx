@@ -42,7 +42,7 @@ const ReactionPopover = memo(({
       top: position.top + 30,
       left: Math.max(
         10,
-        Math.min(position.left - 100, window.innerWidth - 320) // 340 = popover width + margin
+        Math.min(position.left - 100, window.innerWidth - 320) // 320 = popover width + margin
       ),
     }}
       onMouseEnter={onMouseEnter}
