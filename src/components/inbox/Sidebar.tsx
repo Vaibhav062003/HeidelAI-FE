@@ -49,6 +49,7 @@ import { Product } from "../types/product";
 import AssignDropdown from "./AssignToAgent";
 import api from "@/lib/session_api";
 import AnalyticsSection from "./AnalyticsSection";
+import { Contact, ApiContact } from "../types/contacts";
 
 interface SidebarProps {
   selectedConversationId: string;
@@ -486,7 +487,8 @@ const Sidebar = ({
       if (!response.data || !Array.isArray(response.data.contacts)) return;
 
       const currentContact = response.data.contacts.find(
-        (contact: any) => contact.conversation_id === selectedConversationId
+        (contact: ApiContact) =>
+          contact.conversation_id === selectedConversationId
       );
 
       if (currentContact) {
