@@ -256,7 +256,9 @@ const ProductsTab = ({
     };
   }, [selectedConversationId]);
 
-   const prevModalOpenRef = useRef(isModalOpen);
+  // If we need to refresh products after the modal closes (e.g., after adding/editing),
+  // use a ref to track previous isModalOpen value and only fetch when it transitions from true to false.
+  const prevModalOpenRef = useRef(isModalOpen);
   useEffect(() => {
     if (
       prevModalOpenRef.current === true &&
@@ -542,7 +544,7 @@ const ProductsTab = ({
   }}
 >
   <DialogContent
-    className="w-[95%] max-w-[300px] sm:max-w-[400px]  md:max-w-[500px] lg:max-w-[720px] xl:max-w-[1000px]  2xl:max-w-[1150px] rounded- max-h-[88vh]  overflow-y-auto   min-h-[350px] p-4 sm:p-6 hide-scrollbar">
+    className="w-[95%] max-w-[300px] sm:max-w-[400px]  md:max-w-[500px] lg:max-w-[720px] xl:max-w-[1000px]  2xl:max-w-[1150px] rounded-xl max-h-[88vh] overflow-y-auto min-h-[350px] p-4 sm:p-6 hide-scrollbar">
     {/* Header */}
     <DialogHeader className="pb-3 border-b">
       <DialogTitle className="text-xl sm:text-2xl font-semibold text-gray-900">
