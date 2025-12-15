@@ -10,7 +10,7 @@ import { Spinner } from "../Contacts/Spinner";
 import TagSidebar from "./TagSidebar";
 import api from "@/lib/session_api";
 import { ApiContact, Contact } from "../types/contacts";
-import { TagIcon } from "lucide-react";
+import { TagIcon, X } from "lucide-react";
 
 type Tag = string;
 
@@ -55,7 +55,10 @@ const ContactsDashboard = () => {
   const [importingCount, setImportingCount] = useState(0);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  
+  const [sidebarSelectedTag, setSidebarSelectedTag] = useState<string | null>(null); 
+  const [filterSelectedTags, setFilterSelectedTags] = useState<string[]>([]); 
+  
   const [tagsLoading, setTagsLoading] = useState(true);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -248,29 +251,38 @@ const ContactsDashboard = () => {
 
       setTags((prev) => prev.filter((tag) => tag !== tagName));
 
-      // Reset selectedTag if the deleted tag was selected
-      if (selectedTag === tagName) {
-        setSelectedTag(null);
+      // Remove from both filter states if present
+      if (sidebarSelectedTag === tagName) {
+        setSidebarSelectedTag(null);
       }
+      setFilterSelectedTags((prev) => prev.filter((tag) => tag !== tagName));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete tag");
     }
   };
 
-  //  filtering to include selectedTag from sidebar
   const filteredContacts = useMemo(() => {
     let filtered = contacts;
 
-    // Filter by selected tag from TagSidebar
-    if (selectedTag) {
-      filtered = filtered.filter(
-        (contact) =>
-          contact.tags?.includes(selectedTag) ||
-          contact.categories?.includes(selectedTag)
+    // Sidebar tag (single selection, replaces filter button selection)
+    if (sidebarSelectedTag) {
+      filtered = filtered.filter((contact) =>
+        contact.tags?.includes(sidebarSelectedTag) ||
+        contact.categories?.includes(sidebarSelectedTag)
       );
     }
+    // Filter button tags (multiple selection, only if sidebar is not active)
+    else if (filterSelectedTags.length > 0) {
+      filtered = filtered.filter((contact) => {
+        // Contact must have at least one of the selected tags
+        return filterSelectedTags.some(
+          (tag) =>
+            contact.tags?.includes(tag) || contact.categories?.includes(tag)
+        );
+      });
+    }
 
-    // Filter by search query
+    // Filter by search query 
     if (searchQuery) {
       filtered = filtered.filter((contact) => {
         const searchText = `${contact.firstName} ${contact.lastName} ${
@@ -281,7 +293,7 @@ const ContactsDashboard = () => {
     }
 
     return filtered;
-  }, [contacts, searchQuery, selectedTag]);
+  }, [contacts, searchQuery, sidebarSelectedTag, filterSelectedTags]);
 
   const paginatedContacts = filteredContacts.slice(
     (currentPage - 1) * itemsPerPage,
@@ -293,10 +305,10 @@ const ContactsDashboard = () => {
     setCurrentPage(1);
   }, []);
 
-  //  Reset to page 1 when filter changes
+  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedTag, searchQuery]);
+  }, [sidebarSelectedTag, filterSelectedTags, searchQuery]);
 
   return (
     <div className="h-full w-full flex bg-white overflow-hidden">
@@ -307,8 +319,15 @@ const ContactsDashboard = () => {
           tagsLoading={tagsLoading}
           onCreateTag={handleCreateTag}
           onDeleteTag={handleDeleteTag}
-          onTagSelect={setSelectedTag}
-          selectedTag={selectedTag}
+          onTagSelect={(tag) => {
+            if (sidebarSelectedTag === tag) {
+              setSidebarSelectedTag(null); 
+            } else {
+              setSidebarSelectedTag(tag);
+              setFilterSelectedTags([]); 
+            }
+          }}
+          selectedTag={sidebarSelectedTag}
           onTagModalOpen={() => setIsTagModalOpen(true)}
           error={error}
         />
@@ -325,33 +344,74 @@ const ContactsDashboard = () => {
             onImportCSV={handleFileUpload}
             onMessageSend={() => {}}
             tags={tags}
-            selectedTags={selectedTag ? [selectedTag] : []}
+            selectedTags={filterSelectedTags} 
             onTagsChange={(tags) => {
-              setSelectedTag(tags.length > 0 ? tags[0] : null);
+              setFilterSelectedTags(tags);
+              setSidebarSelectedTag(null); 
             }}
           />
         </div>
 
-        {/* Filter Status Banner */}
-        {selectedTag && (
+        {/* Show active filter status */}
+        {(sidebarSelectedTag || filterSelectedTags.length > 0) && (
           <div className="flex-shrink-0 bg-blue-50 border-b border-blue-100 px-4 py-2">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <TagIcon className="w-4 h-4 text-blue-600" />
-                <span className="text-sm text-blue-900">
-                  Filtered by tag:{" "}
-                  <span className="font-semibold">{selectedTag}</span>
-                </span>
+                
+                {/* Sidebar Tag Display */}
+                {sidebarSelectedTag && (
+                  <>
+                    <span className="text-sm text-blue-900">
+                      Filtered by sidebar tag:
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                      {sidebarSelectedTag}
+                      <button
+                        onClick={() => setSidebarSelectedTag(null)}
+                        className="hover:text-blue-900"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  </>
+                )}
+
+                {/* Filter Button Tags Display */}
+                {!sidebarSelectedTag && filterSelectedTags.length > 0 && (
+                  <>
+                    <span className="text-sm text-blue-900">
+                      Filtered by {filterSelectedTags.length} tag{filterSelectedTags.length !== 1 ? 's' : ''}:
+                    </span>
+                    {filterSelectedTags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold"
+                      >
+                        {tag}
+                        <button
+                          onClick={() => setFilterSelectedTags(filterSelectedTags.filter((t) => t !== tag))}
+                          className="hover:text-blue-900"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </>
+                )}
+
                 <span className="text-xs text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
-                  {filteredContacts.length} contact
-                  {filteredContacts.length !== 1 ? "s" : ""}
+                  {filteredContacts.length} contact{filteredContacts.length !== 1 ? 's' : ''}
                 </span>
               </div>
               <button
-                onClick={() => setSelectedTag(null)}
+                onClick={() => {
+                  setSidebarSelectedTag(null);
+                  setFilterSelectedTags([]);
+                }}
                 className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
               >
-                Clear filter
+                Clear all
               </button>
             </div>
           </div>
@@ -367,16 +427,19 @@ const ContactsDashboard = () => {
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <p className="text-gray-500 text-sm mb-2">
-                  {selectedTag
-                    ? `No contacts with tag "${selectedTag}" 🔍`
+                  {sidebarSelectedTag
+                    ? `No contacts with tag "${sidebarSelectedTag}" 🔍`
+                    : filterSelectedTags.length > 0
+                    ? `No contacts with selected tags 🔍`
                     : searchQuery
                     ? "No matching contacts found 🔍"
                     : "No contacts found 🔍"}
                 </p>
-                {(selectedTag || searchQuery) && (
+                {(sidebarSelectedTag || filterSelectedTags.length > 0 || searchQuery) && (
                   <button
                     onClick={() => {
-                      setSelectedTag(null);
+                      setSidebarSelectedTag(null);
+                      setFilterSelectedTags([]);
                       setSearchQuery("");
                     }}
                     className="text-blue-600 hover:text-blue-700 text-sm font-medium hover:underline"
