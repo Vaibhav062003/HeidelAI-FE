@@ -289,12 +289,12 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
                   value={newShortcode}
                   onChange={(e) => setNewShortcode(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder="e.g., /shipping-info or /greeting"
+                  placeholder="e.g., shipping-info or greeting (no / needed)"
                   disabled={isSaving}
                   maxLength={50}
                 />
                 <p className="text-xs text-gray-500 mt-1.5">
-                  Use &apos;/&apos; followed by a unique keyword (e.g., /greeting, /policy)
+                  Type a unique keyword (e.g., greeting, policy). The <b>/</b> will be added automatically.
                 </p>
               </div>
 
