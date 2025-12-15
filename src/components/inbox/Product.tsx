@@ -402,7 +402,7 @@ const ProductsTab = ({
               <TooltipContent>Add new product</TooltipContent>
             </Tooltip>
             {showOptions && (
-              <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-xl border border-gray-00 z-50">
+              <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-xl border border-gray-200 z-50">
                 <div className="py-1">
                   <button
                     onClick={() => handleOptionSelect("pinecone")}
