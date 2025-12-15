@@ -10,9 +10,7 @@ export default function AuthLayout({
 }) {
   return (
     <AuthProvider>
-    <RoleProvider>
       {children}
-    </RoleProvider>
     </AuthProvider>
   )
 }
