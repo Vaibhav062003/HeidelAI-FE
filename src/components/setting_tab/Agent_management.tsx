@@ -43,7 +43,7 @@ export const TeamManagement = () => {
   });
   const [activeTab, setActiveTab] = useState<'members' | 'invitations'>('members');
   // const [isAdmin, setIsAdmin] = useState(false);
-  const {isAdmin} =useRole()
+  const { isAdmin } = useRole();
   const [showTooltip, setShowTooltip] = useState(false);
   
   React.useEffect(() => {
