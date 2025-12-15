@@ -82,7 +82,8 @@ export function HoverBorderGradientDemo() {
         })
       });
       const data = await response.json();
-      if (data.status == 'rejected') {
+  
+      if (data.data.status == 'rejected') {
         sonnerToast.error('Your previous request was rejected. Please contact support for more information.');
         setIsOpen(true);
         setIsSubmitting(false);
@@ -210,7 +211,7 @@ export function HoverBorderGradientDemo() {
             >
               {/* <Drawer.Trigger className="bg-black/50 backdrop-blur-sm hover:cursor-pointer border border-white/[0.2] py-2 px-4 rounded-full text-white flex items-center space-x-2"> */}
 
-              Request Demo
+              Join Beta
 
             </Button>
           </Drawer.Trigger>
