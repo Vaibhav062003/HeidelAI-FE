@@ -134,7 +134,7 @@ const ConversationList = ({
 }: ConversationListProps) => {
   const [activeTab, setActiveTab] = useState<TabValue>('all');
   const statusForTab: TabValue | undefined = activeTab === 'all' ? undefined : activeTab;
-  const { conversations, loading, error } = useConversations(statusForTab);
+  const { conversations, loading, error, markAsRead } = useConversations(statusForTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({
     platform: [],
@@ -219,8 +219,9 @@ const ConversationList = ({
   }, []);
 
   const handleConversationSelect = useCallback((id: string) => {
+    markAsRead(id);
     onConversationSelect?.(id);
-  }, [onConversationSelect]);
+  }, [onConversationSelect, markAsRead]);
 
   const showSkeleton = loading && conversations.length === 0;
 

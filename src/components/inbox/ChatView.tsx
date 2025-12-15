@@ -177,6 +177,7 @@ interface MessageReactions {
 
 interface ChatViewProps {
   selectedConversationId: string;
+  conversation?: Conversation | null;
   sharedProduct: Product | null;
   onClearSharedProduct: () => void;
   isRightSidebarVisible?: boolean;
@@ -237,18 +238,15 @@ const MessageSkeleton = () => (
   <div className="flex flex-col gap-4 animate-pulse">
     {/* Left side message */}
     <div className="flex items-start gap-2 max-w-[50%]">
-      <div className="w-8 h-8 bg-gray-200 rounded-full" />
       <div className="flex flex-col gap-2">
-        <div className="h-4 w-24 bg-gray-200 rounded-full" />
-        <div className="h-10 w-48 bg-gray-200 rounded-lg" />
+        <div className="h-14 w-48 bg-gray-200 rounded-3xl rounded-bl-lg" />
       </div>
     </div>
 
     {/* Right side message */}
     <div className="flex items-start gap-2 max-w-[50%] self-end">
       <div className="flex flex-col gap-2">
-        <div className="h-4 w-24 bg-gray-200 rounded-full self-end" />
-        <div className="h-10 w-56 bg-gray-200 rounded-lg" />
+        <div className="h-14 w-56 bg-gray-200 rounded-3xl rounded-br-lg" />
       </div>
     </div>
   </div>
@@ -691,6 +689,7 @@ MessageItem.displayName = "MessageItem";
 
 const ChatView = ({
   selectedConversationId,
+  conversation: initialConversation,
   sharedProduct,
   onClearSharedProduct,
   isRightSidebarVisible,
@@ -702,7 +701,7 @@ const ChatView = ({
   const [isAIEnabled, setIsAIEnabled] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -728,7 +727,7 @@ const ChatView = ({
     "open" | "closed" | "follow-up"
   >("open");
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [conversation, setConversation] = useState<Conversation | null>(initialConversation || null);
   const [fileCaption, setFileCaption] = useState("");
   const [statusLoading, setStatusLoading] = useState(false);
 
@@ -758,6 +757,12 @@ const ChatView = ({
   >(null);
   const [fullscreenMediaId, setFullscreenMediaId] = useState<string | null>(null);
   const { sendWsMessage } = useMainWebSocket();
+
+  useEffect(() => {
+    if (initialConversation) {
+      setConversation(initialConversation);
+    }
+  }, [initialConversation]);
 
   const handlePlay = (id: string, type: "reel" | "story" | "video") => {
     setActiveMediaId(id);
@@ -1580,7 +1585,6 @@ const ChatView = ({
 
   const fetchConversation = async () => {
     try {
-      setLoading(true);
       const response = await api.get(
         `/api/conversations/${selectedConversationId}`
       );
@@ -1593,8 +1597,6 @@ const ChatView = ({
       }
     } catch {
       toast.error("Failed to load conversation");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -1639,6 +1641,9 @@ const ChatView = ({
   const fetchMessages = async () => {
     if (!isLoaded || !user || !selectedConversationId) return;
 
+    setMessagesLoading(true);
+    let hasCached = false;
+
     // 1. Load from Cache immediately
     try {
       const cachedMessages = await getData<Message[]>(
@@ -1651,8 +1656,10 @@ const ChatView = ({
         cachedMessages.length > 0
       ) {
         setMessages(cachedMessages);
+        hasCached = true;
+        setMessagesLoading(false);
         // Optional: Scroll to bottom immediately upon loading cache
-        // setTimeout(() => lastMessageRef.current?.scrollIntoView(), 100);
+        setTimeout(() => lastMessageRef.current?.scrollIntoView(), 100);
       }
     } catch (err) {
       console.warn("Error loading cached messages:", err);
@@ -1672,6 +1679,8 @@ const ChatView = ({
       await persistMessages(newMessages);
     } catch (error) {
       toast.error("Failed to load messages", { description: error as string });
+    } finally {
+      setMessagesLoading(false);
     }
   };
 
@@ -1687,6 +1696,7 @@ const ChatView = ({
     fetchConversation();
     setUnreadCount();
     fetchAIStatus();
+    setMessages([]);
     fetchMessages();
     setTypingUsers(new Map());
 
@@ -1716,9 +1726,9 @@ const ChatView = ({
     avatarSource = "/features/instagram.png";
   }
 
-  if (loading) {
-    return <LoadingState />;
-  }
+  // if (loading) {
+  //   return <LoadingState />;
+  // }
 
   const lastCustomerMessage = messages
     .filter((m) => m.role === "customer")
@@ -2391,9 +2401,16 @@ const ChatView = ({
               className="flex-1 h-full px-3 py-0.1 bg-gray-50"
             >
               <div className="space-y-3 max-w-full pb-4 sm:pb-0">
-                <>
-                  {messages.map((message, index) => {
-                    const latestMediaMessage = [...messages]
+                {messagesLoading && messages.length === 0 ? (
+                  <div className="space-y-6 p-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <MessageSkeleton key={i} />
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    {messages.map((message, index) => {
+                      const latestMediaMessage = [...messages]
                       .reverse()
                       .find(
                         (m) => m.type === "ig_reel" || m.type === "ig_story"
@@ -2573,7 +2590,8 @@ const ChatView = ({
                     );
                   })}
                   <div ref={lastMessageRef} />
-                </>
+                  </>
+                )}
               </div>
             </ScrollArea>
 
