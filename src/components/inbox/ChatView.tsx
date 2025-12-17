@@ -55,6 +55,7 @@ import { useReminders } from "../hooks/useReminders";
 import { useTypingIndicator } from "../hooks/typingIndicator";
 import { createClient } from "@supabase/supabase-js";
 import { conversationService } from "@/components/services/api";
+import debounce from "lodash.debounce";
 import {
   Tooltip,
   TooltipContent,
@@ -875,13 +876,15 @@ const ChatView = ({
     };
   }, []);
 
-  useEffect(() => {
-    // Don't show dropdown if message doesn't start with "/"
-    if (!message.startsWith("/")) {
+    useEffect(()=>{
+    const debouncedFilter = debounce(()=>{
+
+      if (!message.startsWith("/")) {
       setShowCannedResponses(false);
       setFilteredResponses([]);
       return;
     }
+
 
     // Get the search query after "/"
     const searchQuery = message.slice(1).toLowerCase().trim();
@@ -902,7 +905,15 @@ const ChatView = ({
     setFilteredResponses(filtered);
     setShowCannedResponses(filtered.length > 0);
     setSelectedCannedIndex(0);
-  }, [message, cannedResponses]);
+  }, 200);
+
+   debouncedFilter();
+
+  return () => {
+    debouncedFilter.cancel();
+  };
+
+  }, [message, cannedResponses])
 
   const handleSendAudio = async () => {
     if (!audioURL || !selectedConversationId) return;
@@ -1673,6 +1684,8 @@ const ChatView = ({
       textareaRef.current?.focus();
     }, 0);
   };
+
+
 
   return (
     <>
