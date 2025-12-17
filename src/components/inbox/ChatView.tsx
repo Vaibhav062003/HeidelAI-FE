@@ -910,7 +910,7 @@ const ChatView = ({
   // console.log("conversationStatus", conversationStatus);
 
   useEffect(()=>{
-    const setConversatioStatus= async ()=>{
+    const UpdateConversationStatus= async ()=>{
       if(!selectedConversationId) return;
       // console.log("conversation", selectedConversationId, conversation);
       const status = conversation?.status
@@ -920,7 +920,7 @@ const ChatView = ({
         setIsFollowUp(status === "follow-up");
     }
   }
-    setConversatioStatus();
+    UpdateConversationStatus();
   },[selectedConversationId, conversation]);
   const handleSendAudio = async () => {
     if (!audioURL || !selectedConversationId) return;
@@ -1905,7 +1905,7 @@ const ChatView = ({
                   conversationStatus={conversationStatus}
                   isStatusDropdownOpen={isStatusDropdownOpen}
                   setIsStatusDropdownOpen={setIsStatusDropdownOpen}
-                  selectedConversationId={selectedConversationId!}
+                  selectedConversationId={selectedConversationId}
                   statusLoading={statusLoading}
                   message={messages}
                   setMessages={setMessages}
