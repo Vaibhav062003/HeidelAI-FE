@@ -1,4 +1,3 @@
-import React from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -7,8 +6,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, Loader2, XCircle, Clock, RefreshCw } from "lucide-react";
-import { useCallback, useState} from "react";
-import { toast } from "sonner";
 
 export interface Message {
   id: string;
@@ -73,7 +70,7 @@ interface UserStatusProps {
   handleReopen: () => void;
 }
 
-const User_Status: React.FC<UserStatusProps> = ({
+const UserStatus: React.FC<UserStatusProps> = ({
   conversationStatus,
   isStatusDropdownOpen,
   setIsStatusDropdownOpen,
@@ -161,4 +158,4 @@ const User_Status: React.FC<UserStatusProps> = ({
   );
 };
 
-export default User_Status;
+export default UserStatus;

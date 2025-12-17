@@ -87,7 +87,8 @@ import MediaMessage from "../messaging/MediaMessage";
 import { useMainWebSocket } from "@/lib/websocket";
 import { storeData, getData } from "@/lib/indexedDB";
 import CountDownTimer from "../LandingPage/CountDownTimer";
-import User_Status from "./User_Status";
+import UserStatus from "./UserStatus";
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -1901,7 +1902,7 @@ const ChatView = ({
                   </Badge>
                 )}
 
-                 <User_Status
+                 <UserStatus
                   conversationStatus={conversationStatus}
                   isStatusDropdownOpen={isStatusDropdownOpen}
                   setIsStatusDropdownOpen={setIsStatusDropdownOpen}
