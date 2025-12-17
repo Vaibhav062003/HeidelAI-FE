@@ -308,7 +308,7 @@ const SharedProductPreview = ({
   <div className="flex items-center w-fit gap-3 p-2 bg-gray-50 rounded-lg border border-gray-200 mb-2">
     <div className="w-15 h-15 relative">
       <Image
-        src={product.images}
+        src={product.image_url}
         alt={product.product_name}
         height={80}
         width={80}
