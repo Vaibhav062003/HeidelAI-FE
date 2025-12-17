@@ -2436,7 +2436,7 @@ const ChatView = ({
             <div className="flex-shrink-0 mb-3 relative">
               {/* Typing Users */}
               {typingUsers.size > 0 && (
-                <div className="inline-flex items-center ml-5 px-3 text-sm " style={{background: "transparent"}}>
+                <div className="inline-flex items-center ml-5 px-3 text-sm ">
                   {/* Overlapping Initials */}
                   <div className="flex items-center -space-x-2 mr-2">
                     {Array.from(typingUsers.values())
