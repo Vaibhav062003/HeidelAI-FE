@@ -1337,7 +1337,7 @@ const ChatView = ({
     setIsFollowUp(false);
     setConversationStatus("open");
     setIsStatusDropdownOpen(false);
-    // setStatusLoading(true); 
+    setStatusLoading(true); 
     const agentName = "You";
 
 
