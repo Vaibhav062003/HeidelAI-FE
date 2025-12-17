@@ -2471,7 +2471,7 @@ const ChatView = ({
                     )}
                     {typingUsers.size === 2 && (
                       <>
-                        {Array.from(typingUsers.values())[0].agent_name} &amp; {Array.from(typingUsers.values())[1].agent_name} are typing
+                        {Array.from(typingUsers.values())[0].agent_name} & {Array.from(typingUsers.values())[1].agent_name} are typing
                       </>
                     )}
                     {typingUsers.size > 2 && (
