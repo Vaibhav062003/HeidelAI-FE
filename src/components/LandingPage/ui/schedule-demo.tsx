@@ -209,7 +209,7 @@ export function ScheduleDemo() {
     <div className=" flex justify-center space-x-2 text-center">
       <Drawer.Root repositionInputs={false} open={isOpen} onOpenChange={setIsOpen}>
         <Drawer.Trigger className="focus-visible:border-none">
-            <button className="inline-flex items-center px-6 py-3 bg-transparent text-white text-sm font-medium rounded-xl border-2 border-white/30 hover:bg-white/10 hover:border-white/50 transition-all duration-300 hover:scale-105 shadow-lg backdrop-blur-sm">
+            <button className="inline-flex items-center px-6 py-4 bg-transparent bg-white text-gray-900 text-base font-medium rounded-xl hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg">
               Join Beta
             </button>
 
