@@ -746,8 +746,11 @@ const ChatView = ({
   const { sendWsMessage } = useMainWebSocket();
 
   useEffect(() => {
-    if (initialConversation) {
+    if (initialConversation && initialConversation.status) {
       setConversation(initialConversation);
+      setConversationStatus(initialConversation.status as "open" | "closed" | "follow-up");
+      setIsResolved(initialConversation.status === "closed");
+      setIsFollowUp(initialConversation.status === "follow-up");
     }
   }, [initialConversation]);
 
@@ -909,6 +912,9 @@ const ChatView = ({
   }
     UpdateConversationStatus();
   },[selectedConversationId, conversation]);
+
+
+  
   const handleSendAudio = async () => {
     if (!audioURL || !selectedConversationId) return;
 
