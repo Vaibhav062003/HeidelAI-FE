@@ -40,10 +40,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const ChatView = dynamic(() => import('@/components/inbox/ChatView'), {
-  ssr: false,
-  loading: () => <ChatViewSkeleton />
-});
+import ChatView from '@/components/inbox/ChatView';
 
 const Sidebar = dynamic(() => import('@/components/inbox/Sidebar'), {
   ssr: false,
@@ -565,14 +562,7 @@ export default function DashboardPage() {
     const conv = conversations.find(c => c.id === selectedConversationId);
     if (!conv) return null;
 
-    return {
-      id: conv.id,
-      customer_name: conv.customer_name,
-      platform: conv.platform,
-      email: conv.email || '',
-      billingAddress: conv.billingAddress || '',
-      shippingAddress: conv.shippingAddress || '',
-    } as Conversation;
+    return conv
   }, [conversations, selectedConversationId]);
 
   const handleConversationSelect = useCallback((id: string) => {
