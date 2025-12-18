@@ -87,6 +87,7 @@ import MediaMessage from "../messaging/MediaMessage";
 import { useMainWebSocket } from "@/lib/websocket";
 import { storeData, getData } from "@/lib/indexedDB";
 import CountDownTimer from "../LandingPage/CountDownTimer";
+import DocumentMessage from "../messaging/DocumentMessage";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -156,7 +157,8 @@ interface Message {
     | "ig_reel"
     | "story_reply"
     | "system"
-    | "message_reply";
+    | "message_reply"
+    | "document";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
   product_data?: ProductData[];
@@ -251,43 +253,43 @@ const MessageSkeleton = () => (
   </div>
 );
 
-const LoadingState = () => (
-  <Card className="h-screen flex flex-col bg-white ">
-    {/* Header skeleton */}
-    <div className="p-4 border-b flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
-        <div className="space-y-2">
-          <div className="h-4 w-32 bg-gray-200 rounded-full animate-pulse" />
-          <div className="h-3 w-24 bg-gray-200 rounded-full animate-pulse" />
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
-        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
-        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
-      </div>
-    </div>
+// const LoadingState = () => (
+//   <Card className="h-screen flex flex-col bg-white ">
+//     {/* Header skeleton */}
+//     <div className="p-4 border-b flex items-center justify-between">
+//       <div className="flex items-center gap-3">
+//         <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+//         <div className="space-y-2">
+//           <div className="h-4 w-32 bg-gray-200 rounded-full animate-pulse" />
+//           <div className="h-3 w-24 bg-gray-200 rounded-full animate-pulse" />
+//         </div>
+//       </div>
+//       <div className="flex gap-2">
+//         <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+//         <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+//         <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+//       </div>
+//     </div>
 
-    {/* Messages area */}
-    <ScrollArea className="flex-1 h-full p-4">
-      <div className="space-y-6">
-        {[1, 2, 3, 4].map((i) => (
-          <MessageSkeleton key={i} />
-        ))}
-      </div>
-    </ScrollArea>
+//     {/* Messages area */}
+//     <ScrollArea className="flex-1 h-full p-4">
+//       <div className="space-y-6">
+//         {[1, 2, 3, 4].map((i) => (
+//           <MessageSkeleton key={i} />
+//         ))}
+//       </div>
+//     </ScrollArea>
 
-    {/* Input area skeleton */}
-    <div className="p-4 border-t">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
-        <div className="flex-1 h-10 bg-gray-200 rounded-lg animate-pulse" />
-        <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
-      </div>
-    </div>
-  </Card>
-);
+//     {/* Input area skeleton */}
+//     <div className="p-4 border-t">
+//       <div className="flex items-center gap-2">
+//         <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
+//         <div className="flex-1 h-10 bg-gray-200 rounded-lg animate-pulse" />
+//         <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
+//       </div>
+//     </div>
+//   </Card>
+// );
 
 // const parseProductData = (productDataString: string): ProductData[] => {
 //   try {
@@ -1564,6 +1566,9 @@ const ChatView = ({
   useEffect(() => {
     if (!selectedConversationId) return () => {};
 
+    setMessage("");
+    textareaRef.current?.focus();
+
     sendWsMessage({
       type: "join_conversation",
       conversation_id: selectedConversationId,
@@ -2415,6 +2420,20 @@ const ChatView = ({
                                       }}
                                     />
                                   )}
+
+                                  {/* Document Messages */}
+                                  {message.type === "document" && (
+                                    <DocumentMessage
+                                      url={message.payload.url}
+                                      previewUrl={message.payload.thumbnail_url}
+                                      fileName={message.payload.file_name}
+                                      fileSize={message.payload.file_size}
+                                      fileFormat={message.payload.file_format}
+                                      filePages={message.payload.file_pages}
+                                      isAgent={message.role.toLowerCase() === "agent"}
+                                      timestamp={formatMessageTime(message.timestamp)}
+                                    />
+                                  )}
                                 </LazyMediaLoader>
                               )}
 
@@ -2426,6 +2445,7 @@ const ChatView = ({
                                 "share",
                                 "image",
                                 "video",
+                                "document",
                               ].includes(message.type ?? "") && (
                                 <MessageItem
                                   key={message.id}
