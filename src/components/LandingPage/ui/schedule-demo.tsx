@@ -18,6 +18,7 @@ import ReactMarkdown from "react-markdown";
 import { Toaster, toast as sonnerToast } from 'sonner'
 import { set } from "react-hook-form";
 import { Toast } from "@radix-ui/react-toast";
+import { ArrowRight } from "lucide-react";
 
 export function ScheduleDemo() {
 
@@ -211,6 +212,7 @@ export function ScheduleDemo() {
         <Drawer.Trigger className="focus-visible:border-none">
             <button className="inline-flex items-center px-6 py-4 bg-transparent bg-white text-gray-900 text-base font-medium rounded-xl hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg">
               Join Beta
+              <ArrowRight className="w-4 h-4 ml-2" />
             </button>
 
       </Drawer.Trigger>
