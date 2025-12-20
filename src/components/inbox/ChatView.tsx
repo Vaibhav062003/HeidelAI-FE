@@ -89,6 +89,7 @@ import { useMainWebSocket } from "@/lib/websocket";
 import { storeData, getData } from "@/lib/indexedDB";
 import CountDownTimer from "../LandingPage/CountDownTimer";
 import DocumentMessage from "../messaging/DocumentMessage";
+import { url } from "inspector";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -139,7 +140,7 @@ interface ProductInfo {
   sale_price?: string;
 }
 
-interface Message {
+export interface Message {
   id: string;
   content: string;
   timestamp: string;
@@ -614,19 +615,21 @@ const FilePreview = ({
   );
 };
 
-const MessageItem = memo(
+export const MessageItem = memo(
   ({
     message,
     isLast,
     index,
     isLatest,
     isReplyMessage,
+    isMediaMessage
   }: {
     message: Message;
     isLast: boolean;
     index: number;
     isLatest: boolean;
     isReplyMessage: boolean;
+    isMediaMessage?: boolean;
   }) => {
     if (message.role === "system") {
       return (
@@ -650,7 +653,7 @@ const MessageItem = memo(
                   isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"
                 } text-gray-900 border-gray-200/60`
               : `bg-blue-600/90 backdrop-blur-sm ${
-                  isReplyMessage ? "rounded-tr-lg" : "rounded-br-lg"
+                  isReplyMessage || isMediaMessage ? "rounded-tr-lg" : "rounded-br-lg"
                 } text-white border-blue-500/60`
           }`}
           style={{ wordBreak: "break-word" }}
@@ -1157,61 +1160,91 @@ const ChatView = ({
   };
 
   const sendMessage = async () => {
-    // 1. Basic Validation
-    if (!message.trim() || !selectedConversationId) return;
+    // 1. Validation
+    if ((!message.trim() && attachments.length === 0) || !selectedConversationId)
+      return;
 
     const currentContent = message.trim();
+    const currentAttachments = [...attachments]; // Snapshot for rollback
     const platform = selectedConversationId.split("_")[0];
 
-    // Handle Canned Responses (Slash Commands)
+    // 2. Handle Canned Responses (Slash Commands) for Caption/Text
     let contentToSend = currentContent;
 
     if (currentContent.startsWith("/")) {
       const shortcutQuery = currentContent.slice(1).toLowerCase();
-
-      // Find matching canned response by shortcut
       const cannedResponse = cannedResponses.find(
         (cr) => cr.shortcut.toLowerCase() === shortcutQuery
       );
 
       if (cannedResponse) {
-        // Use the canned response message
         contentToSend = cannedResponse.response;
       } else {
-        // If no matching canned response found, show error and don't send
         toast.error(`No canned response found for "/${shortcutQuery}"`);
         return;
       }
     }
 
-    // If contentToSend is empty after processing, don't send
-    if (!contentToSend.trim()) return;
+    // Double check empty state
+    if (!contentToSend.trim() && attachments.length === 0) return;
 
-    // 3. Create Optimistic Message
+    // 3. Prepare Optimistic Message
     const tempId = `temp-${Date.now()}`;
-    const optimisticMessage: Message = {
-      id: tempId,
-      content: contentToSend,
-      sender_id: user?.id || "agent",
-      role: "agent",
-      conversation_id: selectedConversationId,
-      timestamp: new Date().toISOString(),
-      type: "text",
-      status: "sending",
-    };
+    let optimisticMessage: Message;
 
-    // 4. OPTIMISTIC UPDATE: Update UI immediately
-    setMessage(""); // Clear input immediately
-    setShowCannedResponses(false); // Hide canned responses dropdown
-    setFilteredResponses([]); // Clear filtered responses
+    // determine message type and construct object
+    if (attachments.length > 0) {
+      const file = attachments[0];
+      // Create a local URL for immediate display
+      const localPreviewUrl = URL.createObjectURL(file);
+
+      optimisticMessage = {
+        id: tempId,
+        content: contentToSend, // This acts as the caption
+        sender_id: user?.id || "agent",
+        role: "agent",
+        conversation_id: selectedConversationId,
+        timestamp: new Date(new Date().getTime() - 5.5 * 60 * 60 * 1000).toISOString(),
+        type: file.type.startsWith("image/")
+          ? "image"
+          : file.type.startsWith("video/")
+          ? "video"
+          : file.type.startsWith("audio/")
+          ? "voice"
+          : "file",
+        status: "sending",
+        payload: {
+          url: localPreviewUrl,
+        }, // Display the local file immediately
+        fileName: file.name,
+        fileType: file.type,
+      };
+    } else {
+      optimisticMessage = {
+        id: tempId,
+        content: contentToSend,
+        sender_id: user?.id || "agent",
+        role: "agent",
+        conversation_id: selectedConversationId,
+        timestamp: new Date(new Date().getTime() - 5.5 * 60 * 60 * 1000).toISOString(),
+        type: "text",
+        status: "sending",
+      };
+    }
+
+    // 4. OPTIMISTIC UI UPDATE
+    setMessage("");
+    setAttachments([]); // Clear attachments immediately
+    setShowCannedResponses(false);
+    setFilteredResponses([]);
 
     setMessages((prev) => {
       const newState = [...prev, optimisticMessage];
-      persistMessages(newState); // Save to IDB immediately
+      // persistMessages(newState); // Optional: Save to IDB if needed
       return newState;
     });
 
-    // Scroll to bottom immediately
+    // Scroll to bottom
     setTimeout(
       () => lastMessageRef.current?.scrollIntoView({ behavior: "smooth" }),
       10
@@ -1219,30 +1252,48 @@ const ChatView = ({
 
     // 5. Send to Backend
     try {
-      const data = {
-        conversation_id: selectedConversationId,
-        content: contentToSend,
-        platform: platform,
-      };
+      let data = {}
+      if (currentAttachments.length > 0) {
+        const file = currentAttachments[0];
+        const formData = new FormData();
+        
+        formData.append("file", file);
+        formData.append("recipient_id", selectedConversationId.split("_")[1]);
+        formData.append("platform", platform);
+        
+        // Add caption if it exists
+        if (contentToSend.trim()) {
+          formData.append("caption", contentToSend.trim());
+        }
+
+        data = {
+          conversation_id: selectedConversationId,
+          content: contentToSend,
+          platform: platform,
+          formData: formData
+        };
+      }
+      else {
+        data = {
+          conversation_id: selectedConversationId,
+          content: contentToSend,
+          platform: platform,
+        };
+      }
 
       const response = await api.post(`/api/conversations/send-message`, data);
-
       if (response.status !== 200) throw new Error("Failed to send");
-
-      // Success - WebSocket will handle the real message update
+      
     } catch (error) {
       console.error("Send failed:", error);
       toast.error("Failed to send message");
 
-      // Rollback: Remove the temp message if API fails
-      setMessages((prev) => {
-        const newState = prev.filter((m) => m.id !== tempId);
-        persistMessages(newState);
-        return newState;
-      });
-
-      // Restore text to input so user doesn't lose it
-      setMessage(currentContent); // Restore original message (with /)
+      // ROLLBACK UI on Failure
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      
+      // Restore User Input
+      setMessage(currentContent); // Restore text
+      setAttachments(currentAttachments); // Restore attachments
     }
   };
 
@@ -1456,7 +1507,7 @@ const ChatView = ({
               msg.id.toString().startsWith("temp-") &&
               msg.content === incomingMsg.content &&
               // Optional: Check if timestamp is within last 10 seconds to be safe
-              new Date().getTime() - new Date(msg.timestamp).getTime() < 10000
+              new Date(new Date().getTime() - 5.5 * 60 * 60 * 1000).getTime() - new Date(msg.timestamp).getTime() < 10000
           );
 
           if (tempMatchIndex !== -1) {
@@ -1655,6 +1706,7 @@ const ChatView = ({
     setUnreadCount();
     fetchAIStatus();
     setMessages([]);
+    setAttachments([]);
     fetchMessages();
     setTypingUsers(new Map());
 
@@ -2487,6 +2539,11 @@ const ChatView = ({
                                           : "video"
                                       }
                                       url={message.payload.url}
+                                      status={message.status}
+                                      message={message}
+                                      index={index}
+                                      isLast={index === messages.length - 1}
+                                      key={message.id}
                                       isAgent={
                                         message.role.toLowerCase() === "agent"
                                       }
@@ -2557,7 +2614,7 @@ const ChatView = ({
                       </div>
                     );
                   })}
-                  <div ref={lastMessageRef} />
+                  <div className="mt-10" ref={lastMessageRef} />
                   </>
                 )}
               </div>
@@ -2925,7 +2982,7 @@ const ChatView = ({
 
                         <button
                           className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${
-                            message.trim() || audioURL || sharedProduct
+                            message.trim() || attachments.length > 0
                               ? mode === "reply"
                                 ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
                                 : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
@@ -2942,22 +2999,12 @@ const ChatView = ({
                           }}
                           // ONLY disable if input is empty.
                           // We removed 'isSending' so you can spam click like WhatsApp.
-                          disabled={
-                            !message.trim() && !audioURL && !sharedProduct
-                          }
+                         disabled={!message.trim() && attachments.length === 0}
                         >
-                          {/* Only show spinner for Audio/Product which might be slower, 
-                            but for Text, we show the Send Icon always */}
-                          {isSending && (audioURL || sharedProduct) ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <>
-                              <Send className="h-4 w-4" />
-                              <span className="ml-2">
-                                {mode === "reply" ? "Send" : "Add Note"}
-                              </span>
-                            </>
-                          )}
+                          <Send className="h-4 w-4" />
+                          <span className="ml-2">
+                            {mode === "reply" ? "Send" : "Add Note"}
+                          </span>
                         </button>
                       </div>
                     </div>
