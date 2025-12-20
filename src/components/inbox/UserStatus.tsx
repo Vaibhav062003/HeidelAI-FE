@@ -26,7 +26,8 @@ export interface Message {
     | "ig_reel"
     | "story_reply"
     | "system"
-    | "message_reply";
+    | "message_reply"
+    | "document";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
   product_data?: ProductData[];
