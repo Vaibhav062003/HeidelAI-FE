@@ -1330,7 +1330,6 @@ const ChatView = ({
 
     try{
       const res = await api.post(`/api/conversations/${encodeURIComponent(selectedConversationId)}/reopen`);
-      console.log("res:",res)
 
       if (!(res && (res.status === 200 || res.status === 204))) {
       throw new Error(
