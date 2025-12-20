@@ -25,9 +25,12 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { createClient } from '@supabase/supabase-js';
 import InstagramProfileView from './InstagramProfileView';
-import FacebookSDK, { FacebookLoginResponse } from '@/components/facebook/FacebookSDK';
+// import FacebookSDK, { FacebookLoginResponse } from '@/components/facebook/FacebookSDK';
 import { useIntegrations } from '@/components/hooks/useIntegrations';
 import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
+
+// import { useIntegrations } from '@/components/hooks/useIntegrations';
+// import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
 
 // import { useIntegrations } from '@/components/hooks/useIntegrations';
 // import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
@@ -41,11 +44,11 @@ import {
 } from '@/components/ui/table';
 // import { Shopify } from '@shopify/shopify-api';
 import { toast } from 'sonner';
-import { connectWebSocket } from '../../lib/websocket';
 import WhatsAppLoginDialog from './WhatsappLoginDialog';
 import api from '@/lib/session_api';
 import { useUser, useOrganization } from '@clerk/nextjs';
 import { Dialog as ConfirmDialog, DialogContent as ConfirmDialogContent, DialogHeader as ConfirmDialogHeader, DialogTitle as ConfirmDialogTitle } from "@/components/ui/dialog"; 
+import Image from 'next/image';
 
 // Function to fetch catalog data from the backend
 interface CatalogProduct {
@@ -56,22 +59,6 @@ interface CatalogProduct {
   [key: string]: string | number | boolean | undefined; // For any additional fields
 }
 
-interface AgentMember {
-  id: string | number;
-  identifier: string;
-  role_name: string;
-  user_id: string; 
-  public_user_data?: {
-    identifier?: string;
-    user_id?: string;
-  };
-}
-
-interface InvitedAgent {
-  id: string | number;
-  email_address: string;
-  status: string;
-}
 
 interface CatalogResponse {
   data: CatalogProduct[];
@@ -499,7 +486,7 @@ const InstagramDialog = () => {
           <div className="py-4 space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <img 
+                <Image 
                   src={accountInfo.profileImage} 
                   alt={accountInfo.username}
                   className="h-16 w-16 rounded-full object-cover border-2 border-pink-200"
@@ -708,246 +695,241 @@ const TokenTestBox = () => {
 
  
 
-export const FacebookCatalogIntegration = () => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  // Add state for dialog
-  const [showDialog, setShowDialog] = useState(false);
+// export const FacebookCatalogIntegration = () => {
+//   const [isConnected, setIsConnected] = useState(false);
+//   const [isLoading, setIsLoading] = useState(true);
+//   // Add state for dialog
+//   const [showDialog, setShowDialog] = useState(false);
 
-  // On mount: check if user is logged in and has a Facebook catalog connection
-  useEffect(() => {
-    const checkConnection = async () => {
-      setIsLoading(true);
+//   // On mount: check if user is logged in and has a Facebook catalog connection
+//   useEffect(() => {
+//     const checkConnection = async () => {
+//       setIsLoading(true);
 
-      // Check if user has an active Supabase session (OAuth token present)
-      const { data, error } = await supabase.auth.getSession();
-      const session = data?.session;
+//       // Check if user has an active Supabase session (OAuth token present)
+//       const { data, error } = await supabase.auth.getSession();
+//       const session = data?.session;
 
-      if (session) {
-        // Optional: Check if this session was from Facebook (provider_id = 'facebook')
-        const provider = session?.user?.app_metadata?.provider;
+//       if (session) {
+//         // Optional: Check if this session was from Facebook (provider_id = 'facebook')
+//         const provider = session?.user?.app_metadata?.provider;
 
-        // Check if previously marked as connected (persisted flag)
-        const fbStored = localStorage.getItem("facebook_catalog_connection");
+//         // Check if previously marked as connected (persisted flag)
+//         const fbStored = localStorage.getItem("facebook_catalog_connection");
 
-        if (provider === "facebook" || fbStored) {
-          localStorage.setItem(
-            "facebook_catalog_connection",
-            JSON.stringify({ connected: true })
-          );
-          setIsConnected(true);
-          toast.success("Facebook catalog connected successfully.");
-        } else {
-          setIsConnected(false);
-        }
-      } else {
-        setIsConnected(false);
-      }
+//         if (provider === "facebook" || fbStored) {
+//           localStorage.setItem(
+//             "facebook_catalog_connection",
+//             JSON.stringify({ connected: true })
+//           );
+//           setIsConnected(true);
+//           toast.success("Facebook catalog connected successfully.");
+//         } else {
+//           setIsConnected(false);
+//         }
+//       } else {
+//         setIsConnected(false);
+//       }
 
-      setIsLoading(false);
-    };
+//       setIsLoading(false);
+//     };
 
-    checkConnection();
-  }, []);
+//     checkConnection();
+//   }, []);
 
-  function loadFacebookSDK(appId: string, callback: () => void) {
-  if (window.FB) {
-    callback();
-    return;
-  }
-  if (!document.getElementById('facebook-jssdk')) {
-    const script = document.createElement('script');
-    script.id = 'facebook-jssdk';
-    script.src = 'https://connect.facebook.net/en_US/sdk.js';
-    script.onload = () => {
-      window.FB.init({
-        appId,
-        cookie: true,
-        xfbml: false,
-        version: 'v19.0',
-      });
-      callback();
-    };
-    document.body.appendChild(script);
-  } else {
-    // If script exists but FB not ready, wait for it
-    const existingScript = document.getElementById('facebook-jssdk');
-    if (existingScript) {
-      existingScript.onload = () => {
-        window.FB.init({
-          appId,
-          cookie: true,
-          xfbml: false,
-          version: 'v19.0',
-        });
-        callback();
-      };
-    }
-  }
-}
-
-
-const FACEBOOK_CATALOG_CONFIG_ID = "524055147308362";
-const FACEBOOK_APP_ID = "509681741462833"; 
-
-const handleFacebookCatalogLogin = () => {
-  setIsLoading(true);
-
-  loadFacebookSDK(FACEBOOK_APP_ID, () => {
-    if (window.FB) {
-      window.FB.login(
-        function (response: FacebookLoginResponse) {
-          if (response.authResponse && response.status === 'connected') {
-            // Only store connection data if login was successful
-            const accessToken = response.authResponse.accessToken;
-            localStorage.setItem(
-              "facebook_catalog_connection",
-              JSON.stringify({
-                accessToken,
-                connected: true,
-                time: Date.now(),
-              })
-            );
-            setIsConnected(true);
-            toast.success("Facebook catalog connected successfully.");
-            window.location.hash = "#integrations";
-          } else {
-            // If login was cancelled or failed, ensure we're disconnected
-            setIsConnected(false);
-            localStorage.removeItem("facebook_catalog_connection");
-            toast.error("Facebook login was cancelled or failed.");
-          }
-          setIsLoading(false);
-        },
-        {
-          config_id: FACEBOOK_CATALOG_CONFIG_ID,
-          scope: "catalog_management",
-        }
-      );
-    } else {
-      setIsLoading(false);
-      toast.error("Facebook SDK not loaded. Please try again later.");
-    }
-  });
-};
-
-const handleDisconnect = async () => {
-  setIsLoading(true);
-  try {
-    localStorage.removeItem("facebook_catalog_connection");
-    setIsConnected(false);
-    toast.success("Facebook catalog disconnected successfully.");
-  } catch (error) {
-    toast.error("Failed to disconnect Facebook catalog.");
-  } finally {
-    setIsLoading(false);
-    window.location.hash = "#integrations";
-  }
-};
-
-// Move handleClick to the parent scope so it is accessible
+//   function loadFacebookSDK(appId: string, callback: () => void) {
+//   if (window.FB) {
+//     callback();
+//     return;
+//   }
+//   if (!document.getElementById('facebook-jssdk')) {
+//     const script = document.createElement('script');
+//     script.id = 'facebook-jssdk';
+//     script.src = 'https://connect.facebook.net/en_US/sdk.js';
+//     script.onload = () => {
+//       window.FB.init({
+//         appId,
+//         cookie: true,
+//         xfbml: false,
+//         version: 'v19.0',
+//       });
+//       callback();
+//     };
+//     document.body.appendChild(script);
+//   } else {
+//     // If script exists but FB not ready, wait for it
+//     const existingScript = document.getElementById('facebook-jssdk');
+//     if (existingScript) {
+//       existingScript.onload = () => {
+//         window.FB.init({
+//           appId,
+//           cookie: true,
+//           xfbml: false,
+//           version: 'v19.0',
+//         });
+//         callback();
+//       };
+//     }
+//   }
+// }
 
 
-  return (
-    <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-      <div className="space-y-4">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#4267B2] rounded-lg p-2">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold">Facebook Catalog</h3>
-              <p className="text-sm text-gray-600">Connect your Facebook product catalog</p>
-            </div>
-          </div>
-          {isLoading ? (
-            <Button className="bg-gray-400 text-white" disabled>
-              Loading...
-            </Button>
-          ) : isConnected ? (
-            <Button
-              className="bg-red-500 hover:bg-red-600 text-white"
-              onClick={handleDisconnect}
-            >
-              Disconnect
-            </Button>
-          ) : (
-            <Dialog open={showDialog} onOpenChange={setShowDialog}>
-              <DialogTrigger asChild>
-                <Button className="bg-[#4267B2] hover:bg-[#365899] text-white">
-                  Connect
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px] h-[55vh]">
-                <DialogHeader>
-                  <DialogTitle>Connect Facebook Catalog</DialogTitle>
-                </DialogHeader>
-                <div className="py-2 space-y-2">
-                    <p>
-  Connect your Facebook account to manage your product catalog directly from this dashboard.
-</p>
-                </div>
-                <div className="p-1 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm rounded">
-                        <p>
-    Your Facebook credentials are never stored on our servers. We use secure, industry-standard OAuth authentication directly with Facebook. You are always in control and can disconnect at any time.
-  </p>
-                </div>
-                <div className="py-2 space-y-2">
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium">This will allow HeidelAI to:</h4>
-                    <ul className="text-sm text-gray-600 space-y-2">
-                      <li className="flex items-center gap-2">
-                        <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Access products in your Meta Catalog
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Update existing products in the catalog
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Add new products to the catalog
-                      </li>
-                    </ul>
-                  </div>
-                  <Button 
-                    className="w-full bg-[#4267B2] hover:bg-[#365899] text-white mt-4"
-                    onClick={() => {
-                      setShowDialog(false);
-                      handleFacebookCatalogLogin();
-                    }}
-                  >
-                    Continue with Facebook
-                  </Button>
-                </div>
-              </DialogContent>
+// const FACEBOOK_CATALOG_CONFIG_ID = "524055147308362";
+// const FACEBOOK_APP_ID = "509681741462833"; 
 
-            </Dialog>
+// const handleFacebookCatalogLogin = () => {
+//   setIsLoading(true);
+
+//   loadFacebookSDK(FACEBOOK_APP_ID, () => {
+//     if (window.FB) {
+//       window.FB.login(
+//         function (response: FacebookLoginResponse) {
+//           if (response.authResponse && response.status === 'connected') {
+//             // Only store connection data if login was successful
+//             const accessToken = response.authResponse.accessToken;
+//             localStorage.setItem(
+//               "facebook_catalog_connection",
+//               JSON.stringify({
+//                 accessToken,
+//                 connected: true,
+//                 time: Date.now(),
+//               })
+//             );
+//             setIsConnected(true);
+//             toast.success("Facebook catalog connected successfully.");
+//             window.location.hash = "#integrations";
+//           } else {
+//             // If login was cancelled or failed, ensure we're disconnected
+//             setIsConnected(false);
+//             localStorage.removeItem("facebook_catalog_connection");
+//             toast.error("Facebook login was cancelled or failed.");
+//           }
+//           setIsLoading(false);
+//         },
+//         {
+//           config_id: FACEBOOK_CATALOG_CONFIG_ID,
+//           scope: "catalog_management",
+//         }
+//       );
+//     } else {
+//       setIsLoading(false);
+//       toast.error("Facebook SDK not loaded. Please try again later.");
+//     }
+//   });
+// };
+
+// const handleDisconnect = async () => {
+//   setIsLoading(true);
+//   try {
+//     localStorage.removeItem("facebook_catalog_connection");
+//     setIsConnected(false);
+//     toast.success("Facebook catalog disconnected successfully.");
+//   } catch (error) {
+//     toast.error("Failed to disconnect Facebook catalog.");
+//   } finally {
+//     setIsLoading(false);
+//     window.location.hash = "#integrations";
+//   }
+// };
+
+// // Move handleClick to the parent scope so it is accessible
+
+
+//   return (
+//     <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+//       <div className="space-y-4">
+//         <div className="flex items-start justify-between">
+//           <div className="flex items-center gap-3">
+//             <div className="bg-[#4267B2] rounded-lg p-2">
+//               <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+//                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
+//               </svg>
+//             </div>
+//             <div>
+//               <h3 className="text-lg font-semibold">Facebook Catalog</h3>
+//               <p className="text-sm text-gray-600">Connect your Facebook product catalog</p>
+//             </div>
+//           </div>
+//           {isLoading ? (
+//             <Button className="bg-gray-400 text-white" disabled>
+//               Loading...
+//             </Button>
+//           ) : isConnected ? (
+//             <Button
+//               className="bg-red-500 hover:bg-red-600 text-white"
+//               onClick={handleDisconnect}
+//             >
+//               Disconnect
+//             </Button>
+//           ) : (
+//             <Dialog open={showDialog} onOpenChange={setShowDialog}>
+//               <DialogTrigger asChild>
+//                 <Button className="bg-[#4267B2] hover:bg-[#365899] text-white">
+//                   Connect
+//                 </Button>
+//               </DialogTrigger>
+//               <DialogContent className="sm:max-w-[425px] h-[55vh]">
+//                 <DialogHeader>
+//                   <DialogTitle>Connect Facebook Catalog</DialogTitle>
+//                 </DialogHeader>
+//                 <div className="py-2 space-y-2">
+//                     <p>
+//   Connect your Facebook account to manage your product catalog directly from this dashboard.
+// </p>
+//                 </div>
+//                 <div className="p-1 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm rounded">
+//                         <p>
+//     Your Facebook credentials are never stored on our servers. We use secure, industry-standard OAuth authentication directly with Facebook. You are always in control and can disconnect at any time.
+//   </p>
+//                 </div>
+//                 <div className="py-2 space-y-2">
+//                   <div className="space-y-4">
+//                     <h4 className="text-sm font-medium">This will allow HeidelAI to:</h4>
+//                     <ul className="text-sm text-gray-600 space-y-2">
+//                       <li className="flex items-center gap-2">
+//                         <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+//                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+//                         </svg>
+//                         Access products in your Meta Catalog
+//                       </li>
+//                       <li className="flex items-center gap-2">
+//                         <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+//                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+//                         </svg>
+//                         Update existing products in the catalog
+//                       </li>
+//                       <li className="flex items-center gap-2">
+//                         <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+//                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+//                         </svg>
+//                         Add new products to the catalog
+//                       </li>
+//                     </ul>
+//                   </div>
+//                   <Button 
+//                     className="w-full bg-[#4267B2] hover:bg-[#365899] text-white mt-4"
+//                     onClick={() => {
+//                       setShowDialog(false);
+//                       handleFacebookCatalogLogin();
+//                     }}
+//                   >
+//                     Continue with Facebook
+//                   </Button>
+//                 </div>
+//               </DialogContent>
+
+//             </Dialog>
       
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
 
 
 export default function DashboardPage() {
-  const members: AgentMember[] = [];
-  const invited: InvitedAgent[] = [];
-  const initialLoading = false;
-  const refresh = () => {};
-  const agentlimit = 0;
   const handleInsertResponse = (message: string) => {
     // Handle the canned response insertion
     console.log('Inserting canned response:', message);
@@ -956,15 +938,9 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-      
+    
       {/* Add component */}
-      <AgentsSettings
-        members={members}
-        invited={invited}
-        initialLoading={initialLoading}
-        refresh={refresh}
-        agentlimit={agentlimit}
-      />
+      <AgentsSettings/>
       <TeamsConfiguration />
       <CannedResponses onInsertResponse={handleInsertResponse} />
       {/* You can add other dashboard components here */}
@@ -1322,7 +1298,7 @@ export const IntegrationsSettings = () => (
       </div>
 
       {/* Facebook Catalog Integration Card */}
-      <FacebookCatalogIntegration />
+      {/* <FacebookCatalogIntegration /> */}
 
       {/* WhatsApp Integration Card */}
       <div className="border rounded-lg p-4 md:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">

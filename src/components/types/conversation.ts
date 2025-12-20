@@ -1,5 +1,5 @@
-// Type definition for conversation object
 export interface Conversation {
+  conversation_id: string
   id: string;
   platform: string;
   customer_id: string;
@@ -17,5 +17,7 @@ export interface Conversation {
   priority: "low" | "medium" | "high";
   sentiment: "positive" | "neutral" | "negative";
   query?: string;
-  status?: string; // added status property
+  status?: string;
+  reply_window_ends_at?: string;
+  categories?: string[]; 
 }

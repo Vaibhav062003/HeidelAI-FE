@@ -1,7 +1,5 @@
 import React from "react";
 import {
-  X,
-  Package,
   Tag,
   Clock,
   Warehouse,
@@ -26,130 +24,107 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import {toast} from 'sonner'
+import { toast } from "sonner";
 import { Product } from "../types/product";
-
-// interface Product {
-//   id: string;
-//   category: string;
-//   description: string;
-//   images: string;
-//   name: string;
-//   on_sale: string; // Use boolean if the data contains `true/false` instead of `"True"/"False"`
-//   permalink: string;
-//   price: number;
-//   product_id: number;
-//   purchasable: string; // Use boolean if the data contains `true/false`
-//   regular_price: string; // Use `number` if parsed as numeric values
-//   sale_price: string; // Use `number` if parsed as numeric values
-//   slug: string;
-//   stock_quantity: number;
-// }
-
-type MetadataValue = string | number | boolean;
 
 interface ProductPreviewProps {
   product: Product;
   onClose: () => void;
-  onShare: (product: Product) => void; 
+  onShare: (product: Product) => void;
   open: boolean;
 }
-
 
 const ProductPreview: React.FC<ProductPreviewProps> = ({
   product,
   onClose,
   onShare,
-  open
+  open,
 }) => {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-            {/* <Package className="h-5 w-5" /> */}
+      <DialogContent
+        className="w-[95vw] sm:max-w-lg md:max-w-2xl lg:max-w-3xl xl:max-w-4xl p-0 rounded-xl overflow-hidden">
+        {/* Header */}
+        <DialogHeader className="px-5 py-4 border-b bg-white">
+          <DialogTitle className="text-lg sm:text-xl font-semibold">
             Product Preview
           </DialogTitle>
         </DialogHeader>
-        
-        <ScrollArea className="max-h-[80vh]">
-          <div className="flex flex-col space-y-6 pr-4">
-            {/* Main Product Section */}
-            <div className="flex gap-6">
-              {/* Left: Image */}
-              <div className="w-1/2">
-                <div className="aspect-square relative rounded-lg border overflow-hidden">
+
+        {/* Scroll Body */}
+        <ScrollArea className="max-h-[75vh] p-5">
+          <div className="space-y-8">
+
+            {/* ---------------------------------- */}
+            {/* TOP SECTION - IMAGE + DETAILS */}
+            {/* ---------------------------------- */}
+            <div className="flex flex-col lg:flex-row gap-8">
+
+              {/* LEFT IMAGE */}
+              <div className="w-full lg:w-1/2">
+                <div
+                  className="w-full h-56 sm:h-64 md:h-72 lg:h-80 xl:h-96 bg-gray-100 border rounded-lg overflow-hidden flex items-center justify-center">
                   <img
-                    src={product.images}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
+                    src={product.image_url}
+                    alt={product.product_name}
+                    className="max-w-full max-h-full object-contain"
                   />
-                  {product.on_sale === 'true' && (
-                    <Badge className="absolute top-2 left-2" variant="destructive">
-                      On Sale
-                    </Badge>
-                  )}
                 </div>
+
+                {product.onsale && (
+                  <Badge className="mt-3 w-fit" variant="destructive">
+                    On Sale
+                  </Badge>
+                )}
               </div>
 
-              {/* Right: Basic Info */}
-              <div className="w-1/2 space-y-4">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <h2 className="text-xl font-normal">
-                      {/* {product.name.length > 50 
-                        ? `${product.name.substring(0, 50)}...` 
-                        : product.name} */}
-                        {product.name}
-                    </h2>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-[300px] break-words">
-                    <p>{product.name}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              {/* RIGHT INFO */}
+              <div className="w-full lg:w-1/2 space-y-4">
 
-                {/* Pricing */}
-                <div className="space-y-2">
-                  <div className="flex items-baseline gap-2">
-                    {product.sale_price ? (
-                      <>
-                        <span className="text-2xl font-bold text-green-600">
-                          ₹{product.sale_price}
-                        </span>
-                        <span className="text-sm text-gray-500 line-through">
-                          ₹{product.regular_price}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-2xl font-bold">
-                        ₹{product.regular_price}
-                      </span>
-                    )}
-                  </div>
+                {/* Title */}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <h2 className="text-xl sm:text-2xl font-medium leading-snug">
+                        {product.product_name}
+                      </h2>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      {product.product_name}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                {/* Price */}
+                <div>
+                  <span className="text-3xl font-bold text-emerald-600">
+                    ₹{product.price || product.regularprice}
+                  </span>
                 </div>
 
-                {/* Stock Status */}
+                {/* Stock */}
                 <div className="flex items-center gap-2">
                   <Warehouse className="h-4 w-4 text-gray-500" />
-                  <Badge variant={product.purchasable === 'true' ? "success" : "destructive"}>
-                    {product.purchasable === 'true' 
-                      ? `In Stock (${product.stock_quantity})` 
-                      : "Out of Stock"}
-                  </Badge>
+                  {product.stock > 0 ? (
+                    <Badge variant="success">
+                      In Stock ({product.stock})
+                    </Badge>
+                  ) : (
+                    <Badge variant="destructive">Out of Stock</Badge>
+                  )}
                 </div>
 
-                {/* Quick Info Grid */}
+                {/* Mini Grid */}
                 <div className="grid grid-cols-2 gap-4 pt-4">
-                  <div className="space-y-1">
+                  <div>
                     <p className="text-sm text-gray-500 flex items-center gap-1">
                       <Tag className="h-4 w-4" />
                       Category
                     </p>
                     <p className="font-medium">{product.category}</p>
                   </div>
-                  <div className="space-y-1">
+
+                  <div>
                     <p className="text-sm text-gray-500 flex items-center gap-1">
                       <ShoppingCart className="h-4 w-4" />
                       Product ID
@@ -160,43 +135,51 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
               </div>
             </div>
 
-            {/* Additional Details */}
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-            <div className="space-y-2">
-    <p className="text-sm text-gray-500 flex items-center gap-1">
-      <Link2 className="h-4 w-4" />
-      Product Link
-    </p>
-    <div className="flex gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        className="flex items-center gap-1"
-        onClick={() => window.open(product.permalink, '_blank')}
-      >
-        <ExternalLink className="h-4 w-4" />
-        View
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        className="flex items-center gap-1"
-        onClick={() => {
-          navigator.clipboard.writeText(product.permalink);
-          toast.success("Link copied to clipboard");
-        }}
-      >
-        <Copy className="h-4 w-4" />
-        Copy
-      </Button>
-    </div>
-  </div>
-              <div className="space-y-1">
+            {/* ---------------------------------- */}
+            {/* BOTTOM INFO GRID */}
+            {/* ---------------------------------- */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t pt-6">
+
+              {/* Product Link */}
+              <div>
+                <p className="text-sm text-gray-500 flex items-center gap-1">
+                  <Link2 className="h-4 w-4" />
+                  Product Link
+                </p>
+
+                <div className="flex gap-3 mt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(product.permalink, "_blank")}
+                    className="flex items-center gap-1"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    View
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(product.permalink);
+                      toast.success("Copied!");
+                    }}
+                    className="flex items-center gap-1"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </Button>
+                </div>
+              </div>
+
+              {/* Last Updated */}
+              <div>
                 <p className="text-sm text-gray-500 flex items-center gap-1">
                   <Clock className="h-4 w-4" />
                   Last Updated
                 </p>
-                <p className="font-medium text-sm">
+                <p className="font-medium mt-2 text-sm">
                   {new Date().toLocaleDateString()}
                 </p>
               </div>
@@ -204,24 +187,25 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({
           </div>
         </ScrollArea>
 
-        {/* Share Button - Fixed at bottom */}
-        <div className="pt-4 mt-4 flex border-t justify-end">
-          <Button 
+        {/* ---------------------------------- */}
+        {/* FOOTER BUTTON */}
+        {/* ---------------------------------- */}
+        <div className="px-5 py-4 border-t bg-white flex justify-end">
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
             onClick={() => {
               onShare(product);
               onClose();
             }}
-            variant="outline"
           >
-            <Share2 className="h-5 w-5" />
-            <span className="font-medium">Share in Chat</span>
+            <Share2 className="h-4 w-4" />
+            Share in Chat
           </Button>
-          
         </div>
       </DialogContent>
     </Dialog>
   );
 };
-
 
 export default ProductPreview;

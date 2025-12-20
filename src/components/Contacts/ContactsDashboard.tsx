@@ -8,29 +8,41 @@ import { PaginationFooter } from "../Contacts/PaginationFooter";
 import { ContactForm } from "../Contacts/ContactFormModal";
 import { Spinner } from "../Contacts/Spinner";
 import TagSidebar from "./TagSidebar";
+import api from "@/lib/session_api";
+import { ApiContact, Contact } from "../types/contacts";
+import { TagIcon, X } from "lucide-react";
 
-interface Contact {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  country?: string;
-  tags: string[];
-}
-
-interface Tag {
-  id: string;
-  name: string;
-  tag_description: string;
-  created_at?: string;
-}
+type Tag = string;
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
+
+const mapApiContactToContact = (apiContact: ApiContact): Contact => {
+  const fullName = apiContact.full_name || "Unknown";
+  const nameParts = fullName.trim().split(" ");
+  const firstName = nameParts[0] || "Unknown";
+  const lastName = nameParts.slice(1).join(" ") || "";
+
+  return {
+    id: apiContact.conversation_id,
+    firstName,
+    lastName,
+    email: apiContact.email || "",
+    phone: apiContact.phone_number,
+    company: undefined,
+    country: apiContact.country || undefined,
+    tags: apiContact.categories || [],
+    platform: apiContact.platform,
+    profile_url: apiContact.profile_url,
+    username: apiContact.username,
+    instagram_id: apiContact.instagram_id,
+    full_name: fullName,
+    conversation_id: apiContact.conversation_id,
+    categories: apiContact.categories,
+  };
+};
 
 const ContactsDashboard = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -43,32 +55,45 @@ const ContactsDashboard = () => {
   const [importingCount, setImportingCount] = useState(0);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  
+  const [sidebarSelectedTag, setSidebarSelectedTag] = useState<string | null>(null); 
+  const [filterSelectedTags, setFilterSelectedTags] = useState<string[]>([]); 
+  
   const [tagsLoading, setTagsLoading] = useState(true);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const fetchContacts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
     try {
-      let query = supabase.from('contacts').select('*');
-      
-      if (selectedTag) {
-        query = query.contains('tags', [selectedTag]);
+      const response = await api.get("/api/contacts");
+
+      if (!response.data || !Array.isArray(response.data.contacts)) {
+        setContacts([]);
+        setError("Invalid response format");
+        setLoading(false);
+        return;
       }
-  
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      setContacts(data?.map(c => ({
-        ...c,
-        tags: Array.isArray(c.tags) ? c.tags : []
-      })) || []);
-    } catch (err) {
-      console.error("Failed to fetch contacts:", err);
-      setError("Failed to load contacts. Please try again.");
+
+      const contactsArray: ApiContact[] = response.data.contacts;
+      const mappedContacts = contactsArray.map((contact: ApiContact) => {
+        return mapApiContactToContact(contact);
+      });
+
+      setContacts(mappedContacts);
+      setError(null);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "Failed to load contacts");
+      } else {
+        setError("Failed to load contacts");
+      }
+      setContacts([]);
     } finally {
       setLoading(false);
     }
-  }, [selectedTag]);
+  }, []);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -76,21 +101,15 @@ const ContactsDashboard = () => {
       await fetchTags();
     };
     fetchInitialData();
-  }, [selectedTag]);
-
-  useEffect(() => {
-    fetchContacts();
-  }, [selectedTag, fetchContacts]);
+  }, []);
 
   const fetchTags = async () => {
     setTagsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("tags")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      setTags(data || []);
+      const response = await api.get<{ tags: string[] }>(
+        "/api/org/metadata/tags"
+      );
+      setTags(response.data.tags || []);
     } catch (err) {
       setError("Failed to load tags");
     } finally {
@@ -175,20 +194,6 @@ const ContactsDashboard = () => {
     setSelectedContact(contact);
   };
 
-  const handleDelete = async (contactId: string) => {
-    try {
-      const { error } = await supabase
-        .from("contacts")
-        .delete()
-        .eq("id", contactId);
-
-      if (error) throw error;
-      setContacts((prev) => prev.filter((contact) => contact.id !== contactId));
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  };
-
   const handleSaveContact = useCallback(
     (newContact: Partial<Contact>) => {
       const updatedContact = {
@@ -209,83 +214,86 @@ const ContactsDashboard = () => {
           { ...updatedContact, id: `manual-${Date.now()}` } as Contact,
         ];
       });
-      setSelectedContact(null);
     },
     [selectedContact]
   );
 
-  const handleCreateTag = async (name: string, description: string) => {
+  const handleCreateTag = async (name: string) => {
     try {
-      const { data: existingTags } = await supabase
-        .from("tags")
-        .select("id")
-        .ilike("name", name);
-
-      if (existingTags && existingTags.length > 0) {
-        throw new Error("Tag name already exists");
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        throw new Error("Tag name is required");
       }
 
-      const { data, error } = await supabase
-        .from("tags")
-        .insert([{ name, tag_description: description }])
-        .select();
+      await api.patch("/api/org/metadata/tags/add", null, {
+        params: { tag: trimmedName },
+      });
 
-      if (error) throw error;
-      setTags((prev) => [data[0], ...prev]);
+      setTags((prev) =>
+        prev.includes(trimmedName) ? prev : [trimmedName, ...prev]
+      );
     } catch (err) {
-      setError((err as Error).message);
+      setError(err instanceof Error ? err.message : "Failed to create tag");
     }
   };
 
-  const handleEditTag = async (
-    id: string,
-    name: string,
-    description: string
-  ) => {
+  const handleDeleteTag = async (tagName: string) => {
     try {
-      const { data: existingTags } = await supabase
-        .from("tags")
-        .select("id")
-        .ilike("name", name)
-        .neq("id", id);
-
-      if (existingTags && existingTags.length > 0) {
-        throw new Error("Tag name already exists");
+      if (
+        !window.confirm(`Are you sure you want to delete the tag "${tagName}"?`)
+      ) {
+        return;
       }
 
-      const { data, error } = await supabase
-        .from("tags")
-        .update({ name, tag_description: description })
-        .eq("id", id)
-        .select();
+      await api.patch("/api/org/metadata/tags/remove", null, {
+        params: { tag: tagName },
+      });
 
-      if (error) throw error;
-      setTags((prev) => prev.map((tag) => (tag.id === id ? data[0] : tag)));
+      setTags((prev) => prev.filter((tag) => tag !== tagName));
+
+      // Remove from both filter states if present
+      if (sidebarSelectedTag === tagName) {
+        setSidebarSelectedTag(null);
+      }
+      setFilterSelectedTags((prev) => prev.filter((tag) => tag !== tagName));
     } catch (err) {
-      setError((err as Error).message);
-    }
-  };
-
-  const handleDeleteTag = async (id: string) => {
-    try {
-      if (!window.confirm("Are you sure you want to delete this tag?")) return;
-
-      const { error } = await supabase.from("tags").delete().eq("id", id);
-
-      if (error) throw error;
-      setTags((prev) => prev.filter((tag) => tag.id !== id));
-    } catch (err) {
-      setError((err as Error).message);
+      setError(err instanceof Error ? err.message : "Failed to delete tag");
     }
   };
 
   const filteredContacts = useMemo(() => {
-    return contacts.filter((contact) => {
-      return `${contact.firstName} ${contact.lastName} ${contact.email}`
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-    });
-  }, [contacts, searchQuery]);
+    let filtered = contacts;
+
+    // Sidebar tag (single selection, replaces filter button selection)
+    if (sidebarSelectedTag) {
+      filtered = filtered.filter((contact) =>
+        contact.tags?.includes(sidebarSelectedTag) ||
+        contact.categories?.includes(sidebarSelectedTag)
+      );
+    }
+    // Filter button tags (multiple selection, only if sidebar is not active)
+    else if (filterSelectedTags.length > 0) {
+      filtered = filtered.filter((contact) => {
+        // Contact must have at least one of the selected tags
+        return filterSelectedTags.some(
+          (tag) =>
+            contact.tags?.includes(tag) || contact.categories?.includes(tag)
+        );
+      });
+    }
+
+    // Filter by search query 
+    if (searchQuery) {
+      filtered = filtered.filter((contact) => {
+        const searchText = `${contact.firstName} ${contact.lastName} ${
+          contact.email
+        } ${contact.username || ""} ${contact.phone || ""}`;
+        return searchText.toLowerCase().includes(searchQuery.toLowerCase());
+      });
+    }
+
+    return filtered;
+  }, [contacts, searchQuery, sidebarSelectedTag, filterSelectedTags]);
 
   const paginatedContacts = filteredContacts.slice(
     (currentPage - 1) * itemsPerPage,
@@ -297,6 +305,11 @@ const ContactsDashboard = () => {
     setCurrentPage(1);
   }, []);
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sidebarSelectedTag, filterSelectedTags, searchQuery]);
+
   return (
     <div className="h-full w-full flex bg-white overflow-hidden">
       {/* Tag Sidebar */}
@@ -305,10 +318,16 @@ const ContactsDashboard = () => {
           tags={tags}
           tagsLoading={tagsLoading}
           onCreateTag={handleCreateTag}
-          onEditTag={handleEditTag}
           onDeleteTag={handleDeleteTag}
-          onTagSelect={setSelectedTag}
-          selectedTag={selectedTag}
+          onTagSelect={(tag) => {
+            if (sidebarSelectedTag === tag) {
+              setSidebarSelectedTag(null); 
+            } else {
+              setSidebarSelectedTag(tag);
+              setFilterSelectedTags([]); 
+            }
+          }}
+          selectedTag={sidebarSelectedTag}
           onTagModalOpen={() => setIsTagModalOpen(true)}
           error={error}
         />
@@ -324,8 +343,79 @@ const ContactsDashboard = () => {
             onAddContact={() => setSelectedContact({} as Contact)}
             onImportCSV={handleFileUpload}
             onMessageSend={() => {}}
+            tags={tags}
+            selectedTags={filterSelectedTags} 
+            onTagsChange={(tags) => {
+              setFilterSelectedTags(tags);
+              setSidebarSelectedTag(null); 
+            }}
           />
         </div>
+
+        {/* Show active filter status */}
+        {(sidebarSelectedTag || filterSelectedTags.length > 0) && (
+          <div className="flex-shrink-0 bg-blue-50 border-b border-blue-100 px-4 py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 flex-wrap">
+                <TagIcon className="w-4 h-4 text-blue-600" />
+                
+                {/* Sidebar Tag Display */}
+                {sidebarSelectedTag && (
+                  <>
+                    <span className="text-sm text-blue-900">
+                      Filtered by sidebar tag:
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                      {sidebarSelectedTag}
+                      <button
+                        onClick={() => setSidebarSelectedTag(null)}
+                        className="hover:text-blue-900"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  </>
+                )}
+
+                {/* Filter Button Tags Display */}
+                {!sidebarSelectedTag && filterSelectedTags.length > 0 && (
+                  <>
+                    <span className="text-sm text-blue-900">
+                      Filtered by {filterSelectedTags.length} tag{filterSelectedTags.length !== 1 ? 's' : ''}:
+                    </span>
+                    {filterSelectedTags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold"
+                      >
+                        {tag}
+                        <button
+                          onClick={() => setFilterSelectedTags(filterSelectedTags.filter((t) => t !== tag))}
+                          className="hover:text-blue-900"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </>
+                )}
+
+                <span className="text-xs text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                  {filteredContacts.length} contact{filteredContacts.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setSidebarSelectedTag(null);
+                  setFilterSelectedTags([]);
+                }}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
+              >
+                Clear all
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden min-h-0">
@@ -335,9 +425,29 @@ const ContactsDashboard = () => {
             </div>
           ) : filteredContacts.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
-              <p className="text-gray-500 text-sm">
-                {searchQuery ? "No matching contacts found 🔍" : "No contacts found 🔍"}
-              </p>
+              <div className="text-center">
+                <p className="text-gray-500 text-sm mb-2">
+                  {sidebarSelectedTag
+                    ? `No contacts with tag "${sidebarSelectedTag}" 🔍`
+                    : filterSelectedTags.length > 0
+                    ? `No contacts with selected tags 🔍`
+                    : searchQuery
+                    ? "No matching contacts found 🔍"
+                    : "No contacts found 🔍"}
+                </p>
+                {(sidebarSelectedTag || filterSelectedTags.length > 0 || searchQuery) && (
+                  <button
+                    onClick={() => {
+                      setSidebarSelectedTag(null);
+                      setFilterSelectedTags([]);
+                      setSearchQuery("");
+                    }}
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium hover:underline"
+                  >
+                    Clear all filters
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <>
@@ -349,7 +459,7 @@ const ContactsDashboard = () => {
                       key={contact.id}
                       contact={contact}
                       onEdit={() => handleEdit(contact)}
-                      onDelete={() => handleDelete(contact.id)}
+                      onDelete={() => handleDeleteTag(contact.id)}
                     />
                   ))}
                 </div>
@@ -401,7 +511,8 @@ const ContactsDashboard = () => {
         <div className="fixed bottom-4 right-4 max-w-sm bg-blue-50 text-blue-700 rounded-lg shadow-lg flex items-center gap-3 z-50 p-4 border border-blue-200">
           <Spinner />
           <span className="text-sm">
-            Importing {importingCount} contact{importingCount !== 1 ? "s" : ""}...
+            Importing {importingCount} contact{importingCount !== 1 ? "s" : ""}
+            ...
           </span>
         </div>
       )}

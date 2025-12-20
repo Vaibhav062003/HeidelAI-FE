@@ -19,7 +19,7 @@ import {
 import api from '@/lib/session_api';
 
 interface WhatsAppProfileViewProps {
-  whatsappId: string;
+  whatsappId: () => Promise<string | null> | null;
   isOpen: boolean;
   onClose: () => void;
 }

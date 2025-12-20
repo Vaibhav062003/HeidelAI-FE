@@ -4,10 +4,10 @@ import { Inter } from 'next/font/google'
 
 import { ClerkProvider } from '@clerk/nextjs'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { SecurityProvider } from './providers';
+import { LogoutHandler } from '@/components/LogoutHandler'
+import { RoleProvider } from '@/contexts/RoleContext'
 
-
-const inter = Inter({ 
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap' // Add for better font loading
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   },
   description: 'Transform your business with HeidelAI\'s AI-powered tools for customer engagement, real-time analytics, and smart chatbots.',
   keywords: [
-    'AI customer engagement tools', 
-    'real-time business analytics', 
+    'AI customer engagement tools',
+    'real-time business analytics',
     'AI chatbots for businesses',
     'ads optimization platform',
     'influencer marketing analytics',
@@ -63,13 +63,16 @@ export default function RootLayout({
   return (
     <html lang="en" >
       <body className={`bg-white text-black`}>
-        <AuthProvider> 
-          <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!} afterSignOutUrl="/">
-            <SecurityProvider>
-              {children}
-            </SecurityProvider>
-          </ClerkProvider>
-        </AuthProvider>
+
+        <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!} afterSignOutUrl="/">
+          <AuthProvider>
+          <LogoutHandler />
+          <RoleProvider>
+            {children}
+          </RoleProvider>
+          </AuthProvider>
+        </ClerkProvider>
+
       </body>
     </html>
   )
