@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
-// import Sidebar from "./Sidebar";
 import {
   Popover,
   PopoverContent,
@@ -45,11 +44,7 @@ import {
 } from "../ui/dialog";
 
 import { useReminders } from "../hooks/useReminders";
-// import { H1, H2, H3, Body, Small } from "@/components/typography";
-// import { Trash2, User, Menu } from "lucide-react";
-// import TimerDisplay from "./TimerDisplay";
 import { useTypingIndicator } from "../hooks/typingIndicator";
-
 import { conversationService } from "@/components/services/api";
 import debounce from "lodash.debounce";
 import {
@@ -70,10 +65,7 @@ import Image from "next/image";
 import CustomerInfo from "./CustomerInfo";
 import LandingDashboard from "./LandingDashboard";
 import api from "@/lib/session_api";
-// import { useConversations } from "../hooks/useConversations";
-// import { storeData, getData, getAllKeys, deleteData } from "@/lib/indexedDB";
 import { Product } from "../types/product";
-// import Conversation_Status from "./Conversation_Status";
 import InstagramPost from "../instagram/messaging/InstagramPost";
 import InstagramReel from "../instagram/messaging/InstagramReel";
 import InstagramStory from "../instagram/messaging/InstagramStory";
@@ -86,12 +78,6 @@ import { storeData, getData } from "@/lib/indexedDB";
 import CountDownTimer from "../LandingPage/CountDownTimer";
 import UserStatus from "./UserStatus";
 
-
-
-
-// import Image from "next/image";
-// import { IconShoppingCartFilled } from "@tabler/icons-react";
-// import { Progress } from "@radix-ui/react-progress";
 import DocumentMessage from '../messaging/DocumentMessage';
 
 interface CustomerInfo {
@@ -117,14 +103,6 @@ interface Reminder {
   notes?: string;
   dateTime: string;
   conversationId: string;
-}
-
-interface ProductInfo {
-  name: string;
-  price: string;
-  link: string;
-  image_url: string;
-  sale_price?: string;
 }
 
 interface Message {
@@ -1908,79 +1886,6 @@ const ChatView = ({
                   handleFollowUp={handleFollowUp}
                   handleReopen={handleReopen}
                   />
-                {/* Status Dropdown
-                <DropdownMenu
-                  open={isStatusDropdownOpen}
-                  onOpenChange={setIsStatusDropdownOpen}
-                >
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost
-                      className="rounded-2xl hover:bg-gray-100 flex items-center space-x-1 px-3 py-2.5 bg-white"
-                      disabled={statusLoading}
-                    >
-                      {conversationStatus === "closed" ? (
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                      ) : conversationStatus === "followup" ? (
-                        <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
-                      ) : (
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      )}
-                      <span className="text-sm font-medium text-gray-800">
-                        {conversationStatus === "closed"
-                          ? "Closed"
-                          : conversationStatus === "followup"
-                          ? "Follow-up"
-                          : "Open"}
-                      </span>
-                      <ChevronDown className="h-4 w-4 text-gray-600" />
-                      {statusLoading && (
-                        <Loader2 className="h-4 w-4 ml-2 animate-spin text-blue-600" />
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="w-56 rounded-2xl shadow-xl border bg-white py-2"
-                  >
-                    {conversationStatus === "open" && (
-                      <>
-                        <DropdownMenuItem
-                          onClick={() => handleResolve(selectedConversationId)}
-                          className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-red-50 rounded-xl mx-2"
-                          disabled={statusLoading}
-                        >
-                          <XCircle className="h-4 w-4 mr-3 text-red-600" />
-                          <span className="font-medium">
-                            Close Conversation
-                          </span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleFollowUp(selectedConversationId)}
-                          className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-amber-50 rounded-xl mx-2"
-                          disabled={statusLoading}
-                        >
-                          <Clock className="h-4 w-4 mr-3 text-amber-600" />
-                          <span className="font-medium">
-                            Mark for Follow-up
-                          </span>
-                        </DropdownMenuItem>
-                      </>
-                    )}
-
-                    {(conversationStatus === "closed" ||
-                      conversationStatus === "followup") && (
-                      <DropdownMenuItem
-                        onClick={handleReopen}
-                        className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-green-50 rounded-xl mx-2"
-                        disabled={statusLoading}
-                      >
-                        <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
-                        <span className="font-medium">Reopen Conversation</span>
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu> */}
 
                 {/* Reminders Button */}
                 <Tooltip>
