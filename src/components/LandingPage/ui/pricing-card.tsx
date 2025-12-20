@@ -241,7 +241,8 @@ export function PricingCard({ tier, paymentFrequency }: PricingCardProps) {
 										className="border border-gray-200 bg-white w-full resize-none  p-3 rounded-xl py-2 text-gray-900 outline-none focus:ring-2 focus:ring-black/5 focus:ring-offset-0"
 										/>
 										<p className="text-neutral-600  text-xs  mt-2 mb-8">
-										By submitting you agree to our Terms & Conditions.
+                    By submitting you agree to our <span className="underline cursor-pointer" onClick={() => router.push("/terms-of-service")}>Terms & Conditions.</span>
+
 									</p>
 										<button onClick={() => setIsOpen(false)} type="submit" className="h-[44px] bg-black mx-auto rounded-full sticky bottom-0 text-gray-50  mt-4 w-full font-medium">Submit</button>
 										</form>

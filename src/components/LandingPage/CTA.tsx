@@ -19,13 +19,13 @@ const CTA = () => {
               Transform Your Customer Experience Today
             </h2>
             <span className="hidden sm:block">
-              <p className="text-md max-w-[800px] mb-8 font-medium text-white/80 sm:text-xl">
+              <p className="text-md max-w-[800px]  font-medium text-white/80 sm:text-xl">
                 Join hundreds of businesses already using our AI platform to streamline customer support, 
                 boost sales, and create amazing customer experiences across all channels.
               </p>
             </span>
             <span className="block sm:hidden">
-              <p className="text-md max-w-[700px] mb-2 font-medium text-white/80 sm:text-xl">
+              <p className="text-md max-w-[700px] mb-2 font-medium text-white/80 sm:text-xl ">
                 Start your free trial today and see the difference for yourself!
               </p>
             </span>
@@ -33,11 +33,11 @@ const CTA = () => {
           
           {/* Re-enable pointer events for buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pointer-events-auto">
-            <button onClick={() => {router.push('/onboarding')}} className="inline-flex items-center px-6 py-3 bg-white text-gray-900 text-sm font-medium rounded-xl hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg">
+            {/* <button onClick={() => {router.push('/onboarding')}} className="inline-flex items-center px-6 py-3 bg-white text-gray-900 text-sm font-medium rounded-xl hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg">
               Start Free Trial
               <ArrowRight className="w-4 h-4 ml-2" />
-            </button>
-            <span className='hidden sm:inline-flex'>
+            </button> */}
+            <span className='hidden sm:inline-flex '>
               <ScheduleDemo />
             </span>
           </div>

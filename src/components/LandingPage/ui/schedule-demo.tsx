@@ -1,28 +1,32 @@
 "use client";
 import React from "react";
-import { useRouter } from 'next/navigation';
-import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
+// import { useRouter } from 'next/navigation';
+// import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { Drawer } from 'vaul';
 
-import { useState, useRef, useEffect } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { Button } from "@/components/LandingPage/ui/flow-hover-button";
-import { Input } from "@/components/ui/input2";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { supabase } from "@/components/supabase/client";
-import { useToast } from "@/components/hooks/use-toast";
-import { systemPrompt } from "@/components/config/chatSystemPrompt";
-import { Message, storeMessage } from "@/components/services/chatService";
-import ReactMarkdown from "react-markdown";
+import { useState, 
+  // useRef, useEffect 
+} from "react";
+// import { v4 as uuidv4 } from "uuid";
+// import { Button } from "@/components/LandingPage/ui/flow-hover-button";
+// import { Input } from "@/components/ui/input2";
+// import { ScrollArea } from "@/components/ui/scroll-area";
+// import { supabase } from "@/components/supabase/client";
+// import { useToast } from "@/components/hooks/use-toast";
+// import { systemPrompt } from "@/components/config/chatSystemPrompt";
+// import { Message, storeMessage } from "@/components/services/chatService";
+// import ReactMarkdown from "react-markdown";
 
 import { Toaster, toast as sonnerToast } from 'sonner'
-import { set } from "react-hook-form";
-import { Toast } from "@radix-ui/react-toast";
+// import { set } from "react-hook-form";
+// import { Toast } from "@radix-ui/react-toast";
+import { ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-export function ScheduleDemo() {
+export function ScheduleDemo({ trigger }: { trigger?: React.ReactNode }) {
 
   const [isOpen, setIsOpen] = React.useState(false);
-
+  const router = useRouter()
 
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
@@ -112,94 +116,94 @@ export function ScheduleDemo() {
     }
   };
 
-  const router = useRouter();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [visitorName, setVisitorName] = useState<string | null>(null);
-  const [visitorCompany, setVisitorCompany] = useState<string | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [isInitializing, setIsInitializing] = useState(true);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
+  // const router = useRouter();
+  // const [messages, setMessages] = useState<Message[]>([]);
+  // const [input, setInput] = useState('');
+  // const [isLoading, setIsLoading] = useState(false);
+  // const [visitorName, setVisitorName] = useState<string | null>(null);
+  // const [visitorCompany, setVisitorCompany] = useState<string | null>(null);
+  // const [sessionId, setSessionId] = useState<string | null>(null);
+  // const [isInitializing, setIsInitializing] = useState(true);
+  // const scrollAreaRef = useRef<HTMLDivElement>(null);
+  // const { toast } = useToast();
 
 
-  useEffect(() => {
-    const initializeChat = async () => {
-        const newSessionId = uuidv4();
-        setSessionId(newSessionId);
-        setSessionId(newSessionId);
+  // useEffect(() => {
+  //   const initializeChat = async () => {
+  //       const newSessionId = uuidv4();
+  //       setSessionId(newSessionId);
+  //       setSessionId(newSessionId);
         
-        // Send initial greeting message
-        const initialMessage: Message = {
-          role: 'assistant',
-          content: "Hello! I'm HeidelAI's AI Assistant. Before we begin, could you please tell me your name and the company you're representing?"
-        };
+  //       // Send initial greeting message
+  //       const initialMessage: Message = {
+  //         role: 'assistant',
+  //         content: "Hello! I'm HeidelAI's AI Assistant. Before we begin, could you please tell me your name and the company you're representing?"
+  //       };
         
-        setMessages([initialMessage]);
-        await storeMessage(initialMessage, null, null, newSessionId);
-        setIsInitializing(false);
-      }
+  //       setMessages([initialMessage]);
+  //       await storeMessage(initialMessage, null, null, newSessionId);
+  //       setIsInitializing(false);
+  //     }
 
-    initializeChat();
-  }, []);
+  //   initializeChat();
+  // }, []);
 
-  useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-    }
-  }, [messages]);
+  // useEffect(() => {
+  //   if (scrollAreaRef.current) {
+  //     scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+  //   }
+  // }, [messages]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!input.trim()) return;
 
-    const userMessage: Message = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
+  //   const userMessage: Message = { role: 'user', content: input };
+  //   setMessages(prev => [...prev, userMessage]);
+  //   setInput('');
+  //   setIsLoading(true);
 
-    await storeMessage(userMessage, visitorName, visitorCompany, sessionId);
+  //   await storeMessage(userMessage, visitorName, visitorCompany, sessionId);
 
-    try {
-      const { data, error } = await supabase.functions.invoke('chat', {
-        body: {
-          messages: [...messages, userMessage],
-          systemPrompt,
-        },
-      });
+  //   try {
+  //     const { data, error } = await supabase.functions.invoke('chat', {
+  //       body: {
+  //         messages: [...messages, userMessage],
+  //         systemPrompt,
+  //       },
+  //     });
 
-      if (error) throw error;
+  //     if (error) throw error;
 
-      const assistantMessage = { 
-        role: 'assistant' as const, 
-        content: data.choices[0].message.content 
-      };
+  //     const assistantMessage = { 
+  //       role: 'assistant' as const, 
+  //       content: data.choices[0].message.content 
+  //     };
       
-      setMessages(prev => [...prev, assistantMessage]);
+  //     setMessages(prev => [...prev, assistantMessage]);
       
-      await storeMessage(assistantMessage, visitorName, visitorCompany, sessionId);
+  //     await storeMessage(assistantMessage, visitorName, visitorCompany, sessionId);
 
-      // Only try to extract visitor info from the first user message
-      if (!visitorName && !visitorCompany && messages.length === 1) {
-        const nameMatch = userMessage.content.match(/(?:my name is|I'm|I am) ([^,.]+)/i);
-        const companyMatch = userMessage.content.match(/(?:from|with|at) ([^,.]+)/i);
+  //     // Only try to extract visitor info from the first user message
+  //     if (!visitorName && !visitorCompany && messages.length === 1) {
+  //       const nameMatch = userMessage.content.match(/(?:my name is|I'm|I am) ([^,.]+)/i);
+  //       const companyMatch = userMessage.content.match(/(?:from|with|at) ([^,.]+)/i);
         
-        if (nameMatch) setVisitorName(nameMatch[1].trim());
-        if (companyMatch) setVisitorCompany(companyMatch[1].trim());
-      }
+  //       if (nameMatch) setVisitorName(nameMatch[1].trim());
+  //       if (companyMatch) setVisitorCompany(companyMatch[1].trim());
+  //     }
 
-    } catch (error) {
-      console.error('Error calling chat function:', error);
-      toast({
-        title: "Error",
-        description: "Failed to get a response. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //   } catch (error) {
+  //     console.error('Error calling chat function:', error);
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to get a response. Please try again.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   return (
     <>
@@ -208,11 +212,13 @@ export function ScheduleDemo() {
     </div>
     <div className=" flex justify-center space-x-2 text-center">
       <Drawer.Root repositionInputs={false} open={isOpen} onOpenChange={setIsOpen}>
-        <Drawer.Trigger className="focus-visible:border-none">
-            <button className="inline-flex items-center px-6 py-3 bg-transparent text-white text-sm font-medium rounded-xl border-2 border-white/30 hover:bg-white/10 hover:border-white/50 transition-all duration-300 hover:scale-105 shadow-lg backdrop-blur-sm">
-              Join Beta
-            </button>
-
+        <Drawer.Trigger asChild className="focus-visible:border-none">
+            {trigger ? trigger : (
+              <button className="inline-flex items-center px-6 py-4 bg-transparent bg-white text-gray-900 text-base font-medium rounded-xl hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg">
+                Join Beta
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </button>
+            )}
       </Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40" />
@@ -275,7 +281,7 @@ export function ScheduleDemo() {
               className="border border-gray-200 bg-white w-full resize-none  p-3 rounded-xl py-2 text-gray-900 outline-none focus:ring-2 focus:ring-black/5 focus:ring-offset-0"
             />
             <p className="text-neutral-600  text-xs  mt-2 mb-8">
-            By submitting you agree to our Terms & Conditions.
+            By submitting you agree to our <span className="underline cursor-pointer" onClick={() => router.push("/terms-of-service")}>Terms & Conditions.</span>
           </p>
             <button
                     type="submit"

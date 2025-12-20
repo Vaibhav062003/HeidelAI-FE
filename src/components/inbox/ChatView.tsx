@@ -44,10 +44,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogClose,
+  // DialogClose,
   DialogTrigger,
 } from "../ui/dialog";
-import dynamic from "next/dynamic";
+// import dynamic from "next/dynamic";
 import { useReminders } from "../hooks/useReminders";
 // import { H1, H2, H3, Body, Small } from "@/components/typography";
 // import { Trash2, User, Menu } from "lucide-react";
@@ -95,12 +95,12 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const Picker = dynamic(
-  () => {
-    return import("emoji-picker-react");
-  },
-  { ssr: false }
-);
+// const Picker = dynamic(
+//   () => {
+//     return import("emoji-picker-react");
+//   },
+//   { ssr: false }
+// );
 
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";

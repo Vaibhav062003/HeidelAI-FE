@@ -3,21 +3,24 @@ import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/LandingPage/ui/button';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { SignUp } from '@/components/LandingPage/ui/signup-button';
-
+// import { SignUp } from '@/components/LandingPage/ui/signup-button';
+import { ScheduleDemo } from '@/components/LandingPage/ui/schedule-demo';
 import { useRouter } from 'next/navigation';
-import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
-import { Drawer } from 'vaul';
-import { useState, useRef, useEffect } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { Input } from "@/components/ui/input2";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { supabase } from "@/components/supabase/client";
-import { useToast } from "@/components/hooks/use-toast";
-import { systemPrompt } from "@/components/config/chatSystemPrompt";
-import { Message, storeMessage } from "@/components/services/chatService";
-import ReactMarkdown from "react-markdown";
-import { Toaster, toast as sonnerToast } from 'sonner'
+// import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
+// import { Drawer } from 'vaul';
+// import { useState, useRef, useEffect } from "react";
+// import { v4 as uuidv4 } from "uuid";
+// import { Input } from "@/components/ui/input2";
+// import { ScrollArea } from "@/components/ui/scroll-area";
+// import { supabase } from "@/components/supabase/client";
+// import { useToast } from "@/components/hooks/use-toast";
+// import { systemPrompt } from "@/components/config/chatSystemPrompt";
+// import { Message, storeMessage } from "@/components/services/chatService";
+// import ReactMarkdown from "react-markdown";
+// import {
+	//  Toaster, 
+	// toast as sonnerToast } from 'sonner'
+import Image from 'next/image';
 
 const menuItems = [
 	{ name: 'Features', href: '#features' },
@@ -103,156 +106,156 @@ const Header = () => {
 	const isDarkTheme = currentSection === 'hero' || currentSection === 'cta';
 
 
-	  const [isOpen, setIsOpen] = React.useState(false);
+	//   const [isOpen, setIsOpen] = React.useState(false);
 	
 	
-	  const [userName, setUserName] = useState('');
-	  const [userEmail, setUserEmail] = useState('');
-	  const [userPhone, setUserPhone] = useState('');
-	  const [companyName, setCompanyName] = useState('');
+	//   const [userName, setUserName] = useState('');
+	//   const [userEmail, setUserEmail] = useState('');
+	//   const [userPhone, setUserPhone] = useState('');
+	//   const [companyName, setCompanyName] = useState('');
 	
-	  const handleDemoRequest = async (e: React.FormEvent) => {
-		e.preventDefault();
+	//   const handleDemoRequest = async (e: React.FormEvent) => {
+	// 	e.preventDefault();
 	
-		// Basic validation checks
-		if (!userName.trim() || !userEmail.trim() || !userPhone.trim() || !companyName.trim()) {
-		  sonnerToast.error('Please fill all the details.');
-		  return;
-		}
+	// 	// Basic validation checks
+	// 	if (!userName.trim() || !userEmail.trim() || !userPhone.trim() || !companyName.trim()) {
+	// 	  sonnerToast.error('Please fill all the details.');
+	// 	  return;
+	// 	}
 	
-		// Email validation
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (!emailRegex.test(userEmail.trim())) {
-		  sonnerToast.error('Please enter a valid email address.');
-		  return;
-		}
+	// 	// Email validation
+	// 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	// 	if (!emailRegex.test(userEmail.trim())) {
+	// 	  sonnerToast.error('Please enter a valid email address.');
+	// 	  return;
+	// 	}
 	
-		// Phone number validation (basic check for digits and common formats)
-		const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-		const cleanedPhone = userPhone.replace(/[\s\-\(\)]/g, ''); // Remove spaces, dashes, parentheses
+	// 	// Phone number validation (basic check for digits and common formats)
+	// 	const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+	// 	const cleanedPhone = userPhone.replace(/[\s\-\(\)]/g, ''); // Remove spaces, dashes, parentheses
 		
-		if (!phoneRegex.test(cleanedPhone) || cleanedPhone.length < 8) {
-		  sonnerToast.error('Please enter a valid phone number (minimum 8 digits).');
-		  return;
-		}
+	// 	if (!phoneRegex.test(cleanedPhone) || cleanedPhone.length < 8) {
+	// 	  sonnerToast.error('Please enter a valid phone number (minimum 8 digits).');
+	// 	  return;
+	// 	}
 	
-		// Create form data to match Google Form's expected format
-		const formData = new FormData();
-		formData.append('entry.545040562', userName.trim());       // Name
-		formData.append('entry.1231199003', userEmail.trim());     // Email
-		formData.append('entry.1154213412', cleanedPhone);         // Phone (cleaned)
-		formData.append('entry.1081121699', companyName.trim());   // Company
+	// 	// Create form data to match Google Form's expected format
+	// 	const formData = new FormData();
+	// 	formData.append('entry.545040562', userName.trim());       // Name
+	// 	formData.append('entry.1231199003', userEmail.trim());     // Email
+	// 	formData.append('entry.1154213412', cleanedPhone);         // Phone (cleaned)
+	// 	formData.append('entry.1081121699', companyName.trim());   // Company
 	
-		try {
-		  await fetch("https://docs.google.com/forms/d/e/1FAIpQLSdB_mtDsubutUM_y1draxzdbfzcsqcIz9Ok_hTwPayBukJPNg/formResponse", {
-			method: 'POST',
-			mode: 'no-cors',  // Required to bypass CORS errors
-			body: formData,
-		  });
+	// 	try {
+	// 	  await fetch("https://docs.google.com/forms/d/e/1FAIpQLSdB_mtDsubutUM_y1draxzdbfzcsqcIz9Ok_hTwPayBukJPNg/formResponse", {
+	// 		method: 'POST',
+	// 		mode: 'no-cors',  // Required to bypass CORS errors
+	// 		body: formData,
+	// 	  });
 	
-		  sonnerToast.success('Request received! We will contact you shortly.');
+	// 	  sonnerToast.success('Request received! We will contact you shortly.');
 	
-		  // Clear the form after successful submission
-		  setUserName('');
-		  setUserEmail('');
-		  setUserPhone('');
-		  setCompanyName('');
+	// 	  // Clear the form after successful submission
+	// 	  setUserName('');
+	// 	  setUserEmail('');
+	// 	  setUserPhone('');
+	// 	  setCompanyName('');
 		  
-		  // Close the drawer after successful submission
-		  setIsOpen(false);
-		} catch (error) {
-		  sonnerToast.error('Failed to submit the form. Please try again.');
-		  console.error('Error:', error);
-		}
-	  };
+	// 	  // Close the drawer after successful submission
+	// 	  setIsOpen(false);
+	// 	} catch (error) {
+	// 	  sonnerToast.error('Failed to submit the form. Please try again.');
+	// 	  console.error('Error:', error);
+	// 	}
+	//   };
 	
 	  const router = useRouter();
-	  const [messages, setMessages] = useState<Message[]>([]);
-	  const [input, setInput] = useState('');
-	  const [isLoading, setIsLoading] = useState(false);
-	  const [visitorName, setVisitorName] = useState<string | null>(null);
-	  const [visitorCompany, setVisitorCompany] = useState<string | null>(null);
-	  const [sessionId, setSessionId] = useState<string | null>(null);
-	  const [isInitializing, setIsInitializing] = useState(true);
-	  const scrollAreaRef = useRef<HTMLDivElement>(null);
-	  const { toast } = useToast();
+	//   const [messages, setMessages] = useState<Message[]>([]);
+	//   const [input, setInput] = useState('');
+	//   const [isLoading, setIsLoading] = useState(false);
+	//   const [visitorName, setVisitorName] = useState<string | null>(null);
+	//   const [visitorCompany, setVisitorCompany] = useState<string | null>(null);
+	//   const [sessionId, setSessionId] = useState<string | null>(null);
+	//   const [isInitializing, setIsInitializing] = useState(true);
+	//   const scrollAreaRef = useRef<HTMLDivElement>(null);
+	//   const { toast } = useToast();
 	
-	  useEffect(() => {
-		const initializeChat = async () => {
-			const newSessionId = uuidv4();
-			setSessionId(newSessionId);
-			setSessionId(newSessionId);
+	//   useEffect(() => {
+	// 	const initializeChat = async () => {
+	// 		const newSessionId = uuidv4();
+	// 		setSessionId(newSessionId);
+	// 		setSessionId(newSessionId);
 			
-			// Send initial greeting message
-			const initialMessage: Message = {
-			  role: 'assistant',
-			  content: "Hello! I'm HeidelAI's AI Assistant. Before we begin, could you please tell me your name and the company you're representing?"
-			};
+	// 		// Send initial greeting message
+	// 		const initialMessage: Message = {
+	// 		  role: 'assistant',
+	// 		  content: "Hello! I'm HeidelAI's AI Assistant. Before we begin, could you please tell me your name and the company you're representing?"
+	// 		};
 			
-			setMessages([initialMessage]);
-			await storeMessage(initialMessage, null, null, newSessionId);
-			setIsInitializing(false);
-		  }
+	// 		setMessages([initialMessage]);
+	// 		await storeMessage(initialMessage, null, null, newSessionId);
+	// 		setIsInitializing(false);
+	// 	  }
 	
-		initializeChat();
-	  }, []);
+	// 	initializeChat();
+	//   }, []);
 	
-	  useEffect(() => {
-		if (scrollAreaRef.current) {
-		  scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-		}
-	  }, [messages]);
+	//   useEffect(() => {
+	// 	if (scrollAreaRef.current) {
+	// 	  scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+	// 	}
+	//   }, [messages]);
 	
-	  const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		if (!input.trim()) return;
+	//   const handleSubmit = async (e: React.FormEvent) => {
+	// 	e.preventDefault();
+	// 	if (!input.trim()) return;
 	
-		const userMessage: Message = { role: 'user', content: input };
-		setMessages(prev => [...prev, userMessage]);
-		setInput('');
-		setIsLoading(true);
+	// 	const userMessage: Message = { role: 'user', content: input };
+	// 	setMessages(prev => [...prev, userMessage]);
+	// 	setInput('');
+	// 	setIsLoading(true);
 	
-		await storeMessage(userMessage, visitorName, visitorCompany, sessionId);
+	// 	await storeMessage(userMessage, visitorName, visitorCompany, sessionId);
 	
-		try {
-		  const { data, error } = await supabase.functions.invoke('chat', {
-			body: {
-			  messages: [...messages, userMessage],
-			  systemPrompt,
-			},
-		  });
+	// 	try {
+	// 	  const { data, error } = await supabase.functions.invoke('chat', {
+	// 		body: {
+	// 		  messages: [...messages, userMessage],
+	// 		  systemPrompt,
+	// 		},
+	// 	  });
 	
-		  if (error) throw error;
+	// 	  if (error) throw error;
 	
-		  const assistantMessage = { 
-			role: 'assistant' as const, 
-			content: data.choices[0].message.content 
-		  };
+	// 	  const assistantMessage = { 
+	// 		role: 'assistant' as const, 
+	// 		content: data.choices[0].message.content 
+	// 	  };
 		  
-		  setMessages(prev => [...prev, assistantMessage]);
+	// 	  setMessages(prev => [...prev, assistantMessage]);
 		  
-		  await storeMessage(assistantMessage, visitorName, visitorCompany, sessionId);
+	// 	  await storeMessage(assistantMessage, visitorName, visitorCompany, sessionId);
 	
-		  // Only try to extract visitor info from the first user message
-		  if (!visitorName && !visitorCompany && messages.length === 1) {
-			const nameMatch = userMessage.content.match(/(?:my name is|I'm|I am) ([^,.]+)/i);
-			const companyMatch = userMessage.content.match(/(?:from|with|at) ([^,.]+)/i);
+	// 	  // Only try to extract visitor info from the first user message
+	// 	  if (!visitorName && !visitorCompany && messages.length === 1) {
+	// 		const nameMatch = userMessage.content.match(/(?:my name is|I'm|I am) ([^,.]+)/i);
+	// 		const companyMatch = userMessage.content.match(/(?:from|with|at) ([^,.]+)/i);
 			
-			if (nameMatch) setVisitorName(nameMatch[1].trim());
-			if (companyMatch) setVisitorCompany(companyMatch[1].trim());
-		  }
+	// 		if (nameMatch) setVisitorName(nameMatch[1].trim());
+	// 		if (companyMatch) setVisitorCompany(companyMatch[1].trim());
+	// 	  }
 	
-		} catch (error) {
-		  console.error('Error calling chat function:', error);
-		  toast({
-			title: "Error",
-			description: "Failed to get a response. Please try again.",
-			variant: "destructive",
-		  });
-		} finally {
-		  setIsLoading(false);
-		}
-	  };
+	// 	} catch (error) {
+	// 	  console.error('Error calling chat function:', error);
+	// 	  toast({
+	// 		title: "Error",
+	// 		description: "Failed to get a response. Please try again.",
+	// 		variant: "destructive",
+	// 	  });
+	// 	} finally {
+	// 	  setIsLoading(false);
+	// 	}
+	//   };
 
 	return (
 		<header>
@@ -283,7 +286,9 @@ const Header = () => {
 								aria-label="home"
 								className="flex items-center gap-2"
 							>
-								<img
+								<Image
+									height={10}
+									width={10}
 									src="/heidelai.png"
 									alt="Heidel AI Logo"
 									className="w-8 h-8 object-contain"
@@ -375,7 +380,7 @@ const Header = () => {
 								>
 									<span>Login</span>
 								</Button>
-								<Button
+								{/* <Button
 									size="sm"
 									className={cn(
 										isScrolled ? 'hidden' : 'lg:inline-flex',
@@ -384,20 +389,21 @@ const Header = () => {
 									onClick={() => router.push('/onboarding')}
 								>
 									<span>Sign Up</span>
-								</Button>
-								<Button
-									size="sm"
-									className={cn(
-										isScrolled ? 'lg:inline-flex' : 'hidden',
-										'backdrop-blur-sm transform w-full hover:scale-105 transition-all duration-300 shadow-lg',
-										isDarkTheme
-										? 'bg-white text-black hover:bg-white/90'
-										: 'bg-gray-900 text-white hover:bg-gray-800'
-									)}
-									onClick={() => router.push('/onboarding')}
-									>
-									<span>Get Started</span>
+								</Button> */}
+								<ScheduleDemo trigger={
+									<Button
+										size="sm"
+										className={cn(
+											isScrolled ? 'lg:inline-flex' : 'hidden',
+											'backdrop-blur-sm transform w-full hover:scale-105 transition-all duration-300 shadow-lg',
+											isDarkTheme
+											? 'bg-white text-black hover:bg-white/90'
+											: 'bg-gray-900 text-white hover:bg-gray-800'
+										)}
+										>
+										<span>Join Beta</span>
 									</Button>
+								} />
 							</div>
 						</div>
 					</div>
