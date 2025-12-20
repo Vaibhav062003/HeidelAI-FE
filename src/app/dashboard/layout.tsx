@@ -84,7 +84,7 @@ export default function DashboardLayout({
     );
   }
 
-  if (!isSignedIn) {
+  if (!isLoaded && !isSignedIn) {
     // Enlarged Not signed in UI with HeidelAI Logo Loader with Shine Effect
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 relative overflow-hidden">

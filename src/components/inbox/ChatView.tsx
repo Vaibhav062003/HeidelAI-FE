@@ -51,6 +51,7 @@ import { useReminders } from "../hooks/useReminders";
 import { useTypingIndicator } from "../hooks/typingIndicator";
 
 import { conversationService } from "@/components/services/api";
+import debounce from "lodash.debounce";
 import {
   Tooltip,
   TooltipContent,
@@ -144,7 +145,8 @@ interface Message {
     | "ig_reel"
     | "story_reply"
     | "system"
-    | "message_reply";
+    | "message_reply"
+    | "document";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
   product_data?: ProductData[];
@@ -239,43 +241,43 @@ const MessageSkeleton = () => (
   </div>
 );
 
-const LoadingState = () => (
-  <Card className="h-screen flex flex-col bg-white ">
-    {/* Header skeleton */}
-    <div className="p-4 border-b flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
-        <div className="space-y-2">
-          <div className="h-4 w-32 bg-gray-200 rounded-full animate-pulse" />
-          <div className="h-3 w-24 bg-gray-200 rounded-full animate-pulse" />
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
-        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
-        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
-      </div>
-    </div>
+// const LoadingState = () => (
+//   <Card className="h-screen flex flex-col bg-white ">
+//     {/* Header skeleton */}
+//     <div className="p-4 border-b flex items-center justify-between">
+//       <div className="flex items-center gap-3">
+//         <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+//         <div className="space-y-2">
+//           <div className="h-4 w-32 bg-gray-200 rounded-full animate-pulse" />
+//           <div className="h-3 w-24 bg-gray-200 rounded-full animate-pulse" />
+//         </div>
+//       </div>
+//       <div className="flex gap-2">
+//         <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+//         <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+//         <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+//       </div>
+//     </div>
 
-    {/* Messages area */}
-    <ScrollArea className="flex-1 h-full p-4">
-      <div className="space-y-6">
-        {[1, 2, 3, 4].map((i) => (
-          <MessageSkeleton key={i} />
-        ))}
-      </div>
-    </ScrollArea>
+//     {/* Messages area */}
+//     <ScrollArea className="flex-1 h-full p-4">
+//       <div className="space-y-6">
+//         {[1, 2, 3, 4].map((i) => (
+//           <MessageSkeleton key={i} />
+//         ))}
+//       </div>
+//     </ScrollArea>
 
-    {/* Input area skeleton */}
-    <div className="p-4 border-t">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
-        <div className="flex-1 h-10 bg-gray-200 rounded-lg animate-pulse" />
-        <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
-      </div>
-    </div>
-  </Card>
-);
+//     {/* Input area skeleton */}
+//     <div className="p-4 border-t">
+//       <div className="flex items-center gap-2">
+//         <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
+//         <div className="flex-1 h-10 bg-gray-200 rounded-lg animate-pulse" />
+//         <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
+//       </div>
+//     </div>
+//   </Card>
+// );
 
 // const parseProductData = (productDataString: string): ProductData[] => {
 //   try {
@@ -868,13 +870,15 @@ const ChatView = ({
     };
   }, []);
 
-  useEffect(() => {
-    // Don't show dropdown if message doesn't start with "/"
-    if (!message.startsWith("/")) {
+    useEffect(()=>{
+    const debouncedFilter = debounce(()=>{
+
+      if (!message.startsWith("/")) {
       setShowCannedResponses(false);
       setFilteredResponses([]);
       return;
     }
+
 
     // Get the search query after "/"
     const searchQuery = message.slice(1).toLowerCase().trim();
@@ -895,26 +899,16 @@ const ChatView = ({
     setFilteredResponses(filtered);
     setShowCannedResponses(filtered.length > 0);
     setSelectedCannedIndex(0);
-  }, [message, cannedResponses]);
+  }, 200);
 
-  // console.log("conversationStatus", conversationStatus);
+   debouncedFilter();
 
-  useEffect(()=>{
-    const UpdateConversationStatus= async ()=>{
-      if(!selectedConversationId) return;
-      // console.log("conversation", selectedConversationId, conversation);
-      const status = conversation?.status
-      if(status){
-        setConversationStatus(status as "open" | "closed" | "follow-up");
-        setIsResolved(status === "closed");
-        setIsFollowUp(status === "follow-up");
-    }
-  }
-    UpdateConversationStatus();
-  },[selectedConversationId, conversation]);
+  return () => {
+    debouncedFilter.cancel();
+  };
 
+  }, [message, cannedResponses])
 
-  
   const handleSendAudio = async () => {
     if (!audioURL || !selectedConversationId) return;
 
@@ -1680,6 +1674,9 @@ const ChatView = ({
   useEffect(() => {
     if (!selectedConversationId) return () => {};
 
+    setMessage("");
+    textareaRef.current?.focus();
+
     sendWsMessage({
       type: "join_conversation",
       conversation_id: selectedConversationId,
@@ -1790,6 +1787,8 @@ const ChatView = ({
       textareaRef.current?.focus();
     }, 0);
   };
+
+
 
   return (
     <>
@@ -2471,7 +2470,7 @@ const ChatView = ({
                                       isActive={
                                         activeMediaType === "reel" &&
                                         activeMediaId ===
-                                          message.payload.reel_video_id
+                                        message.payload.reel_video_id
                                       }
                                       onPlay={(id) => handlePlay(id, "reel")} // stops others
                                       isMuted={globalMuted}
@@ -2495,7 +2494,7 @@ const ChatView = ({
                                       isActive={
                                         activeMediaType === "story" &&
                                         activeMediaId ===
-                                          message.payload.story_media_id
+                                        message.payload.story_media_id
                                       } // only one plays
                                       onPlay={(id) => handlePlay(id, "story")}
                                       isMuted={globalMuted}
@@ -2553,6 +2552,20 @@ const ChatView = ({
                                       }}
                                     />
                                   )}
+
+                                  {/* Document Messages */}
+                                  {message.type === "document" && (
+                                    <DocumentMessage
+                                      url={message.payload.url}
+                                      previewUrl={message.payload.thumbnail_url}
+                                      fileName={message.payload.file_name}
+                                      fileSize={message.payload.file_size}
+                                      fileFormat={message.payload.file_format}
+                                      filePages={message.payload.file_pages}
+                                      isAgent={message.role.toLowerCase() === "agent"}
+                                      timestamp={formatMessageTime(message.timestamp)}
+                                    />
+                                  )}
                                 </LazyMediaLoader>
                               )}
 
@@ -2564,6 +2577,7 @@ const ChatView = ({
                                 "share",
                                 "image",
                                 "video",
+                                "document",
                               ].includes(message.type ?? "") && (
                                 <MessageItem
                                   key={message.id}
@@ -2592,66 +2606,75 @@ const ChatView = ({
             <div className="flex-shrink-0 mb-3 relative">
               {/* Typing Users */}
               {typingUsers.size > 0 && (
-                <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-5 py-2 rounded-xl border border-white/10 shadow-sm animate-fadeIn">
-                  {/* List of users typing */}
-                  <div className="flex items-center gap-x-2 flex-wrap text-sm">
-                    {Array.from(typingUsers.values()).map((user, index) => {
-                      const initials = user.agent_name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase();
-
-                      const bgColor = `hsl(${
-                        (user.agent_name.length * 37) % 360
-                      }, 70%, 55%)`; // unique color
-
-                      return (
-                        <span
-                          key={index}
-                          className="inline-flex items-center gap-2"
-                        >
-                          {/* Avatar with initials */}
+                <div className="inline-flex items-center ml-5 px-3 text-sm ">
+                  {/* Overlapping Initials */}
+                  <div className="flex items-center -space-x-2 mr-2">
+                    {Array.from(typingUsers.values())
+                      .slice(0, 2)
+                      .map((user, idx) => {
+                        const initials = user.agent_name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase();
+                        const bgColor = `hsl(${(user.agent_name.length * 37) % 360}, 70%, 45%)`;
+                        return (
                           <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
-                            style={{ backgroundColor: bgColor }}
+                            key={idx}
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-white shadow"
+                            style={{
+                              backgroundColor: bgColor,
+                              zIndex: 10 - idx,
+                            }}
                           >
                             {initials}
                           </div>
-                          {/* Name */}
-                          <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                            {user.agent_name}
-                          </span>
-
-                          {index < typingUsers.size - 1 && (
-                            <span className="text-gray-500 text-base">,</span>
-                          )}
-                        </span>
-                      );
-                    })}
-                    <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent ml-1">
-                      {typingUsers.size === 1 ? "is typing" : "are typing"}
-                    </span>
+                        );
+                      })}
                   </div>
-
-                  {/* Animated dots */}
-                  <div className="flex items-center gap-1 ml-1">
-                    <span className="w-2 h-2 bg-gradient-to-br from-pink-400 to-purple-400 rounded-full animate-bounce delay-0"></span>
-                    <span className="w-2 h-2 bg-gradient-to-br from-purple-400 to-cyan-400 rounded-full animate-bounce delay-150"></span>
-                    <span className="w-2 h-2 bg-gradient-to-br from-cyan-400 to-pink-400 rounded-full animate-bounce delay-300"></span>
+                  {/* Typing Text */}
+                  <span>
+                    {typingUsers.size === 1 && (
+                      <>
+                        {Array.from(typingUsers.values())[0].agent_name} is typing
+                      </>
+                    )}
+                    {typingUsers.size === 2 && (
+                      <>
+                        {Array.from(typingUsers.values())[0].agent_name} & {Array.from(typingUsers.values())[1].agent_name} are typing
+                      </>
+                    )}
+                    {typingUsers.size > 2 && (
+                      <>Multiple people are typing</>
+                    )}
+                  </span>
+                  {/* Dots */}
+                  <div className="flex justify-end gap-1 ml-1">
+                    <span className="dot animate-dot"></span>
+                    <span className="dot animate-dot delay-150"></span>
+                    <span className="dot animate-dot delay-300"></span>
                   </div>
-
                   <style>{`
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(4px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      .animate-fadeIn {
-        animation: fadeIn 0.25s ease-out forwards;
-      }
-    `}</style>
+                    .dot {
+                      width: 3px;
+                      height: 3px;
+                      border-radius: 50%;
+                      background-color: #555;
+                    }
+                    @keyframes dot {
+                      0% { opacity: 0.3; transform: translateY(0); }
+                      50% { opacity: 1; transform: translateY(-2px); }
+                      100% { opacity: 0.3; transform: translateY(0); }
+                    }
+                    .animate-dot {
+                      animation: dot 1s infinite ease-in-out;
+                    }
+                    .delay-150 { animation-delay: 0.15s; }
+                    .delay-300 { animation-delay: 0.3s; }
+                  `}</style>
                 </div>
               )}
+
 
               {sharedProduct && (
                 <div className="mb-3 px-3">
