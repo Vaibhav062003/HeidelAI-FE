@@ -92,6 +92,7 @@ import UserStatus from "./UserStatus";
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
 // import { Progress } from "@radix-ui/react-progress";
+import DocumentMessage from '../messaging/DocumentMessage';
 
 interface CustomerInfo {
   name: string;
