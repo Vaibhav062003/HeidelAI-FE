@@ -1367,7 +1367,6 @@ const ChatView = ({
 
     try{
       const res = await api.post(`/api/ai/schedule-message/${selectedConversationId}`);
-      console.log("res:",res)
 
       if (!(res && (res.status === 200 || res.status === 204))) {
       throw new Error(
