@@ -14,7 +14,7 @@ import {
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { Conversation } from "../types/conversation";
 import {
   ShoppingCart,
@@ -53,7 +53,6 @@ import { useReminders } from "../hooks/useReminders";
 // import { Trash2, User, Menu } from "lucide-react";
 // import TimerDisplay from "./TimerDisplay";
 import { useTypingIndicator } from "../hooks/typingIndicator";
-import { createClient } from "@supabase/supabase-js";
 import { conversationService } from "@/components/services/api";
 import debounce from "lodash.debounce";
 import {
@@ -89,12 +88,6 @@ import { useMainWebSocket } from "@/lib/websocket";
 import { storeData, getData } from "@/lib/indexedDB";
 import CountDownTimer from "../LandingPage/CountDownTimer";
 import DocumentMessage from "../messaging/DocumentMessage";
-import { url } from "inspector";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 // const Picker = dynamic(
 //   () => {
@@ -1811,7 +1804,7 @@ const ChatView = ({
 
   return (
     <>
-      <Toaster richColors position="top-right" />
+      { /*<Toaster richColors position="top-right" /> */}
       <style>
         {`
           .product-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
