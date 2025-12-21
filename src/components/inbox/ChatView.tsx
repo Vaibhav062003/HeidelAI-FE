@@ -142,18 +142,18 @@ export interface Message {
   conversation_id: string;
   status?: "sent" | "delivered" | "read" | "sending";
   type?:
-    | "text"
-    | "image"
-    | "file"
-    | "voice"
-    | "video"
-    | "share"
-    | "ig_story"
-    | "ig_reel"
-    | "story_reply"
-    | "system"
-    | "message_reply"
-    | "document";
+  | "text"
+  | "image"
+  | "file"
+  | "voice"
+  | "video"
+  | "share"
+  | "ig_story"
+  | "ig_reel"
+  | "story_reply"
+  | "system"
+  | "message_reply"
+  | "document";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
   product_data?: ProductData[];
@@ -640,15 +640,12 @@ export const MessageItem = memo(
     return (
       <>
         <div
-          className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${
-            message.role === "customer"
-              ? `bg-white/90 backdrop-blur-sm ${
-                  isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"
-                } text-gray-900 border-gray-200/60`
-              : `bg-blue-600/90 backdrop-blur-sm ${
-                  isReplyMessage || isMediaMessage ? "rounded-tr-lg" : "rounded-br-lg"
-                } text-white border-blue-500/60`
-          }`}
+          className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${message.role === "customer"
+              ? `bg-white/90 backdrop-blur-sm ${isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"
+              } text-gray-900 border-gray-200/60`
+              : `bg-blue-600/90 backdrop-blur-sm ${isReplyMessage || isMediaMessage ? "rounded-tr-lg" : "rounded-br-lg"
+              } text-white border-blue-500/60`
+            }`}
           style={{ wordBreak: "break-word" }}
         >
           <div className="break-words">
@@ -658,9 +655,8 @@ export const MessageItem = memo(
           </div>
           <div className="flex justify-end mt-2">
             <span
-              className={`text-xs ${
-                message.role === "customer" ? "text-gray-500" : "text-white/70"
-              }`}
+              className={`text-xs ${message.role === "customer" ? "text-gray-500" : "text-white/70"
+                }`}
             >
               {formatMessageTime(message.timestamp)}
             </span>
@@ -679,7 +675,7 @@ export const MessageItem = memo(
       prevProps.message.id === nextProps.message.id &&
       prevProps.isLast === nextProps.isLast &&
       JSON.stringify(prevProps.message.reaction) ===
-        JSON.stringify(nextProps.message.reaction)
+      JSON.stringify(nextProps.message.reaction)
     );
   }
 );
@@ -939,42 +935,42 @@ const ChatView = ({
     };
   }, []);
 
-    useEffect(()=>{
-    const debouncedFilter = debounce(()=>{
+  useEffect(() => {
+    const debouncedFilter = debounce(() => {
 
       if (!message.startsWith("/")) {
-      setShowCannedResponses(false);
-      setFilteredResponses([]);
-      return;
-    }
+        setShowCannedResponses(false);
+        setFilteredResponses([]);
+        return;
+      }
 
 
-    // Get the search query after "/"
-    const searchQuery = message.slice(1).toLowerCase().trim();
+      // Get the search query after "/"
+      const searchQuery = message.slice(1).toLowerCase().trim();
 
-    // If just "/" (empty after slash), show ALL responses
-    if (searchQuery === "") {
-      setFilteredResponses(cannedResponses);
-      setShowCannedResponses(cannedResponses.length > 0);
+      // If just "/" (empty after slash), show ALL responses
+      if (searchQuery === "") {
+        setFilteredResponses(cannedResponses);
+        setShowCannedResponses(cannedResponses.length > 0);
+        setSelectedCannedIndex(0);
+        return;
+      }
+
+      // Filter responses by shortcut
+      const filtered = cannedResponses.filter((response) =>
+        response.shortcut.toLowerCase().includes(searchQuery)
+      );
+
+      setFilteredResponses(filtered);
+      setShowCannedResponses(filtered.length > 0);
       setSelectedCannedIndex(0);
-      return;
-    }
+    }, 200);
 
-    // Filter responses by shortcut
-    const filtered = cannedResponses.filter((response) =>
-      response.shortcut.toLowerCase().includes(searchQuery)
-    );
+    debouncedFilter();
 
-    setFilteredResponses(filtered);
-    setShowCannedResponses(filtered.length > 0);
-    setSelectedCannedIndex(0);
-  }, 200);
-
-   debouncedFilter();
-
-  return () => {
-    debouncedFilter.cancel();
-  };
+    return () => {
+      debouncedFilter.cancel();
+    };
 
   }, [message, cannedResponses])
 
@@ -1201,10 +1197,10 @@ const ChatView = ({
         type: file.type.startsWith("image/")
           ? "image"
           : file.type.startsWith("video/")
-          ? "video"
-          : file.type.startsWith("audio/")
-          ? "voice"
-          : "file",
+            ? "video"
+            : file.type.startsWith("audio/")
+              ? "voice"
+              : "file",
         status: "sending",
         payload: {
           url: localPreviewUrl,
@@ -1245,45 +1241,35 @@ const ChatView = ({
 
     // 5. Send to Backend
     try {
-      let data = {}
+      const formData = new FormData();
+
+      // 1. Append common fields
+      formData.append("conversation_id", selectedConversationId);
+      formData.append("platform", platform);
+
+      // 2. Append content/caption if it exists
+      if (contentToSend && contentToSend.trim()) {
+        formData.append("content", contentToSend.trim());
+      }
+
+      // 3. Append file only if it exists
       if (currentAttachments.length > 0) {
-        const file = currentAttachments[0];
-        const formData = new FormData();
-        
-        formData.append("file", file);
-        formData.append("recipient_id", selectedConversationId.split("_")[1]);
-        formData.append("platform", platform);
-        
-        // Add caption if it exists
-        if (contentToSend.trim()) {
-          formData.append("caption", contentToSend.trim());
-        }
-
-        data = {
-          conversation_id: selectedConversationId,
-          content: contentToSend,
-          platform: platform,
-          formData: formData
-        };
-      }
-      else {
-        data = {
-          conversation_id: selectedConversationId,
-          content: contentToSend,
-          platform: platform,
-        };
+        formData.append("file", currentAttachments[0]);
       }
 
-      const response = await api.post(`/api/conversations/send-message`, data);
+      // 4. Send formData DIRECTLY
+      // Do NOT wrap it like { formData: formData }
+      const response = await api.post(`/api/conversations/send-message`, formData);
+
       if (response.status !== 200) throw new Error("Failed to send");
-      
+
     } catch (error) {
       console.error("Send failed:", error);
       toast.error("Failed to send message");
 
       // ROLLBACK UI on Failure
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
-      
+
       // Restore User Input
       setMessage(currentContent); // Restore text
       setAttachments(currentAttachments); // Restore attachments
@@ -1684,7 +1670,7 @@ const ChatView = ({
   };
 
   useEffect(() => {
-    if (!selectedConversationId) return () => {};
+    if (!selectedConversationId) return () => { };
 
     setMessage("");
     textareaRef.current?.focus();
@@ -1827,14 +1813,14 @@ const ChatView = ({
           <Card
             onDragOver={(e) => {
               e.preventDefault();
-                setIsDragging(true);
-              }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={handleDrop}
-              className={`relative h-full flex flex-col bg-white max-h-screen rounded-none overflow-hidden ${isDragging ? "" : "border border-gray-200"}`}
-              >
-              
-                
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            className={`relative h-full flex flex-col bg-white max-h-screen rounded-none overflow-hidden ${isDragging ? "" : "border border-gray-200"}`}
+          >
+
+
 
             {/* Desktop Header */}
             <div className="px-6 py-1 border-b border-gray-100 bg-white items-center justify-between flex">
@@ -2105,16 +2091,16 @@ const ChatView = ({
             </div>
 
             {isDragging && (
-                <div
+              <div
                 className="absolute mt-12  border-blue-500 border-2 border-dashed inset-0 z-50 flex bg-white/30 backdrop-blur-sm items-center justify-center pointer-events-none"
                 aria-hidden="true"
-                >
+              >
                 <div className="flex flex-col items-center justify-center gap-3  rounded-2xl p-6  text-gray-600">
                   <Upload className="h-12 w-12" />
                   <div className="text-sm font-semibold">Drop files to upload</div>
                 </div>
-                </div>
-              )}
+              </div>
+            )}
 
             {/* Customer Info Dialog */}
             <Dialog open={showCustomerInfo} onOpenChange={setShowCustomerInfo}>
@@ -2409,205 +2395,203 @@ const ChatView = ({
                   <>
                     {messages.map((message, index) => {
                       const latestMediaMessage = [...messages]
-                      .reverse()
-                      .find(
-                        (m) => m.type === "ig_reel" || m.type === "ig_story"
-                      );
+                        .reverse()
+                        .find(
+                          (m) => m.type === "ig_reel" || m.type === "ig_story"
+                        );
 
-                    const latestMediaId =
-                      latestMediaMessage?.payload?.reel_video_id ||
-                      latestMediaMessage?.payload?.story_media_id;
+                      const latestMediaId =
+                        latestMediaMessage?.payload?.reel_video_id ||
+                        latestMediaMessage?.payload?.story_media_id;
 
-                    const isLatest =
-                      (message.type === "ig_reel" &&
-                        message.payload?.reel_video_id === latestMediaId) ||
-                      (message.type === "ig_story" &&
-                        message.payload?.story_media_id === latestMediaId);
-                    return (
-                      <div
-                        key={message.id}
-                        className="relative group w-full message-item"
-                      >
+                      const isLatest =
+                        (message.type === "ig_reel" &&
+                          message.payload?.reel_video_id === latestMediaId) ||
+                        (message.type === "ig_story" &&
+                          message.payload?.story_media_id === latestMediaId);
+                      return (
                         <div
-                          className={`flex ${
-                            message.role === "customer"
-                              ? "justify-start"
-                              : "justify-end"
-                          }`}
+                          key={message.id}
+                          className="relative group w-full message-item"
                         >
                           <div
-                            className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${
-                              message.role === "customer"
-                                ? "items-start"
-                                : "items-end"
-                            }`}
+                            className={`flex ${message.role === "customer"
+                                ? "justify-start"
+                                : "justify-end"
+                              }`}
                           >
-                            <MessageWrapper 
-                              message={message} 
-                              index={index} 
-                              allMessages={messages}
-                              forceHide={fullscreenMediaId === message.id}
+                            <div
+                              className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === "customer"
+                                  ? "items-start"
+                                  : "items-end"
+                                }`}
                             >
-                              {/* IG Media Messages */}
-                              {message.payload && (
-                                <LazyMediaLoader key={index} index={index}>
-                                  {/* Render IG Posts */}
-                                  {message.type === "share" && (
-                                    <InstagramPost
-                                      mediaUrl={message.payload.url}
-                                      timestamp={formatMessageTime(
-                                        message.timestamp
-                                      )}
-                                    />
-                                  )}
+                              <MessageWrapper
+                                message={message}
+                                index={index}
+                                allMessages={messages}
+                                forceHide={fullscreenMediaId === message.id}
+                              >
+                                {/* IG Media Messages */}
+                                {message.payload && (
+                                  <LazyMediaLoader key={index} index={index}>
+                                    {/* Render IG Posts */}
+                                    {message.type === "share" && (
+                                      <InstagramPost
+                                        mediaUrl={message.payload.url}
+                                        timestamp={formatMessageTime(
+                                          message.timestamp
+                                        )}
+                                      />
+                                    )}
 
-                                  {/* Render IG Reels */}
-                                  {message.type === "ig_reel" && (
-                                    <InstagramReel
-                                      key={index}
-                                      id={message.payload.reel_video_id}
-                                      reelVideoUrl={message.payload.url}
-                                      title={message.payload.caption}
-                                      timestamp={formatMessageTime(
-                                        message.timestamp
-                                      )}
-                                      viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
-                                      isLatest={isLatest}
-                                      isActive={
-                                        activeMediaType === "reel" &&
-                                        activeMediaId ===
-                                        message.payload.reel_video_id
-                                      }
-                                      onPlay={(id) => handlePlay(id, "reel")} // stops others
-                                      isMuted={globalMuted}
-                                      onMuteToggle={handleMuteToggle}
-                                      isAgent={
-                                        message.role.toLowerCase() === "agent"
-                                      }
-                                    />
-                                  )}
+                                    {/* Render IG Reels */}
+                                    {message.type === "ig_reel" && (
+                                      <InstagramReel
+                                        key={index}
+                                        id={message.payload.reel_video_id}
+                                        reelVideoUrl={message.payload.url}
+                                        title={message.payload.caption}
+                                        timestamp={formatMessageTime(
+                                          message.timestamp
+                                        )}
+                                        viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
+                                        isLatest={isLatest}
+                                        isActive={
+                                          activeMediaType === "reel" &&
+                                          activeMediaId ===
+                                          message.payload.reel_video_id
+                                        }
+                                        onPlay={(id) => handlePlay(id, "reel")} // stops others
+                                        isMuted={globalMuted}
+                                        onMuteToggle={handleMuteToggle}
+                                        isAgent={
+                                          message.role.toLowerCase() === "agent"
+                                        }
+                                      />
+                                    )}
 
-                                  {/* Render IG Story */}
-                                  {(message.type === "ig_story" ||
-                                    message.type === "story_reply") && (
-                                    <InstagramStory
-                                      id={message.payload.story_media_id}
-                                      sharedBy="You"
-                                      storyOwnerName={"Instagram User"}
-                                      storyMediaUrl={
-                                        message.payload.story_media_url
-                                      }
-                                      isActive={
-                                        activeMediaType === "story" &&
-                                        activeMediaId ===
-                                        message.payload.story_media_id
-                                      } // only one plays
-                                      onPlay={(id) => handlePlay(id, "story")}
-                                      isMuted={globalMuted}
-                                      isLatest={isLatest}
-                                      onMuteToggle={(muted) =>
-                                        setGlobalMuted(muted)
-                                      }
-                                      isAgent={
-                                        message.role.toLowerCase() === "agent"
-                                      }
-                                      timestamp={formatMessageTime(
-                                        message.timestamp
+                                    {/* Render IG Story */}
+                                    {(message.type === "ig_story" ||
+                                      message.type === "story_reply") && (
+                                        <InstagramStory
+                                          id={message.payload.story_media_id}
+                                          sharedBy="You"
+                                          storyOwnerName={"Instagram User"}
+                                          storyMediaUrl={
+                                            message.payload.story_media_url
+                                          }
+                                          isActive={
+                                            activeMediaType === "story" &&
+                                            activeMediaId ===
+                                            message.payload.story_media_id
+                                          } // only one plays
+                                          onPlay={(id) => handlePlay(id, "story")}
+                                          isMuted={globalMuted}
+                                          isLatest={isLatest}
+                                          onMuteToggle={(muted) =>
+                                            setGlobalMuted(muted)
+                                          }
+                                          isAgent={
+                                            message.role.toLowerCase() === "agent"
+                                          }
+                                          timestamp={formatMessageTime(
+                                            message.timestamp
+                                          )}
+                                          content={message.content}
+                                          storyOwnerUsername={
+                                            message.payload.owner_username
+                                          }
+                                          type={message.type}
+                                        />
                                       )}
-                                      content={message.content}
-                                      storyOwnerUsername={
-                                        message.payload.owner_username
-                                      }
-                                      type={message.type}
-                                    />
-                                  )}
 
-                                  {/* Render Images / Videos */}
-                                  {(message.type === "image" ||
-                                    message.type === "video") && (
-                                    <MediaMessage
-                                      type={
-                                        message.type === "image"
-                                          ? "image"
-                                          : "video"
-                                      }
-                                      url={message.payload.url}
-                                      status={message.status}
+                                    {/* Render Images / Videos */}
+                                    {(message.type === "image" ||
+                                      message.type === "video") && (
+                                        <MediaMessage
+                                          type={
+                                            message.type === "image"
+                                              ? "image"
+                                              : "video"
+                                          }
+                                          url={message.payload.url}
+                                          status={message.status}
+                                          message={message}
+                                          index={index}
+                                          isLast={index === messages.length - 1}
+                                          key={message.id}
+                                          isAgent={
+                                            message.role.toLowerCase() === "agent"
+                                          }
+                                          isLatest={isLatest}
+                                          isActive={
+                                            activeMediaType === "video" &&
+                                            activeMediaId === message.id
+                                          }
+                                          onPlay={(id) => handlePlay(id, "video")}
+                                          isMuted={globalMuted}
+                                          onMuteToggle={(muted) =>
+                                            setGlobalMuted(muted)
+                                          }
+                                          id={message.id}
+                                          timestamp={formatMessageTime(
+                                            message.timestamp
+                                          )}
+                                          onFullscreenToggle={(isFullscreen) => {
+                                            if (isFullscreen) {
+                                              setFullscreenMediaId(message.id);
+                                            } else {
+                                              setFullscreenMediaId(null);
+                                            }
+                                          }}
+                                        />
+                                      )}
+
+                                    {/* Document Messages */}
+                                    {message.type === "document" && (
+                                      <DocumentMessage
+                                        url={message.payload.url}
+                                        previewUrl={message.payload.thumbnail_url}
+                                        fileName={message.payload.file_name}
+                                        fileSize={message.payload.file_size}
+                                        fileFormat={message.payload.file_format}
+                                        filePages={message.payload.file_pages}
+                                        isAgent={message.role.toLowerCase() === "agent"}
+                                        timestamp={formatMessageTime(message.timestamp)}
+                                      />
+                                    )}
+                                  </LazyMediaLoader>
+                                )}
+
+                                {/* Normal Messages */}
+                                {![
+                                  "ig_story",
+                                  "story_reply",
+                                  "ig_reel",
+                                  "share",
+                                  "image",
+                                  "video",
+                                  "document",
+                                ].includes(message.type ?? "") && (
+                                    <MessageItem
+                                      key={message.id}
                                       message={message}
                                       index={index}
-                                      isLast={index === messages.length - 1}
-                                      key={message.id}
-                                      isAgent={
-                                        message.role.toLowerCase() === "agent"
-                                      }
                                       isLatest={isLatest}
-                                      isActive={
-                                        activeMediaType === "video" &&
-                                        activeMediaId === message.id
+                                      isLast={index === messages.length - 1}
+                                      isReplyMessage={
+                                        message.type == "message_reply"
                                       }
-                                      onPlay={(id) => handlePlay(id, "video")}
-                                      isMuted={globalMuted}
-                                      onMuteToggle={(muted) =>
-                                        setGlobalMuted(muted)
-                                      }
-                                      id={message.id}
-                                      timestamp={formatMessageTime(
-                                        message.timestamp
-                                      )}
-                                      onFullscreenToggle={(isFullscreen) => {
-                                        if (isFullscreen) {
-                                          setFullscreenMediaId(message.id);
-                                        } else {
-                                          setFullscreenMediaId(null);
-                                        }
-                                      }}
                                     />
                                   )}
-
-                                  {/* Document Messages */}
-                                  {message.type === "document" && (
-                                    <DocumentMessage
-                                      url={message.payload.url}
-                                      previewUrl={message.payload.thumbnail_url}
-                                      fileName={message.payload.file_name}
-                                      fileSize={message.payload.file_size}
-                                      fileFormat={message.payload.file_format}
-                                      filePages={message.payload.file_pages}
-                                      isAgent={message.role.toLowerCase() === "agent"}
-                                      timestamp={formatMessageTime(message.timestamp)}
-                                    />
-                                  )}
-                                </LazyMediaLoader>
-                              )}
-
-                              {/* Normal Messages */}
-                              {![
-                                "ig_story",
-                                "story_reply",
-                                "ig_reel",
-                                "share",
-                                "image",
-                                "video",
-                                "document",
-                              ].includes(message.type ?? "") && (
-                                <MessageItem
-                                  key={message.id}
-                                  message={message}
-                                  index={index}
-                                  isLatest={isLatest}
-                                  isLast={index === messages.length - 1}
-                                  isReplyMessage={
-                                    message.type == "message_reply"
-                                  }
-                                />
-                              )}
-                            </MessageWrapper>
+                              </MessageWrapper>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                  <div className="mt-10" ref={lastMessageRef} />
+                      );
+                    })}
+                    <div className="mt-10" ref={lastMessageRef} />
                   </>
                 )}
               </div>
@@ -2730,21 +2714,19 @@ const ChatView = ({
                           <button
                             key={response._id}
                             onClick={() => handleSelectCannedResponse(response)}
-                            className={`w-full text-left px-4 py-3 border-b border-gray-50 last:border-0 transition-all hover:bg-blue-50 group ${
-                              index === selectedCannedIndex
+                            className={`w-full text-left px-4 py-3 border-b border-gray-50 last:border-0 transition-all hover:bg-blue-50 group ${index === selectedCannedIndex
                                 ? "bg-blue-50 border-l-4 border-l-blue-500"
                                 : ""
-                            }`}
+                              }`}
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                   <span
-                                    className={`text-sm font-mono font-semibold px-2 py-0.5 rounded ${
-                                      index === selectedCannedIndex
+                                    className={`text-sm font-mono font-semibold px-2 py-0.5 rounded ${index === selectedCannedIndex
                                         ? "bg-blue-100 text-blue-700"
                                         : "bg-gray-100 text-gray-700 group-hover:bg-blue-100 group-hover:text-blue-700"
-                                    }`}
+                                      }`}
                                   >
                                     {response.shortcut}
                                   </span>
@@ -2832,21 +2814,19 @@ const ChatView = ({
                     {/* Mode Toggle */}
                     <div className="mb-5 w-40 bg-gray-100/80 rounded-2xl p-0.5 flex items-center">
                       <button
-                        className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${
-                          mode === "reply"
+                        className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${mode === "reply"
                             ? "bg-blue-600 text-white shadow-md"
                             : "text-gray-600 hover:text-blue-600"
-                        }`}
+                          }`}
                         onClick={() => setMode("reply")}
                       >
                         Reply
                       </button>
                       <button
-                        className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${
-                          mode === "private"
+                        className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${mode === "private"
                             ? "bg-purple-600 text-white shadow-md"
                             : "text-gray-600 hover:text-purple-600"
-                        }`}
+                          }`}
                         onClick={() => setMode("private")}
                       >
                         Private
@@ -2879,28 +2859,28 @@ const ChatView = ({
                     </div>
 
                     {attachments.length > 0 && (
-                    <div className="flex gap-2 mb-3 px-3 flex-wrap">
-                      {attachments.map((file, idx) => {
-                        const isImage = file.type.startsWith("image/");
-                        const url = URL.createObjectURL(file);
-                        return (
-                          <div key={idx} className="relative group w-24 h-24 rounded-xl overflow-hidden border border-gray-200">
-                            {isImage ? (
-                              <img src={url} alt="preview" className="w-full h-full object-cover" />
-                            ) : (
-                              <video src={url} className="w-full h-full object-cover" />
-                            )}
-                            <button
-                              className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
-                              onClick={() => setAttachments((prev) => prev.filter((_, i) => i !== idx))}
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                      <div className="flex gap-2 mb-3 px-3 flex-wrap">
+                        {attachments.map((file, idx) => {
+                          const isImage = file.type.startsWith("image/");
+                          const url = URL.createObjectURL(file);
+                          return (
+                            <div key={idx} className="relative group w-24 h-24 rounded-xl overflow-hidden border border-gray-200">
+                              {isImage ? (
+                                <img src={url} alt="preview" className="w-full h-full object-cover" />
+                              ) : (
+                                <video src={url} className="w-full h-full object-cover" />
+                              )}
+                              <button
+                                className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                                onClick={() => setAttachments((prev) => prev.filter((_, i) => i !== idx))}
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
 
                     {/* Action buttons */}
                     <div className="flex justify-between items-center">
@@ -2921,39 +2901,38 @@ const ChatView = ({
                           </PopoverContent>
                         </Popover>
 
-                      {/* File attachment */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={handleFileClick}
-                            className="p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors"
-                          >
-                            <Paperclip className="h-4 w-4 text-gray-600" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl">
-                          Attach media
-                        </TooltipContent>
-                      </Tooltip>
+                        {/* File attachment */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={handleFileClick}
+                              className="p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors"
+                            >
+                              <Paperclip className="h-4 w-4 text-gray-600" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl">
+                            Attach media
+                          </TooltipContent>
+                        </Tooltip>
 
-                      {/* Hidden file input */}
-                       <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*,video/*"
-                        className="hidden"
-                        onChange={(e) => handleFiles(e.target.files)}
-                      /> 
+                        {/* Hidden file input */}
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*,video/*"
+                          className="hidden"
+                          onChange={(e) => handleFiles(e.target.files)}
+                        />
 
                         {/* Voice recording */}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button
-                              className={`p-2.5 rounded-xl transition-colors ${
-                                isRecording
+                              className={`p-2.5 rounded-xl transition-colors ${isRecording
                                   ? "bg-red-100/80 hover:bg-red-200/80 text-red-600"
                                   : "bg-gray-100/80 hover:bg-gray-200/80 text-gray-600"
-                              }`}
+                                }`}
                               onClick={
                                 isRecording ? stopRecording : startRecording
                               }
@@ -2974,13 +2953,12 @@ const ChatView = ({
                         </div>
 
                         <button
-                          className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${
-                            message.trim() || attachments.length > 0
+                          className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${message.trim() || attachments.length > 0
                               ? mode === "reply"
                                 ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
                                 : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
                               : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
-                          }`}
+                            }`}
                           onClick={() => {
                             if (sharedProduct) {
                               handleShareProduct(message, sharedProduct);
@@ -2992,7 +2970,7 @@ const ChatView = ({
                           }}
                           // ONLY disable if input is empty.
                           // We removed 'isSending' so you can spam click like WhatsApp.
-                         disabled={!message.trim() && attachments.length === 0}
+                          disabled={!message.trim() && attachments.length === 0}
                         >
                           <Send className="h-4 w-4" />
                           <span className="ml-2">
