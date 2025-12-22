@@ -1,3 +1,4 @@
+import api from '@/lib/session_api';
 import { useState, useEffect, useCallback } from 'react';
 
 interface Reminder {
@@ -18,18 +19,19 @@ export const useReminders = (conversationId?: string) => {
     
     setLoading(true);
     try {
-      const response = await fetch(
-        `https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders?conversationId=${conversationId}`,
-        {
-          credentials: 'include'
-        }
-      );
+      // const response = await fetch(
+      //   `https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders?conversationId=${conversationId}`,
+      //   {
+      //     credentials: 'include'
+      //   }
+      // );
+      const response = await api.get(`https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders?conversationId=${conversationId}`)
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch reminders');
+      if (response.status !== 200) {
+        throw new Error(`Error fetching reminders: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = response.data;
       setReminders(data);
       setError(null);
     } catch (err) {

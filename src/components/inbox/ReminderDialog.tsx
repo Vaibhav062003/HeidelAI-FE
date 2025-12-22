@@ -30,6 +30,8 @@ import { StaticDateTimePicker } from '@mui/x-date-pickers/StaticDateTimePicker';
 import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
 import { toast } from "sonner";
 // import { useToast } from "@/components/ui/use-toast"; 
+import api from '../../lib/session_api';
+import { useConversations } from "../hooks/useConversations";
 
 
 // ... other imports
@@ -46,6 +48,7 @@ interface ReminderData {
   notes: string;
   dateTime: Dayjs | null;
   conversationId: string; 
+  customer_name: string;
 }
 
 export default function ReminderDialog({ 
@@ -58,27 +61,28 @@ export default function ReminderDialog({
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { conversations } = useConversations();
+
+  const getCustomerName = () => {
+    const conversation = conversations.find(conv => conv.id === conversationId);
+    return conversation ? conversation.customer_name : "Customer";
+  }
 
   const handleSubmit = async () => {
     if (!title || !selectedDateTime) return;
     
     setIsSubmitting(true);
     try {
-      const response = await fetch('https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title,
-          notes,
-          dateTime: selectedDateTime.toISOString(),
-          conversationId
-        }),
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
+      const data ={
+        title,
+        notes,
+        dateTime: selectedDateTime.toISOString(),
+        conversationId,
+        customer_name: getCustomerName()
+      }
+      const response = await api.post('https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders', data)
+    
+      if (response.status !== 200) {
         throw new Error('Failed to set reminder');
       }
 
@@ -90,7 +94,8 @@ export default function ReminderDialog({
         title,
         notes,
         dateTime: selectedDateTime,
-        conversationId
+        conversationId,
+        customer_name: getCustomerName()
       });
 
       // Reset form
