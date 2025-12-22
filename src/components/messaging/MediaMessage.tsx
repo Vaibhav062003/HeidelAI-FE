@@ -1,5 +1,6 @@
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
+import { Message, MessageItem } from "../inbox/ChatView";
 
 interface MediaMessageProps {
   url: string;
@@ -12,6 +13,10 @@ interface MediaMessageProps {
   isMuted?: boolean;
   id: string;
   timestamp: string;
+  isLast?: boolean;
+  status?: "sending" | "sent" | "delivered" | "read";
+  index?: number;
+  message?: Message;
   onFullscreenToggle?: (isFullscreen: boolean) => void;
 }
 
@@ -26,6 +31,10 @@ export default function MediaMessage({
   isMuted = true,
   id,
   timestamp,
+  index,
+  isLast,
+  status,
+  message,
   onFullscreenToggle,
 }: MediaMessageProps) {
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
@@ -248,7 +257,21 @@ export default function MediaMessage({
         )}
       </div>
 
-      <div
+      
+      {(message?.content && message && index !== undefined && isLast) ?(
+        <div className="mt-2">
+        <MessageItem
+          key={message.id}
+          message={message}
+          index={index}
+          isLatest={isLatest}
+          isLast={isLast}
+          isReplyMessage={false}
+          isMediaMessage={true}
+        />
+        </div>
+      ) : (
+        <div
         className={`py-1 w-full ${isAgent ? "pr-2" : "pl-2"}`}
       >
         <p
@@ -258,7 +281,18 @@ export default function MediaMessage({
         >
           {timestamp}
         </p>
+        {status == "sending" && (
+          <p
+            className={`text-xs ${
+            isAgent ? "text-right" : "text-left"
+          } text-gray-500 mt-1 tracking-wide`}
+          >
+            Sending...
+          </p>
+        )}
       </div>
+      )}
+      
 
       {isFullscreen && type === "image" && (
         <div
