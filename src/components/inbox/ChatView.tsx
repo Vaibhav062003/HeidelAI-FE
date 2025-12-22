@@ -690,7 +690,7 @@ const ChatView = ({
   onOpenRightSidebar,
 }: ChatViewProps) => {
   const { user, isLoaded } = useUser();
-  const maxLength = selectedConversationId?.split("_")[0] === "instagram" ? 1000 : 3500;
+  const maxLength = selectedConversationId?.split("_")[0] === "instagram" ? 900 : 3500;
   const [isRecording, setIsRecording] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
   const [isAIEnabled, setIsAIEnabled] = useState(false);
