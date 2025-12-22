@@ -690,6 +690,7 @@ const ChatView = ({
   onOpenRightSidebar,
 }: ChatViewProps) => {
   const { user, isLoaded } = useUser();
+  const maxLength = selectedConversationId?.split("_")[0] === "instagram" ? 1000 : 3500;
   const [isRecording, setIsRecording] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
   const [isAIEnabled, setIsAIEnabled] = useState(false);
@@ -1160,17 +1161,18 @@ const ChatView = ({
   };
 
   const sendMessage = async () => {
+    const platform = selectedConversationId.split("_")[0];
+
     // 1. Validation
     if ((!message.trim() && attachments.length === 0) || !selectedConversationId)
       return;
-    if(message.trim().length > 1000) {
-      toast.error("Message exceeds the 1000 character limit.");
+    if(message.length > maxLength) {
+      toast.error(`Message exceeds the ${maxLength} character limit.`);
       return;
     }
 
     const currentContent = message.trim();
     const currentAttachments = [...attachments]; // Snapshot for rollback
-    const platform = selectedConversationId.split("_")[0];
 
     // 2. Handle Canned Responses (Slash Commands) for Caption/Text
     let contentToSend = currentContent;
@@ -2853,18 +2855,18 @@ const ChatView = ({
 
                     {/* Textarea */}
                     <div className="flex-1 mb-1.5 relative">
-                      <div
-                        ref={backdropRef}
-                        className="absolute inset-0 w-full h-full text-sm p-0 whitespace-pre-wrap break-words text-transparent pointer-events-none scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent"
-                        style={{
-                          lineHeight: "20px",
-                          fontFamily: "inherit",
-                        }}
-                        aria-hidden="true"
-                      >
-                        {message.slice(0, 1000)}
-                        <span className="bg-red-300 text-transparent">{message.slice(1000)}</span>
-                      </div>
+                        <div
+                          ref={backdropRef}
+                          className="absolute inset-0 w-full h-full text-sm p-0 whitespace-pre-wrap break-words text-transparent pointer-events-none scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent"
+                          style={{
+                            lineHeight: "20px",
+                            fontFamily: "inherit",
+                          }}
+                          aria-hidden="true"
+                        >
+                          {message.slice(0, maxLength)}
+                          <span className="bg-red-300 text-transparent">{message.slice(maxLength)}</span>
+                        </div>
                       <textarea
                         ref={textareaRef}
                         onScroll={handleScroll}
@@ -2979,18 +2981,19 @@ const ChatView = ({
 
                       {/* Character count and send button */}
                       <div className="flex items-center gap-4">
-                        <div className={`text-xs ${message.length > 1000 ? 'text-red-500' : 'text-gray-500'} font-medium`}>
-                          {message.length}/1000
+                        <div className={`text-xs ${message.length > maxLength ? 'text-red-500' : 'text-gray-500'} font-medium`}>
+                          {message.length}/{maxLength}
                         </div>
 
                         <button
                           className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${message.trim() || attachments.length > 0
                             ? mode === "reply"
-                              ? message.length > 1000 ? "bg-gray-200/80 text-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
-                              : message.length > 1000 ? "bg-gray-200/80 text-gray-400 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
+                              ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
+                              : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
                             : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
-                            }`}
+                            } ${message.length > maxLength ? "opacity-50 cursor-not-allowed" : ""}`}
                           onClick={() => {
+                            if (message.length > maxLength) toast.error(`Message exceeds maximum length of ${maxLength} characters.`);
                             if (sharedProduct) {
                               handleShareProduct(message, sharedProduct);
                             } else if (audioURL) {
@@ -3001,7 +3004,7 @@ const ChatView = ({
                           }}
                           // ONLY disable if input is empty.
                           // We removed 'isSending' so you can spam click like WhatsApp.
-                          disabled={!message.trim() && attachments.length === 0 || message.length > 1000}
+                          disabled={(!message.trim() && attachments.length === 0) || message.length > maxLength}
                         >
                           <Send className="h-4 w-4" />
                           <span className="ml-2">
