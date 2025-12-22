@@ -77,6 +77,7 @@ import { useMainWebSocket } from "@/lib/websocket";
 import { storeData, getData } from "@/lib/indexedDB";
 import CountDownTimer from "../LandingPage/CountDownTimer";
 import UserStatus from "./UserStatus";
+import DocumentMessage from "../messaging/DocumentMessage";
 
 import DocumentMessage from '../messaging/DocumentMessage';
 
@@ -95,6 +96,14 @@ interface ProductData {
   permalink: string;
   price: number;
   regular_price: string;
+}
+
+interface Reminder {
+  id: string;
+  title: string;
+  notes?: string;
+  dateTime: string;
+  conversationId: string;
 }
 
 interface ProductInfo {
@@ -1457,7 +1466,6 @@ const ChatView = ({
 
     try{
       const res = await api.post(`/api/conversations/${encodeURIComponent(selectedConversationId)}/reopen`);
-      console.log("res:",res)
 
       if (!(res && (res.status === 200 || res.status === 204))) {
       throw new Error(
@@ -1494,7 +1502,6 @@ const ChatView = ({
 
     try{
       const res = await api.post(`/api/ai/schedule-message/${selectedConversationId}`);
-      console.log("res:",res)
 
       if (!(res && (res.status === 200 || res.status === 204))) {
       throw new Error(
