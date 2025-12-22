@@ -188,11 +188,7 @@ const ConversationList = ({
       filtered = filtered.filter(c => sentimentSet.has(c.sentiment));
     }
 
-    // if (activeTab === 'all') {
-    //   filtered = filtered.filter(c => c);
-    // } else if (activeTab === 'open') {
-    //   filtered = filtered.filter(c => c);
-    // }
+    
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
