@@ -86,7 +86,6 @@ import DocumentMessage from "../messaging/DocumentMessage";
 //   { ssr: false }
 // );
 
-import DocumentMessage from '../messaging/DocumentMessage';
 
 interface CustomerInfo {
   name: string;
