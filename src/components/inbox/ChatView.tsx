@@ -641,10 +641,10 @@ export const MessageItem = memo(
       <>
         <div
           className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${message.role === "customer"
-              ? `bg-white/90 backdrop-blur-sm ${isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"
-              } text-gray-900 border-gray-200/60`
-              : `bg-blue-600/90 backdrop-blur-sm ${isReplyMessage || isMediaMessage ? "rounded-tr-lg" : "rounded-br-lg"
-              } text-white border-blue-500/60`
+            ? `bg-white/90 backdrop-blur-sm ${isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"
+            } text-gray-900 border-gray-200/60`
+            : `bg-blue-600/90 backdrop-blur-sm ${isReplyMessage || isMediaMessage ? "rounded-tr-lg" : "rounded-br-lg"
+            } text-white border-blue-500/60`
             }`}
           style={{ wordBreak: "break-word" }}
         >
@@ -729,6 +729,7 @@ const ChatView = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
   const typingThrottleRef = useRef<number>(0);
   const { reminders = [], refetchReminders } = useReminders(
     selectedConversationId
@@ -880,6 +881,7 @@ const ChatView = ({
 
   useEffect(() => {
     const textarea = textareaRef.current;
+    const backdrop = backdropRef.current;
     if (!textarea) return;
 
     textarea.style.height = "auto";
@@ -890,16 +892,25 @@ const ChatView = ({
       // 2 lines
       textarea.style.height = `${MIN_HEIGHT}px`;
       textarea.style.overflowY = "hidden";
+      if (backdrop) backdrop.style.overflowY = "hidden";
     } else if (scrollHeight >= MAX_HEIGHT) {
       // More than 5 lines
       textarea.style.height = `${MAX_HEIGHT}px`;
       textarea.style.overflowY = "auto";
+      if (backdrop) backdrop.style.overflowY = "auto";
     } else {
       // Between 2-5 lines
       textarea.style.height = `${scrollHeight}px`;
       textarea.style.overflowY = "hidden";
+      if (backdrop) backdrop.style.overflowY = "hidden";
     }
   }, [message]);
+
+  const handleScroll = () => {
+    if (textareaRef.current && backdropRef.current) {
+      backdropRef.current.scrollTop = textareaRef.current.scrollTop;
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
@@ -1152,6 +1163,10 @@ const ChatView = ({
     // 1. Validation
     if ((!message.trim() && attachments.length === 0) || !selectedConversationId)
       return;
+    if(message.trim().length > 1000) {
+      toast.error("Message exceeds the 1000 character limit.");
+      return;
+    }
 
     const currentContent = message.trim();
     const currentAttachments = [...attachments]; // Snapshot for rollback
@@ -1244,6 +1259,7 @@ const ChatView = ({
       const formData = new FormData();
 
       // 1. Append common fields
+      formData.append("temp_id", tempId);
       formData.append("conversation_id", selectedConversationId);
       formData.append("platform", platform);
 
@@ -1481,13 +1497,15 @@ const ChatView = ({
 
           // 1. Check if we have an optimistic message (temp ID) with matching content
           // We look for a temp message sent by US (agent) with the SAME text
+          const normalizeText = (text: string) => text ? text.replace(/\r/g, "") : "";
           const tempMatchIndex = prev.findIndex(
             (msg) =>
               msg.id.toString().startsWith("temp-") &&
-              msg.content === incomingMsg.content &&
+              msg.content === normalizeText(incomingMsg.content) &&
               // Optional: Check if timestamp is within last 10 seconds to be safe
               new Date(new Date().getTime() - 5.5 * 60 * 60 * 1000).getTime() - new Date(msg.timestamp).getTime() < 10000
           );
+
 
           if (tempMatchIndex !== -1) {
             // RECONCILIATION: Replace the temp message with the real one
@@ -2416,14 +2434,14 @@ const ChatView = ({
                         >
                           <div
                             className={`flex ${message.role === "customer"
-                                ? "justify-start"
-                                : "justify-end"
+                              ? "justify-start"
+                              : "justify-end"
                               }`}
                           >
                             <div
                               className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === "customer"
-                                  ? "items-start"
-                                  : "items-end"
+                                ? "items-start"
+                                : "items-end"
                                 }`}
                             >
                               <MessageWrapper
@@ -2715,8 +2733,8 @@ const ChatView = ({
                             key={response._id}
                             onClick={() => handleSelectCannedResponse(response)}
                             className={`w-full text-left px-4 py-3 border-b border-gray-50 last:border-0 transition-all hover:bg-blue-50 group ${index === selectedCannedIndex
-                                ? "bg-blue-50 border-l-4 border-l-blue-500"
-                                : ""
+                              ? "bg-blue-50 border-l-4 border-l-blue-500"
+                              : ""
                               }`}
                           >
                             <div className="flex items-start justify-between gap-3">
@@ -2724,8 +2742,8 @@ const ChatView = ({
                                 <div className="flex items-center gap-2 mb-1">
                                   <span
                                     className={`text-sm font-mono font-semibold px-2 py-0.5 rounded ${index === selectedCannedIndex
-                                        ? "bg-blue-100 text-blue-700"
-                                        : "bg-gray-100 text-gray-700 group-hover:bg-blue-100 group-hover:text-blue-700"
+                                      ? "bg-blue-100 text-blue-700"
+                                      : "bg-gray-100 text-gray-700 group-hover:bg-blue-100 group-hover:text-blue-700"
                                       }`}
                                   >
                                     {response.shortcut}
@@ -2815,8 +2833,8 @@ const ChatView = ({
                     <div className="mb-5 w-40 bg-gray-100/80 rounded-2xl p-0.5 flex items-center">
                       <button
                         className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${mode === "reply"
-                            ? "bg-blue-600 text-white shadow-md"
-                            : "text-gray-600 hover:text-blue-600"
+                          ? "bg-blue-600 text-white shadow-md"
+                          : "text-gray-600 hover:text-blue-600"
                           }`}
                         onClick={() => setMode("reply")}
                       >
@@ -2824,8 +2842,8 @@ const ChatView = ({
                       </button>
                       <button
                         className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${mode === "private"
-                            ? "bg-purple-600 text-white shadow-md"
-                            : "text-gray-600 hover:text-purple-600"
+                          ? "bg-purple-600 text-white shadow-md"
+                          : "text-gray-600 hover:text-purple-600"
                           }`}
                         onClick={() => setMode("private")}
                       >
@@ -2834,9 +2852,22 @@ const ChatView = ({
                     </div>
 
                     {/* Textarea */}
-                    <div className="flex-1 mb-1.5">
+                    <div className="flex-1 mb-1.5 relative">
+                      <div
+                        ref={backdropRef}
+                        className="absolute inset-0 w-full h-full text-sm p-0 whitespace-pre-wrap break-words text-transparent pointer-events-none scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent"
+                        style={{
+                          lineHeight: "20px",
+                          fontFamily: "inherit",
+                        }}
+                        aria-hidden="true"
+                      >
+                        {message.slice(0, 1000)}
+                        <span className="bg-red-300 text-transparent">{message.slice(1000)}</span>
+                      </div>
                       <textarea
                         ref={textareaRef}
+                        onScroll={handleScroll}
                         value={message}
                         onChange={handleInputChange}
                         onPaste={handlePaste}
@@ -2854,7 +2885,7 @@ const ChatView = ({
                           maxHeight: "120px", // 5 lines
                           lineHeight: "20px",
                         }}
-                        className="w-full bg-transparent border-none outline-none focus:outline-none resize-none overflow-y-hidden text-gray-800 placeholder-gray-500 text-sm p-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent transition-all duration-150"
+                        className="w-full bg-transparent border-none outline-none focus:outline-none resize-none overflow-y-hidden text-gray-800 placeholder-gray-500 text-sm p-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent transition-all duration-150 relative z-10"
                       />
                     </div>
 
@@ -2930,8 +2961,8 @@ const ChatView = ({
                           <TooltipTrigger asChild>
                             <button
                               className={`p-2.5 rounded-xl transition-colors ${isRecording
-                                  ? "bg-red-100/80 hover:bg-red-200/80 text-red-600"
-                                  : "bg-gray-100/80 hover:bg-gray-200/80 text-gray-600"
+                                ? "bg-red-100/80 hover:bg-red-200/80 text-red-600"
+                                : "bg-gray-100/80 hover:bg-gray-200/80 text-gray-600"
                                 }`}
                               onClick={
                                 isRecording ? stopRecording : startRecording
@@ -2948,16 +2979,16 @@ const ChatView = ({
 
                       {/* Character count and send button */}
                       <div className="flex items-center gap-4">
-                        <div className="text-xs text-gray-500 font-medium">
+                        <div className={`text-xs ${message.length > 1000 ? 'text-red-500' : 'text-gray-500'} font-medium`}>
                           {message.length}/1000
                         </div>
 
                         <button
                           className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${message.trim() || attachments.length > 0
-                              ? mode === "reply"
-                                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
-                                : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
-                              : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
+                            ? mode === "reply"
+                              ? message.length > 1000 ? "bg-gray-200/80 text-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
+                              : message.length > 1000 ? "bg-gray-200/80 text-gray-400 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
+                            : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
                             }`}
                           onClick={() => {
                             if (sharedProduct) {
@@ -2970,7 +3001,7 @@ const ChatView = ({
                           }}
                           // ONLY disable if input is empty.
                           // We removed 'isSending' so you can spam click like WhatsApp.
-                          disabled={!message.trim() && attachments.length === 0}
+                          disabled={!message.trim() && attachments.length === 0 || message.length > 1000}
                         >
                           <Send className="h-4 w-4" />
                           <span className="ml-2">
