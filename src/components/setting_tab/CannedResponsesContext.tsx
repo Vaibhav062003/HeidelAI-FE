@@ -1,18 +1,44 @@
-import React, { useState, useEffect } from "react";
-import { Plus, X, MessageSquare, Edit } from "lucide-react";
-import api from "@/lib/session_api"; // Your existing API instance with JWT
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  Plus,
+  X,
+  MessageSquare,
+  Trash2,
+  Loader2,
+  Edit2,
+  AlertCircle,
+  AlertTriangle,
+} from "lucide-react";
+import api from "@/lib/session_api";
+import { toast } from "sonner";
 
 interface CannedResponse {
-  _id: string;
+  id: string;
   org_id: string;
   shortcut: string;
   response: string;
   updated_at: string;
 }
 
-interface CannedResponsesProps {
-  onInsertResponse: (message: string) => void;
+interface ApiResponse<T> {
+  canned_responses?: T[];
+  message?: string;
+  error?: string;
 }
+
+interface CannedResponsesProps {
+  onInsertResponse?: (message: string) => void;
+}
+
+interface DeleteConfirmation {
+  isOpen: boolean;
+  id: string | null;
+  shortcut: string | null;
+}
+
+const SHORTCUT_MAX_LENGTH = 50;
+const RESPONSE_MAX_LENGTH = 2000;
+const SHORTCUT_PREFIX = "/";
 
 const CannedResponses: React.FC<CannedResponsesProps> = ({
   onInsertResponse,
@@ -22,151 +48,219 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
   const [editingResponse, setEditingResponse] = useState<CannedResponse | null>(
     null
   );
-  const [newShortcode, setNewShortcode] = useState("");
-  const [newMessage, setNewMessage] = useState("");
+  const [formData, setFormData] = useState({ shortcut: "", message: "" });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] =
+    useState<DeleteConfirmation>({
+      isOpen: false,
+      id: null,
+      shortcut: null,
+    });
 
-  // Fetch canned responses from API
-  useEffect(() => {
-    fetchCannedResponses();
-  }, []);
-
-  const fetchCannedResponses = async () => {
+  const fetchCannedResponses = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await api.get("/api/canned_responses");
-      
-      if (response.data && response.data.canned_responses) {
+
+      if (response.data?.canned_responses) {
         setResponses(response.data.canned_responses);
       } else {
         setResponses([]);
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to fetch canned responses";
+    } catch (err: any) {
+      const errorMessage =
+        err?.response?.data?.message ||
+        err.message ||
+        "Failed to fetch canned responses";
       setError(errorMessage);
-      console.error("Error fetching canned responses:", err);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const handleAddResponse = async () => {
-    if (!newShortcode.trim() || !newMessage.trim()) {
-      setError("Both shortcut and message are required");
-      return;
-    }
+  const createCannedResponse = async (
+    shortcut: string,
+    message: string
+  ): Promise<void> => {
+    const payload = { shortcut, response: message };
 
-    setIsSaving(true);
-    setError(null);
+    const response = await api.post("/api/canned_responses", payload);
 
-    try {
-      const payload = {
-        shortcut: newShortcode.trim(),
-        response: newMessage.trim(),
-      };
-
-      const response = await api.post("/api/canned_responses", payload);
-
-      if (response.data && response.data.canned_responses) {
-        setResponses(response.data.canned_responses);
-        resetForm();
-      } else {
-        throw new Error("Invalid response format");
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to add canned response";
-      setError(errorMessage);
-      console.error("Error adding canned response:", err);
-    } finally {
-      setIsSaving(false);
+    if (response.data?.canned_responses) {
+      setResponses(response.data.canned_responses);
+      toast.success("Canned response created successfully!");
+    } else {
+      throw new Error("Invalid response format from server");
     }
   };
 
-  const handleUpdateResponse = async () => {
-    if (!editingResponse || !newShortcode.trim() || !newMessage.trim()) {
-      setError("Both shortcut and message are required");
-      return;
+  const updateCannedResponse = async (
+    id: string,
+    shortcut: string,
+    message: string
+  ): Promise<void> => {
+    if (!id) {
+      throw new Error("Cannot update: Response ID is missing");
     }
 
-    setIsSaving(true);
-    setError(null);
+    const payload = { shortcut, response: message };
 
-    try {
-      const payload = {
-        shortcut: newShortcode.trim(),
-        response: newMessage.trim(),
-      };
+    const response = await api.put(`/api/canned_responses/${id}`, payload);
 
-      const response = await api.post("/api/canned_responses", payload);
-
-      if (response.data && response.data.canned_responses) {
-        setResponses(response.data.canned_responses);
-        resetForm();
-      } else {
-        throw new Error("Invalid response format");
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to update canned response";
-      setError(errorMessage);
-      console.error("Error updating canned response:", err);
-    } finally {
-      setIsSaving(false);
+    if (response.data && response.data.id) {
+      setResponses((prevResponses) =>
+        prevResponses.map((r) => (r.id === id ? response.data : r))
+      );
+      toast.success("Canned response updated successfully!");
+    } else {
+      throw new Error("Invalid response format from server");
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this canned response?")) {
-      return;
+  const deleteCannedResponse = async (id: string): Promise<void> => {
+    if (!id) {
+      throw new Error("Cannot delete: Response ID is missing");
     }
 
-    setError(null);
-
     try {
-      // You'll need a DELETE endpoint: DELETE /api/canned_responses/:id
       await api.delete(`/api/canned_responses/${id}`);
-      
-      // Remove from local state
-      setResponses(responses.filter((response) => response._id !== id));
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to delete canned response";
-      setError(errorMessage);
-      console.error("Error deleting canned response:", err);
-      
-      // If delete endpoint doesn't exist, refresh the list
-      fetchCannedResponses();
+
+      setResponses((prevResponses) => prevResponses.filter((r) => r.id !== id));
+      toast.success("Canned response deleted successfully!");
+    } catch (err: any) {
+      throw err;
     }
+  };
+
+  const handleSubmit = async () => {
+    const { shortcut, message } = formData;
+
+    if (!shortcut.trim() || !message.trim()) {
+      setError("Both shortcut and message are required");
+      return;
+    }
+
+    const formattedShortcut = shortcut.startsWith(SHORTCUT_PREFIX)
+      ? shortcut.trim()
+      : `${SHORTCUT_PREFIX}${shortcut.trim()}`;
+
+    if (!editingResponse) {
+      const duplicate = responses.find((r) => r.shortcut === formattedShortcut);
+      if (duplicate) {
+        setError(`Shortcut "${formattedShortcut}" already exists`);
+        return;
+      }
+    } else if (editingResponse.shortcut !== formattedShortcut) {
+      const duplicate = responses.find(
+        (r) => r.shortcut === formattedShortcut && r.id !== editingResponse.id
+      );
+      if (duplicate) {
+        setError(`Shortcut "${formattedShortcut}" already exists`);
+        return;
+      }
+    }
+
+    setIsSaving(true);
+    setError(null);
+
+    try {
+      if (editingResponse && editingResponse.id) {
+        await updateCannedResponse(
+          editingResponse.id,
+          formattedShortcut,
+          message.trim()
+        );
+      } else {
+        await createCannedResponse(formattedShortcut, message.trim());
+      }
+
+      resetForm();
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        `Failed to ${editingResponse ? "update" : "create"} canned response`;
+
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteClick = (id: string, shortcut: string) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      id,
+      shortcut,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirmation.id) return;
+
+    const id = deleteConfirmation.id;
+    setDeletingId(id);
+    setDeleteConfirmation({ isOpen: false, id: null, shortcut: null });
+    setError(null);
+
+    try {
+      await deleteCannedResponse(id);
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to delete canned response";
+
+      setError(errorMessage);
+      toast.error(errorMessage);
+
+      await fetchCannedResponses();
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmation({ isOpen: false, id: null, shortcut: null });
   };
 
   const startEditing = (response: CannedResponse) => {
     setEditingResponse(response);
-    setNewShortcode(response.shortcut);
-    setNewMessage(response.response);
+    setFormData({
+      shortcut: response.shortcut,
+      message: response.response,
+    });
     setIsModalOpen(true);
+    setError(null);
   };
 
   const resetForm = () => {
-    setNewShortcode("");
-    setNewMessage("");
+    setFormData({ shortcut: "", message: "" });
     setEditingResponse(null);
     setIsModalOpen(false);
     setError(null);
   };
 
+  useEffect(() => {
+    fetchCannedResponses();
+  }, [fetchCannedResponses]);
+
   if (isLoading) {
     return (
-      <div className="w-full h-full p-4">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-6"></div>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-20 bg-gray-200 rounded"></div>
-            ))}
-          </div>
+      <div className="w-full h-full flex items-center justify-center p-8">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">
+            Loading canned responses...
+          </p>
         </div>
       </div>
     );
@@ -175,14 +269,17 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
   return (
     <div className="w-full h-full">
       <div className="flex flex-col h-full">
-        {/* Header Section */}
-        <div className="bg-white p-4 rounded-t-lg border-b mb-4">
+        {/* Header */}
+        <header className="bg-white p-4 rounded-t-lg border-b mb-4">
           {error && (
             <div className="bg-red-50 text-red-700 p-3 rounded-lg mb-4 border border-red-200 flex items-start justify-between">
-              <span className="text-sm">{error}</span>
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <span className="text-sm font-medium">{error}</span>
+              </div>
               <button
                 onClick={() => setError(null)}
-                className="text-red-700 hover:text-red-900 ml-2"
+                className="text-red-700 hover:text-red-900"
               >
                 <X size={16} />
               </button>
@@ -190,159 +287,288 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
           )}
 
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Canned Responses
-            </h2>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Canned Responses
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                {responses.length}{" "}
+                {responses.length === 1 ? "response" : "responses"}
+              </p>
+            </div>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-white text-black border border-gray-300 px-4 py-2 rounded-md flex items-center gap-2 transition-colors hover:border-blue-600 hover:bg-gray-50"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all shadow-sm hover:shadow-md"
             >
               <Plus size={20} />
-              Add Response
+              <span className="font-medium">Add Response</span>
             </button>
           </div>
 
-          <p className="text-gray-600 mb-2 text-sm">
-            Canned Responses are pre-written reply templates that help you
-            quickly respond to conversations. Use the &apos;/&apos; character followed by
-            the shortcut to insert a response.
+          <p className="text-gray-600 text-sm">
+            Pre-written reply templates. Type shortcuts starting with &apos;
+            {SHORTCUT_PREFIX}&apos; to insert.
           </p>
-        </div>
+        </header>
 
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
           {responses.length === 0 ? (
-            <div className="text-center py-12 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg bg-white">
-              <MessageSquare className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-              <p className="text-gray-600 font-medium mb-1">No canned responses yet</p>
-              <p className="text-sm text-gray-500">Create your first template to get started</p>
+            <div className="text-center py-16 border-2 border-dashed border-gray-200 rounded-lg bg-white">
+              <MessageSquare className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+              <p className="text-gray-700 font-medium text-lg mb-2">
+                No canned responses yet
+              </p>
+              <p className="text-sm text-gray-500 mb-6">
+                Create your first template to get started
+              </p>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <Plus size={18} />
+                Create First Response
+              </button>
             </div>
           ) : (
             <div className="space-y-3">
-              {responses.map((response) => (
-                <div
-                  key={response._id}
-                  className="group bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-200 hover:shadow-sm transition-all flex justify-between items-start"
-                >
-                  <div className="flex-1 min-w-0 mr-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm text-blue-600 font-mono font-semibold bg-blue-50 px-2 py-1 rounded">
-                        {response.shortcut}
-                      </span>
-                      <span className="text-xs text-gray-400">
-                        {new Date(response.updated_at).toLocaleDateString()}
-                      </span>
+              {responses.map((response) => {
+                const isDeleting = deletingId === response.id;
+
+                return (
+                  <article
+                    key={response.id}
+                    className={`bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-200 hover:shadow-md transition-all ${
+                      isDeleting ? "opacity-50 pointer-events-none" : ""
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <span className="inline-flex items-center text-sm text-blue-700 font-mono font-semibold bg-blue-50 px-3 py-1 rounded-md border border-blue-200">
+                            {response.shortcut}
+                          </span>
+                          <time className="text-xs text-gray-400">
+                            {new Date(response.updated_at).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              }
+                            )}
+                          </time>
+                        </div>
+                        <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap break-words">
+                          {response.response}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => startEditing(response)}
+                          disabled={isDeleting}
+                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+                          title="Edit"
+                        >
+                          <Edit2 className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDeleteClick(response.id, response.shortcut)
+                          }
+                          disabled={isDeleting}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                          title="Delete"
+                        >
+                          {isDeleting ? (
+                            <Loader2 className="h-5 w-5 animate-spin text-red-600" />
+                          ) : (
+                            <Trash2 className="h-5 w-5" />
+                          )}
+                        </button>
+                      </div>
                     </div>
-                    <div className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap">
-                      {response.response}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => startEditing(response)}
-                      className="text-gray-400 hover:text-blue-600 transition-colors p-1.5 rounded hover:bg-blue-50"
-                      title="Edit"
-                    >
-                      <Edit size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(response._id)}
-                      className="text-gray-400 hover:text-red-600 transition-colors p-1.5 rounded hover:bg-red-50"
-                      title="Delete"
-                    >
-                      <X size={18} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           )}
-        </div>
+        </main>
       </div>
 
-      {/* Modal */}
+      {/* Create/Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl p-6 w-full max-w-3xl border border-gray-200 shadow-2xl animate-in zoom-in-95 duration-200">
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+          onClick={(e) =>
+            e.target === e.currentTarget && !isSaving && resetForm()
+          }
+        >
+          <div className="bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">
-                {editingResponse ? "Edit Canned Response" : "New Canned Response"}
+              <h3 className="text-xl font-semibold">
+                {editingResponse
+                  ? "Edit Canned Response"
+                  : "New Canned Response"}
               </h3>
               <button
                 onClick={resetForm}
-                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors"
                 disabled={isSaving}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="space-y-5">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+              className="space-y-4"
+            >
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="shortcut"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Shortcut <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="shortcut"
                   type="text"
-                  value={newShortcode}
-                  onChange={(e) => setNewShortcode(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder="e.g., /shipping-info or /greeting"
+                  value={formData.shortcut}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      shortcut: e.target.value,
+                    }))
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="/greeting"
                   disabled={isSaving}
-                  maxLength={50}
+                  maxLength={SHORTCUT_MAX_LENGTH}
+                  required
                 />
                 <p className="text-xs text-gray-500 mt-1.5">
-                  Use &apos;/&apos; followed by a unique keyword (e.g., /greeting, /policy)
+                  Must start with {SHORTCUT_PREFIX}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="message"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Response Message <span className="text-red-500">*</span>
                 </label>
                 <textarea
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 h-48 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
-                  placeholder="Enter your template message here..."
+                  id="message"
+                  value={formData.message}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      message: e.target.value,
+                    }))
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 h-40 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  placeholder="Enter your template message..."
                   disabled={isSaving}
-                  maxLength={2000}
+                  maxLength={RESPONSE_MAX_LENGTH}
+                  required
                 />
-                <div className="flex items-center justify-between mt-1.5">
-                  <p className="text-xs text-gray-500">
-                    This message will be inserted when you type the shortcut
-                  </p>
+                <div className="flex justify-between mt-1.5">
+                  <p className="text-xs text-gray-500">Message to insert</p>
                   <span className="text-xs text-gray-400">
-                    {newMessage.length}/2000
+                    {formData.message.length}/{RESPONSE_MAX_LENGTH}
                   </span>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <div className="flex justify-end gap-3 pt-4 border-t">
                 <button
+                  type="button"
                   onClick={resetForm}
-                  className="px-5 py-2.5 text-gray-700 hover:text-gray-900 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+                  className="px-5 py-2.5 text-gray-700 font-medium rounded-lg hover:bg-gray-100"
                   disabled={isSaving}
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={
-                    editingResponse ? handleUpdateResponse : handleAddResponse
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium shadow-sm disabled:opacity-50 flex items-center gap-2"
+                  disabled={
+                    isSaving ||
+                    !formData.shortcut.trim() ||
+                    !formData.message.trim()
                   }
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  disabled={isSaving || !newShortcode.trim() || !newMessage.trim()}
                 >
                   {isSaving ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Saving...</span>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>
+                        {editingResponse ? "Updating..." : "Creating..."}
+                      </span>
                     </>
                   ) : (
-                    <span>{editingResponse ? "Save Changes" : "Create Response"}</span>
+                    <span>{editingResponse ? "Update" : "Create"}</span>
                   )}
                 </button>
               </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirmation.isOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+          onClick={(e) => e.target === e.currentTarget && handleDeleteCancel()}
+        >
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+            {/* Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="bg-red-100 rounded-full p-3">
+                <AlertTriangle className="h-8 w-8 text-red-600" />
+              </div>
+            </div>
+
+            {/* Title */}
+            <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">
+              Delete Canned Response?
+            </h3>
+
+            {/* Message */}
+            <div className="text-center mb-6">
+              <p className="text-gray-600 mb-3">
+                Are you sure you want to delete the shortcut
+              </p>
+              <div className="inline-flex items-center bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+                <code className="text-red-700 font-mono font-semibold">
+                  {deleteConfirmation.shortcut}
+                </code>
+              </div>
+              <p className="text-sm text-gray-500 mt-3">
+                This action cannot be undone.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleDeleteCancel}
+                className="flex-1 px-4 py-2.5 text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors shadow-sm hover:shadow-md"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>
