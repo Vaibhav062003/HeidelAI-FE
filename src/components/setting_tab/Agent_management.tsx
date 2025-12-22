@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useUser, useOrganization } from '@clerk/nextjs';
 import { Users, Mail, UserPlus, UserMinus, Trash2, X } from 'lucide-react';
 import api from '@/lib/session_api';
+import { useRole } from '@/contexts/RoleContext';
 
 interface TeamMember {
   name: string;
@@ -41,7 +42,8 @@ export const TeamManagement = () => {
     type: 'member' 
   });
   const [activeTab, setActiveTab] = useState<'members' | 'invitations'>('members');
-  const [isAdmin, setIsAdmin] = useState(false);
+  // const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin } = useRole();
   const [showTooltip, setShowTooltip] = useState(false);
   
   React.useEffect(() => {
@@ -75,17 +77,17 @@ export const TeamManagement = () => {
     setMembers(mapped);
     setInvitationsList(inviteMapped);
 
-    const checkRole = async () => {
-      if (organization && user) {
-        const memberships = await organization.getMemberships();
-        const membership = memberships.data.find(
-          (m) => m.publicUserData?.userId === user.id
-        );
-        setIsAdmin(membership?.roleName === "Admin");
-      }
-    };
+    // const checkRole = async () => {
+    //   if (organization && user) {
+    //     const memberships = await organization.getMemberships();
+    //     const membership = memberships.data.find(
+    //       (m) => m.publicUserData?.userId === user.id
+    //     );
+    //     setIsAdmin(membership?.roleName === "Admin");
+    //   }
+    // };
 
-    checkRole();
+    // checkRole();
   }, [memberships?.data, invitations?.data, organization, user]);
 
   const refreshData = async () => {
@@ -230,7 +232,7 @@ export const TeamManagement = () => {
   const inviteDisabled = membersCount >= maxAllowedMemberships;
 
   return (
-    <div className="w-full min-h-screen bg-white">
+    <div className="w-full min-h-screen bg-white overflow-hidden">
       <div className="w-full max-w-10xl mx-auto px-6 py-10">
         {/* Header */}
        <div className="mb-10">
@@ -280,7 +282,7 @@ export const TeamManagement = () => {
               
               {inviteDisabled && showTooltip && (
                 <div className="absolute left-1/2 -translate-x-1/2 mt-2 px-4 py-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 whitespace-nowrap">
-                  You have reached the maximum of {maxAllowedMemberships} members for this organization.
+                  limit of {maxAllowedMemberships} members for this organization.
                 </div>
               )}
             </div>

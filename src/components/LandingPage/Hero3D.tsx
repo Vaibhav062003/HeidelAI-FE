@@ -55,7 +55,7 @@ const Hero3D = () => {
               {/* <Button className="text-sm px-8 py-3 rounded-xl bg-transparent text-white border border-white/20 shadow-none hover:bg-white/10 transition-none">
                 Watch Demo
               </Button> */}
-              <button 
+              {/* <button 
                 className="hidden sm:flex relative cursor-pointer  items-center justify-center overflow-hidden rounded-xl 
                   border border-white/20 backdrop-blur-sm bg-white/10 text-white text-sm font-semibold
                   px-4 py-3 transition-all duration-300 hover:scale-105 active:scale-95"
@@ -65,7 +65,7 @@ const Hero3D = () => {
                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

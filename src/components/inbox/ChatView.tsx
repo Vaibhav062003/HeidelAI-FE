@@ -14,7 +14,7 @@ import {
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { Conversation } from "../types/conversation";
 import {
   ShoppingCart,
@@ -44,17 +44,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogClose,
+  // DialogClose,
   DialogTrigger,
 } from "../ui/dialog";
-import dynamic from "next/dynamic";
+// import dynamic from "next/dynamic";
 import { useReminders } from "../hooks/useReminders";
 // import { H1, H2, H3, Body, Small } from "@/components/typography";
 // import { Trash2, User, Menu } from "lucide-react";
 // import TimerDisplay from "./TimerDisplay";
 import { useTypingIndicator } from "../hooks/typingIndicator";
-import { createClient } from "@supabase/supabase-js";
 import { conversationService } from "@/components/services/api";
+import debounce from "lodash.debounce";
 import {
   Tooltip,
   TooltipContent,
@@ -87,18 +87,14 @@ import MediaMessage from "../messaging/MediaMessage";
 import { useMainWebSocket } from "@/lib/websocket";
 import { storeData, getData } from "@/lib/indexedDB";
 import CountDownTimer from "../LandingPage/CountDownTimer";
+import DocumentMessage from "../messaging/DocumentMessage";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-const Picker = dynamic(
-  () => {
-    return import("emoji-picker-react");
-  },
-  { ssr: false }
-);
+// const Picker = dynamic(
+//   () => {
+//     return import("emoji-picker-react");
+//   },
+//   { ssr: false }
+// );
 
 // import Image from "next/image";
 // import { IconShoppingCartFilled } from "@tabler/icons-react";
@@ -137,7 +133,7 @@ interface ProductInfo {
   sale_price?: string;
 }
 
-interface Message {
+export interface Message {
   id: string;
   content: string;
   timestamp: string;
@@ -146,17 +142,18 @@ interface Message {
   conversation_id: string;
   status?: "sent" | "delivered" | "read" | "sending";
   type?:
-    | "text"
-    | "image"
-    | "file"
-    | "voice"
-    | "video"
-    | "share"
-    | "ig_story"
-    | "ig_reel"
-    | "story_reply"
-    | "system"
-    | "message_reply";
+  | "text"
+  | "image"
+  | "file"
+  | "voice"
+  | "video"
+  | "share"
+  | "ig_story"
+  | "ig_reel"
+  | "story_reply"
+  | "system"
+  | "message_reply"
+  | "document";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
   product_data?: ProductData[];
@@ -176,6 +173,7 @@ interface MessageReactions {
 
 interface ChatViewProps {
   selectedConversationId: string;
+  conversation?: Conversation | null;
   sharedProduct: Product | null;
   onClearSharedProduct: () => void;
   isRightSidebarVisible?: boolean;
@@ -236,60 +234,57 @@ const MessageSkeleton = () => (
   <div className="flex flex-col gap-4 animate-pulse">
     {/* Left side message */}
     <div className="flex items-start gap-2 max-w-[50%]">
-      <div className="w-8 h-8 bg-gray-200 rounded-full" />
       <div className="flex flex-col gap-2">
-        <div className="h-4 w-24 bg-gray-200 rounded-full" />
-        <div className="h-10 w-48 bg-gray-200 rounded-lg" />
+        <div className="h-14 w-48 bg-gray-200 rounded-3xl rounded-bl-lg" />
       </div>
     </div>
 
     {/* Right side message */}
     <div className="flex items-start gap-2 max-w-[50%] self-end">
       <div className="flex flex-col gap-2">
-        <div className="h-4 w-24 bg-gray-200 rounded-full self-end" />
-        <div className="h-10 w-56 bg-gray-200 rounded-lg" />
+        <div className="h-14 w-56 bg-gray-200 rounded-3xl rounded-br-lg" />
       </div>
     </div>
   </div>
 );
 
-const LoadingState = () => (
-  <Card className="h-screen flex flex-col bg-white ">
-    {/* Header skeleton */}
-    <div className="p-4 border-b flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
-        <div className="space-y-2">
-          <div className="h-4 w-32 bg-gray-200 rounded-full animate-pulse" />
-          <div className="h-3 w-24 bg-gray-200 rounded-full animate-pulse" />
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
-        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
-        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
-      </div>
-    </div>
+// const LoadingState = () => (
+//   <Card className="h-screen flex flex-col bg-white ">
+//     {/* Header skeleton */}
+//     <div className="p-4 border-b flex items-center justify-between">
+//       <div className="flex items-center gap-3">
+//         <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+//         <div className="space-y-2">
+//           <div className="h-4 w-32 bg-gray-200 rounded-full animate-pulse" />
+//           <div className="h-3 w-24 bg-gray-200 rounded-full animate-pulse" />
+//         </div>
+//       </div>
+//       <div className="flex gap-2">
+//         <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+//         <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+//         <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+//       </div>
+//     </div>
 
-    {/* Messages area */}
-    <ScrollArea className="flex-1 h-full p-4">
-      <div className="space-y-6">
-        {[1, 2, 3, 4].map((i) => (
-          <MessageSkeleton key={i} />
-        ))}
-      </div>
-    </ScrollArea>
+//     {/* Messages area */}
+//     <ScrollArea className="flex-1 h-full p-4">
+//       <div className="space-y-6">
+//         {[1, 2, 3, 4].map((i) => (
+//           <MessageSkeleton key={i} />
+//         ))}
+//       </div>
+//     </ScrollArea>
 
-    {/* Input area skeleton */}
-    <div className="p-4 border-t">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
-        <div className="flex-1 h-10 bg-gray-200 rounded-lg animate-pulse" />
-        <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
-      </div>
-    </div>
-  </Card>
-);
+//     {/* Input area skeleton */}
+//     <div className="p-4 border-t">
+//       <div className="flex items-center gap-2">
+//         <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
+//         <div className="flex-1 h-10 bg-gray-200 rounded-lg animate-pulse" />
+//         <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
+//       </div>
+//     </div>
+//   </Card>
+// );
 
 // const parseProductData = (productDataString: string): ProductData[] => {
 //   try {
@@ -310,7 +305,7 @@ const SharedProductPreview = ({
   <div className="flex items-center w-fit gap-3 p-2 bg-gray-50 rounded-lg border border-gray-200 mb-2">
     <div className="w-15 h-15 relative">
       <Image
-        src={product.images}
+        src={product.image_url}
         alt={product.product_name}
         height={80}
         width={80}
@@ -392,7 +387,7 @@ const RemindersPopover = ({
                           // Add IST offset (UTC+5:30)
                           new Date(
                             new Date(reminder.dateTime).getTime() +
-                              5.5 * 60 * 60 * 1000
+                            5.5 * 60 * 60 * 1000
                           ),
                           "MMM d, yyyy 'at' h:mm a"
                         )}
@@ -613,19 +608,21 @@ const FilePreview = ({
   );
 };
 
-const MessageItem = memo(
+export const MessageItem = memo(
   ({
     message,
     isLast,
     index,
     isLatest,
     isReplyMessage,
+    isMediaMessage
   }: {
     message: Message;
     isLast: boolean;
     index: number;
     isLatest: boolean;
     isReplyMessage: boolean;
+    isMediaMessage?: boolean;
   }) => {
     if (message.role === "system") {
       return (
@@ -643,15 +640,12 @@ const MessageItem = memo(
     return (
       <>
         <div
-          className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${
-            message.role === "customer"
-              ? `bg-white/90 backdrop-blur-sm ${
-                  isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"
-                } text-gray-900 border-gray-200/60`
-              : `bg-blue-600/90 backdrop-blur-sm ${
-                  isReplyMessage ? "rounded-tr-lg" : "rounded-br-lg"
-                } text-white border-blue-500/60`
-          }`}
+          className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${message.role === "customer"
+            ? `bg-white/90 backdrop-blur-sm ${isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"
+            } text-gray-900 border-gray-200/60`
+            : `bg-blue-600/90 backdrop-blur-sm ${isReplyMessage || isMediaMessage ? "rounded-tr-lg" : "rounded-br-lg"
+            } text-white border-blue-500/60`
+            }`}
           style={{ wordBreak: "break-word" }}
         >
           <div className="break-words">
@@ -661,9 +655,8 @@ const MessageItem = memo(
           </div>
           <div className="flex justify-end mt-2">
             <span
-              className={`text-xs ${
-                message.role === "customer" ? "text-gray-500" : "text-white/70"
-              }`}
+              className={`text-xs ${message.role === "customer" ? "text-gray-500" : "text-white/70"
+                }`}
             >
               {formatMessageTime(message.timestamp)}
             </span>
@@ -682,7 +675,7 @@ const MessageItem = memo(
       prevProps.message.id === nextProps.message.id &&
       prevProps.isLast === nextProps.isLast &&
       JSON.stringify(prevProps.message.reaction) ===
-        JSON.stringify(nextProps.message.reaction)
+      JSON.stringify(nextProps.message.reaction)
     );
   }
 );
@@ -690,18 +683,20 @@ MessageItem.displayName = "MessageItem";
 
 const ChatView = ({
   selectedConversationId,
+  conversation: initialConversation,
   sharedProduct,
   onClearSharedProduct,
   isRightSidebarVisible,
   onOpenRightSidebar,
 }: ChatViewProps) => {
   const { user, isLoaded } = useUser();
+  const maxLength = selectedConversationId?.split("_")[0] === "instagram" ? 900 : 3500;
   const [isRecording, setIsRecording] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
   const [isAIEnabled, setIsAIEnabled] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -727,7 +722,7 @@ const ChatView = ({
     "open" | "closed" | "followup"
   >("open");
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [conversation, setConversation] = useState<Conversation | null>(initialConversation || null);
   const [fileCaption, setFileCaption] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
@@ -735,6 +730,7 @@ const ChatView = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
   const typingThrottleRef = useRef<number>(0);
   const { reminders = [], refetchReminders } = useReminders(
     selectedConversationId
@@ -750,10 +746,82 @@ const ChatView = ({
   >(new Map());
   const [globalMuted, setGlobalMuted] = useState(true);
   const [activeMediaId, setActiveMediaId] = useState<string | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState<{ file: File; progress: number; url?: string; type: string }[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleFileClick = () => {
+    fileInputRef.current?.click(); // trigger hidden input
+  };
+
+  const validateFile = (file: File): string | null => {
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+    if (!isImage && !isVideo) return "Only images and videos allowed";
+
+    const sizeMB = file.size / (1024 * 1024);
+    if (isImage && sizeMB > 5) return "Image must be under 5MB";
+    if (isVideo && sizeMB > 16) return "Video must be under 16MB";
+    return null;
+  };
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files) return;
+    const newFiles: File[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const error = validateFile(file);
+      if (error) {
+        toast.error(error);
+        continue;
+      }
+      newFiles.push(file);
+    }
+    if (newFiles.length + attachments.length <= 1) {
+      setAttachments((prev) => {
+        const total = [...prev, ...newFiles].slice(0, 3);
+        return total;
+      });
+    } else {
+      toast.error("You can upload only 1 file at a time.");
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === "file") {
+        const file = item.getAsFile();
+        if (file) {
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          handleFiles(dt.files);
+        }
+      }
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFiles(e.dataTransfer.files);
+  };
+
+
   const [activeMediaType, setActiveMediaType] = useState<
     "reel" | "story" | "video" | null
   >(null);
+  const [fullscreenMediaId, setFullscreenMediaId] = useState<string | null>(null);
   const { sendWsMessage } = useMainWebSocket();
+
+  useEffect(() => {
+    if (initialConversation) {
+      setConversation(initialConversation);
+    }
+  }, [initialConversation]);
 
   const handlePlay = (id: string, type: "reel" | "story" | "video") => {
     setActiveMediaId(id);
@@ -814,6 +882,7 @@ const ChatView = ({
 
   useEffect(() => {
     const textarea = textareaRef.current;
+    const backdrop = backdropRef.current;
     if (!textarea) return;
 
     textarea.style.height = "auto";
@@ -824,16 +893,25 @@ const ChatView = ({
       // 2 lines
       textarea.style.height = `${MIN_HEIGHT}px`;
       textarea.style.overflowY = "hidden";
+      if (backdrop) backdrop.style.overflowY = "hidden";
     } else if (scrollHeight >= MAX_HEIGHT) {
       // More than 5 lines
       textarea.style.height = `${MAX_HEIGHT}px`;
       textarea.style.overflowY = "auto";
+      if (backdrop) backdrop.style.overflowY = "auto";
     } else {
       // Between 2-5 lines
       textarea.style.height = `${scrollHeight}px`;
       textarea.style.overflowY = "hidden";
+      if (backdrop) backdrop.style.overflowY = "hidden";
     }
   }, [message]);
+
+  const handleScroll = () => {
+    if (textareaRef.current && backdropRef.current) {
+      backdropRef.current.scrollTop = textareaRef.current.scrollTop;
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
@@ -870,33 +948,43 @@ const ChatView = ({
   }, []);
 
   useEffect(() => {
-    // Don't show dropdown if message doesn't start with "/"
-    if (!message.startsWith("/")) {
-      setShowCannedResponses(false);
-      setFilteredResponses([]);
-      return;
-    }
+    const debouncedFilter = debounce(() => {
 
-    // Get the search query after "/"
-    const searchQuery = message.slice(1).toLowerCase().trim();
+      if (!message.startsWith("/")) {
+        setShowCannedResponses(false);
+        setFilteredResponses([]);
+        return;
+      }
 
-    // If just "/" (empty after slash), show ALL responses
-    if (searchQuery === "") {
-      setFilteredResponses(cannedResponses);
-      setShowCannedResponses(cannedResponses.length > 0);
+
+      // Get the search query after "/"
+      const searchQuery = message.slice(1).toLowerCase().trim();
+
+      // If just "/" (empty after slash), show ALL responses
+      if (searchQuery === "") {
+        setFilteredResponses(cannedResponses);
+        setShowCannedResponses(cannedResponses.length > 0);
+        setSelectedCannedIndex(0);
+        return;
+      }
+
+      // Filter responses by shortcut
+      const filtered = cannedResponses.filter((response) =>
+        response.shortcut.toLowerCase().includes(searchQuery)
+      );
+
+      setFilteredResponses(filtered);
+      setShowCannedResponses(filtered.length > 0);
       setSelectedCannedIndex(0);
-      return;
-    }
+    }, 200);
 
-    // Filter responses by shortcut
-    const filtered = cannedResponses.filter((response) =>
-      response.shortcut.toLowerCase().includes(searchQuery)
-    );
+    debouncedFilter();
 
-    setFilteredResponses(filtered);
-    setShowCannedResponses(filtered.length > 0);
-    setSelectedCannedIndex(0);
-  }, [message, cannedResponses]);
+    return () => {
+      debouncedFilter.cancel();
+    };
+
+  }, [message, cannedResponses])
 
   const handleSendAudio = async () => {
     if (!audioURL || !selectedConversationId) return;
@@ -1000,10 +1088,10 @@ const ChatView = ({
           type: file.type.startsWith("image/")
             ? "image"
             : file.type.startsWith("video/")
-            ? "video"
-            : file.type.startsWith("audio/")
-            ? "voice"
-            : "file",
+              ? "video"
+              : file.type.startsWith("audio/")
+                ? "voice"
+                : "file",
           role: "agent",
           conversation_id: selectedConversationId,
           timestamp: new Date().toISOString(),
@@ -1073,61 +1161,96 @@ const ChatView = ({
   };
 
   const sendMessage = async () => {
-    // 1. Basic Validation
-    if (!message.trim() || !selectedConversationId) return;
-
-    const currentContent = message.trim();
     const platform = selectedConversationId.split("_")[0];
 
-    // Handle Canned Responses (Slash Commands)
+    // 1. Validation
+    if ((!message.trim() && attachments.length === 0) || !selectedConversationId)
+      return;
+    if(message.length > maxLength) {
+      toast.error(`Message exceeds the ${maxLength} character limit.`);
+      return;
+    }
+
+    const currentContent = message.trim();
+    const currentAttachments = [...attachments]; // Snapshot for rollback
+
+    // 2. Handle Canned Responses (Slash Commands) for Caption/Text
     let contentToSend = currentContent;
 
     if (currentContent.startsWith("/")) {
       const shortcutQuery = currentContent.slice(1).toLowerCase();
-
-      // Find matching canned response by shortcut
       const cannedResponse = cannedResponses.find(
         (cr) => cr.shortcut.toLowerCase() === shortcutQuery
       );
 
       if (cannedResponse) {
-        // Use the canned response message
         contentToSend = cannedResponse.response;
       } else {
-        // If no matching canned response found, show error and don't send
         toast.error(`No canned response found for "/${shortcutQuery}"`);
         return;
       }
     }
 
-    // If contentToSend is empty after processing, don't send
-    if (!contentToSend.trim()) return;
+    // Double check empty state
+    if (!contentToSend.trim() && attachments.length === 0) return;
 
-    // 3. Create Optimistic Message
+    // 3. Prepare Optimistic Message
     const tempId = `temp-${Date.now()}`;
-    const optimisticMessage: Message = {
-      id: tempId,
-      content: contentToSend,
-      sender_id: user?.id || "agent",
-      role: "agent",
-      conversation_id: selectedConversationId,
-      timestamp: new Date().toISOString(),
-      type: "text",
-      status: "sending",
-    };
+    let optimisticMessage: Message;
 
-    // 4. OPTIMISTIC UPDATE: Update UI immediately
-    setMessage(""); // Clear input immediately
-    setShowCannedResponses(false); // Hide canned responses dropdown
-    setFilteredResponses([]); // Clear filtered responses
+    // determine message type and construct object
+    if (attachments.length > 0) {
+      const file = attachments[0];
+      // Create a local URL for immediate display
+      const localPreviewUrl = URL.createObjectURL(file);
+
+      optimisticMessage = {
+        id: tempId,
+        content: contentToSend, // This acts as the caption
+        sender_id: user?.id || "agent",
+        role: "agent",
+        conversation_id: selectedConversationId,
+        timestamp: new Date(new Date().getTime() - 5.5 * 60 * 60 * 1000).toISOString(),
+        type: file.type.startsWith("image/")
+          ? "image"
+          : file.type.startsWith("video/")
+            ? "video"
+            : file.type.startsWith("audio/")
+              ? "voice"
+              : "file",
+        status: "sending",
+        payload: {
+          url: localPreviewUrl,
+        }, // Display the local file immediately
+        fileName: file.name,
+        fileType: file.type,
+      };
+    } else {
+      optimisticMessage = {
+        id: tempId,
+        content: contentToSend,
+        sender_id: user?.id || "agent",
+        role: "agent",
+        conversation_id: selectedConversationId,
+        timestamp: new Date(new Date().getTime() - 5.5 * 60 * 60 * 1000).toISOString(),
+        type: "text",
+        status: "sending",
+      };
+    }
+
+    // 4. OPTIMISTIC UI UPDATE
+    setMessage("");
+    setAttachments([]); // Clear attachments immediately
+    setShowCannedResponses(false);
+    setFilteredResponses([]);
 
     setMessages((prev) => {
       const newState = [...prev, optimisticMessage];
-      persistMessages(newState); // Save to IDB immediately
+      // persistMessages(newState); // Optional: Save to IDB if needed
       return newState;
     });
 
-    // Scroll to bottom immediately
+    // Scroll to bottom
     setTimeout(
       () => lastMessageRef.current?.scrollIntoView({ behavior: "smooth" }),
       10
@@ -1135,30 +1258,39 @@ const ChatView = ({
 
     // 5. Send to Backend
     try {
-      const data = {
-        conversation_id: selectedConversationId,
-        content: contentToSend,
-        platform: platform,
-      };
+      const formData = new FormData();
 
-      const response = await api.post(`/api/conversations/send-message`, data);
+      // 1. Append common fields
+      formData.append("temp_id", tempId);
+      formData.append("conversation_id", selectedConversationId);
+      formData.append("platform", platform);
+
+      // 2. Append content/caption if it exists
+      if (contentToSend && contentToSend.trim()) {
+        formData.append("content", contentToSend.trim());
+      }
+
+      // 3. Append file only if it exists
+      if (currentAttachments.length > 0) {
+        formData.append("file", currentAttachments[0]);
+      }
+
+      // 4. Send formData DIRECTLY
+      // Do NOT wrap it like { formData: formData }
+      const response = await api.post(`/api/conversations/send-message`, formData);
 
       if (response.status !== 200) throw new Error("Failed to send");
 
-      // Success - WebSocket will handle the real message update
     } catch (error) {
       console.error("Send failed:", error);
       toast.error("Failed to send message");
 
-      // Rollback: Remove the temp message if API fails
-      setMessages((prev) => {
-        const newState = prev.filter((m) => m.id !== tempId);
-        persistMessages(newState);
-        return newState;
-      });
+      // ROLLBACK UI on Failure
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
 
-      // Restore text to input so user doesn't lose it
-      setMessage(currentContent); // Restore original message (with /)
+      // Restore User Input
+      setMessage(currentContent); // Restore text
+      setAttachments(currentAttachments); // Restore attachments
     }
   };
 
@@ -1367,13 +1499,15 @@ const ChatView = ({
 
           // 1. Check if we have an optimistic message (temp ID) with matching content
           // We look for a temp message sent by US (agent) with the SAME text
+          const normalizeText = (text: string) => text ? text.replace(/\r/g, "") : "";
           const tempMatchIndex = prev.findIndex(
             (msg) =>
               msg.id.toString().startsWith("temp-") &&
-              msg.content === incomingMsg.content &&
+              msg.content === normalizeText(incomingMsg.content) &&
               // Optional: Check if timestamp is within last 10 seconds to be safe
-              new Date().getTime() - new Date(msg.timestamp).getTime() < 10000
+              new Date(new Date().getTime() - 5.5 * 60 * 60 * 1000).getTime() - new Date(msg.timestamp).getTime() < 10000
           );
+
 
           if (tempMatchIndex !== -1) {
             // RECONCILIATION: Replace the temp message with the real one
@@ -1462,15 +1596,12 @@ const ChatView = ({
 
   const fetchConversation = async () => {
     try {
-      setLoading(true);
       const response = await api.get(
         `/api/conversations/${selectedConversationId}`
       );
       setConversation(response?.data);
     } catch {
       toast.error("Failed to load conversation");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -1515,6 +1646,9 @@ const ChatView = ({
   const fetchMessages = async () => {
     if (!isLoaded || !user || !selectedConversationId) return;
 
+    setMessagesLoading(true);
+    let hasCached = false;
+
     // 1. Load from Cache immediately
     try {
       const cachedMessages = await getData<Message[]>(
@@ -1527,8 +1661,10 @@ const ChatView = ({
         cachedMessages.length > 0
       ) {
         setMessages(cachedMessages);
+        hasCached = true;
+        setMessagesLoading(false);
         // Optional: Scroll to bottom immediately upon loading cache
-        // setTimeout(() => lastMessageRef.current?.scrollIntoView(), 100);
+        setTimeout(() => lastMessageRef.current?.scrollIntoView(), 100);
       }
     } catch (err) {
       console.warn("Error loading cached messages:", err);
@@ -1548,11 +1684,16 @@ const ChatView = ({
       await persistMessages(newMessages);
     } catch (error) {
       toast.error("Failed to load messages", { description: error as string });
+    } finally {
+      setMessagesLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!selectedConversationId) return () => {};
+    if (!selectedConversationId) return () => { };
+
+    setMessage("");
+    textareaRef.current?.focus();
 
     sendWsMessage({
       type: "join_conversation",
@@ -1563,6 +1704,8 @@ const ChatView = ({
     fetchConversation();
     setUnreadCount();
     fetchAIStatus();
+    setMessages([]);
+    setAttachments([]);
     fetchMessages();
     setTypingUsers(new Map());
 
@@ -1591,9 +1734,9 @@ const ChatView = ({
     avatarSource = "/features/instagram.png";
   }
 
-  if (loading) {
-    return <LoadingState />;
-  }
+  // if (loading) {
+  //   return <LoadingState />;
+  // }
 
   const lastCustomerMessage = messages
     .filter((m) => m.role === "customer")
@@ -1604,7 +1747,7 @@ const ChatView = ({
 
   const isWindowExpired = lastCustomerMessage
     ? new Date().getTime() - new Date(lastCustomerMessage.timestamp).getTime() >
-      24 * 60 * 60 * 1000
+    24 * 60 * 60 * 1000
     : true;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1663,9 +1806,11 @@ const ChatView = ({
     }, 0);
   };
 
+
+
   return (
     <>
-      <Toaster richColors position="top-right" />
+      { /*<Toaster richColors position="top-right" /> */}
       <style>
         {`
           .product-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -1685,7 +1830,18 @@ const ChatView = ({
             <LandingDashboard />
           </div>
         ) : (
-          <Card className="h-full flex flex-col bg-white max-h-screen rounded-none border border-gray-200 overflow-hidden">
+          <Card
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            className={`relative h-full flex flex-col bg-white max-h-screen rounded-none overflow-hidden ${isDragging ? "" : "border border-gray-200"}`}
+          >
+
+
+
             {/* Desktop Header */}
             <div className="px-6 py-1 border-b border-gray-100 bg-white items-center justify-between flex">
               {/* Customer Info Section */}
@@ -1787,8 +1943,8 @@ const ChatView = ({
                         {conversationStatus === "closed"
                           ? "Closed"
                           : conversationStatus === "followup"
-                          ? "Follow-up"
-                          : "Open"}
+                            ? "Follow-up"
+                            : "Open"}
                       </span>
                       <ChevronDown className="h-4 w-4 text-gray-600" />
                     </Button>
@@ -1822,14 +1978,14 @@ const ChatView = ({
 
                     {(conversationStatus === "closed" ||
                       conversationStatus === "followup") && (
-                      <DropdownMenuItem
-                        onClick={handleReopen}
-                        className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-green-50 rounded-xl mx-2"
-                      >
-                        <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
-                        <span className="font-medium">Reopen Conversation</span>
-                      </DropdownMenuItem>
-                    )}
+                        <DropdownMenuItem
+                          onClick={handleReopen}
+                          className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-green-50 rounded-xl mx-2"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
+                          <span className="font-medium">Reopen Conversation</span>
+                        </DropdownMenuItem>
+                      )}
                   </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -1886,9 +2042,8 @@ const ChatView = ({
                   </TooltipTrigger>
                   <TooltipContent>
                     {reminders.length > 0
-                      ? `${reminders.length} reminder${
-                          reminders.length > 1 ? "s" : ""
-                        } set`
+                      ? `${reminders.length} reminder${reminders.length > 1 ? "s" : ""
+                      } set`
                       : "Set reminder"}
                   </TooltipContent>
                 </Tooltip>
@@ -1912,11 +2067,10 @@ const ChatView = ({
                         variant="ghost"
                         size="icon"
                         onClick={onOpenRightSidebar}
-                        className={`rounded-xl transition-all duration-200 ${
-                          isRightSidebarVisible
-                            ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                            : "hover:bg-gray-100"
-                        }`}
+                        className={`rounded-xl transition-all duration-200 ${isRightSidebarVisible
+                          ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                          : "hover:bg-gray-100"
+                          }`}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -1956,6 +2110,18 @@ const ChatView = ({
               </div>
             </div>
 
+            {isDragging && (
+              <div
+                className="absolute mt-12  border-blue-500 border-2 border-dashed inset-0 z-50 flex bg-white/30 backdrop-blur-sm items-center justify-center pointer-events-none"
+                aria-hidden="true"
+              >
+                <div className="flex flex-col items-center justify-center gap-3  rounded-2xl p-6  text-gray-600">
+                  <Upload className="h-12 w-12" />
+                  <div className="text-sm font-semibold">Drop files to upload</div>
+                </div>
+              </div>
+            )}
+
             {/* Customer Info Dialog */}
             <Dialog open={showCustomerInfo} onOpenChange={setShowCustomerInfo}>
               <DialogContent className="sm:max-w-[800px]">
@@ -1987,8 +2153,8 @@ const ChatView = ({
                           {conversation?.platform === "instagram"
                             ? selectedConversationId?.split("_")[1]
                             : selectedConversationId
-                                ?.split("_")[1]
-                                ?.replace(/^(\d{2})(\d+)/, "+$1 $2")}
+                              ?.split("_")[1]
+                              ?.replace(/^(\d{2})(\d+)/, "+$1 $2")}
                         </div>
                       </div>
                     </div>
@@ -2207,13 +2373,7 @@ const ChatView = ({
                   <Button
                     type="button"
                     disabled={!selectedFile || uploading}
-                    onClick={() =>
-                      handleFileUpload(
-                        selectedFile,
-                        selectedConversationId,
-                        fileCaption
-                      )
-                    }
+                    onClick={() => handleFileUpload(selectedFile, selectedConversationId, fileCaption)}
                   >
                     {uploading ? (
                       <>
@@ -2221,7 +2381,7 @@ const ChatView = ({
                         Sending...
                       </>
                     ) : (
-                      "Send"
+                      'Send'
                     )}
                   </Button>
                 </div>
@@ -2245,181 +2405,215 @@ const ChatView = ({
               className="flex-1 h-full px-3 py-0.1 bg-gray-50"
             >
               <div className="space-y-3 max-w-full pb-4 sm:pb-0">
-                <>
-                  {messages.map((message, index) => {
-                    const latestMediaMessage = [...messages]
-                      .reverse()
-                      .find(
-                        (m) => m.type === "ig_reel" || m.type === "ig_story"
-                      );
+                {messagesLoading && messages.length === 0 ? (
+                  <div className="space-y-6 p-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <MessageSkeleton key={i} />
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    {messages.map((message, index) => {
+                      const latestMediaMessage = [...messages]
+                        .reverse()
+                        .find(
+                          (m) => m.type === "ig_reel" || m.type === "ig_story"
+                        );
 
-                    const latestMediaId =
-                      latestMediaMessage?.payload?.reel_video_id ||
-                      latestMediaMessage?.payload?.story_media_id;
+                      const latestMediaId =
+                        latestMediaMessage?.payload?.reel_video_id ||
+                        latestMediaMessage?.payload?.story_media_id;
 
-                    const isLatest =
-                      (message.type === "ig_reel" &&
-                        message.payload?.reel_video_id === latestMediaId) ||
-                      (message.type === "ig_story" &&
-                        message.payload?.story_media_id === latestMediaId);
-                    return (
-                      <div
-                        key={message.id}
-                        className="relative group w-full message-item"
-                      >
+                      const isLatest =
+                        (message.type === "ig_reel" &&
+                          message.payload?.reel_video_id === latestMediaId) ||
+                        (message.type === "ig_story" &&
+                          message.payload?.story_media_id === latestMediaId);
+                      return (
                         <div
-                          className={`flex ${
-                            message.role === "customer"
-                              ? "justify-start"
-                              : "justify-end"
-                          }`}
+                          key={message.id}
+                          className="relative group w-full message-item"
                         >
                           <div
-                            className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${
-                              message.role === "customer"
+                            className={`flex ${message.role === "customer"
+                              ? "justify-start"
+                              : "justify-end"
+                              }`}
+                          >
+                            <div
+                              className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === "customer"
                                 ? "items-start"
                                 : "items-end"
-                            }`}
-                          >
-                            <MessageWrapper
-                              message={message}
-                              index={index}
-                              allMessages={messages}
+                                }`}
                             >
-                              {/* IG Media Messages */}
-                              {message.payload && (
-                                <LazyMediaLoader key={index} index={index}>
-                                  {/* Render IG Posts */}
-                                  {message.type === "share" && (
-                                    <InstagramPost
-                                      mediaUrl={message.payload.url}
-                                      timestamp={formatMessageTime(
-                                        message.timestamp
-                                      )}
-                                    />
-                                  )}
+                              <MessageWrapper
+                                message={message}
+                                index={index}
+                                allMessages={messages}
+                                forceHide={fullscreenMediaId === message.id}
+                              >
+                                {/* IG Media Messages */}
+                                {message.payload && (
+                                  <LazyMediaLoader key={index} index={index}>
+                                    {/* Render IG Posts */}
+                                    {message.type === "share" && (
+                                      <InstagramPost
+                                        mediaUrl={message.payload.url}
+                                        timestamp={formatMessageTime(
+                                          message.timestamp
+                                        )}
+                                      />
+                                    )}
 
-                                  {/* Render IG Reels */}
-                                  {message.type === "ig_reel" && (
-                                    <InstagramReel
-                                      key={index}
-                                      id={message.payload.reel_video_id}
-                                      reelVideoUrl={message.payload.url}
-                                      title={message.payload.caption}
-                                      timestamp={formatMessageTime(
-                                        message.timestamp
-                                      )}
-                                      viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
-                                      isLatest={isLatest}
-                                      isActive={
-                                        activeMediaType === "reel" &&
-                                        activeMediaId ===
+                                    {/* Render IG Reels */}
+                                    {message.type === "ig_reel" && (
+                                      <InstagramReel
+                                        key={index}
+                                        id={message.payload.reel_video_id}
+                                        reelVideoUrl={message.payload.url}
+                                        title={message.payload.caption}
+                                        timestamp={formatMessageTime(
+                                          message.timestamp
+                                        )}
+                                        viewOnInstagramUrl={`https://instagram.com/reel/${message.payload.reel_video_id}`}
+                                        isLatest={isLatest}
+                                        isActive={
+                                          activeMediaType === "reel" &&
+                                          activeMediaId ===
                                           message.payload.reel_video_id
-                                      }
-                                      onPlay={(id) => handlePlay(id, "reel")} // stops others
-                                      isMuted={globalMuted}
-                                      onMuteToggle={handleMuteToggle}
-                                      isAgent={
-                                        message.role.toLowerCase() === "agent"
-                                      }
-                                    />
-                                  )}
+                                        }
+                                        onPlay={(id) => handlePlay(id, "reel")} // stops others
+                                        isMuted={globalMuted}
+                                        onMuteToggle={handleMuteToggle}
+                                        isAgent={
+                                          message.role.toLowerCase() === "agent"
+                                        }
+                                      />
+                                    )}
 
-                                  {/* Render IG Story */}
-                                  {(message.type === "ig_story" ||
-                                    message.type === "story_reply") && (
-                                    <InstagramStory
-                                      id={message.payload.story_media_id}
-                                      sharedBy="You"
-                                      storyOwnerName={"Instagram User"}
-                                      storyMediaUrl={
-                                        message.payload.story_media_url
-                                      }
-                                      isActive={
-                                        activeMediaType === "story" &&
-                                        activeMediaId ===
-                                          message.payload.story_media_id
-                                      } // only one plays
-                                      onPlay={(id) => handlePlay(id, "story")}
-                                      isMuted={globalMuted}
-                                      isLatest={isLatest}
-                                      onMuteToggle={(muted) =>
-                                        setGlobalMuted(muted)
-                                      }
-                                      isAgent={
-                                        message.role.toLowerCase() === "agent"
-                                      }
-                                      timestamp={formatMessageTime(
-                                        message.timestamp
+                                    {/* Render IG Story */}
+                                    {(message.type === "ig_story" ||
+                                      message.type === "story_reply") && (
+                                        <InstagramStory
+                                          id={message.payload.story_media_id}
+                                          sharedBy="You"
+                                          storyOwnerName={"Instagram User"}
+                                          storyMediaUrl={
+                                            message.payload.story_media_url
+                                          }
+                                          isActive={
+                                            activeMediaType === "story" &&
+                                            activeMediaId ===
+                                            message.payload.story_media_id
+                                          } // only one plays
+                                          onPlay={(id) => handlePlay(id, "story")}
+                                          isMuted={globalMuted}
+                                          isLatest={isLatest}
+                                          onMuteToggle={(muted) =>
+                                            setGlobalMuted(muted)
+                                          }
+                                          isAgent={
+                                            message.role.toLowerCase() === "agent"
+                                          }
+                                          timestamp={formatMessageTime(
+                                            message.timestamp
+                                          )}
+                                          content={message.content}
+                                          storyOwnerUsername={
+                                            message.payload.owner_username
+                                          }
+                                          type={message.type}
+                                        />
                                       )}
-                                      content={message.content}
-                                      storyOwnerUsername={
-                                        message.payload.owner_username
-                                      }
-                                      type={message.type}
-                                    />
-                                  )}
 
-                                  {/* Render Images / Videos */}
-                                  {(message.type === "image" ||
-                                    message.type === "video") && (
-                                    <MediaMessage
-                                      type={
-                                        message.type === "image"
-                                          ? "image"
-                                          : "video"
-                                      }
-                                      url={message.payload.url}
-                                      isAgent={
-                                        message.role.toLowerCase() === "agent"
-                                      }
-                                      isLatest={isLatest}
-                                      isActive={
-                                        activeMediaType === "video" &&
-                                        activeMediaId === message.id
-                                      }
-                                      onPlay={(id) => handlePlay(id, "video")}
-                                      isMuted={globalMuted}
-                                      onMuteToggle={(muted) =>
-                                        setGlobalMuted(muted)
-                                      }
-                                      id={message.id}
-                                      timestamp={formatMessageTime(
-                                        message.timestamp
+                                    {/* Render Images / Videos */}
+                                    {(message.type === "image" ||
+                                      message.type === "video") && (
+                                        <MediaMessage
+                                          type={
+                                            message.type === "image"
+                                              ? "image"
+                                              : "video"
+                                          }
+                                          url={message.payload.url}
+                                          status={message.status}
+                                          message={message}
+                                          index={index}
+                                          isLast={index === messages.length - 1}
+                                          key={message.id}
+                                          isAgent={
+                                            message.role.toLowerCase() === "agent"
+                                          }
+                                          isLatest={isLatest}
+                                          isActive={
+                                            activeMediaType === "video" &&
+                                            activeMediaId === message.id
+                                          }
+                                          onPlay={(id) => handlePlay(id, "video")}
+                                          isMuted={globalMuted}
+                                          onMuteToggle={(muted) =>
+                                            setGlobalMuted(muted)
+                                          }
+                                          id={message.id}
+                                          timestamp={formatMessageTime(
+                                            message.timestamp
+                                          )}
+                                          onFullscreenToggle={(isFullscreen) => {
+                                            if (isFullscreen) {
+                                              setFullscreenMediaId(message.id);
+                                            } else {
+                                              setFullscreenMediaId(null);
+                                            }
+                                          }}
+                                        />
                                       )}
+
+                                    {/* Document Messages */}
+                                    {message.type === "document" && (
+                                      <DocumentMessage
+                                        url={message.payload.url}
+                                        previewUrl={message.payload.thumbnail_url}
+                                        fileName={message.payload.file_name}
+                                        fileSize={message.payload.file_size}
+                                        fileFormat={message.payload.file_format}
+                                        filePages={message.payload.file_pages}
+                                        isAgent={message.role.toLowerCase() === "agent"}
+                                        timestamp={formatMessageTime(message.timestamp)}
+                                      />
+                                    )}
+                                  </LazyMediaLoader>
+                                )}
+
+                                {/* Normal Messages */}
+                                {![
+                                  "ig_story",
+                                  "story_reply",
+                                  "ig_reel",
+                                  "share",
+                                  "image",
+                                  "video",
+                                  "document",
+                                ].includes(message.type ?? "") && (
+                                    <MessageItem
+                                      key={message.id}
+                                      message={message}
+                                      index={index}
+                                      isLatest={isLatest}
+                                      isLast={index === messages.length - 1}
+                                      isReplyMessage={
+                                        message.type == "message_reply"
+                                      }
                                     />
                                   )}
-                                </LazyMediaLoader>
-                              )}
-
-                              {/* Normal Messages */}
-                              {![
-                                "ig_story",
-                                "story_reply",
-                                "ig_reel",
-                                "share",
-                                "image",
-                                "video",
-                              ].includes(message.type ?? "") && (
-                                <MessageItem
-                                  key={message.id}
-                                  message={message}
-                                  index={index}
-                                  isLatest={isLatest}
-                                  isLast={index === messages.length - 1}
-                                  isReplyMessage={
-                                    message.type == "message_reply"
-                                  }
-                                />
-                              )}
-                            </MessageWrapper>
+                              </MessageWrapper>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                  <div ref={lastMessageRef} />
-                </>
+                      );
+                    })}
+                    <div className="mt-10" ref={lastMessageRef} />
+                  </>
+                )}
               </div>
             </ScrollArea>
 
@@ -2427,66 +2621,75 @@ const ChatView = ({
             <div className="flex-shrink-0 mb-3 relative">
               {/* Typing Users */}
               {typingUsers.size > 0 && (
-                <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-5 py-2 rounded-xl border border-white/10 shadow-sm animate-fadeIn">
-                  {/* List of users typing */}
-                  <div className="flex items-center gap-x-2 flex-wrap text-sm">
-                    {Array.from(typingUsers.values()).map((user, index) => {
-                      const initials = user.agent_name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase();
-
-                      const bgColor = `hsl(${
-                        (user.agent_name.length * 37) % 360
-                      }, 70%, 55%)`; // unique color
-
-                      return (
-                        <span
-                          key={index}
-                          className="inline-flex items-center gap-2"
-                        >
-                          {/* Avatar with initials */}
+                <div className="inline-flex items-center ml-5 px-3 text-sm ">
+                  {/* Overlapping Initials */}
+                  <div className="flex items-center -space-x-2 mr-2">
+                    {Array.from(typingUsers.values())
+                      .slice(0, 2)
+                      .map((user, idx) => {
+                        const initials = user.agent_name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase();
+                        const bgColor = `hsl(${(user.agent_name.length * 37) % 360}, 70%, 45%)`;
+                        return (
                           <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
-                            style={{ backgroundColor: bgColor }}
+                            key={idx}
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-white shadow"
+                            style={{
+                              backgroundColor: bgColor,
+                              zIndex: 10 - idx,
+                            }}
                           >
                             {initials}
                           </div>
-                          {/* Name */}
-                          <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                            {user.agent_name}
-                          </span>
-
-                          {index < typingUsers.size - 1 && (
-                            <span className="text-gray-500 text-base">,</span>
-                          )}
-                        </span>
-                      );
-                    })}
-                    <span className="font-medium text-base bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent ml-1">
-                      {typingUsers.size === 1 ? "is typing" : "are typing"}
-                    </span>
+                        );
+                      })}
                   </div>
-
-                  {/* Animated dots */}
-                  <div className="flex items-center gap-1 ml-1">
-                    <span className="w-2 h-2 bg-gradient-to-br from-pink-400 to-purple-400 rounded-full animate-bounce delay-0"></span>
-                    <span className="w-2 h-2 bg-gradient-to-br from-purple-400 to-cyan-400 rounded-full animate-bounce delay-150"></span>
-                    <span className="w-2 h-2 bg-gradient-to-br from-cyan-400 to-pink-400 rounded-full animate-bounce delay-300"></span>
+                  {/* Typing Text */}
+                  <span>
+                    {typingUsers.size === 1 && (
+                      <>
+                        {Array.from(typingUsers.values())[0].agent_name} is typing
+                      </>
+                    )}
+                    {typingUsers.size === 2 && (
+                      <>
+                        {Array.from(typingUsers.values())[0].agent_name} & {Array.from(typingUsers.values())[1].agent_name} are typing
+                      </>
+                    )}
+                    {typingUsers.size > 2 && (
+                      <>Multiple people are typing</>
+                    )}
+                  </span>
+                  {/* Dots */}
+                  <div className="flex justify-end gap-1 ml-1">
+                    <span className="dot animate-dot"></span>
+                    <span className="dot animate-dot delay-150"></span>
+                    <span className="dot animate-dot delay-300"></span>
                   </div>
-
                   <style>{`
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(4px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      .animate-fadeIn {
-        animation: fadeIn 0.25s ease-out forwards;
-      }
-    `}</style>
+                    .dot {
+                      width: 3px;
+                      height: 3px;
+                      border-radius: 50%;
+                      background-color: #555;
+                    }
+                    @keyframes dot {
+                      0% { opacity: 0.3; transform: translateY(0); }
+                      50% { opacity: 1; transform: translateY(-2px); }
+                      100% { opacity: 0.3; transform: translateY(0); }
+                    }
+                    .animate-dot {
+                      animation: dot 1s infinite ease-in-out;
+                    }
+                    .delay-150 { animation-delay: 0.15s; }
+                    .delay-300 { animation-delay: 0.3s; }
+                  `}</style>
                 </div>
               )}
+
 
               {sharedProduct && (
                 <div className="mb-3 px-3">
@@ -2531,21 +2734,19 @@ const ChatView = ({
                           <button
                             key={response._id}
                             onClick={() => handleSelectCannedResponse(response)}
-                            className={`w-full text-left px-4 py-3 border-b border-gray-50 last:border-0 transition-all hover:bg-blue-50 group ${
-                              index === selectedCannedIndex
-                                ? "bg-blue-50 border-l-4 border-l-blue-500"
-                                : ""
-                            }`}
+                            className={`w-full text-left px-4 py-3 border-b border-gray-50 last:border-0 transition-all hover:bg-blue-50 group ${index === selectedCannedIndex
+                              ? "bg-blue-50 border-l-4 border-l-blue-500"
+                              : ""
+                              }`}
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                   <span
-                                    className={`text-sm font-mono font-semibold px-2 py-0.5 rounded ${
-                                      index === selectedCannedIndex
-                                        ? "bg-blue-100 text-blue-700"
-                                        : "bg-gray-100 text-gray-700 group-hover:bg-blue-100 group-hover:text-blue-700"
-                                    }`}
+                                    className={`text-sm font-mono font-semibold px-2 py-0.5 rounded ${index === selectedCannedIndex
+                                      ? "bg-blue-100 text-blue-700"
+                                      : "bg-gray-100 text-gray-700 group-hover:bg-blue-100 group-hover:text-blue-700"
+                                      }`}
                                   >
                                     {response.shortcut}
                                   </span>
@@ -2633,21 +2834,19 @@ const ChatView = ({
                     {/* Mode Toggle */}
                     <div className="mb-5 w-40 bg-gray-100/80 rounded-2xl p-0.5 flex items-center">
                       <button
-                        className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${
-                          mode === "reply"
-                            ? "bg-blue-600 text-white shadow-md"
-                            : "text-gray-600 hover:text-blue-600"
-                        }`}
+                        className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${mode === "reply"
+                          ? "bg-blue-600 text-white shadow-md"
+                          : "text-gray-600 hover:text-blue-600"
+                          }`}
                         onClick={() => setMode("reply")}
                       >
                         Reply
                       </button>
                       <button
-                        className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${
-                          mode === "private"
-                            ? "bg-purple-600 text-white shadow-md"
-                            : "text-gray-600 hover:text-purple-600"
-                        }`}
+                        className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${mode === "private"
+                          ? "bg-purple-600 text-white shadow-md"
+                          : "text-gray-600 hover:text-purple-600"
+                          }`}
                         onClick={() => setMode("private")}
                       >
                         Private
@@ -2655,11 +2854,25 @@ const ChatView = ({
                     </div>
 
                     {/* Textarea */}
-                    <div className="flex-1 mb-1.5">
+                    <div className="flex-1 mb-1.5 relative">
+                        <div
+                          ref={backdropRef}
+                          className="absolute inset-0 w-full h-full text-sm p-0 whitespace-pre-wrap break-words text-transparent pointer-events-none scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent"
+                          style={{
+                            lineHeight: "20px",
+                            fontFamily: "inherit",
+                          }}
+                          aria-hidden="true"
+                        >
+                          {message.slice(0, maxLength)}
+                          <span className="bg-red-300 text-transparent">{message.slice(maxLength)}</span>
+                        </div>
                       <textarea
                         ref={textareaRef}
+                        onScroll={handleScroll}
                         value={message}
                         onChange={handleInputChange}
+                        onPaste={handlePaste}
                         onKeyDown={handleKeyDown}
                         placeholder={
                           mode === "reply"
@@ -2674,9 +2887,33 @@ const ChatView = ({
                           maxHeight: "120px", // 5 lines
                           lineHeight: "20px",
                         }}
-                        className="w-full bg-transparent border-none outline-none focus:outline-none resize-none overflow-y-hidden text-gray-800 placeholder-gray-500 text-sm p-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent transition-all duration-150"
+                        className="w-full bg-transparent border-none outline-none focus:outline-none resize-none overflow-y-hidden text-gray-800 placeholder-gray-500 text-sm p-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent transition-all duration-150 relative z-10"
                       />
                     </div>
+
+                    {attachments.length > 0 && (
+                      <div className="flex gap-2 mb-3 px-3 flex-wrap">
+                        {attachments.map((file, idx) => {
+                          const isImage = file.type.startsWith("image/");
+                          const url = URL.createObjectURL(file);
+                          return (
+                            <div key={idx} className="relative group w-24 h-24 rounded-xl overflow-hidden border border-gray-200">
+                              {isImage ? (
+                                <img src={url} alt="preview" className="w-full h-full object-cover" />
+                              ) : (
+                                <video src={url} className="w-full h-full object-cover" />
+                              )}
+                              <button
+                                className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                                onClick={() => setAttachments((prev) => prev.filter((_, i) => i !== idx))}
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
 
                     {/* Action buttons */}
                     <div className="flex justify-between items-center">
@@ -2701,8 +2938,8 @@ const ChatView = ({
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button
+                              onClick={handleFileClick}
                               className="p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors"
-                              onClick={() => setIsFileModalOpen(true)}
                             >
                               <Paperclip className="h-4 w-4 text-gray-600" />
                             </button>
@@ -2712,15 +2949,23 @@ const ChatView = ({
                           </TooltipContent>
                         </Tooltip>
 
+                        {/* Hidden file input */}
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*,video/*"
+                          className="hidden"
+                          onChange={(e) => handleFiles(e.target.files)}
+                        />
+
                         {/* Voice recording */}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button
-                              className={`p-2.5 rounded-xl transition-colors ${
-                                isRecording
-                                  ? "bg-red-100/80 hover:bg-red-200/80 text-red-600"
-                                  : "bg-gray-100/80 hover:bg-gray-200/80 text-gray-600"
-                              }`}
+                              className={`p-2.5 rounded-xl transition-colors ${isRecording
+                                ? "bg-red-100/80 hover:bg-red-200/80 text-red-600"
+                                : "bg-gray-100/80 hover:bg-gray-200/80 text-gray-600"
+                                }`}
                               onClick={
                                 isRecording ? stopRecording : startRecording
                               }
@@ -2736,19 +2981,19 @@ const ChatView = ({
 
                       {/* Character count and send button */}
                       <div className="flex items-center gap-4">
-                        <div className="text-xs text-gray-500 font-medium">
-                          {message.length}/1000
+                        <div className={`text-xs ${message.length > maxLength ? 'text-red-500' : 'text-gray-500'} font-medium`}>
+                          {message.length}/{maxLength}
                         </div>
 
                         <button
-                          className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${
-                            message.trim() || audioURL || sharedProduct
-                              ? mode === "reply"
-                                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
-                                : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
-                              : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
-                          }`}
+                          className={`px-6 py-2.5 rounded-2xl flex items-center justify-center transition-all duration-300 font-medium text-sm ${message.trim() || attachments.length > 0
+                            ? mode === "reply"
+                              ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
+                              : "bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg"
+                            : "bg-gray-200/80 text-gray-400 cursor-not-allowed"
+                            } ${message.length > maxLength ? "opacity-50 cursor-not-allowed" : ""}`}
                           onClick={() => {
+                            if (message.length > maxLength) toast.error(`Message exceeds maximum length of ${maxLength} characters.`);
                             if (sharedProduct) {
                               handleShareProduct(message, sharedProduct);
                             } else if (audioURL) {
@@ -2759,22 +3004,12 @@ const ChatView = ({
                           }}
                           // ONLY disable if input is empty.
                           // We removed 'isSending' so you can spam click like WhatsApp.
-                          disabled={
-                            !message.trim() && !audioURL && !sharedProduct
-                          }
+                          disabled={(!message.trim() && attachments.length === 0) || message.length > maxLength}
                         >
-                          {/* Only show spinner for Audio/Product which might be slower, 
-                            but for Text, we show the Send Icon always */}
-                          {isSending && (audioURL || sharedProduct) ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <>
-                              <Send className="h-4 w-4" />
-                              <span className="ml-2">
-                                {mode === "reply" ? "Send" : "Add Note"}
-                              </span>
-                            </>
-                          )}
+                          <Send className="h-4 w-4" />
+                          <span className="ml-2">
+                            {mode === "reply" ? "Send" : "Add Note"}
+                          </span>
                         </button>
                       </div>
                     </div>

@@ -223,10 +223,10 @@ export function HoverBorderGradientDemo() {
                 <div aria-hidden className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-4" />
 
                 <Drawer.Title className="text-2xl lg:text-3xl md:text-3xl font-semibold text-black text-center">
-                  Contact Us
+                  Join Beta
                 </Drawer.Title>
                 <p className="text-neutral-600 px-4 lg:px-0 text-xs lg:text-base text-center mt-2">
-                  We will contact you based on the below information
+                  Sign up for our beta program to get access
                 </p>
                 <form method="POST" action={"https://docs.google.com/forms/d/e/1FAIpQLSdB_mtDsubutUM_y1draxzdbfzcsqcIz9Ok_hTwPayBukJPNg/formResponse"} onSubmit={handleDemoRequest}>
                   <label htmlFor="fname" className="font-medium text-gray-900 text-sm mt-8 mb-2 block">
@@ -276,7 +276,7 @@ export function HoverBorderGradientDemo() {
                     className="border border-gray-200 bg-white w-full resize-none  p-3 rounded-xl py-2 text-gray-900 outline-none focus:ring-2 focus:ring-black/5 focus:ring-offset-0"
                   />
                   <p className="text-neutral-600  text-xs  mt-2 mb-8">
-                    By submitting you agree to our Terms & Conditions.
+                    By submitting you agree to our <span className="underline cursor-pointer" onClick={() => router.push("/terms-of-service")}>Terms & Conditions.</span>
                   </p>
                   <button
                     type="submit"

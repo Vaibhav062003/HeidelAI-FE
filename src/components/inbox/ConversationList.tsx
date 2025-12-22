@@ -128,7 +128,7 @@ const ConversationList = ({
   onToggleVisibility,
 }: ConversationListProps) => {
   const [activeTab, setActiveTab] = useState<TabValue>('all');
-  const { conversations, loading, error } = useConversations();
+  const { conversations, loading, error, markAsRead } = useConversations();
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({
     platform: [],
@@ -214,8 +214,9 @@ const ConversationList = ({
   }, []);
 
   const handleConversationSelect = useCallback((id: string) => {
+    markAsRead(id);
     onConversationSelect?.(id);
-  }, [onConversationSelect]);
+  }, [onConversationSelect, markAsRead]);
 
   return (
     <div className="w-full h-full max-h-screen bg-white/95 flex flex-col overflow-hidden border-r border-gray-200/60">

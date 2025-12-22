@@ -15,3 +15,4 @@ Prithal fixed whitespace issue for messages
 Prithal fixed the whitespace issue for messages
 Prithal's typing indicator new UI updated finally merged
 Merge conflict minor bug issue due to Rounak - fixed
+Merge Vaibhav's canned responses & message input text area line spacing

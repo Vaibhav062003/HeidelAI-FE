@@ -1,5 +1,6 @@
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
+import { Message, MessageItem } from "../inbox/ChatView";
 
 interface MediaMessageProps {
   url: string;
@@ -12,6 +13,11 @@ interface MediaMessageProps {
   isMuted?: boolean;
   id: string;
   timestamp: string;
+  isLast?: boolean;
+  status?: "sending" | "sent" | "delivered" | "read";
+  index?: number;
+  message?: Message;
+  onFullscreenToggle?: (isFullscreen: boolean) => void;
 }
 
 export default function MediaMessage({
@@ -25,8 +31,14 @@ export default function MediaMessage({
   isMuted = true,
   id,
   timestamp,
+  index,
+  isLast,
+  status,
+  message,
+  onFullscreenToggle,
 }: MediaMessageProps) {
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  const [mediaHeight, setMediaHeight] = useState<number | null>(null);
   const [showOverlay, setShowOverlay] = useState(false);
   const [loopCount, setLoopCount] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -48,6 +60,7 @@ export default function MediaMessage({
 
       img.onload = () => {
         setAspectRatio(img.width / img.height);
+        setMediaHeight(img.height);
         setIsUnavailable(false);
       };
       img.onerror = () => {
@@ -59,6 +72,7 @@ export default function MediaMessage({
 
       vid.onloadedmetadata = () => {
         setAspectRatio(vid.videoWidth / vid.videoHeight);
+        setMediaHeight(vid.videoHeight);
         setIsUnavailable(false);
       };
       vid.onerror = () => {
@@ -144,7 +158,6 @@ export default function MediaMessage({
   };
 
   const isVertical = aspectRatio !== null && aspectRatio < 1;
-  const mediaHeight = isVertical ? 330 : 220;
   const mediaWidth = isVertical ? 190 : 410;
 
   return (
@@ -154,10 +167,12 @@ export default function MediaMessage({
       } rounded-2xl w-fit max-w-[350px] p-1`}
     >
       <div
-        className={`relative overflow-hidden rounded-2xl bg-gray-200 shadow-sm cursor-pointer flex items-center justify-center`}
+        className={`relative h-fit overflow-hidden rounded-2xl bg-gray-200 shadow-sm cursor-pointer flex items-center justify-center`}
         style={{
           width: isUnavailable? "190px" : mediaWidth,
-          height: mediaHeight,
+          height: mediaHeight
+            ? Math.min(mediaWidth / (aspectRatio || 1), 400)
+            : 200,
           transition: "all 0.2s ease-in-out",
         }}
       >
@@ -171,6 +186,10 @@ export default function MediaMessage({
             className="object-cover"
             sizes="(max-width: 350px) 100vw"
             onError={() => setIsUnavailable(true)}
+            onClick={() => {
+              setIsFullscreen(true);
+              onFullscreenToggle?.(true);
+            }}
           />
         ) : (
           <>
@@ -238,7 +257,21 @@ export default function MediaMessage({
         )}
       </div>
 
-      <div
+      
+      {(message?.content && message && index !== undefined && isLast) ?(
+        <div className="mt-2">
+        <MessageItem
+          key={message.id}
+          message={message}
+          index={index}
+          isLatest={isLatest}
+          isLast={isLast}
+          isReplyMessage={false}
+          isMediaMessage={true}
+        />
+        </div>
+      ) : (
+        <div
         className={`py-1 w-full ${isAgent ? "pr-2" : "pl-2"}`}
       >
         <p
@@ -248,7 +281,60 @@ export default function MediaMessage({
         >
           {timestamp}
         </p>
+        {status == "sending" && (
+          <p
+            className={`text-xs ${
+            isAgent ? "text-right" : "text-left"
+          } text-gray-500 mt-1 tracking-wide`}
+          >
+            Sending...
+          </p>
+        )}
       </div>
+      )}
+      
+
+      {isFullscreen && type === "image" && (
+        <div
+          className="fixed inset-0 z-[99999999999] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => {
+            setIsFullscreen(false);
+            onFullscreenToggle?.(false);
+          }}
+        >
+          <div className="relative w-full h-full flex items-center justify-center p-4">
+            <Image
+              fill
+              src={url}
+              alt="Full screen media"
+              className=" p-10 max-w-full max-h-full object-contain"
+            />
+            <button
+              className="absolute top-4 right-4 text-white bg-white/10 hover:bg-white/20 rounded-full p-2 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsFullscreen(false);
+                onFullscreenToggle?.(false);
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

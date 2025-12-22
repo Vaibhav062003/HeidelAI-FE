@@ -8,7 +8,7 @@ export interface Product {
   created_at?: string;
   metadata?: Record<string, unknown>;
   category: string;
-  images: string;
+  image_url: string;
   onsale: boolean;
   permalink: string;
   purchasable: boolean;
