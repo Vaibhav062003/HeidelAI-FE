@@ -79,8 +79,6 @@ import CountDownTimer from "../LandingPage/CountDownTimer";
 import UserStatus from "./UserStatus";
 import DocumentMessage from "../messaging/DocumentMessage";
 
-import DocumentMessage from '../messaging/DocumentMessage';
-
 interface CustomerInfo {
   name: string;
   phone: string;

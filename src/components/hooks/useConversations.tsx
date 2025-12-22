@@ -6,27 +6,32 @@ import { conversationService } from '../services/api';
 import { normalizeConversation } from '@/utils/normalizeConversation';
 import { useMainWebSocket } from '@/lib/websocket';
 
-export const useConversations = (status?: "open" | "closed") => {
+export const useConversations = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [hasFetched, setHasFetched] = useState(false);
 
   // 1. Initial Data Fetching
   const fetchConversations = useCallback(async () => {
-    setLoading(true);
+    if(!hasFetched){
+      setLoading(true);
+    }
     try {
-      const allres = await conversationService.getConversationByStatus(status);
+      const allres = await conversationService.getAllConversations();
       if (allres.status === "success" && Array.isArray(allres.data)) {
         setConversations(allres.data);
+        setHasFetched(true);
       }
       setError(null);
+
     } catch (err) {
       console.error("Fetch error:", err);
       setError(err instanceof Error ? err : new Error('Unknown error'));
     } finally {
       setLoading(false);
     }
-  }, [status]);
+  }, [hasFetched]);
 
   const handleNewConversation = useCallback((conv: any) => {
     if (!conv) return;
@@ -61,7 +66,7 @@ export const useConversations = (status?: "open" | "closed") => {
       
       return newList;
     });
-  }, [status]); // Re-create only if status filter changes
+  }, []); 
 
   useMainWebSocket({
     onNewConversation: handleNewConversation,
@@ -83,5 +88,5 @@ export const useConversations = (status?: "open" | "closed") => {
     }));
   }, []);
   
-  return { conversations, loading, error, markAsRead };
+  return { conversations, loading, error, markAsRead};
 };

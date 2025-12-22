@@ -134,7 +134,7 @@ const ConversationList = ({
 }: ConversationListProps) => {
   const [activeTab, setActiveTab] = useState<TabValue>('all');
   const statusForTab: TabValue | undefined = activeTab === 'all' ? undefined : activeTab;
-  const { conversations, loading, error, markAsRead } = useConversations(statusForTab);
+  const { conversations, loading, error, markAsRead } = useConversations();
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({
     platform: [],
@@ -148,21 +148,31 @@ const ConversationList = ({
     setActiveTab(value as TabValue);
   }, []);
 
+  const tabFiltered = useMemo(()=>{
+    switch(activeTab){
+      case 'open':
+        return conversations.filter(c=> c.status === 'open');
+      case 'closed':
+        return conversations.filter(c=> c.status === 'closed');
+      default:
+        return conversations;
+    }
+  }, [conversations, activeTab]);
+
   const filteredConversations = useMemo(() => {
     if (!conversations.length) return [];
-    
 
+    let filtered = tabFiltered;
+    
     const hasFilters = filters.unreadOnly || filters.hasQuery || 
                        filters.platform.length || filters.priority.length || 
                        filters.sentiment.length || searchQuery;
 
     if (!hasFilters && activeTab === 'all') {
-      return [...conversations].sort((a, b) => 
+      return [...filtered].sort((a, b) => 
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
     }
-
-    let filtered = conversations;  
 
    
     if (filters.unreadOnly) {
