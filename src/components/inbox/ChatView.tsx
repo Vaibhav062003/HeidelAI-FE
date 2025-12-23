@@ -1206,7 +1206,7 @@ const ChatView = ({
 
       optimisticMessage = {
         id: tempId,
-        content: contentToSend, // This acts as the caption
+        content: contentToSend,
         sender_id: user?.id || "agent",
         role: "agent",
         conversation_id: selectedConversationId,
