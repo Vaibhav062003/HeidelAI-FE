@@ -128,7 +128,7 @@ const ConversationList = ({
   onToggleVisibility,
 }: ConversationListProps) => {
   const [activeTab, setActiveTab] = useState<TabValue>('all');
-  const { conversations, loading, error, markAsRead } = useConversations();
+  const {conversations, loading, error, markAsRead } = useConversations();
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({
     platform: [],
@@ -161,6 +161,7 @@ const ConversationList = ({
 
     if (filters.hasQuery) {
       filtered = filtered.filter(c => c.query);
+      
     }
 
     if (filters.platform.length) {
@@ -188,7 +189,8 @@ const ConversationList = ({
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(c => 
         c.customer_name.toLowerCase().includes(query) ||
-        c.last_message.toLowerCase().includes(query)
+        c.last_message.toLowerCase().includes(query) ||
+        c.id?.includes(query)
       );
     }
 
