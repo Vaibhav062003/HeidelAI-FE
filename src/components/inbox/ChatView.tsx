@@ -2016,15 +2016,10 @@ const ChatView = ({
                           onCreateReminder={() => setShowReminder(true)}
                           onDeleteReminder={async (id) => {
                             try {
-                              const response = await fetch(
-                                `https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders/${id}`,
-                                {
-                                  method: "DELETE",
-                                  credentials: "include",
-                                }
-                              );
+                              const response = await api.delete(
+                                `https://heidelai-2.koyeb.app/reminders/${id}`);
 
-                              if (!response.ok) {
+                              if (response.status !== 200) {
                                 throw new Error("Failed to delete reminder");
                               }
 

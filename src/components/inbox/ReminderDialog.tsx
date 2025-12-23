@@ -80,7 +80,7 @@ export default function ReminderDialog({
         conversationId,
         customer_name: getCustomerName()
       }
-      const response = await api.post('https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders', data)
+      const response = await api.post('https://heidelai-2.koyeb.app/reminders', data)
     
       if (response.status !== 200) {
         throw new Error('Failed to set reminder');

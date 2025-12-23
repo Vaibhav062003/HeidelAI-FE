@@ -56,10 +56,10 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
   const { conversations } = useConversations();
   const [isloading, setIsLoading] = useState<boolean>(true);
 
-  const fetchRemainders = async () => {
+  const fetchReminders = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get('https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/all-reminders');
+      const response = await api.get('https://heidelai-2.koyeb.app/all-reminders');
 
       if (response.status !== 200) {
         throw new Error('Failed to fetch reminders');
@@ -108,7 +108,7 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
   };
 
   useEffect(() => {
-    fetchRemainders();
+    fetchReminders();
   }, []);
 
   return (

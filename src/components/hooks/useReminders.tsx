@@ -19,13 +19,7 @@ export const useReminders = (conversationId?: string) => {
     
     setLoading(true);
     try {
-      // const response = await fetch(
-      //   `https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders?conversationId=${conversationId}`,
-      //   {
-      //     credentials: 'include'
-      //   }
-      // );
-      const response = await api.get(`https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders?conversationId=${conversationId}`)
+      const response = await api.get(`https://heidelai-2.koyeb.app/reminders?conversationId=${conversationId}`)
 
       if (response.status !== 200) {
         throw new Error(`Error fetching reminders: ${response.statusText}`);
