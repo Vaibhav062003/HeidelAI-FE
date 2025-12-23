@@ -12,12 +12,14 @@ import React, { useState, useEffect } from 'react';
 import { Clock, Calendar, Bell, CheckCircle, AlertCircle, X } from 'lucide-react';
 import { useConversations } from '../hooks/useConversations';
 import { Conversation } from '../types/conversation';
+import { format } from 'date-fns';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip";
+import api from "@/lib/session_api";
 
 interface RemainderSideBarProps {
   onToggleVisibility?: () => void;
@@ -57,19 +59,14 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
   const fetchRemainders = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/all-reminders', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+      const response = await api.get('https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/all-reminders');
 
-      if (!response.ok) {
+      if (response.status !== 200) {
         throw new Error('Failed to fetch reminders');
       }
-
-      const data: ApiResponse = await response.json();
+ 
+      const data: ApiResponse = response.data;
+      console.log('Fetched reminders:', data.reminders);
       setRemainder(data.reminders || []);
     } catch (err) {
       console.error('Error fetching reminders:', err);
@@ -89,7 +86,7 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
     const reminderDate = new Date(dateTime);
     const now = new Date();
     const diffHours = (reminderDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-    
+
     if (diffHours <= 24) {
       return (
         <Badge variant="outline" className="bg-red-100 text-red-600">
@@ -155,9 +152,9 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
             <Bell className="text-blue-600" size={18} />
             <h1 className="text-base font-semibold text-gray-900">Reminders</h1>
           </div>
-<span className="ml-24 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
-    {remainder.length} Active
-  </span>
+          <span className="ml-24 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+            {remainder.length} Active
+          </span>
         </div>
 
         {/* Content */}
@@ -208,10 +205,10 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
                         {reminder.title}
                         <div className="flex items-center gap-1">
                           {getPriorityBadge(reminder.dateTime)}
-                          <Badge 
-                            variant="outline" 
-                            className={reminder.status === 'COMPLETED' 
-                              ? 'bg-green-100 text-green-600' 
+                          <Badge
+                            variant="outline"
+                            className={reminder.status === 'COMPLETED'
+                              ? 'bg-green-100 text-green-600'
                               : 'bg-yellow-100 text-yellow-600'
                             }
                           >
@@ -225,7 +222,7 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
                     </div>
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="px-3 pb-2">
                   <p className="text-xs text-gray-600 leading-relaxed">{reminder.notes}</p>
                 </CardContent>
@@ -233,21 +230,19 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
                 <CardFooter className="flex justify-between px-3 py-2 border-t border-gray-100/60">
                   <div className="flex items-center text-xs text-gray-500">
                     <Calendar className="h-3 w-3 mr-1" />
-                    {new Date(reminder.dateTime).toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
+                    {format(
+                      // Add IST offset (UTC+5:30)
+                      new Date(
+                        new Date(reminder.dateTime).getTime() +
+                        5.5 * 60 * 60 * 1000
+                      ),
+                      "MMM d, yyyy 'at' h:mm a"
+                    )}
                   </div>
-                  <div className="flex items-center text-xs text-gray-500">
+                  {/* <div className="flex items-center text-xs text-gray-500">
                     <Clock className="h-3 w-3 mr-1" />
-                    Created: {new Date(reminder.created_at).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </div>
+                    Created: {reminder.created_at}
+                  </div> */}
                 </CardFooter>
               </Card>
             ))

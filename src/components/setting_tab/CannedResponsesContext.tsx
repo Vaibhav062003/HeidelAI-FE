@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import api from "@/lib/session_api";
 import { toast } from "sonner";
+import type { AxiosError } from "axios";
 
 interface CannedResponse {
   id: string;
@@ -35,6 +36,20 @@ interface DeleteConfirmation {
   id: string | null;
   shortcut: string | null;
 }
+
+type ApiErrorResponse = { message?: string; error?: string };
+type UnknownError = AxiosError<ApiErrorResponse> | Error | unknown;
+
+const getErrorMessage = (error: UnknownError, fallback: string): string => {
+  const axiosErr = error as AxiosError<ApiErrorResponse>;
+
+  return (
+    axiosErr.response?.data?.message ||
+    axiosErr.response?.data?.error ||
+    (axiosErr as any)?.message ||
+    fallback
+  );
+};
 
 const SHORTCUT_MAX_LENGTH = 50;
 const RESPONSE_MAX_LENGTH = 2000;
@@ -128,14 +143,11 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
       throw new Error("Cannot delete: Response ID is missing");
     }
 
-    try {
-      await api.delete(`/api/canned_responses/${id}`);
+    console.log("Deleting canned response ID:", id);
 
-      setResponses((prevResponses) => prevResponses.filter((r) => r.id !== id));
-      toast.success("Canned response deleted successfully!");
-    } catch (err: any) {
-      throw err;
-    }
+    await api.delete(`/api/canned_responses/${id}`);
+    setResponses((prev) => prev.filter((r) => r.id !== id));
+    toast.success("Canned response deleted successfully!");
   };
 
   const handleSubmit = async () => {
@@ -181,12 +193,11 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
       }
 
       resetForm();
-    } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        err.message ||
-        `Failed to ${editingResponse ? "update" : "create"} canned response`;
+    } catch (err) {
+      const errorMessage = getErrorMessage(
+        err,
+        `Failed to ${editingResponse ? "update" : "create"} canned response`
+      );
 
       setError(errorMessage);
       toast.error(errorMessage);
@@ -213,16 +224,24 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
 
     try {
       await deleteCannedResponse(id);
-    } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to delete canned response";
+    } catch (err) {
+      const errorMessage = getErrorMessage(
+        err,
+        "Failed to delete canned response"
+      );
 
       setError(errorMessage);
       toast.error(errorMessage);
 
-      await fetchCannedResponses();
+      try {
+        await fetchCannedResponses();
+      } catch (refreshErr) {
+        const refreshMessage = getErrorMessage(
+          refreshErr,
+          "Failed to refresh responses after delete error"
+        );
+        console.error(refreshMessage);
+      }
     } finally {
       setDeletingId(null);
     }
@@ -334,10 +353,13 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
             <div className="space-y-3">
               {responses.map((response) => {
                 const isDeleting = deletingId === response.id;
+                const titleId = `canned-response-title-${response.id}`;
 
                 return (
                   <article
                     key={response.id}
+                    role="article"
+                    aria-labelledby={titleId}
                     className={`bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-200 hover:shadow-md transition-all ${
                       isDeleting ? "opacity-50 pointer-events-none" : ""
                     }`}
@@ -345,10 +367,16 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <span className="inline-flex items-center text-sm text-blue-700 font-mono font-semibold bg-blue-50 px-3 py-1 rounded-md border border-blue-200">
+                          <h3
+                            id={titleId}
+                            className="inline-flex items-center text-sm text-blue-700 font-mono font-semibold bg-blue-50 px-3 py-1 rounded-md border border-blue-200"
+                          >
                             {response.shortcut}
-                          </span>
-                          <time className="text-xs text-gray-400">
+                          </h3>
+                          <time
+                            className="text-xs text-gray-400"
+                            dateTime={response.updated_at}
+                          >
                             {new Date(response.updated_at).toLocaleDateString(
                               "en-US",
                               {
@@ -404,6 +432,12 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
           onClick={(e) =>
             e.target === e.currentTarget && !isSaving && resetForm()
           }
+          onKeyDown={(e) => {
+            if (e.key === "Escape" && !isSaving) {
+              e.stopPropagation();
+              resetForm();
+            }
+          }}
         >
           <div className="bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-6">
@@ -526,6 +560,12 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
           onClick={(e) => e.target === e.currentTarget && handleDeleteCancel()}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              e.stopPropagation();
+              handleDeleteCancel();
+            }
+          }}
         >
           <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
             {/* Icon */}
