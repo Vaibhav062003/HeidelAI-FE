@@ -3,10 +3,16 @@ import { useState, useEffect, useCallback } from 'react';
 
 interface Reminder {
   id: string;
+  conversation_id: string;
   title: string;
-  notes?: string;
-  dateTime: string;
-  conversationId: string;
+  notes: string;
+  trigger_time: string;
+  status: "OVERDUE" | "SNOOZED" | "COMPLETED";
+  snooze_count: number;
+  last_triggered_at: string;
+  created_at: string;
+  updated_at: string;
+  recipient_email: string;
 }
 
 export const useReminders = (conversationId?: string) => {
@@ -26,7 +32,7 @@ export const useReminders = (conversationId?: string) => {
       }
 
       const data = response.data;
-      setReminders(data);
+      setReminders(Array.isArray(data.reminders) ? data.reminders : []);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch reminders');
@@ -44,6 +50,5 @@ export const useReminders = (conversationId?: string) => {
     reminders, 
     loading, 
     error, 
-    refetchReminders: fetchReminders 
   };
 };

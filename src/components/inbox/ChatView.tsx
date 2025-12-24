@@ -119,10 +119,16 @@ interface ProductData {
 
 interface Reminder {
   id: string;
+  conversation_id: string;
   title: string;
-  notes?: string;
-  dateTime: string;
-  conversationId: string;
+  notes: string;
+  trigger_time: string;
+  status: "OVERDUE" | "SNOOZED" | "COMPLETED";
+  snooze_count: number;
+  last_triggered_at: string;
+  created_at: string;
+  updated_at: string;
+  recipient_email: string;
 }
 
 interface ProductInfo {
@@ -383,14 +389,7 @@ const RemindersPopover = ({
                         </p>
                       )}
                       <p className="text-xs text-gray-500 mt-1">
-                        {format(
-                          // Add IST offset (UTC+5:30)
-                          new Date(
-                            new Date(reminder.dateTime).getTime() +
-                            5.5 * 60 * 60 * 1000
-                          ),
-                          "MMM d, yyyy 'at' h:mm a"
-                        )}
+                        {new Date(reminder.trigger_time).toLocaleString()}
                       </p>
                     </div>
                     <Button
@@ -732,7 +731,7 @@ const ChatView = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
   const typingThrottleRef = useRef<number>(0);
-  const { reminders = [], refetchReminders } = useReminders(
+  const { reminders } = useReminders(
     selectedConversationId
   );
   const [typingUsers, setTypingUsers] = useState<
@@ -2025,7 +2024,7 @@ const ChatView = ({
 
                               toast.success("Reminder deleted successfully");
                               // Refresh reminders after deletion
-                              refetchReminders();
+                              
                             } catch (error) {
                               toast.error("Failed to delete reminder");
                               console.error("Error deleting reminder:", error);
@@ -2388,10 +2387,10 @@ const ChatView = ({
               onOpenChange={setShowReminder}
               onSave={(reminderData) => {
                 console.log("Reminder saved:", reminderData);
-                refetchReminders();
+            
                 setShowReminder(false);
               }}
-              conversationId={selectedConversationId}
+              conversation_id={selectedConversationId}
             />
 
             {/* Messages Area */}
