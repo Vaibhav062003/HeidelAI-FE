@@ -928,9 +928,9 @@ const ChatView = ({
 
     const fetchCannedResponses = async () => {
       try {
-        const response = await api.get<{ canned_responses: CannedResponse[] }>(
-          "/api/canned_responses"
-        );
+      const response = await api.get("/api/canned_responses");
+
+        console.log("canned :", response);
 
         if (mounted && response.data?.canned_responses) {
           setCannedResponses(response.data.canned_responses);

@@ -1428,4 +1428,3 @@ export const SLASettings = () => (
     </div>
   </div>
 );
-
