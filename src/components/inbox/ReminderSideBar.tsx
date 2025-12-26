@@ -18,9 +18,17 @@ import {
   TooltipContent,
   TooltipTrigger,
   TooltipProvider,
-} from "@/components/ui/tooltip";
+} from "@/components/ui/tooltip"; 
 import api from "@/lib/session_api";
 import dayjs from "dayjs";
+import { ApiResponse } from '../services/api';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
 
 interface RemainderSideBarProps {
   onToggleVisibility?: () => void;
@@ -32,7 +40,7 @@ interface Reminder {
   title: string;
   notes: string;
   trigger_time: string;
-  status: "OVERDUE" | "SNOOZED" | "COMPLETED";
+  status: "OVERDUE" | "SNOOZED" | "DONE";
   snooze_count: number;
   last_triggered_at: string;
   created_at: string;
@@ -51,33 +59,30 @@ interface ApiResponse {
   };
 }
 
-const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
-  const [remainder, setRemainder] = useState<Reminder[]>([]);
-  const [error, setError] = useState<string>('');
+const ReminderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
   const { conversations } = useConversations();
-  const [isloading, setIsLoading] = useState<boolean>(true);
+  const queryClient = new QueryClient()
 
-  const fetchReminders = async () => {
-    try {
-      setIsLoading(true);
-      const response = await api.get('https://heidelai-2.koyeb.app/reminders');
-      console.log("response reminder", response)
-
-      if (response.status !== 200) {
-        throw new Error('Failed to fetch reminders');
-      }
- 
-      const data: ApiResponse = response.data;
-      console.log('Fetched reminders:', data.reminders);
-      setRemainder(data.reminders || []);
-    } catch (err) {
-      console.error('Error fetching reminders:', err);
-      setError('Failed to load reminders');
-      setRemainder([]);
-    } finally {
-      setIsLoading(false)
+  const {data, isLoading, error} = useQuery<ApiResponse, Error>({
+    queryKey: ['reminders'],
+    queryFn: async () => {
+      const response = await api.get(`https://heidelai-2.koyeb.app/reminders`);
+      return response.data as ApiResponse;
     }
-  };
+  });
+
+  const reminders = data?.reminders || [];
+
+    const doneMutation = useMutation({
+    mutationFn: async (reminderId: string) => {
+      return api.post(
+        `https://heidelai-2.koyeb.app/reminders/${reminderId}/done`
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    },
+  });
 
   const getCustomerName = (conversationId: string): string => {
     const conversation = conversations.find((conv) => conv.id === conversationId);
@@ -108,10 +113,6 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
       </Badge>
     );
   };
-
-  useEffect(() => {
-    fetchReminders();
-  }, []);
 
   return (
     <TooltipProvider>
@@ -258,4 +259,4 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
   );
 };
 
-export default RemainderSideBar;
+export default ReminderSideBar;
