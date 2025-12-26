@@ -9,7 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from '@mui/material';
 import React, { useState } from 'react';
-import { Clock, Calendar, Bell, AlertCircle, X } from 'lucide-react';
+import { Clock, Calendar, Bell, AlertCircle, X, Check } from 'lucide-react';
 import { useConversations } from '../hooks/useConversations';
 
 import {
@@ -85,11 +85,19 @@ const ReminderSideBar = ({ onToggleVisibility }: remindersideBarProps) => {
     }
   });
 
+  const getSnoozeUntil = (minutes: number) =>
+  new Date(Date.now() + minutes * 60 * 1000).toISOString();
+
   const snoozeMutation = useMutation({
-    mutationFn: async (reminderId: string)=>{
+    mutationFn: async (
+      {reminderId, snoozeUntil}: {reminderId: string; snoozeUntil: string}
+    )=>{
       setProcessingReminderId(reminderId);
       return api.post(
-        `https://heidelai-2.koyeb.app/reminders/${reminderId}/snooze`
+        `https://heidelai-2.koyeb.app/reminders/${reminderId}/snooze`,
+        {
+          snooze_duration_minutes: snoozeUntil,
+        }
       );
     },
     onSuccess: ()=>{
@@ -250,10 +258,30 @@ const ReminderSideBar = ({ onToggleVisibility }: remindersideBarProps) => {
                     <Calendar className="h-3 w-3 mr-1" />
                     {new Date(reminder.trigger_time).toLocaleString()}
                   </div>
-                  {/* <div className="flex items-center text-xs text-gray-500">
-                    <Clock className="h-3 w-3 mr-1" />
-                    Created: {reminder.created_at}
-                  </div> */}
+                  <div>
+                    <Button 
+                      variant="contained"
+                      color="primary"
+                      onClick={() => snoozeMutation.mutate({
+                        reminderId: reminder.id,
+                        snoozeUntil: getSnoozeUntil(30) // Snooze for 30 minutes
+                      })}
+                      disabled={processingReminderId === reminder.id}
+                      size="small"
+                      className="mr-2">
+                        <Clock className="h-4 w-4 mr-1" />
+                      </Button>
+                  </div>
+                  <div>
+                    <Button 
+                      variant="contained" 
+                      color="secondary"
+                      onClick={() => doneMutation.mutate(reminder.id)}
+                      disabled={processingReminderId === reminder.id}
+                      size="small">
+                        <Check className="h-4 w-4 mr-1" />
+                      </Button>
+                  </div>
                 </CardFooter>
               </Card>
             ))
