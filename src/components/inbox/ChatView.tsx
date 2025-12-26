@@ -33,6 +33,7 @@ import {
   Smile,
   Mic,
   Clock,
+  Check,
 } from "lucide-react";
 import {
   Dialog,
@@ -112,19 +113,12 @@ interface Reminder {
 
 interface ProductInfo {
   name: string;
-  price: string;
+  price: string;  
   link: string;
   image_url: string;
   sale_price?: string;
 }
 
-interface Reminder {
-  id: string;
-  title: string;
-  notes?: string;
-  dateTime: string;
-  conversationId: string;
-}
 
 export interface Message {
   id: string;
@@ -328,10 +322,15 @@ const RemindersPopover = ({
   reminders,
   onCreateReminder,
   onDeleteReminder,
+  doneReminder,
+  snoozeReminder
+
 }: {
   reminders: Reminder[];
   onCreateReminder: () => void;
   onDeleteReminder: (id: string) => void;
+  doneReminder: (id: string) => void; 
+  snoozeReminder: ({reminderId, snoozeUntil}:{reminderId:string, snoozeUntil:number}) => void;
 }) => {
   return (
     <PopoverContent className="w-80" align="end">
@@ -362,7 +361,6 @@ const RemindersPopover = ({
           ) : (
             reminders.map(
               (reminder) => (
-                console.log("reminder", reminder),
                 (
                   <div
                     key={reminder.id}
@@ -379,7 +377,25 @@ const RemindersPopover = ({
                         {new Date(reminder.trigger_time).toLocaleString()}
                       </p>
                     </div>
-                    <Button
+                    <div>
+                      <Button
+                      variant="ghost"
+                      size="sm"
+                      className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0 text-yellow-600 hover:text-yellow-600 hover:bg-red-50"
+                      onClick={()=> snoozeReminder({reminderId: reminder.id, snoozeUntil: 30})}
+                      >
+                      <Clock className="h-4 w-4" />
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                        onClick={() => doneReminder(reminder.id)}
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
                       variant="ghost"
                       size="sm"
                       className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -387,6 +403,8 @@ const RemindersPopover = ({
                     >
                       <X className="h-4 w-4" />
                     </Button>
+                    </div>
+                    
                   </div>
                 )
               )
@@ -720,9 +738,7 @@ const ChatView = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
   const typingThrottleRef = useRef<number>(0);
-  const { reminders } = useReminders(
-    selectedConversationId
-  );
+  const {reminders, snoozeReminder, doneReminder, snoozing, completing} = useReminders(selectedConversationId);
   const [typingUsers, setTypingUsers] = useState<
     Map<
       string,
@@ -2044,7 +2060,7 @@ const ChatView = ({
                             className="relative mr-2"
                           >
                             <Clock className="h-5 w-5" />
-                            {reminders.length > 0 && (
+                            {reminders?.length > 0 && (
                               <Badge
                                 variant="secondary"
                                 className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
@@ -2056,6 +2072,8 @@ const ChatView = ({
                         </PopoverTrigger>
                         <RemindersPopover
                           reminders={reminders}
+                          snoozeReminder={snoozeReminder}
+                          doneReminder={doneReminder}
                           onCreateReminder={() => setShowReminder(true)}
                           onDeleteReminder={async (id) => {
                             try {

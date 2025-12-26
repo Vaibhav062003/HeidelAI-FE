@@ -1,5 +1,5 @@
 import api from '@/lib/session_api';
-import { useState, useEffect, useCallback } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface Reminder {
   id: string;
@@ -7,7 +7,7 @@ interface Reminder {
   title: string;
   notes: string;
   trigger_time: string;
-  status: "OVERDUE" | "SNOOZED" | "COMPLETED";
+  status: "OVERDUE" | "SNOOZED" | "DONE";
   snooze_count: number;
   last_triggered_at: string;
   created_at: string;
@@ -15,40 +15,87 @@ interface Reminder {
   recipient_email: string;
 }
 
+interface ApiResponse {
+  reminders: Reminder[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+}
+
+
+const getSnoozeUntil = (minutes: number) =>
+  new Date(Date.now() + minutes * 60 * 1000).toISOString();
+
 export const useReminders = (conversationId?: string) => {
-  const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchReminders = useCallback(async () => {
-    if (!conversationId) return;
-    
-    setLoading(true);
-    try {
-      const response = await api.get(`https://heidelai-2.koyeb.app/reminders?conversationId=${conversationId}`)
+  const remindersQuery = useQuery<Reminder[], Error>({
+    queryKey : conversationId
+    ?["Conversation_reminders", conversationId]
+    :["reminders"],
 
-      if (response.status !== 200) {
-        throw new Error(`Error fetching reminders: ${response.statusText}`);
+    queryFn: async ()=>{
+      const Url =conversationId
+      ? `https://heidelai-2.koyeb.app/reminders/conversation/${conversationId}`
+      : `https://heidelai-2.koyeb.app/reminders`;
+
+      const res = await api.get(Url);
+      if ("reminders" in res.data) {
+        return res.data.reminders as Reminder[];
       }
 
-      const data = response.data;
-      setReminders(Array.isArray(data.reminders) ? data.reminders : []);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch reminders');
-      console.error('Error fetching reminders:', err);
-    } finally {
-      setLoading(false);
+    return res.data;
+      
+    },
+  })
+
+  const doneMutation = useMutation({
+    mutationFn: async (reminderId:string) => {
+      return api.post(`https://heidelai-2.koyeb.app/reminders/${reminderId}/done`);
+      
+    },
+    onSuccess: ()=>{
+      queryClient.invalidateQueries({queryKey: ["reminders"]});
     }
-  }, [conversationId]);
+  })
 
-  useEffect(() => {
-    fetchReminders();
-  }, [fetchReminders, conversationId]);
+  const snoozeMutation = useMutation({
+    mutationFn: async ({reminderId, snoozeUntil}:{reminderId:string, snoozeUntil:number}) => {
+      return api.post(`https://heidelai-2.koyeb.app/reminders/${reminderId}/snooze`, {
+        snooze_until: getSnoozeUntil(snoozeUntil),  
+      });
+    },
+    onSuccess: ()=>{
+      queryClient.invalidateQueries({queryKey: ["reminders"]});
+    }
+  })
 
-  return { 
-    reminders, 
-    loading, 
-    error, 
-  };
+  const deleteMutation = useMutation({
+    mutationFn: async (reminderId:string) => {
+      return api.post(`https://heidelai-2.koyeb.app/reminders/${reminderId}/delete`);
+    },
+    onSuccess: ()=>{
+      queryClient.invalidateQueries({queryKey: ["reminders"]});
+    }
+  })
+
+  return {
+  
+    reminders:  remindersQuery.data ?? [],
+    loading: remindersQuery.isLoading,
+    error: remindersQuery.error,
+
+    snoozeReminder: snoozeMutation.mutate,
+    doneReminder: doneMutation.mutate,
+    deleteReminder: deleteMutation.mutate,
+
+    snoozing: snoozeMutation.isPending,
+    completing: doneMutation.isPending,
+    deleting: deleteMutation.isPending,
+
+    refetch: remindersQuery.refetch,
+  }
 };

@@ -17,13 +17,15 @@ import {
   TooltipContent,
   TooltipTrigger,
   TooltipProvider,
-} from "@/components/ui/tooltip"; 
+} from "@/components/ui/tooltip";
 import api from "@/lib/session_api";
 import {
   useQuery,
   useMutation,
   QueryClient,
+  useQueryClient,
 } from '@tanstack/react-query'
+import { useReminders } from "../hooks/useReminders";
 
 interface remindersideBarProps {
   onToggleVisibility?: () => void;
@@ -54,59 +56,11 @@ interface ApiResponse {
   };
 }
 
+
 const ReminderSideBar = ({ onToggleVisibility }: remindersideBarProps) => {
   const { conversations } = useConversations();
-  const queryClient = new QueryClient()
-  const [processingReminderId, setProcessingReminderId] = useState<string | null>(null);
+  const { reminders, loading, error, snoozeReminder, doneReminder, deleteReminder, snoozing, completing, deleting, refetch } = useReminders();
 
-
-  const {data, isLoading, error} = useQuery<ApiResponse, Error>({
-    queryKey: ['reminders'],
-    queryFn: async () => {
-      const response = await api.get(`https://heidelai-2.koyeb.app/reminders`);
-      return response.data as ApiResponse;
-    }
-  });
-
-  const reminders = data?.reminders || [];
-
-    const doneMutation = useMutation({
-    mutationFn: async (reminderId: string) => {
-      setProcessingReminderId(reminderId);
-      return api.post(
-        `https://heidelai-2.koyeb.app/reminders/${reminderId}/done`
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["reminders"] });
-    },
-    onSettled: () => {
-      setProcessingReminderId(null);
-    }
-  });
-
-  const getSnoozeUntil = (minutes: number) =>
-  new Date(Date.now() + minutes * 60 * 1000).toISOString();
-
-  const snoozeMutation = useMutation({
-    mutationFn: async (
-      {reminderId, snoozeUntil}: {reminderId: string; snoozeUntil: string}
-    )=>{
-      setProcessingReminderId(reminderId);
-      return api.post(
-        `https://heidelai-2.koyeb.app/reminders/${reminderId}/snooze`,
-        {
-          snooze_duration_minutes: snoozeUntil,
-        }
-      );
-    },
-    onSuccess: ()=>{
-      queryClient.invalidateQueries({ queryKey: ["reminders"] });
-    },
-    onSettled: () => {
-      setProcessingReminderId(null);
-    }
-  })
 
   const getCustomerName = (conversationId: string): string => {
     const conversation = conversations.find((conv) => conv.id === conversationId);
@@ -179,9 +133,6 @@ const ReminderSideBar = ({ onToggleVisibility }: remindersideBarProps) => {
             <Bell className="text-blue-600" size={18} />
             <h1 className="text-base font-semibold text-gray-900">Reminders</h1>
           </div>
-          <span className="ml-24 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
-            {reminders.length} Active
-          </span>
         </div>
 
         {/* Content */}
@@ -208,7 +159,7 @@ const ReminderSideBar = ({ onToggleVisibility }: remindersideBarProps) => {
             `}
           </style>
 
-          {isLoading ? (
+          {loading ? (
             <div className="flex items-center justify-center py-8">
               <div className="flex flex-col items-center gap-3">
                 <div className="w-8 h-8 bg-blue-100/80 rounded-xl flex items-center justify-center">
@@ -221,8 +172,8 @@ const ReminderSideBar = ({ onToggleVisibility }: remindersideBarProps) => {
             <div className="flex items-center justify-center p-4 bg-red-50/80 ios-backdrop rounded-lg border border-red-200/60">
               <AlertCircle className="text-red-500 mr-2" size={18} />
             </div>
-          ) : reminders.length > 0 ? (
-            reminders.map((reminder) => (
+          ) : (reminders?.length ?? 0) > 0 ? (
+            (reminders ?? []).map((reminder) => (
               <Card key={reminder.id} className="transition-all hover:shadow-md bg-white/80 ios-backdrop border border-gray-100/60">
                 <CardHeader className="p-3 pb-2">
                   <div className="flex items-start justify-between">
@@ -258,30 +209,31 @@ const ReminderSideBar = ({ onToggleVisibility }: remindersideBarProps) => {
                     <Calendar className="h-3 w-3 mr-1" />
                     {new Date(reminder.trigger_time).toLocaleString()}
                   </div>
-                  <div>
-                    <Button 
-                      variant="contained"
-                      color="primary"
-                      onClick={() => snoozeMutation.mutate({
-                        reminderId: reminder.id,
-                        snoozeUntil: getSnoozeUntil(30) // Snooze for 30 minutes
-                      })}
-                      disabled={processingReminderId === reminder.id}
-                      size="small"
-                      className="mr-2">
-                        <Clock className="h-4 w-4 mr-1" />
-                      </Button>
+                   <div className="flex items-center gap-2">
+                    <button
+                      disabled={snoozing}
+                      onClick={() =>
+                        snoozeReminder({
+                          reminderId: reminder.id,
+                          snoozeUntil: 30,
+                        })
+                      }
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-full border text-gray-600 hover:bg-gray-100 transition disabled:opacity-50"
+                    >
+                      <Clock className="h-3 w-3" />
+                      Snooze 30m
+                    </button>
+
+                    <button
+                      disabled={completing}
+                      onClick={() => doneReminder(reminder.id)}
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-full bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-50"
+                    >
+                      <Check className="h-3 w-3" />
+                      Done
+                    </button>
                   </div>
-                  <div>
-                    <Button 
-                      variant="contained" 
-                      color="secondary"
-                      onClick={() => doneMutation.mutate(reminder.id)}
-                      disabled={processingReminderId === reminder.id}
-                      size="small">
-                        <Check className="h-4 w-4 mr-1" />
-                      </Button>
-                  </div>
+
                 </CardFooter>
               </Card>
             ))
