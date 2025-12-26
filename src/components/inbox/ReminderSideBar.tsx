@@ -8,11 +8,10 @@ import {
 } from "../ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from '@mui/material';
-import React, { useState, useEffect } from 'react';
-import { Clock, Calendar, Bell, CheckCircle, AlertCircle, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, Calendar, Bell, AlertCircle, X } from 'lucide-react';
 import { useConversations } from '../hooks/useConversations';
-import { Conversation } from '../types/conversation';
-import { format } from 'date-fns';
+
 import {
   Tooltip,
   TooltipContent,
@@ -20,17 +19,13 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip"; 
 import api from "@/lib/session_api";
-import dayjs from "dayjs";
-import { ApiResponse } from '../services/api';
 import {
   useQuery,
   useMutation,
-  useQueryClient,
   QueryClient,
-  QueryClientProvider,
 } from '@tanstack/react-query'
 
-interface RemainderSideBarProps {
+interface remindersideBarProps {
   onToggleVisibility?: () => void;
 }
 
@@ -59,9 +54,11 @@ interface ApiResponse {
   };
 }
 
-const ReminderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
+const ReminderSideBar = ({ onToggleVisibility }: remindersideBarProps) => {
   const { conversations } = useConversations();
   const queryClient = new QueryClient()
+  const [processingReminderId, setProcessingReminderId] = useState<string | null>(null);
+
 
   const {data, isLoading, error} = useQuery<ApiResponse, Error>({
     queryKey: ['reminders'],
@@ -75,6 +72,7 @@ const ReminderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
 
     const doneMutation = useMutation({
     mutationFn: async (reminderId: string) => {
+      setProcessingReminderId(reminderId);
       return api.post(
         `https://heidelai-2.koyeb.app/reminders/${reminderId}/done`
       );
@@ -82,7 +80,25 @@ const ReminderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reminders"] });
     },
+    onSettled: () => {
+      setProcessingReminderId(null);
+    }
   });
+
+  const snoozeMutation = useMutation({
+    mutationFn: async (reminderId: string)=>{
+      setProcessingReminderId(reminderId);
+      return api.post(
+        `https://heidelai-2.koyeb.app/reminders/${reminderId}/snooze`
+      );
+    },
+    onSuccess: ()=>{
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    },
+    onSettled: () => {
+      setProcessingReminderId(null);
+    }
+  })
 
   const getCustomerName = (conversationId: string): string => {
     const conversation = conversations.find((conv) => conv.id === conversationId);
@@ -156,7 +172,7 @@ const ReminderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
             <h1 className="text-base font-semibold text-gray-900">Reminders</h1>
           </div>
           <span className="ml-24 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
-            {remainder.length} Active
+            {reminders.length} Active
           </span>
         </div>
 
@@ -184,7 +200,7 @@ const ReminderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
             `}
           </style>
 
-          {isloading ? (
+          {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="flex flex-col items-center gap-3">
                 <div className="w-8 h-8 bg-blue-100/80 rounded-xl flex items-center justify-center">
@@ -196,10 +212,9 @@ const ReminderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
           ) : error ? (
             <div className="flex items-center justify-center p-4 bg-red-50/80 ios-backdrop rounded-lg border border-red-200/60">
               <AlertCircle className="text-red-500 mr-2" size={18} />
-              <p className="text-red-600 text-sm">{error}</p>
             </div>
-          ) : remainder.length > 0 ? (
-            remainder.map((reminder) => (
+          ) : reminders.length > 0 ? (
+            reminders.map((reminder) => (
               <Card key={reminder.id} className="transition-all hover:shadow-md bg-white/80 ios-backdrop border border-gray-100/60">
                 <CardHeader className="p-3 pb-2">
                   <div className="flex items-start justify-between">
@@ -210,7 +225,7 @@ const ReminderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
                           {getPriorityBadge(reminder.trigger_time)}
                           <Badge
                             variant="outline"
-                            className={reminder.status === 'COMPLETED'
+                            className={reminder.status === 'DONE'
                               ? 'bg-green-100 text-green-600'
                               : 'bg-yellow-100 text-yellow-600'
                             }
