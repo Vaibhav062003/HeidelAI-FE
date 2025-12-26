@@ -150,7 +150,7 @@ const ConversationList = ({
   const tabFiltered = useMemo(()=>{
     switch(activeTab){
       case 'open':
-        return conversations.filter(c=> c.status === 'open');
+        return conversations.filter(c=> c.status === 'open' || c.status === 'follow-up');
       case 'closed':
         return conversations.filter(c=> c.status === 'closed');
       default:

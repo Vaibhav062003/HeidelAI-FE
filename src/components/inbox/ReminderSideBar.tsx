@@ -32,7 +32,7 @@ interface Reminder {
   title: string;
   notes: string;
   trigger_time: string;
-  status: "OVERDUE" | "SNOOZED" | "COMPLETED";
+  status: "OVERDUE" | "SNOOZED" | "DONE";
   snooze_count: number;
   last_triggered_at: string;
   created_at: string;
@@ -51,7 +51,7 @@ interface ApiResponse {
   };
 }
 
-const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
+const ReminderSidebar = ({ onToggleVisibility }: RemainderSideBarProps) => {
   const [remainder, setRemainder] = useState<Reminder[]>([]);
   const [error, setError] = useState<string>('');
   const { conversations } = useConversations();
@@ -61,14 +61,12 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
     try {
       setIsLoading(true);
       const response = await api.get('https://heidelai-2.koyeb.app/reminders');
-      console.log("response reminder", response)
 
       if (response.status !== 200) {
         throw new Error('Failed to fetch reminders');
       }
  
       const data: ApiResponse = response.data;
-      console.log('Fetched reminders:', data.reminders);
       setRemainder(data.reminders || []);
     } catch (err) {
       console.error('Error fetching reminders:', err);
@@ -209,7 +207,7 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
                           {getPriorityBadge(reminder.trigger_time)}
                           <Badge
                             variant="outline"
-                            className={reminder.status === 'COMPLETED'
+                            className={reminder.status === 'DONE'
                               ? 'bg-green-100 text-green-600'
                               : 'bg-yellow-100 text-yellow-600'
                             }
@@ -258,4 +256,4 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
   );
 };
 
-export default RemainderSideBar;
+export default ReminderSidebar;

@@ -7,7 +7,7 @@ interface Reminder {
   title: string;
   notes: string;
   trigger_time: string;
-  status: "OVERDUE" | "SNOOZED" | "COMPLETED";
+  status: "OVERDUE" | "SNOOZED" | "DONE";
   snooze_count: number;
   last_triggered_at: string;
   created_at: string;
@@ -25,14 +25,15 @@ export const useReminders = (conversationId?: string) => {
     
     setLoading(true);
     try {
-      const response = await api.get(`https://heidelai-2.koyeb.app/reminders?conversationId=${conversationId}`)
+      const url =`https://heidelai-2.koyeb.app/reminders/conversation/${conversationId}`
+      const response = await api.get(url)
 
       if (response.status !== 200) {
         throw new Error(`Error fetching reminders: ${response.statusText}`);
       }
 
       const data = response.data;
-      setReminders(Array.isArray(data.reminders) ? data.reminders : []);
+      setReminders(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch reminders');
@@ -41,6 +42,7 @@ export const useReminders = (conversationId?: string) => {
       setLoading(false);
     }
   }, [conversationId]);
+
 
   useEffect(() => {
     fetchReminders();

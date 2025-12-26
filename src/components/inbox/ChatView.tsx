@@ -102,7 +102,7 @@ interface Reminder {
   title: string;
   notes: string;
   trigger_time: string;
-  status: "OVERDUE" | "SNOOZED" | "COMPLETED";
+  status: "OVERDUE" | "SNOOZED" | "DONE";
   snooze_count: number;
   last_triggered_at: string;
   created_at: string;
@@ -116,14 +116,6 @@ interface ProductInfo {
   link: string;
   image_url: string;
   sale_price?: string;
-}
-
-interface Reminder {
-  id: string;
-  title: string;
-  notes?: string;
-  dateTime: string;
-  conversationId: string;
 }
 
 export interface Message {
@@ -362,7 +354,6 @@ const RemindersPopover = ({
           ) : (
             reminders.map(
               (reminder) => (
-                console.log("reminder", reminder),
                 (
                   <div
                     key={reminder.id}
