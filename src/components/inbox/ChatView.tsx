@@ -876,7 +876,7 @@ const ChatView = ({
 
   const LINE_HEIGHT = 20;
   const MIN_LINES = 2;
-  const MAX_LINES = 5;
+  const MAX_LINES =10;
   const MIN_HEIGHT = LINE_HEIGHT * MIN_LINES;
   const MAX_HEIGHT = LINE_HEIGHT * MAX_LINES;
 
@@ -895,7 +895,7 @@ const ChatView = ({
       textarea.style.overflowY = "hidden";
       if (backdrop) backdrop.style.overflowY = "hidden";
     } else if (scrollHeight >= MAX_HEIGHT) {
-      // More than 5 lines
+      // More than 10 lines
       textarea.style.height = `${MAX_HEIGHT}px`;
       textarea.style.overflowY = "auto";
       if (backdrop) backdrop.style.overflowY = "auto";
@@ -2884,7 +2884,7 @@ const ChatView = ({
                         rows={2}
                         style={{
                           minHeight: "40px", // 2 lines
-                          maxHeight: "120px", // 5 lines
+                          maxHeight: "200px", // 10 lines
                           lineHeight: "20px",
                         }}
                         className="w-full bg-transparent border-none outline-none focus:outline-none resize-none overflow-y-hidden text-gray-800 placeholder-gray-500 text-sm p-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent transition-all duration-150 relative z-10"
