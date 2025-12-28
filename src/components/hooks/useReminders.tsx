@@ -3,10 +3,16 @@ import { useState, useEffect, useCallback } from 'react';
 
 interface Reminder {
   id: string;
+  conversation_id: string;
   title: string;
-  notes?: string;
-  dateTime: string;
-  conversationId: string;
+  notes: string;
+  trigger_time: string;
+  status: "OVERDUE" | "SNOOZED" | "DONE";
+  snooze_count: number;
+  last_triggered_at: string;
+  created_at: string;
+  updated_at: string;
+  recipient_email: string;
 }
 
 export const useReminders = (conversationId?: string) => {
@@ -19,20 +25,15 @@ export const useReminders = (conversationId?: string) => {
     
     setLoading(true);
     try {
-      // const response = await fetch(
-      //   `https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders?conversationId=${conversationId}`,
-      //   {
-      //     credentials: 'include'
-      //   }
-      // );
-      const response = await api.get(`https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders?conversationId=${conversationId}`)
+      const url =`https://heidelai-2.koyeb.app/reminders/conversation/${conversationId}`
+      const response = await api.get(url)
 
       if (response.status !== 200) {
         throw new Error(`Error fetching reminders: ${response.statusText}`);
       }
 
       const data = response.data;
-      setReminders(data);
+      setReminders(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch reminders');
@@ -42,6 +43,7 @@ export const useReminders = (conversationId?: string) => {
     }
   }, [conversationId]);
 
+
   useEffect(() => {
     fetchReminders();
   }, [fetchReminders, conversationId]);
@@ -50,6 +52,5 @@ export const useReminders = (conversationId?: string) => {
     reminders, 
     loading, 
     error, 
-    refetchReminders: fetchReminders 
   };
 };

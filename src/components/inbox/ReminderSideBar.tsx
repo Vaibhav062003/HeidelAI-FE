@@ -20,6 +20,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import api from "@/lib/session_api";
+import dayjs from "dayjs";
 
 interface RemainderSideBarProps {
   onToggleVisibility?: () => void;
@@ -27,18 +28,18 @@ interface RemainderSideBarProps {
 
 interface Reminder {
   id: string;
-  _id: string;
+  conversation_id: string;
   title: string;
   notes: string;
-  status: string;
-  dateTime: string;
-  conversationId: string;
-  recipient_email: string;
+  trigger_time: string;
+  status: "OVERDUE" | "SNOOZED" | "DONE";
+  snooze_count: number;
+  last_triggered_at: string;
   created_at: string;
-  user?: {
-    full_name: string;
-  };
+  updated_at: string;
+  recipient_email: string;
 }
+
 
 interface ApiResponse {
   reminders: Reminder[];
@@ -50,23 +51,22 @@ interface ApiResponse {
   };
 }
 
-const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
+const ReminderSidebar = ({ onToggleVisibility }: RemainderSideBarProps) => {
   const [remainder, setRemainder] = useState<Reminder[]>([]);
   const [error, setError] = useState<string>('');
   const { conversations } = useConversations();
   const [isloading, setIsLoading] = useState<boolean>(true);
 
-  const fetchRemainders = async () => {
+  const fetchReminders = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get('https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/all-reminders');
+      const response = await api.get('https://heidelai-2.koyeb.app/reminders');
 
       if (response.status !== 200) {
         throw new Error('Failed to fetch reminders');
       }
  
       const data: ApiResponse = response.data;
-      console.log('Fetched reminders:', data.reminders);
       setRemainder(data.reminders || []);
     } catch (err) {
       console.error('Error fetching reminders:', err);
@@ -108,7 +108,7 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
   };
 
   useEffect(() => {
-    fetchRemainders();
+    fetchReminders();
   }, []);
 
   return (
@@ -197,17 +197,17 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
             </div>
           ) : remainder.length > 0 ? (
             remainder.map((reminder) => (
-              <Card key={reminder._id} className="transition-all hover:shadow-md bg-white/80 ios-backdrop border border-gray-100/60">
+              <Card key={reminder.id} className="transition-all hover:shadow-md bg-white/80 ios-backdrop border border-gray-100/60">
                 <CardHeader className="p-3 pb-2">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
                       <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                         {reminder.title}
                         <div className="flex items-center gap-1">
-                          {getPriorityBadge(reminder.dateTime)}
+                          {getPriorityBadge(reminder.trigger_time)}
                           <Badge
                             variant="outline"
-                            className={reminder.status === 'COMPLETED'
+                            className={reminder.status === 'DONE'
                               ? 'bg-green-100 text-green-600'
                               : 'bg-yellow-100 text-yellow-600'
                             }
@@ -217,7 +217,7 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
                         </div>
                       </CardTitle>
                       <CardDescription className="flex items-center gap-1 text-xs text-gray-500">
-                        <span>Customer: {getCustomerName(reminder.conversationId)}</span>
+                        <span>Customer: {getCustomerName(reminder.conversation_id)}</span>
                       </CardDescription>
                     </div>
                   </div>
@@ -230,14 +230,7 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
                 <CardFooter className="flex justify-between px-3 py-2 border-t border-gray-100/60">
                   <div className="flex items-center text-xs text-gray-500">
                     <Calendar className="h-3 w-3 mr-1" />
-                    {format(
-                      // Add IST offset (UTC+5:30)
-                      new Date(
-                        new Date(reminder.dateTime).getTime() +
-                        5.5 * 60 * 60 * 1000
-                      ),
-                      "MMM d, yyyy 'at' h:mm a"
-                    )}
+                    {new Date(reminder.trigger_time).toLocaleString()}
                   </div>
                   {/* <div className="flex items-center text-xs text-gray-500">
                     <Clock className="h-3 w-3 mr-1" />
@@ -263,4 +256,4 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
   );
 };
 
-export default RemainderSideBar;
+export default ReminderSidebar;

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo, useCallback, memo } from "react";
+import React, { useState, useMemo, useCallback, memo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, X } from "lucide-react";
@@ -62,20 +62,23 @@ const ConversationItem = memo(({
   }, [conversation.id, onSelect]);
 
   const formattedTime = useMemo(() => {
-    const ISOdate = parseISO(conversation.timestamp);
-    const date = new Date(ISOdate.getTime() + 5.5 * 60 * 60 * 1000);
-    if (isToday(date)) {
-      return format(date, "h:mm a");
-
-    
-    }    
-    else if (isYesterday(date)) {
-      return "Yesterday";
-    } 
-    else if (date >= subDays(startOfDay(new Date()), 7)) {
-      return format(date, "EEE h:mm a");
-    } else {
-      return format(date, "MMM d");
+    if (!conversation.timestamp) return "";
+    try {
+      const ISOdate = parseISO(conversation.timestamp);
+      const date = new Date(ISOdate.getTime() + 5.5 * 60 * 60 * 1000);
+      if (isToday(date)) {
+        return format(date, "h:mm a");
+      }    
+      else if (isYesterday(date)) {
+        return "Yesterday";
+      } 
+      else if (date >= subDays(startOfDay(new Date()), 7)) {
+        return format(date, "EEE h:mm a");
+      } else {
+        return format(date, "MMM d");
+      }
+    } catch {
+      return "";
     }
   }, [conversation.timestamp]);
 
@@ -121,6 +124,8 @@ const ConversationItem = memo(({
 });
 ConversationItem.displayName = "ConversationItem";
 
+
+
 const ConversationList = ({
   selectedConversationId,
   onConversationSelect,
@@ -134,27 +139,41 @@ const ConversationList = ({
     platform: [],
     priority: [],
     sentiment: [],
-    unreadOnly: false,
+    unreadOnly: false,  
     hasQuery: false,
   });
 
-  const showSkeleton = loading
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value as TabValue);
+  }, []);
+
+  const tabFiltered = useMemo(()=>{
+    switch(activeTab){
+      case 'open':
+        return conversations.filter(c=> c.status === 'open' || c.status === 'follow-up');
+      case 'closed':
+        return conversations.filter(c=> c.status === 'closed');
+      default:
+        return conversations;
+    }
+  }, [conversations, activeTab]);
 
   const filteredConversations = useMemo(() => {
     if (!conversations.length) return [];
 
+    let filtered = tabFiltered;
+    
     const hasFilters = filters.unreadOnly || filters.hasQuery || 
                        filters.platform.length || filters.priority.length || 
                        filters.sentiment.length || searchQuery;
 
     if (!hasFilters && activeTab === 'all') {
-      return [...conversations].sort((a, b) => 
+      return [...filtered].sort((a, b) => 
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
     }
 
-    let filtered = conversations;  
-
+   
     if (filters.unreadOnly) {
       filtered = filtered.filter(c => c.unread_count > 0);
     }
@@ -179,11 +198,7 @@ const ConversationList = ({
       filtered = filtered.filter(c => sentimentSet.has(c.sentiment));
     }
 
-    if (activeTab === 'all') {
-      filtered = filtered.filter(c => c.is_ai_enabled);
-    } else if (activeTab === 'open') {
-      filtered = filtered.filter(c => !c.is_ai_enabled);
-    }
+    
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -207,10 +222,6 @@ const ConversationList = ({
     setSearchQuery('');
   }, []);
 
-  const handleTabChange = useCallback((value: string) => {
-    setActiveTab(value as TabValue);
-  }, []);
-
   const handleFilterChange = useCallback((newFilters: FilterOptions) => {
     setFilters(newFilters);
   }, []);
@@ -219,6 +230,9 @@ const ConversationList = ({
     markAsRead(id);
     onConversationSelect?.(id);
   }, [onConversationSelect, markAsRead]);
+
+  const showSkeleton = loading && conversations.length === 0;
+
 
   return (
     <div className="w-full h-full max-h-screen bg-white/95 flex flex-col overflow-hidden border-r border-gray-200/60">
@@ -308,7 +322,7 @@ const ConversationList = ({
       <div className="flex-1 overflow-y-auto ios-scrollbar">
         {showSkeleton ? (
           <OptimisticSkeletonLayout />
-        ) : error ? (
+        ) : error ? ( 
           <div className="flex items-center justify-center p-8 h-full">
             <div className="text-center">
               <div className="w-16 h-16 bg-red-100/80 rounded-3xl flex items-center justify-center mx-auto mb-4">

@@ -40,22 +40,21 @@ interface ReminderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (reminder: ReminderData) => void;
-  conversationId: string; 
+  conversation_id: string; 
 }
 
 interface ReminderData {
+  conversation_id: string;
   title: string;
   notes: string;
-  dateTime: Dayjs | null;
-  conversationId: string; 
-  customer_name: string;
+  trigger_time: string;
 }
 
 export default function ReminderDialog({ 
   open, 
   onOpenChange, 
   onSave, 
-  conversationId 
+  conversation_id
 }: ReminderDialogProps) {
   const [selectedDateTime, setSelectedDateTime] = useState<Dayjs | null>(dayjs());
   const [title, setTitle] = useState("");
@@ -64,23 +63,26 @@ export default function ReminderDialog({
   const { conversations } = useConversations();
 
   const getCustomerName = () => {
-    const conversation = conversations.find(conv => conv.id === conversationId);
+    const conversation = conversations.find(conv => conv.id === conversation_id);
     return conversation ? conversation.customer_name : "Customer";
   }
 
   const handleSubmit = async () => {
     if (!title || !selectedDateTime) return;
+    const triggerTimeString = selectedDateTime.format("YYYY-MM-DD HH:mm:ss");
+
     
     setIsSubmitting(true);
     try {
       const data ={
         title,
         notes,
-        dateTime: selectedDateTime.toISOString(),
-        conversationId,
-        customer_name: getCustomerName()
+        trigger_time: triggerTimeString,
+        conversation_id,
       }
-      const response = await api.post('https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders', data)
+      console.log("set reminder data", data)
+      const response = await api.post('https://heidelai-2.koyeb.app/reminders', data)
+      console.log("set reminder response", response)
     
       if (response.status !== 200) {
         throw new Error('Failed to set reminder');
@@ -93,9 +95,8 @@ export default function ReminderDialog({
       onSave({
         title,
         notes,
-        dateTime: selectedDateTime,
-        conversationId,
-        customer_name: getCustomerName()
+        trigger_time: selectedDateTime.toISOString(),
+        conversation_id,
       });
 
       // Reset form

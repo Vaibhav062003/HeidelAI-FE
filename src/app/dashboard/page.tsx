@@ -21,7 +21,7 @@ import {
   PanelLeft
 } from 'lucide-react';
 import { InstagramLogoIcon } from '@radix-ui/react-icons';
-import RemainderSideBar from '@/components/inbox/ReminderSideBar';
+import ReminderSidebar from '@/components/inbox/ReminderSideBar';
 import { useUser, useClerk } from '@clerk/nextjs';
 import {
   Tooltip,
@@ -678,7 +678,7 @@ export default function DashboardPage() {
                         currentAgentUsername={currentAgentUsername}
                       />
                     ) : (
-                      <RemainderSideBar
+                      <ReminderSidebar
                         onToggleVisibility={handleToggleRightSidebar}
                       />
                     )}

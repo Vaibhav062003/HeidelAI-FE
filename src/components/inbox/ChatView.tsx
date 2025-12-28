@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
-// import Sidebar from "./Sidebar";
 import {
   Popover,
   PopoverContent,
@@ -28,9 +27,6 @@ import {
   File,
   Loader2,
   X,
-  ChevronDown,
-  RefreshCw,
-  XCircle,
   Send,
   Paperclip,
   MoreVertical,
@@ -44,14 +40,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  // DialogClose,
   DialogTrigger,
 } from "../ui/dialog";
-// import dynamic from "next/dynamic";
+
 import { useReminders } from "../hooks/useReminders";
-// import { H1, H2, H3, Body, Small } from "@/components/typography";
-// import { Trash2, User, Menu } from "lucide-react";
-// import TimerDisplay from "./TimerDisplay";
 import { useTypingIndicator } from "../hooks/typingIndicator";
 import { conversationService } from "@/components/services/api";
 import debounce from "lodash.debounce";
@@ -73,10 +65,7 @@ import Image from "next/image";
 import CustomerInfo from "./CustomerInfo";
 import LandingDashboard from "./LandingDashboard";
 import api from "@/lib/session_api";
-// import { useConversations } from "../hooks/useConversations";
-// import { storeData, getData, getAllKeys, deleteData } from "@/lib/indexedDB";
 import { Product } from "../types/product";
-// import Conversation_Status from "./Conversation_Status";
 import InstagramPost from "../instagram/messaging/InstagramPost";
 import InstagramReel from "../instagram/messaging/InstagramReel";
 import InstagramStory from "../instagram/messaging/InstagramStory";
@@ -87,18 +76,8 @@ import MediaMessage from "../messaging/MediaMessage";
 import { useMainWebSocket } from "@/lib/websocket";
 import { storeData, getData } from "@/lib/indexedDB";
 import CountDownTimer from "../LandingPage/CountDownTimer";
+import UserStatus from "./UserStatus";
 import DocumentMessage from "../messaging/DocumentMessage";
-
-// const Picker = dynamic(
-//   () => {
-//     return import("emoji-picker-react");
-//   },
-//   { ssr: false }
-// );
-
-// import Image from "next/image";
-// import { IconShoppingCartFilled } from "@tabler/icons-react";
-// import { Progress } from "@radix-ui/react-progress";
 
 interface CustomerInfo {
   name: string;
@@ -119,10 +98,16 @@ interface ProductData {
 
 interface Reminder {
   id: string;
+  conversation_id: string;
   title: string;
-  notes?: string;
-  dateTime: string;
-  conversationId: string;
+  notes: string;
+  trigger_time: string;
+  status: "OVERDUE" | "SNOOZED" | "DONE";
+  snooze_count: number;
+  last_triggered_at: string;
+  created_at: string;
+  updated_at: string;
+  recipient_email: string;
 }
 
 interface ProductInfo {
@@ -369,7 +354,6 @@ const RemindersPopover = ({
           ) : (
             reminders.map(
               (reminder) => (
-                console.log("reminder", reminder),
                 (
                   <div
                     key={reminder.id}
@@ -383,14 +367,7 @@ const RemindersPopover = ({
                         </p>
                       )}
                       <p className="text-xs text-gray-500 mt-1">
-                        {format(
-                          // Add IST offset (UTC+5:30)
-                          new Date(
-                            new Date(reminder.dateTime).getTime() +
-                            5.5 * 60 * 60 * 1000
-                          ),
-                          "MMM d, yyyy 'at' h:mm a"
-                        )}
+                        {new Date(reminder.trigger_time).toLocaleString()}
                       </p>
                     </div>
                     <Button
@@ -719,11 +696,13 @@ const ChatView = ({
   const [isResolved, setIsResolved] = useState(false);
   const [isFollowUp, setIsFollowUp] = useState(false);
   const [conversationStatus, setConversationStatus] = useState<
-    "open" | "closed" | "followup"
+    "open" | "closed" | "follow-up"
   >("open");
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(initialConversation || null);
   const [fileCaption, setFileCaption] = useState("");
+  const [statusLoading, setStatusLoading] = useState(false);
+
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const inputFileRef = useRef<HTMLInputElement>(null);
@@ -732,7 +711,7 @@ const ChatView = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
   const typingThrottleRef = useRef<number>(0);
-  const { reminders = [], refetchReminders } = useReminders(
+  const { reminders } = useReminders(
     selectedConversationId
   );
   const [typingUsers, setTypingUsers] = useState<
@@ -818,8 +797,11 @@ const ChatView = ({
   const { sendWsMessage } = useMainWebSocket();
 
   useEffect(() => {
-    if (initialConversation) {
+    if (initialConversation && initialConversation.status) {
       setConversation(initialConversation);
+      setConversationStatus(initialConversation.status as "open" | "closed" | "follow-up");
+      setIsResolved(initialConversation.status === "closed");
+      setIsFollowUp(initialConversation.status === "follow-up");
     }
   }, [initialConversation]);
 
@@ -1375,11 +1357,12 @@ const ChatView = ({
     }
   };
 
-  const handleResolve = useCallback(() => {
+  const handleResolve = useCallback(async(selectedConversationId:string) => {
     setIsResolved(true);
     setIsFollowUp(false);
     setConversationStatus("closed");
     setIsStatusDropdownOpen(false);
+    setStatusLoading(true);
     const agentName = "You";
 
     const systemMessage: Message = {
@@ -1402,14 +1385,51 @@ const ChatView = ({
         });
       }
     }, 100);
+
+    try {
+    // Use encodeURIComponent to be safe with IDs that contain special chars
+    const res = await api.post(
+      `/api/conversations/${encodeURIComponent(selectedConversationId)}/close`
+    );
+
+    // handle non-2xx as error
+    if (!(res && (res.status === 200 || res.status === 204))) {
+      throw new Error(
+        `Unexpected response from server: ${res?.status ?? "no status"}`
+      );
+    }
+    setConversation((prev)=> prev ? {...prev, status: "closed"} : prev);
+    setConversationStatus("closed");
+    toast.success("Closed conversation successfully");
+  } catch (err) {
+    // Rollback optimistic UI: remove system message we added earlier
+    console.error("Error closing conversation:", err);
+    setMessages((prev) =>
+      prev.filter((msg) => msg.id !== systemMessage.id)
+    );
+
+    // rollback other state if you want (optional — uncomment to revert)
+    // setIsResolved(false);
+    // setConversationStatus("open");
+
+    const message =
+      (typeof err === "object" && err !== null && "response" in err && typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === "string")
+        ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
+        : "Failed to close conversation. Try again.";
+    toast.error(message);
+  } finally{
+     setStatusLoading(false);
+  }
   }, [selectedConversationId]);
 
-  const handleReopen = useCallback(() => {
+  const handleReopen = useCallback(async () => {
     setIsResolved(false);
     setIsFollowUp(false);
     setConversationStatus("open");
     setIsStatusDropdownOpen(false);
+    setStatusLoading(true); 
     const agentName = "You";
+
 
     const systemMessage: Message = {
       id: `system-${Date.now()}`,
@@ -1431,14 +1451,73 @@ const ChatView = ({
         });
       }
     }, 100);
+
+    try{
+      const res = await api.post(`/api/conversations/${encodeURIComponent(selectedConversationId)}/reopen`);
+
+      if (!(res && (res.status === 200 || res.status === 204))) {
+      throw new Error(
+        `Unexpected response from server: ${res?.status ?? "no status"}`
+      );
+      }
+
+      setConversation((prev)=> prev ? {...prev, status: "open"} : prev);
+      setConversationStatus("open");
+      toast.success("Reopened conversation successfully");
+    }
+    catch (err){
+      console.error("Error reopening conversation:", err);
+      setMessages((prev) =>
+        prev.filter((msg) => msg.id !== systemMessage.id)
+      );
+      const message =
+        (typeof err === "object" && err !== null && "response" in err && typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === "string")
+          ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
+          : "Failed to reopen conversation. Try again.";
+      toast.error(message);
+    } finally{
+      setStatusLoading(false);
+    }
   }, [selectedConversationId]);
 
-  const handleFollowUp = useCallback(() => {
+  const handleFollowUp = useCallback(async(selectedConversationId:string) => {
     setIsResolved(false);
     setIsFollowUp(true);
-    setConversationStatus("followup");
+    setConversationStatus("follow-up");
     setIsStatusDropdownOpen(false);
+    setStatusLoading(true);
     const agentName = "You";
+
+    try{
+      const res = await api.post(`/api/ai/schedule-message/${selectedConversationId}`);
+
+      if (!(res && (res.status === 200 || res.status === 204))) {
+      throw new Error(
+        `Unexpected response from server: ${res?.status ?? "no status"}`
+      );
+    }
+
+      setConversation((prev)=> prev ? {...prev, status: "follow-up"} : prev);
+      setConversationStatus("follow-up");
+      toast.success("Marked conversation for follow-up successfully");
+    }catch (err){
+      console.error("Error scheduling message for follow-up:", err);
+    setMessages((prev) =>
+      prev.filter((msg) => msg.id !== systemMessage.id)
+    );
+
+    // rollback other state if you want (optional — uncomment to revert)
+    // setIsResolved(false);
+    // setConversationStatus("open");
+
+    const message =
+      (typeof err === "object" && err !== null && "response" in err && typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === "string")
+        ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
+        : "Failed to set conversation for follow-up. Try again.";
+    toast.error(message);
+    }finally{
+      setStatusLoading(false);
+    }
 
     const systemMessage: Message = {
       id: `system-${Date.now()}`,
@@ -1460,7 +1539,7 @@ const ChatView = ({
         });
       }
     }, 100);
-  }, [selectedConversationId]);
+  }, [ ]);
 
   useMainWebSocket({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1600,6 +1679,12 @@ const ChatView = ({
         `/api/conversations/${selectedConversationId}`
       );
       setConversation(response?.data);
+      const status = response?.data?.status;
+      if(status){
+        setConversationStatus(status as "open" | "closed" | "follow-up");
+        setIsResolved(status === "closed");
+        setIsFollowUp(status === "follow-up");
+      }
     } catch {
       toast.error("Failed to load conversation");
     }
@@ -1716,6 +1801,7 @@ const ChatView = ({
       });
     };
   }, [selectedConversationId]);
+  
 
   const sendFn = (payload: Record<string, unknown>) => {
     // console.log("TypingIndicator payload sent to backend:", payload);
@@ -1922,72 +2008,20 @@ const ChatView = ({
                   </Badge>
                 )}
 
-                {/* Status Dropdown */}
-                <DropdownMenu
-                  open={isStatusDropdownOpen}
-                  onOpenChange={setIsStatusDropdownOpen}
-                >
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="rounded-2xl hover:bg-gray-100 flex items-center space-x-1 px-3 py-2.5 bg-white"
-                    >
-                      {conversationStatus === "closed" ? (
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                      ) : conversationStatus === "followup" ? (
-                        <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
-                      ) : (
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      )}
-                      <span className="text-sm font-medium text-gray-800">
-                        {conversationStatus === "closed"
-                          ? "Closed"
-                          : conversationStatus === "followup"
-                            ? "Follow-up"
-                            : "Open"}
-                      </span>
-                      <ChevronDown className="h-4 w-4 text-gray-600" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="w-56 rounded-2xl shadow-xl border bg-white py-2"
-                  >
-                    {conversationStatus === "open" && (
-                      <>
-                        <DropdownMenuItem
-                          onClick={handleResolve}
-                          className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-red-50 rounded-xl mx-2"
-                        >
-                          <XCircle className="h-4 w-4 mr-3 text-red-600" />
-                          <span className="font-medium">
-                            Close Conversation
-                          </span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={handleFollowUp}
-                          className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-amber-50 rounded-xl mx-2"
-                        >
-                          <Clock className="h-4 w-4 mr-3 text-amber-600" />
-                          <span className="font-medium">
-                            Mark for Follow-up
-                          </span>
-                        </DropdownMenuItem>
-                      </>
-                    )}
-
-                    {(conversationStatus === "closed" ||
-                      conversationStatus === "followup") && (
-                        <DropdownMenuItem
-                          onClick={handleReopen}
-                          className="flex items-center px-4 py-3 cursor-pointer text-sm hover:bg-green-50 rounded-xl mx-2"
-                        >
-                          <RefreshCw className="h-4 w-4 mr-3 text-green-600" />
-                          <span className="font-medium">Reopen Conversation</span>
-                        </DropdownMenuItem>
-                      )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                 <UserStatus
+                  conversationStatus={conversationStatus}
+                  isStatusDropdownOpen={isStatusDropdownOpen}
+                  setIsStatusDropdownOpen={setIsStatusDropdownOpen}
+                  selectedConversationId={selectedConversationId}
+                  statusLoading={statusLoading}
+                  message={messages}
+                  setMessages={setMessages}
+                  lastMessageRef={lastMessageRef}
+                  setConversationStatus={setConversationStatus}
+                  handleResolve={handleResolve}
+                  handleFollowUp={handleFollowUp}
+                  handleReopen={handleReopen}
+                  />
 
                 {/* Reminders Button */}
                 <Tooltip>
@@ -2016,21 +2050,16 @@ const ChatView = ({
                           onCreateReminder={() => setShowReminder(true)}
                           onDeleteReminder={async (id) => {
                             try {
-                              const response = await fetch(
-                                `https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders/${id}`,
-                                {
-                                  method: "DELETE",
-                                  credentials: "include",
-                                }
-                              );
+                              const response = await api.delete(
+                                `https://heidelai-2.koyeb.app/reminders/${id}`);
 
-                              if (!response.ok) {
+                              if (response.status !== 200) {
                                 throw new Error("Failed to delete reminder");
                               }
 
                               toast.success("Reminder deleted successfully");
                               // Refresh reminders after deletion
-                              refetchReminders();
+                              
                             } catch (error) {
                               toast.error("Failed to delete reminder");
                               console.error("Error deleting reminder:", error);
@@ -2393,10 +2422,10 @@ const ChatView = ({
               onOpenChange={setShowReminder}
               onSave={(reminderData) => {
                 console.log("Reminder saved:", reminderData);
-                refetchReminders();
+            
                 setShowReminder(false);
               }}
-              conversationId={selectedConversationId}
+              conversation_id={selectedConversationId}
             />
 
             {/* Messages Area */}

@@ -53,13 +53,11 @@ export const conversationService = {
     * Fetch conversations by status (open or closed)
    */
 
-  async getConversationByStatus(status?: "open" | "closed"): Promise<ApiResponse>{
+  async getAllConversations(): Promise<ApiResponse>{
     try{
-      const url = status
-      ? `api/conversations?status=${status}`
-      : "api/conversations";
-
+      const url= "api/conversations";
       const response = await api.get(url);
+      console.log("[ConversationService] Fetched all conversations:", response.data);
       return { status: "success", data: response.data };
     }
     catch (error){
