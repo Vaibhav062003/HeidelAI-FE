@@ -338,6 +338,36 @@ const RemindersPopover = ({
   activeCount: number;
 
 }) => {
+
+  const parseBackendDate = (dateStr: string): Date | null => {
+  if (!dateStr) return null;
+
+  // Trim microseconds: .267000 -> .267
+  let cleaned = dateStr.replace(/\.(\d{3})\d+/, ".$1");
+
+  // Backend sends no timezone → force UTC to avoid NaN
+  if (!cleaned.endsWith("Z") && !cleaned.includes("+")) {
+    cleaned = cleaned + "Z";
+  }
+
+  const date = new Date(cleaned);
+  return isNaN(date.getTime()) ? null : date;
+};
+
+const formatReminderDate = (dateStr: string): string => {
+  const date = parseBackendDate(dateStr);
+  if (!date) return "Invalid date";
+
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
   return (
     <PopoverContent className="w-80" align="end">
       <div className="space-y-2">
@@ -385,7 +415,7 @@ const RemindersPopover = ({
                     )}
 
                     <p className="text-xs text-gray-500 mt-1">
-                      {new Date(reminder.trigger_time).toLocaleString()}
+                      {formatReminderDate(reminder.trigger_time)}
                     </p>
                   </div>
 
