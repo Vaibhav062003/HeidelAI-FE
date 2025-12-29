@@ -103,7 +103,7 @@ interface Reminder {
   title: string;
   notes: string;
   trigger_time: string;
-  status: "OVERDUE" | "SNOOZED" | "DONE";
+  status: "OVERDUE" | "SNOOZED" | "DONE" | "DELETED" | "PENDING";
   snooze_count: number;
   last_triggered_at: string;
   created_at: string;
@@ -113,7 +113,7 @@ interface Reminder {
 
 interface ProductInfo {
   name: string;
-  price: string;  
+  price: string;
   link: string;
   image_url: string;
   sale_price?: string;
@@ -329,8 +329,8 @@ const RemindersPopover = ({
   reminders: Reminder[];
   onCreateReminder: () => void;
   onDeleteReminder: (id: string) => void;
-  doneReminder: (id: string) => void; 
-  snoozeReminder: ({reminderId, snoozeUntil}:{reminderId:string, snoozeUntil:number}) => void;
+  doneReminder: (id: string) => void;
+  snoozeReminder: ({ reminderId, snoozeUntil }: { reminderId: string, snoozeUntil: number }) => void;
 }) => {
   return (
     <PopoverContent className="w-80" align="end">
@@ -352,65 +352,81 @@ const RemindersPopover = ({
         <div className="space-y-2">
           {reminders.length === 0 ? (
             <div className="text-center py-8">
-              <div className="text-sm text-gray-500 mb-4">No reminders set</div>
+              <div className="text-sm text-gray-500 mb-4">
+                No reminders set
+              </div>
               <Button variant="outline" size="sm" onClick={onCreateReminder}>
                 <Plus className="h-4 w-4 mr-1" />
                 Add your first reminder
               </Button>
             </div>
           ) : (
-            reminders.map(
-              (reminder) => (
-                (
-                  <div
-                    key={reminder.id}
-                    className="flex items-start justify-between p-2 rounded-lg border bg-white group"
-                  >
-                    <div>
-                      <p className="font-medium text-sm">{reminder.title}</p>
-                      {reminder.notes && (
-                        <p className="text-xs text-gray-500">
-                          {reminder.notes}
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-500 mt-1">
-                        {new Date(reminder.trigger_time).toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <Button
-                      variant="ghost"
-                      size="sm"
-                      className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0 text-yellow-600 hover:text-yellow-600 hover:bg-red-50"
-                      onClick={()=> snoozeReminder({reminderId: reminder.id, snoozeUntil: 30})}
-                      >
-                      <Clock className="h-4 w-4" />
-                      </Button>
+            reminders
+              .filter((reminder) => reminder.status !== "DELETED" && reminder.status !== "DONE")
+              .map((reminder) => (
+                <div
+                  key={reminder.id}
+                  className="flex items-start justify-between p-2 rounded-lg border bg-white group"
+                >
+                  {/* LEFT */}
+                  <div>
+                    <p className="font-medium text-sm">{reminder.title}</p>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                        onClick={() => doneReminder(reminder.id)}
-                      >
-                        <Check className="h-4 w-4" />
-                      </Button>
-                      <Button
+                    {reminder.notes && (
+                      <p className="text-xs text-gray-500">
+                        {reminder.notes}
+                      </p>
+                    )}
+
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(reminder.trigger_time).toLocaleString()}
+                    </p>
+                  </div>
+
+                  {/* RIGHT ACTIONS */}
+                  <div className="flex gap-1">
+                    {/* SNOOZE */}
+                    <Button
                       variant="ghost"
                       size="sm"
-                      className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      disabled={reminder.status === "DONE"}
+                      className=" h-8 w-8 p-0 text-yellow-600 hover:bg-yellow-50"
+                      onClick={() =>
+                        snoozeReminder({
+                          reminderId: reminder.id,
+                          snoozeUntil: 30,
+                        })
+                      }
+                    >
+                      <Clock className="h-4 w-4" />
+                    </Button>
+
+                    {/* DONE */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={reminder.status === "DONE"}
+                      className=" h-8 w-8 p-0 text-green-600 hover:bg-green-50"
+                      onClick={() => doneReminder(reminder.id)}
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+
+                    {/* DELETE */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0 text-red-600 hover:bg-red-50"
                       onClick={() => onDeleteReminder(reminder.id)}
                     >
                       <X className="h-4 w-4" />
                     </Button>
-                    </div>
-                    
                   </div>
-                )
-              )
-            )
+                </div>
+              ))
           )}
         </div>
+
       </div>
     </PopoverContent>
   );
@@ -738,7 +754,7 @@ const ChatView = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
   const typingThrottleRef = useRef<number>(0);
-  const {reminders, snoozeReminder, doneReminder, snoozing, completing} = useReminders(selectedConversationId);
+  const { reminders, snoozeReminder, doneReminder, snoozing, completing } = useReminders(selectedConversationId);
   const [typingUsers, setTypingUsers] = useState<
     Map<
       string,
@@ -754,6 +770,11 @@ const ChatView = ({
   const [uploadingFiles, setUploadingFiles] = useState<{ file: File; progress: number; url?: string; type: string }[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const activeCount = reminders.filter((r) => r.status !== "DELETED" && r.status !== "DONE").length;
+  console.log("Active reminders count:", activeCount);
+
+
+
 
   const handleFileClick = () => {
     fileInputRef.current?.click(); // trigger hidden input
@@ -935,7 +956,7 @@ const ChatView = ({
 
     const fetchCannedResponses = async () => {
       try {
-      const response = await api.get("/api/canned_responses");
+        const response = await api.get("/api/canned_responses");
 
         console.log("canned :", response);
 
@@ -1173,7 +1194,7 @@ const ChatView = ({
     // 1. Validation
     if ((!message.trim() && attachments.length === 0) || !selectedConversationId)
       return;
-    if(message.length > maxLength) {
+    if (message.length > maxLength) {
       toast.error(`Message exceeds the ${maxLength} character limit.`);
       return;
     }
@@ -1382,7 +1403,7 @@ const ChatView = ({
     }
   };
 
-  const handleResolve = useCallback(async(selectedConversationId:string) => {
+  const handleResolve = useCallback(async (selectedConversationId: string) => {
     setIsResolved(true);
     setIsFollowUp(false);
     setConversationStatus("closed");
@@ -1412,39 +1433,39 @@ const ChatView = ({
     }, 100);
 
     try {
-    // Use encodeURIComponent to be safe with IDs that contain special chars
-    const res = await api.post(
-      `/api/conversations/${encodeURIComponent(selectedConversationId)}/close`
-    );
-
-    // handle non-2xx as error
-    if (!(res && (res.status === 200 || res.status === 204))) {
-      throw new Error(
-        `Unexpected response from server: ${res?.status ?? "no status"}`
+      // Use encodeURIComponent to be safe with IDs that contain special chars
+      const res = await api.post(
+        `/api/conversations/${encodeURIComponent(selectedConversationId)}/close`
       );
+
+      // handle non-2xx as error
+      if (!(res && (res.status === 200 || res.status === 204))) {
+        throw new Error(
+          `Unexpected response from server: ${res?.status ?? "no status"}`
+        );
+      }
+      setConversation((prev) => prev ? { ...prev, status: "closed" } : prev);
+      setConversationStatus("closed");
+      toast.success("Closed conversation successfully");
+    } catch (err) {
+      // Rollback optimistic UI: remove system message we added earlier
+      console.error("Error closing conversation:", err);
+      setMessages((prev) =>
+        prev.filter((msg) => msg.id !== systemMessage.id)
+      );
+
+      // rollback other state if you want (optional — uncomment to revert)
+      // setIsResolved(false);
+      // setConversationStatus("open");
+
+      const message =
+        (typeof err === "object" && err !== null && "response" in err && typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === "string")
+          ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
+          : "Failed to close conversation. Try again.";
+      toast.error(message);
+    } finally {
+      setStatusLoading(false);
     }
-    setConversation((prev)=> prev ? {...prev, status: "closed"} : prev);
-    setConversationStatus("closed");
-    toast.success("Closed conversation successfully");
-  } catch (err) {
-    // Rollback optimistic UI: remove system message we added earlier
-    console.error("Error closing conversation:", err);
-    setMessages((prev) =>
-      prev.filter((msg) => msg.id !== systemMessage.id)
-    );
-
-    // rollback other state if you want (optional — uncomment to revert)
-    // setIsResolved(false);
-    // setConversationStatus("open");
-
-    const message =
-      (typeof err === "object" && err !== null && "response" in err && typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === "string")
-        ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
-        : "Failed to close conversation. Try again.";
-    toast.error(message);
-  } finally{
-     setStatusLoading(false);
-  }
   }, [selectedConversationId]);
 
   const handleReopen = useCallback(async () => {
@@ -1452,7 +1473,7 @@ const ChatView = ({
     setIsFollowUp(false);
     setConversationStatus("open");
     setIsStatusDropdownOpen(false);
-    setStatusLoading(true); 
+    setStatusLoading(true);
     const agentName = "You";
 
 
@@ -1477,20 +1498,20 @@ const ChatView = ({
       }
     }, 100);
 
-    try{
+    try {
       const res = await api.post(`/api/conversations/${encodeURIComponent(selectedConversationId)}/reopen`);
 
       if (!(res && (res.status === 200 || res.status === 204))) {
-      throw new Error(
-        `Unexpected response from server: ${res?.status ?? "no status"}`
-      );
+        throw new Error(
+          `Unexpected response from server: ${res?.status ?? "no status"}`
+        );
       }
 
-      setConversation((prev)=> prev ? {...prev, status: "open"} : prev);
+      setConversation((prev) => prev ? { ...prev, status: "open" } : prev);
       setConversationStatus("open");
       toast.success("Reopened conversation successfully");
     }
-    catch (err){
+    catch (err) {
       console.error("Error reopening conversation:", err);
       setMessages((prev) =>
         prev.filter((msg) => msg.id !== systemMessage.id)
@@ -1500,12 +1521,12 @@ const ChatView = ({
           ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
           : "Failed to reopen conversation. Try again.";
       toast.error(message);
-    } finally{
+    } finally {
       setStatusLoading(false);
     }
   }, [selectedConversationId]);
 
-  const handleFollowUp = useCallback(async(selectedConversationId:string) => {
+  const handleFollowUp = useCallback(async (selectedConversationId: string) => {
     setIsResolved(false);
     setIsFollowUp(true);
     setConversationStatus("follow-up");
@@ -1513,34 +1534,34 @@ const ChatView = ({
     setStatusLoading(true);
     const agentName = "You";
 
-    try{
+    try {
       const res = await api.post(`/api/ai/schedule-message/${selectedConversationId}`);
 
       if (!(res && (res.status === 200 || res.status === 204))) {
-      throw new Error(
-        `Unexpected response from server: ${res?.status ?? "no status"}`
-      );
-    }
+        throw new Error(
+          `Unexpected response from server: ${res?.status ?? "no status"}`
+        );
+      }
 
-      setConversation((prev)=> prev ? {...prev, status: "follow-up"} : prev);
+      setConversation((prev) => prev ? { ...prev, status: "follow-up" } : prev);
       setConversationStatus("follow-up");
       toast.success("Marked conversation for follow-up successfully");
-    }catch (err){
+    } catch (err) {
       console.error("Error scheduling message for follow-up:", err);
-    setMessages((prev) =>
-      prev.filter((msg) => msg.id !== systemMessage.id)
-    );
+      setMessages((prev) =>
+        prev.filter((msg) => msg.id !== systemMessage.id)
+      );
 
-    // rollback other state if you want (optional — uncomment to revert)
-    // setIsResolved(false);
-    // setConversationStatus("open");
+      // rollback other state if you want (optional — uncomment to revert)
+      // setIsResolved(false);
+      // setConversationStatus("open");
 
-    const message =
-      (typeof err === "object" && err !== null && "response" in err && typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === "string")
-        ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
-        : "Failed to set conversation for follow-up. Try again.";
-    toast.error(message);
-    }finally{
+      const message =
+        (typeof err === "object" && err !== null && "response" in err && typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === "string")
+          ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
+          : "Failed to set conversation for follow-up. Try again.";
+      toast.error(message);
+    } finally {
       setStatusLoading(false);
     }
 
@@ -1564,7 +1585,7 @@ const ChatView = ({
         });
       }
     }, 100);
-  }, [ ]);
+  }, []);
 
   useMainWebSocket({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1705,7 +1726,7 @@ const ChatView = ({
       );
       setConversation(response?.data);
       const status = response?.data?.status;
-      if(status){
+      if (status) {
         setConversationStatus(status as "open" | "closed" | "follow-up");
         setIsResolved(status === "closed");
         setIsFollowUp(status === "follow-up");
@@ -1826,7 +1847,7 @@ const ChatView = ({
       });
     };
   }, [selectedConversationId]);
-  
+
 
   const sendFn = (payload: Record<string, unknown>) => {
     // console.log("TypingIndicator payload sent to backend:", payload);
@@ -2033,7 +2054,7 @@ const ChatView = ({
                   </Badge>
                 )}
 
-                 <UserStatus
+                <UserStatus
                   conversationStatus={conversationStatus}
                   isStatusDropdownOpen={isStatusDropdownOpen}
                   setIsStatusDropdownOpen={setIsStatusDropdownOpen}
@@ -2046,7 +2067,7 @@ const ChatView = ({
                   handleResolve={handleResolve}
                   handleFollowUp={handleFollowUp}
                   handleReopen={handleReopen}
-                  />
+                />
 
                 {/* Reminders Button */}
                 <Tooltip>
@@ -2060,12 +2081,12 @@ const ChatView = ({
                             className="relative mr-2"
                           >
                             <Clock className="h-5 w-5" />
-                            {reminders?.length > 0 && (
+                            {activeCount > 0 && (
                               <Badge
                                 variant="secondary"
                                 className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
                               >
-                                {reminders.length}
+                                {activeCount}
                               </Badge>
                             )}
                           </Button>
@@ -2086,7 +2107,7 @@ const ChatView = ({
 
                               toast.success("Reminder deleted successfully");
                               // Refresh reminders after deletion
-                              
+
                             } catch (error) {
                               toast.error("Failed to delete reminder");
                               console.error("Error deleting reminder:", error);
@@ -2097,8 +2118,8 @@ const ChatView = ({
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    {reminders.length > 0
-                      ? `${reminders.length} reminder${reminders.length > 1 ? "s" : ""
+                    {activeCount > 0
+                      ? `${activeCount} reminder${activeCount > 1 ? "s" : ""
                       } set`
                       : "Set reminder"}
                   </TooltipContent>
@@ -2449,7 +2470,7 @@ const ChatView = ({
               onOpenChange={setShowReminder}
               onSave={(reminderData) => {
                 console.log("Reminder saved:", reminderData);
-            
+
                 setShowReminder(false);
               }}
               conversation_id={selectedConversationId}
@@ -2911,18 +2932,18 @@ const ChatView = ({
 
                     {/* Textarea */}
                     <div className="flex-1 mb-1.5 relative">
-                        <div
-                          ref={backdropRef}
-                          className="absolute inset-0 w-full h-full text-sm p-0 whitespace-pre-wrap break-words text-transparent pointer-events-none scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent"
-                          style={{
-                            lineHeight: "20px",
-                            fontFamily: "inherit",
-                          }}
-                          aria-hidden="true"
-                        >
-                          {message.slice(0, maxLength)}
-                          <span className="bg-red-300 text-transparent">{message.slice(maxLength)}</span>
-                        </div>
+                      <div
+                        ref={backdropRef}
+                        className="absolute inset-0 w-full h-full text-sm p-0 whitespace-pre-wrap break-words text-transparent pointer-events-none scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent"
+                        style={{
+                          lineHeight: "20px",
+                          fontFamily: "inherit",
+                        }}
+                        aria-hidden="true"
+                      >
+                        {message.slice(0, maxLength)}
+                        <span className="bg-red-300 text-transparent">{message.slice(maxLength)}</span>
+                      </div>
                       <textarea
                         ref={textareaRef}
                         onScroll={handleScroll}

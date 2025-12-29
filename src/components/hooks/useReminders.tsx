@@ -7,7 +7,7 @@ interface Reminder {
   title: string;
   notes: string;
   trigger_time: string;
-  status: "OVERDUE" | "SNOOZED" | "DONE";
+  status: "OVERDUE" | "SNOOZED" | "DONE" | "PENDING" | "DELETED";
   snooze_count: number;
   last_triggered_at: string;
   created_at: string;
