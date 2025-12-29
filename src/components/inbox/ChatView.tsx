@@ -323,21 +323,27 @@ const RemindersPopover = ({
   onCreateReminder,
   onDeleteReminder,
   doneReminder,
-  snoozeReminder
-
+  snoozeReminder,
+  snoozing,
+  completing,
+  activeCount
 }: {
   reminders: Reminder[];
   onCreateReminder: () => void;
   onDeleteReminder: (id: string) => void;
   doneReminder: (id: string) => void;
   snoozeReminder: ({ reminderId, snoozeUntil }: { reminderId: string, snoozeUntil: number }) => void;
+  snoozing: boolean;
+  completing: boolean;
+  activeCount: number;
+
 }) => {
   return (
     <PopoverContent className="w-80" align="end">
       <div className="space-y-2">
         <div className="flex items-center justify-between mb-2">
           <h4 className="font-medium">Reminders</h4>
-          {reminders.length > 0 && (
+          {activeCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
@@ -350,7 +356,7 @@ const RemindersPopover = ({
           )}
         </div>
         <div className="space-y-2">
-          {reminders.length === 0 ? (
+          {activeCount === 0 ? (
             <div className="text-center py-8">
               <div className="text-sm text-gray-500 mb-4">
                 No reminders set
@@ -389,7 +395,7 @@ const RemindersPopover = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      disabled={reminder.status === "DONE"}
+                      disabled={snoozing || reminder.status === "DONE"}
                       className=" h-8 w-8 p-0 text-yellow-600 hover:bg-yellow-50"
                       onClick={() =>
                         snoozeReminder({
@@ -405,7 +411,7 @@ const RemindersPopover = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      disabled={reminder.status === "DONE"}
+                      disabled={completing || reminder.status === "DONE"}
                       className=" h-8 w-8 p-0 text-green-600 hover:bg-green-50"
                       onClick={() => doneReminder(reminder.id)}
                     >
@@ -771,10 +777,6 @@ const ChatView = ({
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const activeCount = reminders.filter((r) => r.status !== "DELETED" && r.status !== "DONE").length;
-  console.log("Active reminders count:", activeCount);
-
-
-
 
   const handleFileClick = () => {
     fileInputRef.current?.click(); // trigger hidden input
@@ -2096,6 +2098,9 @@ const ChatView = ({
                           snoozeReminder={snoozeReminder}
                           doneReminder={doneReminder}
                           onCreateReminder={() => setShowReminder(true)}
+                          snoozing={snoozing}
+                          completing={completing}
+                          activeCount={activeCount}
                           onDeleteReminder={async (id) => {
                             try {
                               const response = await api.delete(
