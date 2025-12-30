@@ -321,22 +321,21 @@ const SharedProductPreview = ({
 const RemindersPopover = ({
   reminders,
   onCreateReminder,
-  onDeleteReminder,
   doneReminder,
   snoozeReminder,
   snoozing,
   completing,
-  activeCount
+  activeCount,
+  deleteReminder
 }: {
   reminders: Reminder[];
   onCreateReminder: () => void;
-  onDeleteReminder: (id: string) => void;
   doneReminder: (id: string) => void;
   snoozeReminder: ({ reminderId, snoozeUntil }: { reminderId: string, snoozeUntil: number }) => void;
   snoozing: boolean;
   completing: boolean;
   activeCount: number;
-
+  deleteReminder: (id: string) => void;
 }) => {
 
   const parseBackendDate = (dateStr: string): Date | null => {
@@ -452,8 +451,8 @@ const formatReminderDate = (dateStr: string): string => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0 text-red-600 hover:bg-red-50"
-                      onClick={() => onDeleteReminder(reminder.id)}
+                      className=" h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                      onClick={() => deleteReminder(reminder.id)}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -790,7 +789,7 @@ const ChatView = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
   const typingThrottleRef = useRef<number>(0);
-  const { reminders, snoozeReminder, doneReminder, snoozing, completing } = useReminders(selectedConversationId);
+  const { reminders, snoozeReminder, doneReminder, snoozing, completing, deleteReminder, deleting } = useReminders(selectedConversationId);
   const [typingUsers, setTypingUsers] = useState<
     Map<
       string,
@@ -2131,23 +2130,7 @@ const ChatView = ({
                           snoozing={snoozing}
                           completing={completing}
                           activeCount={activeCount}
-                          onDeleteReminder={async (id) => {
-                            try {
-                              const response = await api.delete(
-                                `https://heidelai-2.koyeb.app/reminders/${id}`);
-
-                              if (response.status !== 200) {
-                                throw new Error("Failed to delete reminder");
-                              }
-
-                              toast.success("Reminder deleted successfully");
-                              // Refresh reminders after deletion
-
-                            } catch (error) {
-                              toast.error("Failed to delete reminder");
-                              console.error("Error deleting reminder:", error);
-                            }
-                          }}
+                          deleteReminder={deleteReminder}
                         />
                       </Popover>
                     </div>
