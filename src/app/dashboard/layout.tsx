@@ -37,6 +37,7 @@ export default function DashboardLayout({
   }, [])
 
   const router = useRouter();
+  const queryClient = new QueryClient();
   const { isSignedIn, isLoaded } = useUser();
 
   if (!isLoaded) {
