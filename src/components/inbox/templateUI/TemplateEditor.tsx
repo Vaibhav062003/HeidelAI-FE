@@ -145,7 +145,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
 }) => {
 
-  
+
   const [apps, setApps] = useState<AppSetup[]>([
     { packageName: "", signatureHash: "" },
   ]);
@@ -175,7 +175,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
     // Set the file_handle as the header content
     setHeaderContent(fileHandle);
-    
+
 
     console.log('S3 URL:', s3Url);
     console.log('File Handle:', fileHandle);
@@ -304,8 +304,8 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   return (
-    <div className="text-sm space-y-6">
-      <div className="grid grid-cols-2 gap-4">
+    <div className="text-sm space-y-4 sm:space-y-6 overflow-y-auto hide-scrollbar">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Template name
@@ -343,8 +343,8 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         <>
           {/* Header Section */}
           {/* Header Section with Variables */}
-          <div className="border p-4 rounded-lg bg-gray-50">
-            <div className="flex items-center justify-between mb-4">
+          <div className="border p-3 sm:p-4 rounded-lg bg-gray-50/50">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
               <h3 className="text-md font-semibold">Header (Optional)</h3>
               <button
                 onClick={() => {
@@ -352,7 +352,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                   setShowVariableModal(true);
                 }}
                 disabled={headerVariables.length >= 5}
-                className="text-blue-500 hover:text-blue-600 disabled:text-gray-400 text-sm flex items-center gap-1"
+                className="text-blue-500 hover:text-blue-600 disabled:text-gray-400 text-sm flex items-center gap-1 w-fit"
               >
                 <Plus size={16} />
                 Add Header Variable
@@ -428,20 +428,20 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 {(headerType === "image" ||
                   headerType === "video" ||
                   headerType === "document") && (
-                  <FileUploadHandler
-                    setPreviewFile={setPreviewFile}
-                    onUploadComplete={handleFileUploadComplete}
-                    setHeaderContent={setHeaderContent}
-                    accept={
-                      headerType === "image"
-                        ? "image/*"
-                        : headerType === "video"
-                        ? "video/*"
-                        : "*"
-                    }
-                    className="w-full"
-                  />
-                )}
+                    <FileUploadHandler
+                      setPreviewFile={setPreviewFile}
+                      onUploadComplete={handleFileUploadComplete}
+                      setHeaderContent={setHeaderContent}
+                      accept={
+                        headerType === "image"
+                          ? "image/*"
+                          : headerType === "video"
+                            ? "video/*"
+                            : "*"
+                      }
+                      className="w-full"
+                    />
+                  )}
 
                 {headerType === "location" && (
                   <div className="border rounded-lg p-4">
@@ -456,8 +456,8 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             </div>
           </div>
 
-          <div className="border p-4 rounded-lg bg-gray-50">
-            <div className="flex items-center justify-between mb-4">
+          <div className="border p-3 sm:p-4 rounded-lg bg-gray-50/50">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
               <h3 className="text-sm font-semibold">Message Body Section</h3>
               <button
                 onClick={() => {
@@ -465,7 +465,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                   setShowVariableModal(true);
                 }}
                 disabled={bodyVariables.length >= 5}
-                className="text-blue-500 hover:text-blue-600 disabled:text-gray-400 text-sm flex items-center gap-1"
+                className="text-blue-500 hover:text-blue-600 disabled:text-gray-400 text-sm flex items-center gap-1 w-fit"
               >
                 <Plus size={16} />
                 Add Body Variable
@@ -522,7 +522,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                   maxLength={1024}
                 />
 
-               
+
                 <div className="absolute bottom-2 right-2 flex items-center gap-2">
                   {/* Emoji Picker Toggle */}
                   <div className="relative">
@@ -589,7 +589,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           </div>
 
           {/* Footer Section */}
-          <div className="">
+          <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Footer (Optional)
             </label>
@@ -601,68 +601,62 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               onChange={(e) => setFooter(e.target.value)}
               maxLength={60}
             />
-            <div className="text-sm text-gray-500 mt-1">{footer.length}/10</div>
+            <div className="text-[11px] text-gray-500">{footer.length}/60</div>
           </div>
 
           {/* Buttons Section */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div>
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Buttons {button.length}/10
+              </label>
+              <button
+                onClick={() => setShowButtonModal(true)}
+                disabled={button.length >= 10}
+                className="text-blue-500 hover:text-blue-600 disabled:text-gray-400 text-sm flex items-center gap-1 w-fit"
+              >
+                <Plus size={16} />
+                Add Button
+              </button>
+            </div>
+
+            <div className="p-3 sm:p-4 bg-yellow-50 border border-yellow-100 rounded-lg">
+              <p className="text-sm text-yellow-800 leading-relaxed">
+                Create buttons that let customers respond to your message or
+                take action. You can add up to 10 buttons. If you add more than
+                3 buttons, they will appear in a list.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {button.map((buttons) => (
+              <div
+                key={buttons.id}
+                className="flex items-center justify-between p-2 border rounded-md"
+              >
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Button {button.length}/10
-                    </label>
-                  </div>
-                  <div className="p-4 bg-yellow-100 rounded-lg">
-                    <p className="text-sm text-gray-600">
-                      Create buttons that let customers respond to your message
-                      or take action. You can add up to 10 buttons. If you add
-                      more than 3 buttons, they will appear in a list.
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={() => setShowButtonModal(true)}
-                    disabled={button.length >= 10}
-                    className="p-4 text-blue-500 hover:text-blue-600 disabled:text-gray-400 text-sm flex items-center gap-1"
-                  >
-                    <Plus size={16} />
-                    Add Button
-                  </button>
+                  <span className="text-sm font-medium capitalize">
+                    {" "}
+                    {buttons.type}
+                  </span>
+                  <p className="text-sm text-gray-600">{buttons.text}</p>
                 </div>
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              {button.map((buttons) => (
-                <div
-                  key={buttons.id}
-                  className="flex items-center justify-between p-2 border rounded-md"
+                <button
+                  onClick={() => removeButton(buttons.id)}
+                  className="text-red-500 hover:text-red-600"
                 >
-                  <div>
-                    <span className="text-sm font-medium capitalize">
-                      {" "}
-                      {buttons.type}
-                    </span>
-                    <p className="text-sm text-gray-600">{buttons.text}</p>
-                  </div>
-
-                  <button
-                    onClick={() => removeButton(buttons.id)}
-                    className="text-red-500 hover:text-red-600"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
           </div>
         </>
       )}
 
       {activeTab === "utility" ? (
-        <div className="mt-8">
+        <div className="mt-8 border-t pt-6">
           <h3 className="text-lg font-semibold mb-2">
             Message validity period
           </h3>
@@ -697,8 +691,8 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 Select Validity Period (Minutes)
               </label>
               <select
-                value={selectedTime} // Use a state variable to track the selected time
-                onChange={(e) => setSelectedTime(e.target.value)} // Set the selected time when user changes
+                value={selectedTime}
+                onChange={(e) => setSelectedTime(e.target.value)}
                 className="w-full p-2 border rounded-md"
               >
                 <option value="30s">30 seconds</option>
@@ -717,7 +711,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           )}
         </div>
       ) : (
-        <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="bg-gray-50 p-4 rounded-lg mt-8 border-t pt-6">
           <div className="flex items-center gap-2 mb-2">
             <Info size={16} className="text-blue-500" />
             <h4 className="font-medium">Sample Content</h4>

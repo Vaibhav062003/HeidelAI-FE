@@ -73,11 +73,10 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
     newApps[index] = { ...newApps[index], [field]: value };
     setApps(newApps);
   };
- 
-  return (
-    <div className="grid ">
 
-<div className="grid grid-cols-2 gap-4">
+  return (
+    <div className="grid gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Template name
@@ -110,12 +109,11 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
             ))}
           </select>
         </div>
-        </div>
-    <div className="inline-block">
-      <div>
+      </div>
+      <div className="space-y-6">
         {/* Code Delivery Setup */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4">Code delivery setup</h3>
+        <div>
+          <h3 className="text-md font-semibold mb-3">Code delivery setup</h3>
           <p className="text-sm text-gray-600 mb-4">
             Choose how customers send the code from WhatsApp to your app.
           </p>
@@ -186,8 +184,8 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
         </div>
 
         {/* App Setup */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4">App setup</h3>
+        <div>
+          <h3 className="text-md font-semibold mb-3">App setup</h3>
           <p className="text-sm text-gray-600 mb-4">
             You can add up to 5 apps.
           </p>
@@ -244,8 +242,8 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
         </div>
 
         {/* Content Settings */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4">Content</h3>
+        <div>
+          <h3 className="text-md font-semibold mb-3">Content</h3>
           <p className="text-sm text-gray-600 mb-4">
             Content for authentication message templates can&apos;t be edited. You
             can add additional content from the options below.
@@ -273,13 +271,13 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
         </div>
 
         {/* Button Text */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4">Buttons</h3>
-          <p className="text-sm text-gray-600 mb-4">
+        <div>
+          <h3 className="text-md font-semibold mb-3">Buttons</h3>
+          <p className="text-sm text-gray-600 mb-3">
             Customize button text for autofill and copy code.
           </p>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">
                 Autofill text
@@ -314,12 +312,12 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
         </div>
 
         {/* Validity Period */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4">
+        <div>
+          <h3 className="text-md font-semibold mb-3">
             Message validity period
           </h3>
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 leading-relaxed">
               Set a custom validity period for your authentication message.
             </p>
 
@@ -354,16 +352,6 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
         </div>
       </div>
     </div>
-    {/* <AuthPreview
-      addSecurityRecommendation={addSecurityRecommendation}
-      addExpirationTime={addExpirationTime}
-      validityPeriod={validityPeriod || '5 minutes'}
-      codeDeliveryMethod={codeDeliveryMethod}
-      autofillText={autofillText}
-      copyCodeText={copyCodeText}
-    /> */}
-</div>
-
   );
 };
 
