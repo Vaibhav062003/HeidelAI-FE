@@ -7,6 +7,10 @@ import { motion } from "framer-motion";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import { WebSocketProvider } from "@/lib/WebsocketContext";
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
 
 export default function DashboardLayout({
   children,
@@ -157,7 +161,9 @@ export default function DashboardLayout({
       {/* Content wrapper with padding to avoid overlap */}
       <div className={!isOnline ? 'pt-10' : ''}>
         <WebSocketProvider>
+          <QueryClientProvider client={queryClient}>
           {children}
+          </QueryClientProvider>
         </WebSocketProvider>
       </div>
     </div>

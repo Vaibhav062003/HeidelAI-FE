@@ -14,6 +14,7 @@ import AgentsSettings from './Agent_management';
 import TeamsConfiguration from './Team_configuration';
 import CannedResponses from './CannedResponsesContext';
 import AutomationPage from '../Automation/AutomationPage';
+import BillingPlans from '../inbox/BillingPlans';
 import { Construction, Loader2, Instagram } from 'lucide-react';
 import { 
   Select, 
@@ -1160,16 +1161,16 @@ export const CustomAttributesSettings = () => {
 };
 
 
-export const AutomationSettings = () => (
+export const Billing = () => (
   <div className="space-y-6 max-w-6xl">
-    <div>
+    {/* <div>
       <h2 className="text-2xl font-bold text-gray-900">Automation Rules</h2>
       <p className="text-sm text-gray-600 mt-1">
         Create workflows to automate repetitive tasks and improve efficiency
       </p>
-    </div>
+    </div> */}
     <div className="bg-white border border-gray-200 rounded-xl p-6">
-      <AutomationPage />
+      <BillingPlans />
     </div>
   </div>
 );

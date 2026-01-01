@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AgentsSettings from './Agent_management';
 import TeamsConfiguration from './Team_configuration';
-import { InboxSettings, LabelsSettings, CustomAttributesSettings, AutomationSettings, MacrosSettings, IntegrationsSettings, AuditLogsSettings, CustomRolesSettings, SLASettings } from './SidebarItem';
+import { InboxSettings, LabelsSettings, CustomAttributesSettings, Billing, MacrosSettings, IntegrationsSettings, AuditLogsSettings, CustomRolesSettings, SLASettings } from './SidebarItem';
 import { 
   Users, 
   List, 
@@ -67,8 +67,8 @@ const SettingsSections = [
   },
   { 
     icon: Workflow, 
-    name: 'Automation', 
-    component: AutomationSettings 
+    name: 'Billing',
+    component: Billing 
   },
   { 
     icon: FileText, 

@@ -34,8 +34,6 @@ import api from '../../lib/session_api';
 import { useConversations } from "../hooks/useConversations";
 
 
-// ... other imports
-
 interface ReminderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -69,15 +67,13 @@ export default function ReminderDialog({
 
   const handleSubmit = async () => {
     if (!title || !selectedDateTime) return;
-    const triggerTimeString = selectedDateTime.format("YYYY-MM-DD HH:mm:ss");
 
-    
     setIsSubmitting(true);
     try {
       const data ={
         title,
         notes,
-        trigger_time: triggerTimeString,
+        trigger_time: selectedDateTime.toISOString(),
         conversation_id,
       }
       console.log("set reminder data", data)
