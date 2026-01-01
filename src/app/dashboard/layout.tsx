@@ -33,7 +33,7 @@ export default function DashboardLayout({
   }, [])
 
   const router = useRouter();
-  const { isSignedIn, isLoaded} = useUser();
+  const { isSignedIn, isLoaded } = useUser();
 
   if (!isLoaded) {
     // HeidelAI Logo Loader with Shine Effect
@@ -54,7 +54,7 @@ export default function DashboardLayout({
             <Image
               src="/heidelai.png"
               alt="HeidelAI"
-              width={260} 
+              width={260}
               height={260}
               className="mb-8 drop-shadow-2xl"
             />
@@ -84,7 +84,7 @@ export default function DashboardLayout({
     );
   }
 
-  if (!isLoaded && !isSignedIn) {
+  if (!isSignedIn) {
     // Enlarged Not signed in UI with HeidelAI Logo Loader with Shine Effect
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 relative overflow-hidden">
@@ -103,7 +103,7 @@ export default function DashboardLayout({
             <Image
               src="/heidelai.png"
               alt="HeidelAI"
-              width={260} 
+              width={260}
               height={260}
               className="mb-8 drop-shadow-2xl"
             />
