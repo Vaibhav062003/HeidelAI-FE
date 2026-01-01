@@ -95,7 +95,7 @@ export const Catalog: React.FC<CatalogProps> = ({
     <div className="grid gap-5">
       <div className="space-y-6 px-2">
         {/* Template Name and Language Section */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Template name
@@ -242,7 +242,7 @@ export const Catalog: React.FC<CatalogProps> = ({
                 <p>Connecting a Catalog will allow customers to view, message and send carts containing your products and services via WhatsApp.</p>
               </div>
 
-              <div className="">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   placeholder="Search Catalog by Name or ID"
                   className="flex-1"
@@ -399,15 +399,15 @@ export const Catalog: React.FC<CatalogProps> = ({
       </div>
 
       {/* Button Section */}
-      <div className="bg-white  rounded-lg shadow-sm">
+      <div className="bg-white rounded-lg border border-gray-100 p-4 shadow-sm">
         <h2 className="text-md font-semibold text-gray-900 mb-3">Button</h2>
 
-        <div className="bg-gray-50 p-4 rounded-md flex items-start space-x-3 mb-4">
+        <div className="bg-blue-50/50 p-3 sm:p-4 rounded-md flex items-start space-x-3 mb-4 border border-blue-100">
           <LightbulbIcon
-            className="h-5 w-5 text-gray-500 mt-0.5"
+            className="h-5 w-5 text-blue-500 mt-0.5 shrink-0"
             aria-hidden="true"
           />
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-blue-800 leading-relaxed">
             Only one button is supported for this type of template. The button
             text is not editable.
           </p>
@@ -426,12 +426,12 @@ export const Catalog: React.FC<CatalogProps> = ({
               type="text"
               value={buttonText}
               disabled
-              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 cursor-not-allowed"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 cursor-not-allowed pr-16"
               maxLength={25}
               aria-label="Button text (not editable)"
             />
             <span
-              className="absolute right-3 top-2.5 text-sm text-gray-500"
+              className="absolute right-3 top-2.5 text-xs text-gray-500"
               aria-live="polite"
             >
               {buttonText.length}/25

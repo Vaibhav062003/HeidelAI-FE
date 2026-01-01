@@ -6,6 +6,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { LogoutHandler } from '@/components/LogoutHandler'
 import { RoleProvider } from '@/contexts/RoleContext'
+import { Toaster } from 'sonner'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -63,13 +64,14 @@ export default function RootLayout({
   return (
     <html lang="en" >
       <body className={`bg-white text-black`}>
+        <Toaster position="top-right" richColors />
 
         <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!} afterSignOutUrl="/">
           <AuthProvider>
-          <LogoutHandler />
-          <RoleProvider>
-            {children}
-          </RoleProvider>
+            <LogoutHandler />
+            <RoleProvider>
+              {children}
+            </RoleProvider>
           </AuthProvider>
         </ClerkProvider>
 
