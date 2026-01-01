@@ -18,3 +18,4 @@ Merge conflict minor bug issue due to Rounak - fixed
 Merge Vaibhav's canned responses & message input text area line spacing
 Merged Prithal's changes regarding update for all / open / closed filtering of conversations
 prithal's merge had errors he fixed them 
+prithal's merge had errors because of rounak, fixed
