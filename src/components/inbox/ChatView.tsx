@@ -670,14 +670,16 @@ export const MessageItem = memo(
     index,
     isLatest,
     isReplyMessage,
-    isMediaMessage
+    isMediaMessage,
+    caption
   }: {
     message: Message;
-    isLast: boolean;
-    index: number;
-    isLatest: boolean;
+    isLast?: boolean;
+    index?: number;
+    isLatest?: boolean;
     isReplyMessage: boolean;
     isMediaMessage?: boolean;
+    caption?: string;
   }) => {
     if (message.role === "system") {
       return (
@@ -696,7 +698,7 @@ export const MessageItem = memo(
       <>
         <div
           className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${message.role === "customer"
-            ? `bg-white/90 backdrop-blur-sm ${isReplyMessage ? "rounded-tl-lg" : "rounded-bl-lg"
+            ? `bg-white/90 backdrop-blur-sm ${isReplyMessage || isMediaMessage ? "rounded-tl-lg" : "rounded-bl-lg"
             } text-gray-900 border-gray-200/60`
             : `bg-blue-600/90 backdrop-blur-sm ${isReplyMessage || isMediaMessage ? "rounded-tr-lg" : "rounded-br-lg"
             } text-white border-blue-500/60`
@@ -705,7 +707,7 @@ export const MessageItem = memo(
         >
           <div className="break-words">
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
-              {message.content}
+              {caption ? caption : message.content}
             </p>
           </div>
           <div className="flex justify-end mt-2">
@@ -2633,8 +2635,7 @@ const ChatView = ({
                                           url={message.payload.url}
                                           status={message.status}
                                           message={message}
-                                          index={index}
-                                          isLast={index === messages.length - 1}
+                                          caption={message.payload.caption}
                                           key={message.id}
                                           isAgent={
                                             message.role.toLowerCase() === "agent"
@@ -2669,11 +2670,13 @@ const ChatView = ({
                                         url={message.payload.url}
                                         previewUrl={message.payload.thumbnail_url}
                                         fileName={message.payload.file_name}
+                                        caption={message.payload.caption}
                                         fileSize={message.payload.file_size}
                                         fileFormat={message.payload.file_format}
                                         filePages={message.payload.file_pages}
                                         isAgent={message.role.toLowerCase() === "agent"}
                                         timestamp={formatMessageTime(message.timestamp)}
+                                        message={message}
                                       />
                                     )}
                                   </LazyMediaLoader>
