@@ -7,6 +7,10 @@ import { motion } from "framer-motion";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import { WebSocketProvider } from "@/lib/WebsocketContext";
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
 
 export default function DashboardLayout({
   children,
@@ -33,7 +37,8 @@ export default function DashboardLayout({
   }, [])
 
   const router = useRouter();
-  const { isSignedIn, isLoaded} = useUser();
+  const queryClient = new QueryClient();
+  const { isSignedIn, isLoaded } = useUser();
 
   if (!isLoaded) {
     // HeidelAI Logo Loader with Shine Effect
@@ -54,7 +59,7 @@ export default function DashboardLayout({
             <Image
               src="/heidelai.png"
               alt="HeidelAI"
-              width={260} 
+              width={260}
               height={260}
               className="mb-8 drop-shadow-2xl"
             />
@@ -84,7 +89,7 @@ export default function DashboardLayout({
     );
   }
 
-  if (!isLoaded && !isSignedIn) {
+  if (!isSignedIn) {
     // Enlarged Not signed in UI with HeidelAI Logo Loader with Shine Effect
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 relative overflow-hidden">
@@ -103,7 +108,7 @@ export default function DashboardLayout({
             <Image
               src="/heidelai.png"
               alt="HeidelAI"
-              width={260} 
+              width={260}
               height={260}
               className="mb-8 drop-shadow-2xl"
             />
@@ -141,16 +146,12 @@ export default function DashboardLayout({
         <p className="text-gray-400 text-lg mt-10 z-10">
           HeidelAI • Secure Access Portal
         </p>
-
-        <Toaster position="top-center" richColors />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-100 relative">
-      <Toaster position="top-right" richColors />
-
       {/* Offline Banner */}
       {!isOnline && (
         <div className="fixed top-0 left-0 w-full z-50 text-center text-red-600 border-[#fcb3b3] border-y bg-[#fff5f5] py-2 font-medium ">
@@ -161,7 +162,9 @@ export default function DashboardLayout({
       {/* Content wrapper with padding to avoid overlap */}
       <div className={!isOnline ? 'pt-10' : ''}>
         <WebSocketProvider>
+          <QueryClientProvider client={queryClient}>
           {children}
+          </QueryClientProvider>
         </WebSocketProvider>
       </div>
     </div>

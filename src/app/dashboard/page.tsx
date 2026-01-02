@@ -21,7 +21,7 @@ import {
   PanelLeft
 } from 'lucide-react';
 import { InstagramLogoIcon } from '@radix-ui/react-icons';
-import RemainderSideBar from '@/components/inbox/ReminderSideBar';
+import ReminderSidebar from '@/components/inbox/ReminderSideBar';
 import { useUser, useClerk } from '@clerk/nextjs';
 import {
   Tooltip,
@@ -67,7 +67,7 @@ const InfluencerBot = dynamic(() => import('@/components/influencerBot/influence
   loading: () => <TabLoadingSkeleton />
 });
 
-const BillingPlans = dynamic(() => import('@/components/inbox/BillingPlans'), {
+const AutomationHub = dynamic(() => import('@/components/inbox/AutomationHub'), {
   ssr: false,
   loading: () => <TabLoadingSkeleton />
 });
@@ -154,7 +154,7 @@ const SidebarNavigation = React.memo(({
   ], []);
 
   const additionalItems = useMemo(() => [
-    { value: 'billing', icon: CreditCard, label: 'Billing' },
+    { value: 'Automation', icon: CreditCard, label: 'AutomationHub' },
     { value: 'talktodata', icon: BotMessageSquare, label: 'Talk to Data' },
     { value: 'influencerbot', icon: InstagramLogoIcon, label: 'InfluIndex' },
   ], []);
@@ -445,7 +445,7 @@ const SidebarNavigation = React.memo(({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="right" className="bg-gray-800 text-white text-xs">
-                    {value === 'billing' ? 'Billing' : value === 'talktodata' ? 'Talk to Data' : 'InfluIndex'}
+                    {value === 'Automation' ? 'AutomationHub' : value === 'talktodata' ? 'Talk to Data' : 'InfluIndex'}
                   </TooltipContent>
                 </Tooltip>
               ))}
@@ -531,7 +531,7 @@ export default function DashboardPage() {
 
   const [activeView, setActiveView] = useState<
     | 'inbox'
-    | 'billing'
+    | 'Automation'
     | 'settings'
     | 'talktodata'
     | 'analyticsbot'
@@ -678,7 +678,7 @@ export default function DashboardPage() {
                         currentAgentUsername={currentAgentUsername}
                       />
                     ) : (
-                      <RemainderSideBar
+                      <ReminderSidebar
                         onToggleVisibility={handleToggleRightSidebar}
                       />
                     )}
@@ -715,10 +715,10 @@ export default function DashboardPage() {
               <SettingsSidebar />
             )}
 
-            {activeView === 'billing' && (
+            {activeView === 'Automation' && (
               <div className="h-full w-full overflow-y-auto bg-white min-h-0 min-w-0">
                 <div className="p-4 sm:p-6 max-w-7xl mx-auto">
-                  <BillingPlans />
+                  <AutomationHub />
                 </div>
               </div>
             )}

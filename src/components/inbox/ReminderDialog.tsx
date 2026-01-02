@@ -30,55 +30,57 @@ import { StaticDateTimePicker } from '@mui/x-date-pickers/StaticDateTimePicker';
 import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
 import { toast } from "sonner";
 // import { useToast } from "@/components/ui/use-toast"; 
+import api from '../../lib/session_api';
+import { useConversations } from "../hooks/useConversations";
 
-
-// ... other imports
 
 interface ReminderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (reminder: ReminderData) => void;
-  conversationId: string; 
+  conversation_id: string; 
 }
 
 interface ReminderData {
+  conversation_id: string;
   title: string;
   notes: string;
-  dateTime: Dayjs | null;
-  conversationId: string; 
+  trigger_time: string;
 }
 
 export default function ReminderDialog({ 
   open, 
   onOpenChange, 
   onSave, 
-  conversationId 
+  conversation_id
 }: ReminderDialogProps) {
   const [selectedDateTime, setSelectedDateTime] = useState<Dayjs | null>(dayjs());
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { conversations } = useConversations();
+
+  const getCustomerName = () => {
+    const conversation = conversations.find(conv => conv.id === conversation_id);
+    return conversation ? conversation.customer_name : "Customer";
+  }
 
   const handleSubmit = async () => {
     if (!title || !selectedDateTime) return;
-    
+
     setIsSubmitting(true);
     try {
-      const response = await fetch('https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/reminders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title,
-          notes,
-          dateTime: selectedDateTime.toISOString(),
-          conversationId
-        }),
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
+      const data ={
+        title,
+        notes,
+        trigger_time: selectedDateTime.toISOString(),
+        conversation_id,
+      }
+      console.log("set reminder data", data)
+      const response = await api.post('https://heidelai-2.koyeb.app/reminders', data)
+      console.log("set reminder response", response)
+    
+      if (response.status !== 200) {
         throw new Error('Failed to set reminder');
       }
 
@@ -89,8 +91,8 @@ export default function ReminderDialog({
       onSave({
         title,
         notes,
-        dateTime: selectedDateTime,
-        conversationId
+        trigger_time: selectedDateTime.toISOString(),
+        conversation_id,
       });
 
       // Reset form

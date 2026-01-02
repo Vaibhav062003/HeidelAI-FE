@@ -102,7 +102,7 @@ return (
           {unreadCount > 0 && (
             <div className="w-[18px] h-[18px] bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-[10px] text-white font-semibold">
-                {unreadCount > 9 ? '9' : unreadCount}
+                {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             </div>
           )}

@@ -13,11 +13,10 @@ interface MediaMessageProps {
   isMuted?: boolean;
   id: string;
   timestamp: string;
-  isLast?: boolean;
   status?: "sending" | "sent" | "delivered" | "read";
-  index?: number;
   message?: Message;
   onFullscreenToggle?: (isFullscreen: boolean) => void;
+  caption?: string;
 }
 
 export default function MediaMessage({
@@ -31,11 +30,10 @@ export default function MediaMessage({
   isMuted = true,
   id,
   timestamp,
-  index,
-  isLast,
   status,
   message,
   onFullscreenToggle,
+  caption
 }: MediaMessageProps) {
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const [mediaHeight, setMediaHeight] = useState<number | null>(null);
@@ -91,9 +89,9 @@ export default function MediaMessage({
     );
 
     if (isActive) {
-      video.play().catch(() => {});
+      video.play().catch(() => { });
     } else if (isLatest && !anyPlaying) {
-      video.play().catch(() => {});
+      video.play().catch(() => { });
     } else {
       video.pause();
     }
@@ -162,14 +160,13 @@ export default function MediaMessage({
 
   return (
     <div
-      className={`flex flex-col ${
-        isAgent ? "items-end" : "items-start"
-      } rounded-2xl w-fit max-w-[350px] p-1`}
+      className={`flex flex-col ${isAgent ? "items-end" : "items-start"
+        } rounded-2xl w-fit max-w-[350px] p-1`}
     >
       <div
         className={`relative h-fit overflow-hidden rounded-2xl bg-gray-200 shadow-sm cursor-pointer flex items-center justify-center`}
         style={{
-          width: isUnavailable? "190px" : mediaWidth,
+          width: isUnavailable ? "190px" : mediaWidth,
           height: mediaHeight
             ? Math.min(mediaWidth / (aspectRatio || 1), 400)
             : 200,
@@ -257,42 +254,45 @@ export default function MediaMessage({
         )}
       </div>
 
-      
-      {(message?.content && message && index !== undefined && isLast) ?(
-        <div className="mt-2">
-        <MessageItem
-          key={message.id}
-          message={message}
-          index={index}
-          isLatest={isLatest}
-          isLast={isLast}
-          isReplyMessage={false}
-          isMediaMessage={true}
-        />
+      {caption && message ? (
+        console.log("Rendering caption:", caption),
+        <div className="mt-2 text-sm text-gray-700">
+          <MessageItem
+            message={message}
+            isReplyMessage={false}
+            isMediaMessage={true}
+            caption={caption}
+          />
         </div>
       ) : (
-        <div
-        className={`py-1 w-full ${isAgent ? "pr-2" : "pl-2"}`}
-      >
-        <p
-          className={`text-xs ${
-            isAgent ? "text-right" : "text-left"
-          } text-gray-500 mt-1 uppercase tracking-wide`}
-        >
-          {timestamp}
-        </p>
-        {status == "sending" && (
-          <p
-            className={`text-xs ${
-            isAgent ? "text-right" : "text-left"
-          } text-gray-500 mt-1 tracking-wide`}
-          >
-            Sending...
+        <div className={`w-full mt-1 ${isAgent ? "text-right pr-1" : "text-left pl-1"}`}>
+          <p className="text-xs text-gray-500  tracking-wide">
+            {timestamp}
           </p>
-        )}
-      </div>
+        </div>
       )}
-      
+
+      {message?.role === "agent" && message.status === "sending" && (
+        <div
+          className={`py-1 w-full ${isAgent ? "pr-2" : "pl-2"}`}
+        >
+          <p
+            className={`text-xs ${isAgent ? "text-right" : "text-left"
+              } text-gray-500 mt-1 uppercase tracking-wide`}
+          >
+            {timestamp}
+          </p>
+          {status == "sending" && (
+            <p
+              className={`text-xs ${isAgent ? "text-right" : "text-left"
+                } text-gray-500 mt-1 tracking-wide`}
+            >
+              Sending...
+            </p>
+          )}
+        </div>
+      )}
+
 
       {isFullscreen && type === "image" && (
         <div

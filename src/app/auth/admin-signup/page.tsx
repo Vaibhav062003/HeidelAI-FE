@@ -30,7 +30,7 @@ const AdminSignup: React.FC = () => {
   const [verifyError, setVerifyError] = useState<string | null>(null);
   const [emailExists, setEmailExists] = useState(false);
   const [emailCheckLoading, setEmailCheckLoading] = useState(false);
-  
+
   const { adminSignup, signIn } = useAuth();
   const router = useRouter();
 
@@ -38,7 +38,7 @@ const AdminSignup: React.FC = () => {
   useEffect(() => {
     const checkEmailExists = async () => {
       if (!email || email.length < 5 || !email.includes('@')) return;
-      
+
       setEmailCheckLoading(true);
       try {
         const { data, error } = await supabase
@@ -46,7 +46,7 @@ const AdminSignup: React.FC = () => {
           .select('email')
           .eq('email', email)
           .single();
-          
+
         setEmailExists(!!data);
       } catch (err) {
         console.error('Error checking email:', err);
@@ -65,14 +65,14 @@ const AdminSignup: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
+
     if (emailExists) {
       setError('Email already exists. Please use a different email or verify your account.');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       const result = await adminSignup(email, password, firstName, lastName, companyName);
       if (result.success) router.push('/company-info');
@@ -89,7 +89,7 @@ const AdminSignup: React.FC = () => {
     e.preventDefault();
     setVerifyError(null);
     setVerifyLoading(true);
-    
+
     try {
       // First check if email exists in database
       const { data, error: dbError } = await supabase
@@ -97,13 +97,13 @@ const AdminSignup: React.FC = () => {
         .select('email')
         .eq('email', verifyEmail)
         .single();
-      
+
       if (!data) {
         setVerifyError('Account not found. Please check your email or sign up.');
         setVerifyLoading(false);
         return;
       }
-      
+
       // Proceed with sign in
       const result = await signIn(verifyEmail, verifyPassword);
       if (result.success) {
@@ -127,9 +127,8 @@ const AdminSignup: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-full bg-black"> 
-      <Toaster position="top-center" richColors />
-      
+    <div className="h-screen w-full bg-black">
+
       <motion.section
         initial="hidden"
         animate="visible"
@@ -170,7 +169,7 @@ const AdminSignup: React.FC = () => {
                         placeholder="John"
                       />
                     </LabelInputContainer>
-                    
+
                     <LabelInputContainer>
                       <Label htmlFor="last-name">Last Name</Label>
                       <Input

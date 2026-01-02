@@ -7,36 +7,45 @@ import {
   CardFooter,
 } from "../ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from '@mui/material';
-import React, { useState, useEffect } from 'react';
-import { Clock, Calendar, Bell, CheckCircle, AlertCircle, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, Calendar, Bell, AlertCircle, X, Check } from 'lucide-react';
 import { useConversations } from '../hooks/useConversations';
-import { Conversation } from '../types/conversation';
+
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip";
+import api from "@/lib/session_api";
+import {
+  useQuery,
+  useMutation,
+  QueryClient,
+  useQueryClient,
+} from '@tanstack/react-query'
+import { useReminders } from "../hooks/useReminders";
+import { Button } from '@/components/ui/button';
+import { format } from "date-fns";
 
-interface RemainderSideBarProps {
+interface remindersideBarProps {
   onToggleVisibility?: () => void;
 }
 
 interface Reminder {
   id: string;
-  _id: string;
+  conversation_id: string;
   title: string;
   notes: string;
-  status: string;
-  dateTime: string;
-  conversationId: string;
-  recipient_email: string;
+  trigger_time: string;
+  status: "OVERDUE" | "SNOOZED" | "DONE" | "DELETED" | "PENDING";
+  snooze_count: number;
+  last_triggered_at: string;
   created_at: string;
-  user?: {
-    full_name: string;
-  };
+  updated_at: string;
+  recipient_email: string;
 }
+
 
 interface ApiResponse {
   reminders: Reminder[];
@@ -48,37 +57,39 @@ interface ApiResponse {
   };
 }
 
-const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
-  const [remainder, setRemainder] = useState<Reminder[]>([]);
-  const [error, setError] = useState<string>('');
+const parseBackendDate = (dateStr: string): Date | null => {
+  if (!dateStr) return null;
+
+  // Trim microseconds: .267000 -> .267
+  let cleaned = dateStr.replace(/\.(\d{3})\d+/, ".$1");
+
+  // Backend sends no timezone → force UTC to avoid NaN
+  if (!cleaned.endsWith("Z") && !cleaned.includes("+")) {
+    cleaned = cleaned + "Z";
+  }
+
+  const date = new Date(cleaned);
+  return isNaN(date.getTime()) ? null : date;
+};
+
+const formatReminderDate = (dateStr: string): string => {
+  const date = parseBackendDate(dateStr);
+  if (!date) return "Invalid date";
+
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+
+const ReminderSideBar = ({ onToggleVisibility }: remindersideBarProps) => {
   const { conversations } = useConversations();
-  const [isloading, setIsLoading] = useState<boolean>(true);
-
-  const fetchRemainders = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch('https://critical-donella-egeniestores2-12e8ec2b.koyeb.app/all-reminders', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch reminders');
-      }
-
-      const data: ApiResponse = await response.json();
-      setRemainder(data.reminders || []);
-    } catch (err) {
-      console.error('Error fetching reminders:', err);
-      setError('Failed to load reminders');
-      setRemainder([]);
-    } finally {
-      setIsLoading(false)
-    }
-  };
+  const { reminders, loading, error, snoozeReminder, doneReminder, deleteReminder, snoozing, completing, deleting, refetch } = useReminders();
 
   const getCustomerName = (conversationId: string): string => {
     const conversation = conversations.find((conv) => conv.id === conversationId);
@@ -89,7 +100,7 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
     const reminderDate = new Date(dateTime);
     const now = new Date();
     const diffHours = (reminderDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-    
+
     if (diffHours <= 24) {
       return (
         <Badge variant="outline" className="bg-red-100 text-red-600">
@@ -109,10 +120,6 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
       </Badge>
     );
   };
-
-  useEffect(() => {
-    fetchRemainders();
-  }, []);
 
   return (
     <TooltipProvider>
@@ -155,9 +162,6 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
             <Bell className="text-blue-600" size={18} />
             <h1 className="text-base font-semibold text-gray-900">Reminders</h1>
           </div>
-<span className="ml-24 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
-    {remainder.length} Active
-  </span>
         </div>
 
         {/* Content */}
@@ -184,7 +188,7 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
             `}
           </style>
 
-          {isloading ? (
+          {loading ? (
             <div className="flex items-center justify-center py-8">
               <div className="flex flex-col items-center gap-3">
                 <div className="w-8 h-8 bg-blue-100/80 rounded-xl flex items-center justify-center">
@@ -196,61 +200,117 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
           ) : error ? (
             <div className="flex items-center justify-center p-4 bg-red-50/80 ios-backdrop rounded-lg border border-red-200/60">
               <AlertCircle className="text-red-500 mr-2" size={18} />
-              <p className="text-red-600 text-sm">{error}</p>
             </div>
-          ) : remainder.length > 0 ? (
-            remainder.map((reminder) => (
-              <Card key={reminder._id} className="transition-all hover:shadow-md bg-white/80 ios-backdrop border border-gray-100/60">
-                <CardHeader className="p-3 pb-2">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                        {reminder.title}
-                        <div className="flex items-center gap-1">
-                          {getPriorityBadge(reminder.dateTime)}
-                          <Badge 
-                            variant="outline" 
-                            className={reminder.status === 'COMPLETED' 
-                              ? 'bg-green-100 text-green-600' 
-                              : 'bg-yellow-100 text-yellow-600'
-                            }
-                          >
-                            {reminder.status}
-                          </Badge>
-                        </div>
-                      </CardTitle>
-                      <CardDescription className="flex items-center gap-1 text-xs text-gray-500">
-                        <span>Customer: {getCustomerName(reminder.conversationId)}</span>
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="px-3 pb-2">
-                  <p className="text-xs text-gray-600 leading-relaxed">{reminder.notes}</p>
-                </CardContent>
+          ) : (reminders?.filter((reminder) => reminder.status !== "DELETED").length ?? 0) > 0 ? (
+            reminders
+              ?.filter((reminder) => reminder.status !== "DELETED")
+              .map((reminder) => (
+                <Card
+                  key={reminder.id}
+                  className="group transition-all hover:shadow-md bg-white/80 ios-backdrop border border-gray-100/60"
+                >
+                  <CardHeader className="p-3 pb-2">
+                    <div className="flex items-start justify-between gap-3">
+                      {/* LEFT: Title + Customer */}
+                      <div className="min-w-0">
+                        <CardTitle className="text-sm font-semibold text-gray-900 truncate">
+                          {reminder.title}
+                        </CardTitle>
 
-                <CardFooter className="flex justify-between px-3 py-2 border-t border-gray-100/60">
-                  <div className="flex items-center text-xs text-gray-500">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    {new Date(reminder.dateTime).toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </div>
-                  <div className="flex items-center text-xs text-gray-500">
-                    <Clock className="h-3 w-3 mr-1" />
-                    Created: {new Date(reminder.created_at).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </div>
-                </CardFooter>
-              </Card>
-            ))
+                        <CardDescription className="flex items-center gap-1 text-xs text-gray-500">
+                          Customer: {getCustomerName(reminder.conversation_id)}
+                        </CardDescription>
+                      </div>
+
+                      {/* RIGHT: Badges (fixed position) */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        {getPriorityBadge(reminder.trigger_time)}
+
+                        <Badge
+                          variant="outline"
+                          className={
+                            reminder.status === "DONE"
+                              ? "bg-green-100 text-green-600"
+                              : "bg-yellow-100 text-yellow-600"
+                          }
+                        >
+                          {reminder.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+
+                  <CardContent className="px-3 pb-2">
+                    <p className="text-xs text-gray-600 leading-relaxed">{reminder.notes}</p>
+                  </CardContent>
+
+                  <CardFooter className="flex justify-between px-3 py-2 border-t border-gray-100/60">
+                    <div className="flex items-center text-xs text-gray-500">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      {formatReminderDate(reminder.trigger_time)}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-yellow-600 hover:text-yellow-600 hover:bg-red-50"
+                            onClick={() =>
+                              snoozeReminder({ reminderId: reminder.id, snoozeUntil: 30 })
+                            }
+                            disabled={reminder.status === 'DONE' || snoozing}
+                          >
+                            <Clock className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+
+                        <TooltipContent className="bg-gray-900/90 ios-backdrop text-white rounded-xl text-xs">
+                          {reminder.status === 'SNOOZED' ? 'Resnooze for 30 minutes' : 'Snooze for 30 minutes'}
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                            onClick={() => doneReminder(reminder.id)}
+                            disabled={reminder.status === 'DONE' || completing}
+                          >
+
+                            <Check className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+
+                        <TooltipContent className="bg-gray-900/90 ios-backdrop text-white rounded-xl text-xs">
+                          Mark as Done
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => deleteReminder(reminder.id)}
+                            disabled={deleting}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-gray-900/90 ios-backdrop text-white rounded-xl text-xs">
+                          Delete Reminder
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+
+                  </CardFooter>
+                </Card>
+              ))
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="w-16 h-16 bg-gray-100/80 rounded-3xl flex items-center justify-center mx-auto mb-4">
@@ -268,4 +328,4 @@ const RemainderSideBar = ({ onToggleVisibility }: RemainderSideBarProps) => {
   );
 };
 
-export default RemainderSideBar;
+export default ReminderSideBar;

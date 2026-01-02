@@ -16,7 +16,7 @@ import { Message, storeMessage } from "@/components/services/chatService";
 import ReactMarkdown from "react-markdown";
 
 import { Toaster, toast as sonnerToast } from 'sonner'
-;
+  ;
 import { data } from "react-router-dom";
 
 export function HoverBorderGradientDemo() {
@@ -82,7 +82,7 @@ export function HoverBorderGradientDemo() {
         })
       });
       const data = await response.json();
-  
+
       if (data.data.status == 'rejected') {
         sonnerToast.error('Your previous request was rejected. Please contact support for more information.');
         setIsOpen(true);
@@ -200,7 +200,6 @@ export function HoverBorderGradientDemo() {
   return (
     <>
       <div className="z-[100000]">
-        <Toaster richColors position="bottom-right" className="z-[10000]" />
       </div>
       <div className=" flex justify-center space-x-2 text-center">
         <Drawer.Root repositionInputs={false} open={isOpen} onOpenChange={setIsOpen}>
@@ -218,7 +217,6 @@ export function HoverBorderGradientDemo() {
           <Drawer.Portal>
             <Drawer.Overlay className="fixed inset-0 bg-black/40" />
             <Drawer.Content className="bg-white flex flex-col  fixed bottom-0  left-0 right-0 max-h-[85vh] rounded-t-[10px] z-[999]">
-              <Toaster richColors position="bottom-right" className="z-[10000]" />
               <div className="max-w-md flex justify-center flex-col w-full mx-auto overflow-auto p-4 mb-4 rounded-t-[10px]">
                 <div aria-hidden className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-4" />
 
