@@ -272,24 +272,16 @@ export default function MediaMessage({
         </div>
       )}
 
-      {message?.role === "agent" && message.status === "sending" && (
+      {message?.role === "agent" && message.status === "sending" && !caption && (
         <div
           className={`py-1 w-full ${isAgent ? "pr-2" : "pl-2"}`}
         >
           <p
             className={`text-xs ${isAgent ? "text-right" : "text-left"
-              } text-gray-500 mt-1 uppercase tracking-wide`}
+              } text-gray-500 mt-1 tracking-wide`}
           >
-            {timestamp}
+            Sending...
           </p>
-          {status == "sending" && (
-            <p
-              className={`text-xs ${isAgent ? "text-right" : "text-left"
-                } text-gray-500 mt-1 tracking-wide`}
-            >
-              Sending...
-            </p>
-          )}
         </div>
       )}
 

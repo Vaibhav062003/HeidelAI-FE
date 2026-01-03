@@ -260,7 +260,7 @@ return (
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Image height={30} width={30} src='/icons/summary_icon.png' alt="summary_icon"/>
-          <h3 className="font-sans text-xs text-gray-600 leading-relaxed font-semibold">Conversation Summary</h3>
+          <h3 className="font-sans text-xs text-gray-800 leading-relaxed font-semibold">Conversation Summary</h3>
         </div>
         <Badge
           variant="secondary"
@@ -277,7 +277,7 @@ return (
       </div>
 
       <div className="px-4">
-        <h4 className="font-sans text-xs text-gray-600 leading-relaxed font-medium mb-2">Summary Points</h4>
+        <h4 className="font-sans text-xs text-gray-800 leading-relaxed font-semibold mb-2">Summary Points</h4>
         <ul className="space-y-1">
           {conversation.summary.map((point, index) => (
             <li key={index} className="font-sans text-xs text-gray-600 leading-relaxed">
@@ -289,7 +289,7 @@ return (
 
       {conversation.suggestions && conversation.suggestions.length > 0 && (
         <div className="px-4">
-          <h4 className="font-sans text-xs text-gray-600 leading-relaxed font-medium mb-2">AI Suggestions</h4>
+          <h4 className="font-sans text-xs text-gray-800 leading-relaxed font-semibold mb-2">AI Suggestions</h4>
           <ul className="space-y-1">
             {conversation.suggestions.map((suggestion, index) => (
               <li key={index} className="font-sans text-xs text-gray-600 leading-relaxed">
