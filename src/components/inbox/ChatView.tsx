@@ -737,6 +737,7 @@ export const MessageItem = memo(
     return (
       prevProps.message.id === nextProps.message.id &&
       prevProps.isLast === nextProps.isLast &&
+      prevProps.message.status === nextProps.message.status &&
       JSON.stringify(prevProps.message.reaction) ===
       JSON.stringify(nextProps.message.reaction)
     );
@@ -997,7 +998,6 @@ const ChatView = ({
       try {
         const response = await api.get("/api/canned_responses");
 
-        console.log("canned :", response);
 
         if (mounted && response.data?.canned_responses) {
           setCannedResponses(response.data.canned_responses);
@@ -1274,7 +1274,7 @@ const ChatView = ({
       optimisticMessage = {
         id: tempId,
         content: contentToSend,
-        sender_id: user?.id || "agent",
+        sender_id: selectedConversationId.split("_")[1],
         role: "agent",
         conversation_id: selectedConversationId,
         timestamp: new Date(new Date().getTime() - 5.5 * 60 * 60 * 1000).toISOString(),
@@ -1297,7 +1297,7 @@ const ChatView = ({
       optimisticMessage = {
         id: tempId,
         content: contentToSend,
-        sender_id: user?.id || "agent",
+        sender_id: selectedConversationId.split("_")[1],
         role: "agent",
         conversation_id: selectedConversationId,
         timestamp: new Date(new Date().getTime() - 5.5 * 60 * 60 * 1000).toISOString(),
@@ -1348,6 +1348,30 @@ const ChatView = ({
       const response = await api.post(`/api/conversations/send-message`, formData);
 
       if (response.status !== 200) throw new Error("Failed to send");
+
+      if (response.data.details.message_id) {
+
+        // Update the optimistic message with real ID
+        setMessages((prev) => {
+           const exactMatchIndex = prev.findIndex(
+              (msg) => 
+                msg.id.toString() === tempId // Direct ID comparison
+            );
+
+            if (exactMatchIndex !== -1) {
+              const newState = [...prev];
+              // Replace optimistic message with real message
+              newState[exactMatchIndex] = {
+                ...newState[exactMatchIndex],
+                id: response.data.details.message_id,
+              };
+              //
+              persistMessages(newState);
+              return newState;
+            }
+            return prev
+        })
+      }
 
     } catch (error) {
       console.error("Send failed:", error);
@@ -1661,32 +1685,47 @@ const ChatView = ({
       if (data.message.conversation_id === selectedConversationId) {
         setMessages((prev) => {
           const incomingMsg = data.message;
+          
+          // ---------------------------------------------------------
+          // 1. DETERMINISTIC MATCH (The Fix)
+          // Check if the incoming message has a temp_id in its metadata
+          // ---------------------------------------------------------
+          if (incomingMsg.platform === 'whatsapp') {
+            const incomingTempId = incomingMsg.temp_id;
 
-          // 1. Check if we have an optimistic message (temp ID) with matching content
-          // We look for a temp message sent by US (agent) with the SAME text
-          const normalizeText = (text: string) => text ? text.replace(/\r/g, "") : "";
-          const tempMatchIndex = prev.findIndex(
-            (msg) =>
-              msg.id.toString().startsWith("temp-") &&
-              msg.content === normalizeText(incomingMsg.content) &&
-              // Optional: Check if timestamp is within last 10 seconds to be safe
-              new Date(new Date().getTime() - 5.5 * 60 * 60 * 1000).getTime() - new Date(msg.timestamp).getTime() < 10000
-          );
+            const exactMatchIndex = prev.findIndex(
+              (msg) => 
+                msg.id.toString() === incomingTempId // Direct ID comparison
+            );
 
-
-          if (tempMatchIndex !== -1) {
-            // RECONCILIATION: Replace the temp message with the real one
-            // This keeps the chat smooth and prevents "jumping"
-            const newState = [...prev];
-            newState[tempMatchIndex] = incomingMsg;
-
-            persistMessages(newState); // Update IDB
-            return newState;
+            if (exactMatchIndex !== -1) {
+              const newState = [...prev];
+              // Replace optimistic message with real message
+              newState[exactMatchIndex] = incomingMsg; 
+              persistMessages(newState);
+              return newState;
+            }
           }
 
-          // 2. Standard Duplicate Check (for normal incoming messages)
-          const messageExists = prev.some((msg) => msg.id === incomingMsg.id);
+          // ---------------------------------------------------------
+          // 2. Fallback: For IG we match the message_id
+          // ---------------------------------------------------------
+          else {
+            // const normalizeText = (text: string) => text ? text.replace(/\r/g, "") : "";
+            const fuzzyMatchIndex = prev.findIndex(
+              (msg) =>
+                msg.id.toString() === incomingMsg.id.toString()
+            );
+            if (fuzzyMatchIndex !== -1) {
+              const newState = [...prev];
+              newState[fuzzyMatchIndex] = incomingMsg;
+              persistMessages(newState);
+              return newState;
+            }
+          }
 
+          // 3. Standard New Message Logic
+          const messageExists = prev.some((msg) => msg.id === incomingMsg.id);
           if (!messageExists) {
             const newState = [...prev, incomingMsg];
             persistMessages(newState);
@@ -2496,8 +2535,6 @@ const ChatView = ({
               open={showReminder}
               onOpenChange={setShowReminder}
               onSave={(reminderData) => {
-                console.log("Reminder saved:", reminderData);
-
                 setShowReminder(false);
               }}
               conversation_id={selectedConversationId}
