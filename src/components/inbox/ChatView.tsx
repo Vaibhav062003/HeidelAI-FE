@@ -681,6 +681,7 @@ export const MessageItem = memo(
     isMediaMessage?: boolean;
     caption?: string;
   }) => {
+    const isAgent = message.role === "agent";
     if (message.role === "system") {
       return (
         <div className="flex justify-center my-4 message-item">
@@ -697,7 +698,7 @@ export const MessageItem = memo(
     return (
       <>
         <div
-          className={`rounded-3xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${message.role === "customer"
+          className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${message.role === "customer"
             ? `bg-white/90 backdrop-blur-sm ${isReplyMessage || isMediaMessage ? "rounded-tl-lg" : "rounded-bl-lg"
             } text-gray-900 border-gray-200/60`
             : `bg-blue-600/90 backdrop-blur-sm ${isReplyMessage || isMediaMessage ? "rounded-tr-lg" : "rounded-br-lg"
@@ -710,14 +711,19 @@ export const MessageItem = memo(
               {caption ? caption : message.content}
             </p>
           </div>
-          <div className="flex justify-end mt-2">
+          {/* <div className="flex justify-end mt-2">
             <span
-              className={`text-xs ${message.role === "customer" ? "text-gray-500" : "text-white/70"
+              className={`text-xs ${isAgent ? "text-white/70" : "text-gray-500"
                 }`}
             >
               {formatMessageTime(message.timestamp)}
             </span>
-          </div>
+          </div> */}
+        </div>
+        <div className={`w-full mt-1 ${isAgent ? "text-right pr-1" : "text-left pl-1"}`}>
+          <p className="text-xs text-gray-500  tracking-wide">
+            {formatMessageTime(message.timestamp)}
+          </p>
         </div>
         {message.status && message.status == "sending" && (
           <div className="flex justify-end mt-1">
@@ -1282,6 +1288,7 @@ const ChatView = ({
         status: "sending",
         payload: {
           url: localPreviewUrl,
+          caption: contentToSend
         }, // Display the local file immediately
         fileName: file.name,
         fileType: file.type,
