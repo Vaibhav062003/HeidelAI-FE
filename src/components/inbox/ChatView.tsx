@@ -79,6 +79,7 @@ import { storeData, getData } from "@/lib/indexedDB";
 import CountDownTimer from "../LandingPage/CountDownTimer";
 import UserStatus from "./UserStatus";
 import DocumentMessage from "../messaging/DocumentMessage";
+import { renderContentWithLinks } from "@/utils/messagingFeatures";
 
 interface CustomerInfo {
   name: string;
@@ -708,7 +709,7 @@ export const MessageItem = memo(
         >
           <div className="break-words">
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
-              {caption ? caption : message.content}
+              {renderContentWithLinks(caption ? caption : message.content, isAgent)}
             </p>
           </div>
           {/* <div className="flex justify-end mt-2">
