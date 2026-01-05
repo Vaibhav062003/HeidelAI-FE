@@ -34,6 +34,8 @@ import {
   Mic,
   Clock,
   Check,
+  CheckCheck,
+  Eye,
 } from "lucide-react";
 import {
   Dialog,
@@ -340,33 +342,33 @@ const RemindersPopover = ({
 }) => {
 
   const parseBackendDate = (dateStr: string): Date | null => {
-  if (!dateStr) return null;
+    if (!dateStr) return null;
 
-  // Trim microseconds: .267000 -> .267
-  let cleaned = dateStr.replace(/\.(\d{3})\d+/, ".$1");
+    // Trim microseconds: .267000 -> .267
+    let cleaned = dateStr.replace(/\.(\d{3})\d+/, ".$1");
 
-  // Backend sends no timezone → force UTC to avoid NaN
-  if (!cleaned.endsWith("Z") && !cleaned.includes("+")) {
-    cleaned = cleaned + "Z";
-  }
+    // Backend sends no timezone → force UTC to avoid NaN
+    if (!cleaned.endsWith("Z") && !cleaned.includes("+")) {
+      cleaned = cleaned + "Z";
+    }
 
-  const date = new Date(cleaned);
-  return isNaN(date.getTime()) ? null : date;
-};
+    const date = new Date(cleaned);
+    return isNaN(date.getTime()) ? null : date;
+  };
 
-const formatReminderDate = (dateStr: string): string => {
-  const date = parseBackendDate(dateStr);
-  if (!date) return "Invalid date";
+  const formatReminderDate = (dateStr: string): string => {
+    const date = parseBackendDate(dateStr);
+    if (!date) return "Invalid date";
 
-  return date.toLocaleString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-};
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
 
   return (
     <PopoverContent className="w-80" align="end">
@@ -664,6 +666,14 @@ const FilePreview = ({
   );
 };
 
+// Helper to find the next message sent by the AGENT
+const getNextAgentMessage = (msgs: Message[], currentIndex: number) => {
+  for (let i = currentIndex + 1; i < msgs.length; i++) {
+    if (msgs[i].role === "agent") return msgs[i];
+  }
+  return null;
+};
+
 export const MessageItem = memo(
   ({
     message,
@@ -672,7 +682,9 @@ export const MessageItem = memo(
     isLatest,
     isReplyMessage,
     isMediaMessage,
-    caption
+    caption,
+    showStatusIcon,
+    platform
   }: {
     message: Message;
     isLast?: boolean;
@@ -681,8 +693,26 @@ export const MessageItem = memo(
     isReplyMessage: boolean;
     isMediaMessage?: boolean;
     caption?: string;
+    showStatusIcon?: boolean;
+    platform?: string;
   }) => {
     const isAgent = message.role === "agent";
+    // Helper to render the correct icon based on status
+    const getStatusIcon = () => {
+      switch (message.status) {
+        case "sending":
+          return <Clock className="w-4 h-4 text-gray-400 animate-pulse" />;
+        case "sent":
+          return <Check className="w-4 h-4 text-gray-400" />;
+        case "delivered":
+          return <CheckCheck className="w-4 h-4 text-gray-400" />;
+        case "read":
+          return <CheckCheck className="w-4 h-4 text-blue-500" />;
+        default:
+          return null;
+      }
+    };
+    
     if (message.role === "system") {
       return (
         <div className="flex justify-center my-4 message-item">
@@ -698,6 +728,7 @@ export const MessageItem = memo(
 
     return (
       <>
+        <div className="flex w-full items-end">
         <div
           className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel ${message.role === "customer"
             ? `bg-white/90 backdrop-blur-sm ${isReplyMessage || isMediaMessage ? "rounded-tl-lg" : "rounded-bl-lg"
@@ -721,16 +752,20 @@ export const MessageItem = memo(
             </span>
           </div> */}
         </div>
-        <div className={`w-full mt-1 ${isAgent ? "text-right pr-1" : "text-left pl-1"}`}>
+          {(showStatusIcon || message.status === "sending") ? (
+            <div className="animate-in fade-in zoom-in duration-300 ml-1">
+            {getStatusIcon()}
+          </div>
+        ) : (
+          <div className="ml-3"></div>
+        )}
+        </div>
+        <div className={`w-full mt-1 ${isAgent ? "text-right pr-3" : "text-left pl-1"}`}>
           <p className="text-xs text-gray-500  tracking-wide">
             {formatMessageTime(message.timestamp)}
           </p>
         </div>
-        {message.status && message.status == "sending" && (
-          <div className="flex justify-end mt-1">
-            <span className="text-xs text-gray-500">Sending...</span>
-          </div>
-        )}
+        
       </>
     );
   },
@@ -739,6 +774,7 @@ export const MessageItem = memo(
       prevProps.message.id === nextProps.message.id &&
       prevProps.isLast === nextProps.isLast &&
       prevProps.message.status === nextProps.message.status &&
+      prevProps.showStatusIcon === nextProps.showStatusIcon &&
       JSON.stringify(prevProps.message.reaction) ===
       JSON.stringify(nextProps.message.reaction)
     );
@@ -945,7 +981,7 @@ const ChatView = ({
 
   const LINE_HEIGHT = 20;
   const MIN_LINES = 2;
-  const MAX_LINES =10;
+  const MAX_LINES = 10;
   const MIN_HEIGHT = LINE_HEIGHT * MIN_LINES;
   const MAX_HEIGHT = LINE_HEIGHT * MAX_LINES;
 
@@ -1354,23 +1390,23 @@ const ChatView = ({
 
         // Update the optimistic message with real ID
         setMessages((prev) => {
-           const exactMatchIndex = prev.findIndex(
-              (msg) => 
-                msg.id.toString() === tempId // Direct ID comparison
-            );
+          const exactMatchIndex = prev.findIndex(
+            (msg) =>
+              msg.id.toString() === tempId // Direct ID comparison
+          );
 
-            if (exactMatchIndex !== -1) {
-              const newState = [...prev];
-              // Replace optimistic message with real message
-              newState[exactMatchIndex] = {
-                ...newState[exactMatchIndex],
-                id: response.data.details.message_id,
-              };
-              //
-              persistMessages(newState);
-              return newState;
-            }
-            return prev
+          if (exactMatchIndex !== -1) {
+            const newState = [...prev];
+            // Replace optimistic message with real message
+            newState[exactMatchIndex] = {
+              ...newState[exactMatchIndex],
+              id: response.data.details.message_id,
+            };
+            //
+            persistMessages(newState);
+            return newState;
+          }
+          return prev
         })
       }
 
@@ -1686,7 +1722,7 @@ const ChatView = ({
       if (data.message.conversation_id === selectedConversationId) {
         setMessages((prev) => {
           const incomingMsg = data.message;
-          
+
           // ---------------------------------------------------------
           // 1. DETERMINISTIC MATCH (The Fix)
           // Check if the incoming message has a temp_id in its metadata
@@ -1695,14 +1731,14 @@ const ChatView = ({
             const incomingTempId = incomingMsg.temp_id;
 
             const exactMatchIndex = prev.findIndex(
-              (msg) => 
+              (msg) =>
                 msg.id.toString() === incomingTempId // Direct ID comparison
             );
 
             if (exactMatchIndex !== -1) {
               const newState = [...prev];
               // Replace optimistic message with real message
-              newState[exactMatchIndex] = incomingMsg; 
+              newState[exactMatchIndex] = incomingMsg;
               persistMessages(newState);
               return newState;
             }
@@ -1731,6 +1767,52 @@ const ChatView = ({
             const newState = [...prev, incomingMsg];
             persistMessages(newState);
             return newState;
+          }
+
+          return prev;
+        });
+      }
+    },
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onMessageStatusUpdate: (data: any) => {
+      if (data.message.conversation_id === selectedConversationId) {
+        setMessages((prev) => {
+          const incomingMsg = data.message;
+
+          // ---------------------------------------------------------
+          // 1. DETERMINISTIC MATCH (The Fix)
+          // Check if the incoming message has a temp_id in its metadata
+          // ---------------------------------------------------------
+          if (incomingMsg.platform === 'whatsapp') {
+            // Temp ID based match
+            const incomingTempId = incomingMsg.temp_id;
+
+            const exactMatchIndex = prev.findIndex(
+              (msg) =>
+                msg.id.toString() === incomingTempId // Direct ID comparison
+            );
+
+            if (exactMatchIndex !== -1) {
+              const newState = [...prev];
+              // Replace optimistic message with real message
+              newState[exactMatchIndex] = incomingMsg;
+              persistMessages(newState);
+              return newState;
+            }
+            else {
+              // If no Temp ID match, match on message ID
+              const fuzzyMatchIndex = prev.findIndex(
+                (msg) =>
+                  msg.id.toString() === incomingMsg.id.toString()
+              );
+              if (fuzzyMatchIndex !== -1) {
+                const newState = [...prev];
+                newState[fuzzyMatchIndex] = incomingMsg;
+                persistMessages(newState);
+                return newState;
+              }
+            }
           }
 
           return prev;
@@ -2556,6 +2638,28 @@ const ChatView = ({
                 ) : (
                   <>
                     {messages.map((message, index) => {
+                      // ####################################################
+                      // Message Status Icon Logic
+                      // ####################################################
+                      const isMe = message.role === "agent";
+                      
+                      let showStatusIcon = false;
+                      
+                      if (isMe) {
+                        const nextAgentMsg = getNextAgentMessage(messages, index);
+                        
+                        // 2. Logic: Show icon if it's the LAST message OR status changes next
+                        if (!nextAgentMsg) {
+                          // It's the very last message -> ALWAYS SHOW
+                          showStatusIcon = true;
+                        } else if (nextAgentMsg.status !== message.status) {
+                          // The status changed in the next message (e.g., Read -> Delivered)
+                          // So this is the "last" message of the current status group -> SHOW
+                          showStatusIcon = true;
+                        }
+                      }
+                      // ####################################################
+                      
                       const latestMediaMessage = [...messages]
                         .reverse()
                         .find(
@@ -2585,7 +2689,7 @@ const ChatView = ({
                             <div
                               className={`flex flex-col max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === "customer"
                                 ? "items-start"
-                                : "items-end"
+                                : "items-end mr-1"
                                 }`}
                             >
                               <MessageWrapper
@@ -2746,6 +2850,8 @@ const ChatView = ({
                                       isReplyMessage={
                                         message.type == "message_reply"
                                       }
+                                      showStatusIcon={showStatusIcon}
+                                      platform={selectedConversationId.split("_")[1]}
                                     />
                                   )}
                               </MessageWrapper>

@@ -40,6 +40,11 @@ export function useMainWebSocket(handlers?: any) {
       const remove = addEventHandler("message_deleted", handlers.onMessageDeleted);
       cleanups.push(remove);
     }
+    
+    if(handlers.onMessageStatusUpdate) {
+      const remove = addEventHandler("message_status_update", handlers.onMessageStatusUpdate);
+      cleanups.push(remove);
+    }
 
     return () => {
       cleanups.forEach((cleanup) => cleanup());
