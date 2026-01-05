@@ -2386,10 +2386,10 @@ const ChatView = ({
                     </div>
                   </div>
 
-                  <div className="h-px bg-gray-200" />
+                  {/* <div className="h-px bg-gray-200" /> */}
 
-                  <div className="grid pl-4 grid-cols-2 gap-6">
-                    {messages.some((m) => extractAddressData(m.content)) && (
+                  {/* <div className="grid pl-4 grid-cols-2 gap-6"> */}
+                    {/* {messages.some((m) => extractAddressData(m.content)) && (
                       <div className="space-y-3">
                         <h3 className="text-lg font-medium">Latest Address</h3>
                         {messages
@@ -2451,11 +2451,11 @@ const ChatView = ({
                                 </div>
                               </div>
                             );
-                          })}
-                      </div>
-                    )}
+                          })} */}
+                      {/* </div>
+                    )} */}
 
-                    {messages.some((m) => extractCartData(m.content)) && (
+                    {/* {messages.some((m) => extractCartData(m.content)) && (
                       <div className="space-y-3">
                         <h3 className="text-lg font-medium">Latest Cart</h3>
                         {messages
@@ -2501,10 +2501,10 @@ const ChatView = ({
                                 </div>
                               </div>
                             );
-                          })}
-                      </div>
-                    )}
-                  </div>
+                          })} */}
+                      {/* </div>
+                    )} */}
+                  {/* </div> */}
                 </div>
               </DialogContent>
             </Dialog>
