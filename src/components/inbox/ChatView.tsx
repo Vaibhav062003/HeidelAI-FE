@@ -757,7 +757,7 @@ export const MessageItem = memo(
             {getStatusIcon()}
           </div>
         ) : (
-          <div className="ml-3"></div>
+          <div className="ml-4"></div>
         )}
         </div>
         <div className={`w-full mt-1 ${isAgent ? "text-right pr-3" : "text-left pl-1"}`}>
