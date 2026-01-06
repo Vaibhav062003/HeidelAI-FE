@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import "./globals.css"
-import { Inter } from 'next/font/google'
+import { Inter, Instrument_Serif } from 'next/font/google'
 
 import { ClerkProvider } from '@clerk/nextjs'
 import { AuthProvider } from '@/contexts/AuthContext'
@@ -11,7 +11,15 @@ import { Toaster } from 'sonner'
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
-  display: 'swap' // Add for better font loading
+  display: 'swap'
+})
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: ['400'],
+  style: ['italic'],
+  variable: '--font-instrument-serif',
+  display: 'swap'
 })
 
 export const metadata: Metadata = {
@@ -63,7 +71,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" >
-      <body className={`bg-white text-black`}>
+      <body className={`${inter.variable} ${instrumentSerif.variable} antialiased bg-white text-black font-sans`}>
         <Toaster position="top-right" richColors />
 
         <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!} afterSignOutUrl="/">

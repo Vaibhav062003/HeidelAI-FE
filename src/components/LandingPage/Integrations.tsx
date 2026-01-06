@@ -1,124 +1,108 @@
 import React from 'react';
 
-
 const Integrations = () => {
-  const platforms = [
-    {
-      name: "WhatsApp",
-      logo: "/logos/whatsapp.png",
-      category: "Messaging"
-    },
-    {
-      name: "Instagram",
-      logo: "/logos/instagram.webp",
-      category: "Social Media"
-    },
-    {
-      name: "Facebook",
-      logo: "/logos/facebook.png",
-      category: "Social Media"
-    },
-    {
-      name: "Telegram",
-      logo: "/logos/telegram.webp",
-      category: "Messaging"
-    },
-    {
-      name: "Shopify",
-      logo: "/logos/shopify.webp",
-      category: "E-commerce"
-    },
-    {
-      name: "WooCommerce",
-      logo: "/logos/woocommerce.png",
-      category: "E-commerce"
-    },
-    // {
-    //   name: "Slack",
-    //   logo: "/logos/slack.svg",
-    //   category: "Communication"
-    // },
-    // {
-    //   name: "Discord",
-    //   logo: "/logos/discord.svg",
-    //   category: "Communication"
-    // },
-    // {
-    //   name: "BigCommerce",
-    //   logo: "/logos/bigcommerce.svg",
-    //   category: "E-commerce"
-    // },
-    // {
-    //   name: "Magento",
-    //   logo: "/logos/magento.svg",
-    //   category: "E-commerce"
-    // },
-    // {
-    //   name: "Zapier",
-    //   logo: "/logos/zapier.svg",
-    //   category: "Automation"
-    // },
-    // {
-    //   name: "HubSpot",
-    //   logo: "/logos/hubspot.svg",
-    //   category: "CRM"
-    // }
+  const row1 = [
+    { name: "WordPress", logo: "/logos/wordpress.svg" }, // Added based on user list
+    { name: "Shopify", logo: "/logos/shopify.webp" },
+    { name: "WhatsApp", logo: "/logos/whatsapp.png" },
+    { name: "Instagram", logo: "/logos/instagram.webp" },
+    { name: "Facebook Messenger", logo: "/logos/facebook.png" }, // Assuming existing fb logo or similar
   ];
 
+  const row2 = [
+    { name: "SMS", logo: "/logos/sms.png" }, // Need to ensure these exist or use placeholders if necessary
+    { name: "Email", logo: "/logos/email.jpg" },
+    { name: "TikTok", logo: "/logos/tiktok.png" },
+    { name: "Telegram", logo: "/logos/telegram.webp" },
+    { name: "Google Sheets", logo: "/logos/google_sheet.webp" },
+  ];
+
+  // Double the rows for seamless looping
+  const fullRow1 = [...row1, ...row1, ...row1];
+  const fullRow2 = [...row2, ...row2, ...row2];
+
   return (
-    <section id="integrations" className="py-20 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center gap-4 px-4 mb-8 sm:mb-8 sm:gap-8 text-center">
-          <h2 className="text-3xl font-semibold leading-tight sm:text-5xl sm:leading-tight">
-            Seamlessly Integrate Your Preferred Apps
+    <section id="integrations" className="py-16 bg-white overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <h2 className="text-4xl md:text-6xl font-[400] text-gray-600 leading-tight font-serif italic">
+            Integrate With the Apps You Already Use
           </h2>
-          <p className="text-md max-w-[800px] sm:mb-8 font-medium text-muted-foreground sm:text-xl">
-            <span className="block sm:hidden">
-              Connect all your platforms in one place for a seamless customer experience.
-            </span>
-            <span className="hidden sm:block">
-              Easily connect across platforms, with features accessible on messaging apps and your e-commerce site, 
-              ensuring a consistent experience for your customers.
-            </span>
+          <p className="text-lg md:text-xl max-w-[800px] font-medium text-gray-600 font-inter">
+            Stop managing multiple channels separately. Deliver consistent conversations
+            whether customers reach you on WhatsApp, Instagram, or your website.
           </p>
-        </div>
-
-        {/* Platform Logos Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6   items-center justify-items-center">
-          {platforms.map((platform, index) => (
-            <div 
-              key={platform.name}
-              className="group flex flex-col items-center justify-center p-6 rounded-2xl  transition-all duration-300 hover:scale-105 w-full aspect-square"
-            >
-              <img
-                src={platform.logo}
-                alt={`${platform.name} logo`}
-                className="w-12 h-12 sm:w-16 sm:h-16 object-contain mb-3 group-hover:scale-110 transition-transform duration-300"
-                
-              />
-              <h3 className="text-sm font-medium text-gray-900  transition-colors duration-300">
-                {platform.name}
-              </h3>
-              <p className="text-xs text-gray-500 mt-1">
-                {platform.category}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Call to Action */}
-        <div className="text-center mb-8 mt-16">
-          <p className="text-sm sm:text-lg font-medium text-gray-700 mb-6">
-            Can&apos;t find your platform? We&apos;re constantly adding new integrations.
-          </p>
-          <button className="inline-flex items-center px-6 py-3 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-all duration-300 hover:scale-105 shadow-lg">
-            Request Integration
-            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
         </div>
       </div>
+
+      {/* Sliding Window Container */}
+      <div className="relative flex flex-col gap-8 w-full">
+        {/* Row 1: Right Moving */}
+        <div className="flex overflow-hidden">
+          <div className="flex animate-scroll-right whitespace-nowrap gap-6 py-4">
+            {fullRow1.map((platform, index) => (
+              <div
+                key={`${platform.name}-${index}`}
+                className="flex items-center justify-center bg-white rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-50 w-48 h-48 flex-shrink-0"
+              >
+                <img
+                  src={platform.logo}
+                  alt={platform.name}
+                  className="w-20 h-20 object-contain"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Row 2: Left Moving */}
+        <div className="flex overflow-hidden">
+          <div className="flex animate-scroll-left whitespace-nowrap gap-6 py-4">
+            {fullRow2.map((platform, index) => (
+              <div
+                key={`${platform.name}-${index}`}
+                className="flex items-center justify-center bg-white rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-50 w-48 h-48 flex-shrink-0"
+              >
+                <img
+                  src={platform.logo}
+                  alt={platform.name}
+                  className="w-20 h-20 object-contain"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Call to Action */}
+      <div className="text-center mt-16 font-inter" style={{ fontFamily: "'Inter', sans-serif" }}>
+        <p className="text-gray-600 mb-6 font-medium">
+          Can't find your platform? We're constantly adding new integrations.
+        </p>
+        <button className="inline-flex items-center px-8 py-3 bg-black text-white text-sm font-semibold rounded-full hover:bg-gray-900 transition-all duration-300 hover:scale-105">
+          Request Integration
+          <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <style jsx>{`
+        @keyframes scroll-right {
+          0% { transform: translateX(-33.33%); }
+          100% { transform: translateX(0); }
+        }
+        @keyframes scroll-left {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-33.33%); }
+        }
+        .animate-scroll-right {
+          animation: scroll-right 40s linear infinite;
+        }
+        .animate-scroll-left {
+          animation: scroll-left 40s linear infinite;
+        }
+      `}</style>
     </section>
   );
 };

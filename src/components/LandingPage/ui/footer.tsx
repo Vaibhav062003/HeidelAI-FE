@@ -7,7 +7,7 @@ const footerData = {
   sections: [
     { title: "Product", links: ["Features", "Integrations", "Reviews", "Pricing"] },
     { title: "Company", links: ["About Us"] },
-    { title: "Legal", links: ["Privacy Policy", "Terms of Service", ] },
+    { title: "Legal", links: ["Privacy Policy", "Terms of Service",] },
     { title: "Help", links: ["support@heidelai.com"] },
   ],
   social: [
@@ -93,7 +93,7 @@ const getLinkUrl = (link: string, sectionTitle: string) => {
       default: return `#${link.toLowerCase().replace(/\s+/g, '-')}`
     }
   }
-  
+
   // Company section - use page routes
   if (sectionTitle === "Company") {
     switch (link) {
@@ -102,7 +102,7 @@ const getLinkUrl = (link: string, sectionTitle: string) => {
       default: return `/${link.toLowerCase().replace(/\s+/g, '-')}`
     }
   }
-  
+
   // Legal section - use page routes
   if (sectionTitle === "Legal") {
     switch (link) {
@@ -114,7 +114,7 @@ const getLinkUrl = (link: string, sectionTitle: string) => {
       default: return `/${link.toLowerCase().replace(/\s+/g, '-')}`
     }
   }
-  
+
   // Help section - handle email links
   if (sectionTitle === "Help") {
     if (link.includes("@")) {
@@ -122,7 +122,7 @@ const getLinkUrl = (link: string, sectionTitle: string) => {
     }
     return `/${link.toLowerCase().replace(/\s+/g, '-')}`
   }
-  
+
   // Default fallback
   return `#${link.toLowerCase().replace(/\s+/g, '-')}`
 }
@@ -148,7 +148,7 @@ const NavSection = ({ title, links, index }: { title: string; links: string[]; i
     {links.map((link, linkIndex) => {
       const linkUrl = getLinkUrl(link, title)
       const isExternal = isExternalLink(linkUrl)
-      
+
       return (
         <motion.a
           key={linkIndex}
@@ -200,14 +200,14 @@ const SocialLink = ({ href, label, icon: Icon, index }: { href: string; label: s
 
 export default function StickyFooter() {
   return (
-    <div className="relative h-[80vh] sm:h-[70vh]" style={{ clipPath: "polygon(0% 0, 100% 0%, 100% 100%, 0 100%)" }}>
-      <div className="relative h-[calc(100vh+80vh)] sm:h-[calc(100vh+70vh)] -top-[100vh]">
-        <div className="h-[80vh] sm:h-[70vh] sticky top-[calc(100vh-80vh)] sm:top-[calc(100vh-70vh)]">
+    <div className="relative h-[30vh] sm:h-[25vh]" style={{ clipPath: "polygon(0% 0, 100% 0%, 100% 100%, 0 100%)" }}>
+      <div className="relative h-[calc(100vh+30vh)] sm:h-[calc(100vh+25vh)] -top-[100vh]">
+        <div className="h-[30vh] sm:h-[25vh] sticky top-[calc(100vh-30vh)] sm:top-[calc(100vh-25vh)]">
           <motion.div
             initial="hidden"
             animate="visible"
             variants={containerVariants}
-            className="bg-white py-6 md:py-12 px-4 md:px-12 h-full w-full flex flex-col justify-between relative overflow-hidden text-gray-900"
+            className="bg-white py-1 md:py-2 px-4 md:px-12 h-full w-full flex flex-col justify-between relative overflow-hidden text-gray-900"
           >
             {/* Animated Background Elements */}
             <div className="absolute inset-0 bg-gradient-to-t from-gray-50/40 via-transparent to-gray-50/20 pointer-events-none" />

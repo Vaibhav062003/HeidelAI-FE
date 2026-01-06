@@ -27,10 +27,10 @@ const Features = () => {
 
         <div className="flex justify-center items-center">
           <span className='hidden sm:block'>
-            <Image 
-              src="/features-optimized.webp" 
-              className="h-auto w-full max-w-full select-none pointer-events-none" 
-              alt="Features overview" 
+            <Image
+              src="/features-optimized.webp"
+              className="h-auto w-full max-w-full select-none pointer-events-none"
+              alt="Features overview"
               width={1200}
               height={800}
               priority
@@ -48,10 +48,10 @@ const Features = () => {
           </span>
           <span className='block sm:hidden'>
             <div className="flex flex-col gap-4">
-              <Image 
-                src="/features-mobile-optimized.webp" 
-                className="h-auto w-full max-w-full select-none pointer-events-none" 
-                alt="Features overview" 
+              <Image
+                src="/features-mobile-optimized.webp"
+                className="h-auto w-full max-w-full select-none pointer-events-none"
+                alt="Features overview"
                 width={400}
                 height={600}
                 priority
@@ -66,10 +66,10 @@ const Features = () => {
                   KhtmlUserSelect: 'none'
                 }}
               />
-              <Image 
-                src="/features-mobile-optimized2.webp" 
-                className="h-auto w-full max-w-full select-none pointer-events-none" 
-                alt="Features overview" 
+              <Image
+                src="/features-mobile-optimized2.webp"
+                className="h-auto w-full max-w-full select-none pointer-events-none"
+                alt="Features overview"
                 width={400}
                 height={600}
                 onContextMenu={handleContextMenu}
