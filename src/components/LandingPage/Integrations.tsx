@@ -10,11 +10,11 @@ const Integrations = () => {
   ];
 
   const row2 = [
-    { name: "SMS", logo: "/logos/sms.jpg" }, // Need to ensure these exist or use placeholders if necessary
+    { name: "SMS", logo: "/logos/sms.jpg", scale: 1.3 }, // Need to ensure these exist or use placeholders if necessary
     { name: "Email", logo: "/logos/email.png" },
     { name: "TikTok", logo: "/logos/tiktok.jpg" },
     { name: "Telegram", logo: "/logos/telegram.webp" },
-    { name: "Google Sheets", logo: "/logos/google_sheets.png" },
+    { name: "Google Sheets", logo: "/logos/google_sheets.png", scale: 1.3 },
   ];
 
   // Double the rows for seamless looping
@@ -30,8 +30,13 @@ const Integrations = () => {
             Integrate With the Apps You Already Use
           </h2>
           <p className="text-lg md:text-xl max-w-[800px] font-medium text-gray-600 font-inter">
-            Stop managing multiple channels separately. Deliver consistent conversations
-            whether customers reach you on WhatsApp, Instagram, or your website.
+            <span className="block md:hidden">
+              Manage every channel from one unified platform.
+            </span>
+            <span className="hidden md:block">
+              Stop managing multiple channels separately. Deliver consistent conversations
+              whether customers reach you on WhatsApp, Instagram, or your website.
+            </span>
           </p>
         </div>
       </div>
@@ -40,17 +45,16 @@ const Integrations = () => {
       <div className="relative flex flex-col gap-8 w-full">
         {/* Row 1: Right Moving */}
         <div className="flex overflow-hidden">
-          <div className="flex animate-scroll-right whitespace-nowrap gap-6 py-4">
+          <div className="flex animate-scroll-right whitespace-nowrap gap-4 md:gap-6 py-4">
             {fullRow1.map((platform, index) => (
               <div
                 key={`${platform.name}-${index}`}
-                className="flex items-center justify-center bg-white rounded-2xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-gray-50 w-48 h-48 flex-shrink-0 transition-all duration-300 hover:shadow-[0_40px_80px_rgba(0,0,0,0.12)] hover:-translate-y-2"
+                className="flex items-center justify-center bg-white rounded-2xl p-4 md:p-8 shadow-[0_8px_24px_rgba(0,0,0,0.06)] border border-gray-50 w-[28vw] h-[28vw] md:w-48 md:h-48 flex-shrink-0 transition-all duration-300 hover:shadow-[0_40px_80px_rgba(0,0,0,0.12)] hover:-translate-y-2"
               >
                 <img
                   src={platform.logo}
                   alt={platform.name}
-                  className="w-20 h-20 object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.25)] transition-transform duration-300 hover:scale-110 hover:drop-shadow-[0_25px_35px_rgba(0,0,0,0.35)]"
-
+                  className="max-w-[70px] max-h-[70px] drop-shadow-[0_15px_25px_rgba(0,0,0,0.25)] transition-transform duration-300 hover:scale-110 hover:drop-shadow-[0_25px_35px_rgba(0,0,0,0.35)]"
                 />
               </div>
             ))}
@@ -59,17 +63,19 @@ const Integrations = () => {
 
         {/* Row 2: Left Moving */}
         <div className="flex overflow-hidden">
-          <div className="flex animate-scroll-left whitespace-nowrap gap-6 py-4">
+          <div className="flex animate-scroll-left whitespace-nowrap gap-4 md:gap-6 py-4">
             {fullRow2.map((platform, index) => (
               <div
                 key={`${platform.name}-${index}`}
-                className="flex items-center justify-center bg-white rounded-2xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-gray-50 w-48 h-48 flex-shrink-0 transition-all duration-300 hover:shadow-[0_40px_80px_rgba(0,0,0,0.12)] hover:-translate-y-2"
+                className="flex items-center justify-center bg-white rounded-2xl p-4 md:p-8 shadow-[0_8px_24px_rgba(0,0,0,0.06)] border border-gray-50 w-[28vw] h-[28vw] md:w-48 md:h-48 flex-shrink-0 transition-all duration-300 hover:shadow-[0_40px_80px_rgba(0,0,0,0.12)] hover:-translate-y-2"
               >
                 <img
                   src={platform.logo}
                   alt={platform.name}
-                  className="w-20 h-20 object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.25)] transition-transform duration-300 hover:scale-110 hover:drop-shadow-[0_25px_35px_rgba(0,0,0,0.35)]"
-
+                  style={{
+                    transform: `scale(${platform.scale ?? 1})`,
+                  }}
+                  className="max-w-[80px] max-h-[80px] drop-shadow-[0_15px_25px_rgba(0,0,0,0.25)] transition-transform duration-300 hover:scale-110 hover:drop-shadow-[0_25px_35px_rgba(0,0,0,0.35)]"
                 />
               </div>
             ))}

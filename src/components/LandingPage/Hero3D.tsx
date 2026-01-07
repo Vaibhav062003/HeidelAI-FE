@@ -97,8 +97,8 @@ const Hero3D = () => {
 
               <p
                 className="mt-6 text-sm leading-relaxed text-zinc-500 sm:text-base md:text-lg max-w-3xl mx-auto px-6 sm:px-0 font-medium text-center">
-                <span className="block sm:hidden">
-                  Unify your social growth. Automate engagement and scale revenue across all platforms in real-time.
+                <span className="block sm:hidden font-sm">
+                  AI that unifies your channels, automates sales, and delivers revenue-driven solutions.
                 </span>
                 <span className="hidden sm:block">
                   Unify every social platform with an intelligent AI Companion that handles operations, analyzes performance in real time, and delivers actionable insights that actually scale revenue.
