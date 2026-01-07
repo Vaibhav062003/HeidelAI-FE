@@ -35,7 +35,6 @@ export default function LoginPage() {
         router.push("/dashboard");
       } else if (sessionId) {
         localStorage.setItem("sessionId", sessionId);
-        toast.success("Signed in!");
         router.push("/dashboard");
       }
     }
