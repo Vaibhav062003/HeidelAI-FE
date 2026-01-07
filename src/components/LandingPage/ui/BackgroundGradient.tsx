@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 
 interface BackgroundGradientProps {
     children?: React.ReactNode;
@@ -9,13 +9,28 @@ interface BackgroundGradientProps {
 
 const BackgroundGradient = ({ children, className = "" }: BackgroundGradientProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const mouseX = useMotionValue(0);
-    const mouseY = useMotionValue(0);
+    const mouseX = useMotionValue(0.5);
+    const mouseY = useMotionValue(0.5);
 
-    // Smooth out the mouse movement
-    const springConfig = { damping: 25, stiffness: 150 };
+    // Smooth out the mouse movement - refined for premium feel
+    const springConfig = { damping: 40, stiffness: 80 };
     const smoothX = useSpring(mouseX, springConfig);
     const smoothY = useSpring(mouseY, springConfig);
+
+    // Optimized transforms that stay outside the React render loop
+    const x1 = useTransform(smoothX, [0, 1], ["-20%", "20%"]);
+    const y1 = useTransform(smoothY, [0, 1], ["-15%", "15%"]);
+
+    const x2 = useTransform(smoothX, [0, 1], ["15%", "-15%"]);
+    const y2 = useTransform(smoothY, [0, 1], ["20%", "-20%"]);
+
+    const x3 = useTransform(smoothX, [0, 1], ["-25%", "25%"]);
+    const y3 = useTransform(smoothY, [0, 1], ["15%", "-15%"]);
+
+    const followX = useSpring(mouseX, { damping: 50, stiffness: 100 });
+    const followY = useSpring(mouseY, { damping: 50, stiffness: 100 });
+    const cursorX = useTransform(followX, [0, 1], ["0%", "100%"]);
+    const cursorY = useTransform(followY, [0, 1], ["0%", "100%"]);
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -43,17 +58,56 @@ const BackgroundGradient = ({ children, className = "" }: BackgroundGradientProp
             <div className="absolute inset-0 z-0">
                 {/* Bubble 1 */}
                 <motion.div
-                    className="absolute w-[600px] h-[600px] rounded-full opacity-40 blur-[100px]"
+                    className="absolute w-[800px] h-[800px] rounded-full opacity-40 blur-[120px]"
                     style={{
                         background: 'hsla(61,100%,84%,1.00)',
-                        x: smoothX.get() * 100 - 50 + '%',
-                        y: smoothY.get() * 80 - 40 + '%',
-                        left: '30%',
-                        top: '20%',
+                        x: x1,
+                        y: y1,
+                        left: '20%',
+                        top: '10%',
+                    }}
+                    animate={{
+                        scale: [1, 1.1, 1],
+                    }}
+                    transition={{
+                        duration: 25,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                    }}
+                />
+
+                {/* Bubble 2 */}
+                <motion.div
+                    className="absolute w-[700px] h-[700px] rounded-full opacity-30 blur-[120px]"
+                    style={{
+                        background: 'hsla(26,95%,71%,1.00)',
+                        x: x2,
+                        y: y2,
+                        right: '5%',
+                        top: '25%',
+                    }}
+                    animate={{
+                        scale: [1.1, 1, 1.1],
+                    }}
+                    transition={{
+                        duration: 30,
+                        repeat: Infinity,
+                        ease: "linear"
+                    }}
+                />
+
+                {/* Bubble 3 */}
+                <motion.div
+                    className="absolute w-[900px] h-[900px] rounded-full opacity-35 blur-[140px]"
+                    style={{
+                        background: 'hsla(15,96%,70%,1.00)',
+                        x: x3,
+                        y: y3,
+                        left: '5%',
+                        bottom: '5%',
                     }}
                     animate={{
                         scale: [1, 1.2, 1],
-                        rotate: [0, 90, 0],
                     }}
                     transition={{
                         duration: 20,
@@ -62,55 +116,15 @@ const BackgroundGradient = ({ children, className = "" }: BackgroundGradientProp
                     }}
                 />
 
-                {/* Bubble 2 */}
+                {/* Bubble 4 (Follows Cursor) */}
                 <motion.div
-                    className="absolute w-[500px] h-[500px] rounded-full opacity-30 blur-[100px]"
-                    style={{
-                        background: 'hsla(26,95%,71%,1.00)',
-                        x: smoothX.get() * -60 + 30 + '%',
-                        y: smoothY.get() * -100 + 50 + '%',
-                        right: '10%',
-                        top: '30%',
-                    }}
-                    animate={{
-                        scale: [1.2, 1, 1.2],
-                        rotate: [180, 0, 180],
-                    }}
-                    transition={{
-                        duration: 25,
-                        repeat: Infinity,
-                        ease: "linear"
-                    }}
-                />
-
-                {/* Bubble 3 */}
-                <motion.div
-                    className="absolute w-[700px] h-[700px] rounded-full opacity-35 blur-[120px]"
-                    style={{
-                        background: 'hsla(15,96%,70%,1.00)',
-                        x: smoothX.get() * 120 - 60 + '%',
-                        y: smoothY.get() * -80 + 40 + '%',
-                        left: '10%',
-                        bottom: '10%',
-                    }}
-                    animate={{
-                        scale: [1, 1.3, 1],
-                    }}
-                    transition={{
-                        duration: 15,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }}
-                />
-
-                {/* Bubble 4 (Follows Cursor More Closely) */}
-                <motion.div
-                    className="absolute w-[300px] h-[300px] rounded-full opacity-25 blur-[60px] pointer-events-none"
+                    className="absolute w-[400px] h-[400px] rounded-full opacity-25 blur-[100px] pointer-events-none"
                     style={{
                         background: 'hsla(58,100%,65%,1.00)',
-                        left: useSpring(mouseX, { damping: 30, stiffness: 200 }).get() * 100 + '%',
-                        top: useSpring(mouseY, { damping: 30, stiffness: 200 }).get() * 100 + '%',
-                        transform: 'translate(-50%, -50%)',
+                        left: cursorX,
+                        top: cursorY,
+                        x: "-50%",
+                        y: "-50%",
                     }}
                 />
             </div>

@@ -10,11 +10,11 @@ const Integrations = () => {
   ];
 
   const row2 = [
-    { name: "SMS", logo: "/logos/sms.png" }, // Need to ensure these exist or use placeholders if necessary
-    { name: "Email", logo: "/logos/email.jpg" },
-    { name: "TikTok", logo: "/logos/tiktok.png" },
+    { name: "SMS", logo: "/logos/sms.jpg" }, // Need to ensure these exist or use placeholders if necessary
+    { name: "Email", logo: "/logos/email.png" },
+    { name: "TikTok", logo: "/logos/tiktok.jpg" },
     { name: "Telegram", logo: "/logos/telegram.webp" },
-    { name: "Google Sheets", logo: "/logos/google_sheet.webp" },
+    { name: "Google Sheets", logo: "/logos/google_sheets.png" },
   ];
 
   // Double the rows for seamless looping
@@ -25,7 +25,8 @@ const Integrations = () => {
     <section id="integrations" className="py-16 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <div className="flex flex-col items-center gap-4 text-center">
-          <h2 className="text-4xl md:text-6xl font-[400] text-gray-600 leading-tight font-serif italic">
+          <h2 className="text-4xl md:text-6xl font-[400] text-gray-800 leading-tight italic"
+            style={{ fontFamily: "'Awesome Serif', serif" }}>
             Integrate With the Apps You Already Use
           </h2>
           <p className="text-lg md:text-xl max-w-[800px] font-medium text-gray-600 font-inter">
@@ -43,12 +44,13 @@ const Integrations = () => {
             {fullRow1.map((platform, index) => (
               <div
                 key={`${platform.name}-${index}`}
-                className="flex items-center justify-center bg-white rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-50 w-48 h-48 flex-shrink-0"
+                className="flex items-center justify-center bg-white rounded-2xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-gray-50 w-48 h-48 flex-shrink-0 transition-all duration-300 hover:shadow-[0_40px_80px_rgba(0,0,0,0.12)] hover:-translate-y-2"
               >
                 <img
                   src={platform.logo}
                   alt={platform.name}
-                  className="w-20 h-20 object-contain"
+                  className="w-20 h-20 object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.25)] transition-transform duration-300 hover:scale-110 hover:drop-shadow-[0_25px_35px_rgba(0,0,0,0.35)]"
+
                 />
               </div>
             ))}
@@ -61,12 +63,13 @@ const Integrations = () => {
             {fullRow2.map((platform, index) => (
               <div
                 key={`${platform.name}-${index}`}
-                className="flex items-center justify-center bg-white rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-50 w-48 h-48 flex-shrink-0"
+                className="flex items-center justify-center bg-white rounded-2xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-gray-50 w-48 h-48 flex-shrink-0 transition-all duration-300 hover:shadow-[0_40px_80px_rgba(0,0,0,0.12)] hover:-translate-y-2"
               >
                 <img
                   src={platform.logo}
                   alt={platform.name}
-                  className="w-20 h-20 object-contain"
+                  className="w-20 h-20 object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.25)] transition-transform duration-300 hover:scale-110 hover:drop-shadow-[0_25px_35px_rgba(0,0,0,0.35)]"
+
                 />
               </div>
             ))}

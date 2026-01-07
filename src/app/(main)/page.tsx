@@ -21,7 +21,7 @@ export default function Home() {
       <Integrations />
       {/* <TestimonialsMarquee /> */}
       <Pricing />
-      <CTA />
+      {/* <CTA /> */}
       <Footer />
     </div>
   )

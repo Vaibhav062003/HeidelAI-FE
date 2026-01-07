@@ -47,13 +47,13 @@ const Hero3D = () => {
 
           {/* Partners Section - Moved to Top */}
           <div
-            className="flex flex-col items-center justify-center gap-6 sm:flex-row sm:gap-10 lg:gap-16 max-w-4xl mx-auto pt-5 sm:pt-5 px-4 sm:px-0 font-sans"
+            className="flex flex-col items-center justify-center gap-6 sm:flex-row sm:gap-10 lg:gap-16 max-w-4xl mx-auto pt-5 sm:pt-5 px-2 sm:px-0 font-sans"
           >
 
             {/* Meta Partner */}
             <div className="flex items-center gap-2">
               <Image
-                src="/logos/meta-removebg-preview.png"
+                src="/logos/meta.png"
                 alt="Meta Business"
                 width={42}
                 height={42}
@@ -83,9 +83,10 @@ const Hero3D = () => {
 
           <div className="flex flex-col items-center text-center space-y-8">
             <div className="space-y-6 flex items-center justify-center flex-col">
-              <h1 className="font-serif italic font-[500] text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-5xl mx-auto text-center">
+              <h1 className="font-[500] italic text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-5xl mx-auto text-center"
+                style={{ fontFamily: "'Awesome Serif', serif" }}>
                 AI that{" "}
-                <span className=" bg-gradient-to-r from-indigo-400 via-sky-400 to-cyan-300 bg-clip-text text-transparent animate-gradient-soft">
+                <span className="bg-gradient-to-r from-stone-950 via-amber-900 to-stone-950 bg-clip-text text-transparent animate-gradient-soft">
                   {text}
                 </span>
                 {" "}
