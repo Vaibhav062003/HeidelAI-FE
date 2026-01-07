@@ -65,26 +65,26 @@ import React from 'react';
 
 const Pricing = () => {
 	return (
-		<section id="pricing" className="py-20 bg-white relative">
+		<section id="pricing" className="py-16 bg-white relative">
 			{/* Grid Background - Wrapping the entire section */}
 			{/* <div className="absolute inset-0 -z-10">
                 <div className="h-full w-full bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:35px_35px] opacity-30 [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
             </div> */}
 
 			<div className="max-w-7xl mx-auto -mt-4 px-4 sm:px-6 lg:px-8">
-				<div className="text-center py-16">
+				<div className="text-center py-12">
 					<h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl mb-4">
-						Pricing Plans 
+						Pricing Plans
 					</h2>
 					<p className="text-xl font-semibold text-gray-600 mb-12">
 						Coming Soon
 					</p>
 
-						<p className="text-gray-500 text-lg">
-							We are currently finalizing our pricing structures to best suit your needs.
-							<br />
-							Please check back later or contact us for more information.
-						</p>
+					{/* <p className="text-gray-500 text-lg">
+						We are currently finalizing our pricing structures to best suit your needs.
+						<br />
+						Please check back later or contact us for more information.
+					</p> */}
 				</div>
 
 				{/* <div className="relative flex justify-center items-center w-full">

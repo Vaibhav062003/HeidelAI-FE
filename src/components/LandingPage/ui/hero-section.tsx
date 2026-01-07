@@ -4,8 +4,8 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Shape, ExtrudeGeometry } from 'three';
 
 interface BoxProps {
-  position: [number, number, number];
-  rotation: [number, number, number];
+    position: [number, number, number];
+    rotation: [number, number, number];
 }
 
 const Box = ({ position, rotation }: BoxProps) => {
@@ -36,7 +36,7 @@ const Box = ({ position, rotation }: BoxProps) => {
             position={position}
             rotation={rotation}
         >
-            <meshPhysicalMaterial 
+            <meshPhysicalMaterial
                 color="#232323"
                 metalness={1}
                 roughness={0.3}
