@@ -67,7 +67,7 @@ const InfluencerBot = dynamic(() => import('@/components/influencerBot/influence
   loading: () => <TabLoadingSkeleton />
 });
 
-const AutomationHub = dynamic(() => import('@/components/inbox/AutomationHub'), {
+const AutomationHub = dynamic(() => import('@/components/Automation/AutomationHub'), {
   ssr: false,
   loading: () => <TabLoadingSkeleton />
 });
