@@ -3,36 +3,14 @@ import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/LandingPage/ui/button';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-// import { SignUp } from '@/components/LandingPage/ui/signup-button';
 import { ScheduleDemo } from '@/components/LandingPage/ui/schedule-demo';
 import { useRouter } from 'next/navigation';
-// import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
-// import { Drawer } from 'vaul';
-// import { useState, useRef, useEffect } from "react";
-// import { v4 as uuidv4 } from "uuid";
-// import { Input } from "@/components/ui/input2";
-// import { ScrollArea } from "@/components/ui/scroll-area";
-// import { supabase } from "@/components/supabase/client";
-// import { useToast } from "@/components/hooks/use-toast";
-// import { systemPrompt } from "@/components/config/chatSystemPrompt";
-// import { Message, storeMessage } from "@/components/services/chatService";
-// import ReactMarkdown from "react-markdown";
-// import {
-//  Toaster, 
-// toast as sonnerToast } from 'sonner'
 import Image from 'next/image';
-import {
-	Sheet,
-	SheetContent,
-	SheetTrigger,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
 
 const menuItems = [
 	{ name: 'Features', href: '#features' },
+	{ name: 'Reviews', href: '#CustomerStories' },
 	{ name: 'Integrations', href: '#integrations' },
-	// { name: 'Reviews', href: '#testimonials' },
 	{ name: 'Pricing', href: '#pricing' },
 ];
 
@@ -53,7 +31,7 @@ const Header = () => {
 			const heroSection = document.getElementById('home') as HTMLElement;
 			const featuresSection = document.getElementById('features') as HTMLElement;
 			const integrationsSection = document.getElementById('integrations') as HTMLElement;
-			const testimonialsSection = document.getElementById('testimonials') as HTMLElement;
+			const testimonialsSection = document.getElementById('CustomerStories') as HTMLElement;
 			const pricingSection = document.getElementById('pricing') as HTMLElement;
 			const ctaSection = document.querySelector('[data-section="cta"]') as HTMLElement;
 
@@ -75,7 +53,7 @@ const Header = () => {
 			} else if (scrollY >= integrationsTop - buffer && scrollY < testimonialsTop - buffer) {
 				setCurrentSection('integrations');
 			} else if (scrollY >= testimonialsTop - buffer && scrollY < pricingTop - buffer) {
-				setCurrentSection('testimonials');
+				setCurrentSection('CustomerStories');
 			} else if (scrollY >= pricingTop - buffer && scrollY < ctaTop - buffer) {
 				setCurrentSection('pricing');
 			} else if (scrollY >= ctaTop - buffer) {
@@ -110,7 +88,7 @@ const Header = () => {
 	};
 
 	// Determine if we should use dark theme
-	const isDarkTheme = currentSection === 'hero' || currentSection === 'cta';
+	const isDarkTheme = currentSection === 'cta';
 
 
 	//   const [isOpen, setIsOpen] = React.useState(false);
@@ -266,15 +244,19 @@ const Header = () => {
 
 	return (
 		<header>
-			<nav className="fixed top-0 left-0 right-0 z-50 w-full px-4 group flex justify-center pt-2 pointer-events-none">
+			<nav data-state={menuState && 'active'} className="fixed z-20 w-full px-2 group">
 				<div
 					className={cn(
-						'mx-auto w-full max-w-6xl px-6 border border-zinc-200/50 transition-all rounded-full backdrop-blur-md duration-500 lg:px-12 py-3 bg-white/80 shadow-sm pointer-events-auto',
-						isScrolled && 'max-w-4xl border-zinc-300/80 py-2 px-6 shadow-md bg-white/90'
+						'mx-auto mt-2 max-w-6xl px-6 border-white/20 transition-all rounded-2xl backdrop-blur-md duration-300 lg:px-12',
+						isScrolled &&
+						cn(
+							'max-w-4xl rounded-2xl border backdrop-blur-md sm:backdrop-blur-lg lg:px-5',
+							isDarkTheme ? 'bg-black/30 border-white/20' : 'bg-white/50 border-gray-200'
+						)
 					)}
 				>
-					<div className="relative flex items-center justify-between gap-6 lg:gap-0">
-						<div className="flex w-full justify-between lg:w-auto z-10">
+					<div className="relative flex flex-wrap items-center justify-between gap-6 py-4 lg:gap-0 lg:py-4">
+						<div className="flex w-full justify-between lg:w-auto">
 							<Link
 								href="/"
 								onClick={(e) => {
@@ -287,116 +269,50 @@ const Header = () => {
 									}
 								}}
 								aria-label="home"
-								className="flex items-center gap-2 group"
+								className="flex items-center gap-2"
 							>
-								<div className="relative w-8 h-8 transition-transform group-hover:scale-110">
-									<Image
-										fill
-										src="/heidelai.png"
-										alt="Heidel AI Logo"
-										className="object-contain"
-									/>
-								</div>
+								<Image
+									height={10}
+									width={10}
+									src="/heidelai.png"
+									alt="Heidel AI Logo"
+									className="w-8 h-8 object-contain"
+								/>
 								<span
 									className={cn(
-										'text-lg font-bold tracking-tight transition-colors duration-300',
-										isDarkTheme ? 'text-gray-900' : 'text-gray-900'
+										'text-xl font-medium transition-colors duration-300',
+										isDarkTheme ? 'text-white' : 'text-gray-900'
 									)}
 								>
 									Heidel AI
 								</span>
 							</Link>
 
-							<div className="lg:hidden flex items-center">
-								<Sheet open={menuState} onOpenChange={setMenuState}>
-									<SheetTrigger asChild>
-										<button
-											aria-label={menuState ? 'Close Menu' : 'Open Menu'}
-											className={cn(
-												'relative z-20 -m-2.5 cursor-pointer p-2.5 text-gray-900 transition-colors duration-300'
-											)}
-										>
-											<Menu className="size-6" />
-										</button>
-									</SheetTrigger>
-									<SheetContent side="right" className="w-[300px] sm:w-[400px] border-l border-zinc-200 bg-white/95 backdrop-blur-md p-0">
-										<div className="flex flex-col h-full py-6 px-6">
-											<SheetHeader className="mb-8 items-start text-left">
-												<div className="flex items-center gap-2 group mb-2">
-													<div className="relative w-8 h-8 transition-transform group-hover:scale-110">
-														<Image
-															fill
-															src="/heidelai.png"
-															alt="Heidel AI Logo"
-															className="object-contain"
-														/>
-													</div>
-													<SheetTitle className="text-xl font-bold tracking-tight text-gray-900">
-														Heidel AI
-													</SheetTitle>
-												</div>
-												<p className="text-sm text-gray-500">
-													AI that stays awake while you sleep.
-												</p>
-											</SheetHeader>
-
-											<div className="flex flex-col flex-1 gap-8 mt-4">
-												<nav className="flex flex-col gap-6">
-													{menuItems.map((item, index) => (
-														<Link
-															key={index}
-															href={item.href}
-															onClick={(e) => handleNavClick(e, item.href)}
-															className={cn(
-																'text-lg font-semibold transition-all duration-300 py-2 border-b border-zinc-100',
-																currentSection === item.href.replace('#', '')
-																	? 'text-gray-900'
-																	: 'text-gray-500'
-															)}
-														>
-															{item.name}
-														</Link>
-													))}
-												</nav>
-
-												<div className="flex flex-col gap-4 mt-auto mb-8">
-													<Button
-														variant="outline"
-														className="w-full justify-center py-6 text-base font-semibold border-zinc-200 text-gray-700 hover:bg-zinc-50 rounded-2xl"
-														onClick={() => {
-															setMenuState(false);
-															router.push('/login');
-														}}
-													>
-														Login
-													</Button>
-													<ScheduleDemo trigger={
-														<Button
-															className="w-full justify-center py-6 text-base font-semibold bg-zinc-900 text-white hover:bg-zinc-800 rounded-2xl shadow-lg shadow-zinc-200"
-														>
-															Join Beta
-														</Button>
-													} />
-												</div>
-											</div>
-										</div>
-									</SheetContent>
-								</Sheet>
-							</div>
+							<button
+								onClick={() => setMenuState(!menuState)}
+								aria-label={menuState == true ? 'Close Menu' : 'Open Menu'}
+								className={cn(
+									'relative z-20 -m-2.5 -mr-4 block cursor-pointer p-2.5 lg:hidden transition-colors duration-300',
+									isDarkTheme ? 'text-white' : 'text-gray-900'
+								)}
+							>
+								<Menu className="in-data-[state=active]:rotate-180 group-data-[state=active]:scale-0 group-data-[state=active]:opacity-0 m-auto size-6 duration-200" />
+								<X className="group-data-[state=active]:rotate-0 group-data-[state=active]:scale-100 group-data-[state=active]:opacity-100 absolute inset-0 m-auto size-6 -rotate-180 scale-0 opacity-0 duration-200" />
+							</button>
 						</div>
 
 						<div className="absolute inset-0 m-auto hidden size-fit lg:block">
-							<ul className="flex gap-8">
+							<ul className="flex gap-8 text-sm">
 								{menuItems.map((item, index) => (
 									<li key={index}>
 										<Link
 											href={item.href}
 											onClick={(e) => handleNavClick(e, item.href)}
 											className={cn(
-												'text-sm font-semibold transition-all duration-300 px-1 py-1',
-												currentSection === item.href.replace('#', '')
-													? 'text-gray-900'
-													: 'text-gray-500 hover:text-gray-900'
+												'block duration-300 font-medium transition-colors',
+												isDarkTheme
+													? 'text-white/70 hover:text-white'
+													: 'text-gray-600 hover:text-gray-900'
 											)}
 										>
 											<span>{item.name}</span>
@@ -406,36 +322,79 @@ const Header = () => {
 							</ul>
 						</div>
 
-						<div className="hidden lg:flex items-center gap-6">
-							<Button
-								variant="ghost"
-								size="sm"
-								className={cn(
-									isScrolled && 'hidden opacity-0 pointer-events-none',
-									'text-sm font-semibold text-gray-600 hover:text-gray-900 hover:bg-transparent transition-all duration-300'
-								)}
-								onClick={() => router.push('/login')}
-							>
-								<span>Login</span>
-							</Button>
-							<ScheduleDemo trigger={
+						<div
+							className={cn(
+								'group-data-[state=active]:block lg:group-data-[state=active]:flex mb-6 hidden w-full flex-wrap items-center justify-end space-y-8 rounded-3xl border p-6 shadow-2xl md:flex-nowrap lg:m-0 lg:flex lg:w-fit lg:gap-6 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none transition-all duration-300',
+								isDarkTheme
+									? 'bg-black/20 border-white/20 shadow-black/20'
+									: 'bg-white/90 border-gray-200 shadow-gray-300/20'
+							)}
+						>
+							<div className="lg:hidden">
+								<ul className="space-y-6 text-base">
+									{menuItems.map((item, index) => (
+										<li key={index}>
+											<a
+												href={item.href}
+												onClick={(e) => handleNavClick(e, item.href)}
+												className={cn(
+													'block duration-300 font-medium transition-colors',
+													isDarkTheme
+														? 'text-white/70 hover:text-white'
+														: 'text-gray-600 hover:text-gray-900'
+												)}
+											>
+												<span>{item.name}</span>
+											</a>
+										</li>
+									))}
+								</ul>
+							</div>
+							<div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
 								<Button
+									variant="outline"
 									size="sm"
 									className={cn(
-										!isScrolled && 'hidden opacity-0 pointer-events-none',
-										'bg-zinc-900 text-white hover:bg-zinc-800 rounded-full px-6 py-5 text-sm font-semibold shadow-md transition-all hover:scale-105 active:scale-95'
+										isScrolled && 'hidden',
+										'backdrop-blur-sm transform hover:scale-105 transition-all duration-300',
+										isDarkTheme
+											? 'border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white hover:border-white/50'
+											: 'border-gray-300 bg-transparent text-gray-900 hover:bg-gray-100 hover:border-gray-400'
 									)}
+									onClick={() => router.push('/login')}
 								>
-									<span>Join Beta</span>
+									<span>Login</span>
 								</Button>
-							} />
+								{/* <Button
+									size="sm"
+									className={cn(
+										isScrolled ? 'hidden' : 'lg:inline-flex',
+										'backdrop-blur-sm transform focus-visible:ring-0 hover:scale-105 w-full transition-all duration-300 shadow-lg bg-white text-black hover:bg-white/90'
+									)}
+									onClick={() => router.push('/onboarding')}
+								>
+									<span>Sign Up</span>
+								</Button> */}
+								<ScheduleDemo trigger={
+									<Button
+										size="sm"
+										className={cn(
+											isScrolled ? 'lg:inline-flex' : 'hidden',
+											'backdrop-blur-sm transform w-full hover:scale-105 transition-all duration-300 shadow-lg',
+											isDarkTheme
+												? 'bg-white text-black hover:bg-white/90'
+												: 'bg-gray-900 text-white hover:bg-gray-800'
+										)}
+									>
+										<span>Join Beta</span>
+									</Button>
+								} />
+							</div>
 						</div>
 					</div>
 				</div>
 			</nav>
 		</header>
-
-
 	);
 };
 
