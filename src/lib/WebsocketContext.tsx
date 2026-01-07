@@ -14,7 +14,8 @@ type WSClientEvent =
     | "conversation_updated"
     | "typing_indicator"
     | "message_reaction"
-    | "message_deleted";
+    | "message_deleted"
+    | "message_status_update";
 
 export const WebSocketContext = createContext<any>(null);
 
@@ -55,6 +56,7 @@ export const WebSocketProvider = ({ children }: any) => {
         typing_indicator: [],
         message_reaction: [],
         message_deleted: [],
+        message_status_update: [],
     });
 
     const addEventHandler = (event: WSClientEvent, fn: (data: any) => void) => {
