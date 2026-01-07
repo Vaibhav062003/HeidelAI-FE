@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import AgentsSettings from './Agent_management';
 import TeamsConfiguration from './Team_configuration';
 import CannedResponses from './CannedResponsesContext';
-import AutomationPage from '../Automation/AutomationPage';
+// import AutomationPage from '../Automation/AutomationPage';
 import BillingPlans from '../inbox/BillingPlans';
 import { Construction, Loader2, Instagram } from 'lucide-react';
 import { 
