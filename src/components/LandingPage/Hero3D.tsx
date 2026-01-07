@@ -41,7 +41,19 @@ const Hero3D = () => {
   }, [text, isDeleting, wordIndex]);
 
   return (
-    <BackgroundGradient className="min-h-screen flex items-center justify-center pt-10 sm:pt-10 pb-20 sm:pb-20">
+    <BackgroundGradient
+      className="
+    min-h-[100svh]
+    w-full
+    flex
+    items-center
+    justify-center
+    px-4 sm:px-6 md:px-10
+    pt-20 sm:pt-24 md:pt-28
+    pb-20 sm:pb-24 md:pb-28
+  "
+    >
+
       <section id="home" className="w-full text-zinc-900 flex flex-col items-center justify-start relative overflow-hidden">
         <div className="w-full max-w-6xl space-y-6 relative z-10">
 
@@ -81,17 +93,24 @@ const Hero3D = () => {
 
           <div className="flex flex-col items-center text-center space-y-8">
             <div className="space-y-6 flex items-center justify-center flex-col">
-              <h1 className="font-[500] italic text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-5xl mx-auto text-center leading-tight"
+              <h1 className="font-[500] italic text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-5xl mx-auto text-center leading-tight tracking-tight px-4"
                 style={{ fontFamily: "'Awesome Serif', serif" }}>
-                AI that{" "}
-                <span className="bg-gradient-to-r from-stone-950 via-amber-900 to-stone-950 bg-clip-text text-transparent animate-gradient-soft">
-                  {text}
+                <span className="bg-gradient-to-r from-[#1a1a1a] via-[#4a4a4a] to-[#1a1a1a] bg-clip-text text-transparent">
+                  AI that{" "}
+                </span>
+                <span className="inline-flex items-baseline min-h-[1.2em]">
+                  <span className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent animate-gradient bg-[length:var(--bg-size)_100%] [--bg-size:300%]">
+                    {text}
+                  </span>
+                  <span className="ml-1 opacity-60 animate-pulse text-zinc-900 not-italic select-none">/</span>
                 </span>
                 {" "}
                 <br className="sm:hidden" />
-                <span className="not-italic inline sm:hidden">while you sleep</span>
-                <span className="hidden sm:inline">
-                  <span className="animate-pulse not-italic">|</span> while you sleep
+                <span className="not-italic inline sm:hidden bg-gradient-to-r from-[#2c3e50] via-[#4ca1af] to-[#2c3e50] bg-clip-text text-transparent">
+                  while you sleep
+                </span>
+                <span className="hidden sm:inline not-italic bg-gradient-to-r from-[#1a1a1a] via-[#3d3d3d] to-[#1a1a1a] bg-clip-text text-transparent">
+                  while you sleep
                 </span>
               </h1>
 
