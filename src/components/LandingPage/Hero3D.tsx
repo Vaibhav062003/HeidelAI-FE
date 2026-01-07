@@ -43,6 +43,21 @@ const Hero3D = () => {
     <section id="home" className="lg:min-h-[100svh] min-h-[70svh] w-full flex items-center justify-center px-4 sm:px-6 md:px-10 pb-20 sm:pb-24 md:pb-28 relative overflow-hidden">
       <div className="w-full max-w-6xl space-y-6 relative z-10">
 
+        {/* Beta Status Badge */}
+        <div className="flex justify-center mb-[-10px] relative pt-36 z-20">
+          <Badge className="bg-white/40 backdrop-blur-md border border-[#0080A0]/20 text-[#0080A0] px-4 py-1.5 rounded-full shadow-[0_8px_32px_rgba(0,128,160,0.1)] transition-all duration-500 hover:scale-105 hover:bg-white/60 group cursor-default">
+            <div className="flex items-center h-5 text-[10px] sm:text-xs font-bold tracking-[0.15em] uppercase">
+              <span className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0080A0] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0080A0]"></span>
+                </span>
+                🚀 Beta is Live Now
+              </span>
+            </div>
+          </Badge>
+        </div>
+
         {/* Partners Section - Moved to Top */}
         <div
           className="flex flex-row items-center justify-center gap-4 sm:gap-10 lg:gap-16 max-w-4xl mx-auto pt-2 sm:pt-2 px-4 sm:px-0 font-sans"
@@ -78,6 +93,7 @@ const Hero3D = () => {
         </div>
 
         <div className="flex flex-col items-center text-center space-y-8">
+
           <div className="space-y-6 flex items-center justify-center flex-col">
             <h1 className="font-[500] italic text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-5xl mx-auto text-center leading-[1.1] tracking-tight px-4"
               style={{ fontFamily: "'Awesome Serif', serif" }}>

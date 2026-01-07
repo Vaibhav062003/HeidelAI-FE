@@ -113,9 +113,10 @@ const CustomerStories = () => {
 
                     {/* Card 5: Saved Weekly */}
                     <div className="bg-white rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100 relative overflow-hidden h-[240px] flex flex-col group">
-                        <div className="absolute -bottom-5 -right-10 opacity-[0.08] transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 pointer-events-none">
-                            <svg width="100" height="100" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M17.66 11.2c-.23-.3-.51-.56-.77-.82-.67-.6-1.43-1.03-2.07-1.66C13.33 7.26 13 4.85 13.95 3c-.95.23-1.78.75-2.49 1.32-2.59 2.08-3.61 5.75-2.39 8.9.04.1.08.2.08.33 0 .22-.15.42-.35.5-.23.1-.47.04-.64-.12-.06-.05-.1-.1-.14-.17-1.09-1.5-1.35-3.59-.69-5.3-.3.26-.55.56-.78.87-1.31 1.76-1.61 4.15-.8 6.13.12.3.26.58.42.85 1.51 2.5 4.7 3.51 7.42 2.45 2.72-1.06 4.14-4.04 3.44-6.9-.23-.97-.73-1.85-1.42-2.56z" />
+                        <div className="absolute -bottom-10 -right-7 opacity-[0.20] transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 pointer-events-none">
+                            <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor" className="text-gray-400">
+                                <path d="M6 2h12v2H6V2zm0 18h12v2H6v-2zm11-14v2.5c0 2.48-2.02 4.5-4.5 4.5S8 10.98 8 8.5V6h9zm-2 2H9v.5c0 1.38 1.12 2.5 2.5 2.5S14 9.88 14 8.5V8zm-2.5 5.5c2.48 0 4.5 2.02 4.5 4.5V20H8v-2c0-2.48 2.02-4.5 4.5-4.5zM10 18h5v-1c0-.55-.45-1-1-1h-3c-.55 0-1 .45-1 1v1z" />
+                                <circle cx="12" cy="11.5" r="0.5" className="animate-pulse" />
                             </svg>
                         </div>
                         <div className="relative z-10">
