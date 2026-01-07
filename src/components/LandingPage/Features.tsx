@@ -9,7 +9,7 @@ const Features = () => {
   };
 
   return (
-    <section id="features" className="py-20 bg-white">
+    <section id="features" className="py-20 bg-white relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center gap-4 px-4 mb-8 sm:gap-8 text-center">
           <h2 className="max-w-[800px] text-3xl font-semibold leading-tight sm:text-5xl sm:leading-tight">

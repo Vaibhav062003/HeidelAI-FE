@@ -4,24 +4,21 @@ import Hero3D from '@/components/LandingPage/Hero3D';
 import Features from '@/components/LandingPage/Features';
 import CustomerStories from '@/components/LandingPage/CustomerStories';
 import Integrations from '@/components/LandingPage/Integrations';
-// import TestimonialsMarquee from '@/components/LandingPage/TestimonialsMarquee';
 import Pricing from '@/components/LandingPage/Pricing';
-import CTA from '@/components/LandingPage/CTA';
 import Footer from '@/components/LandingPage/Footer';
+import BackgroundGradient from '@/components/LandingPage/ui/BackgroundGradient';
 
 export default function Home() {
-
-
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      <Hero3D />
-      <Features />
-      <CustomerStories />
-      <Integrations />
-      {/* <TestimonialsMarquee /> */}
-      <Pricing />
-      {/* <CTA /> */}
+      <BackgroundGradient>
+        <Hero3D />
+        <Features />
+        <CustomerStories />
+        <Integrations />
+        <Pricing />
+      </BackgroundGradient>
       <Footer />
     </div>
   )
