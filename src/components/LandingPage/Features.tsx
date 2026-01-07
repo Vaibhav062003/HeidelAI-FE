@@ -142,12 +142,42 @@ const INPUT_ICONS: InputIcon[] = [
 
 // Output Feature Cards
 const OUTPUT_CARDS: OutputCard[] = [
-  { id: "1", icon: "💬", title: "Chat Insights", category: "Analytics" },
-  { id: "2", icon: "🤖", title: "AI Automation", category: "Intelligence" },
-  { id: "3", icon: "📢", title: "Broadcasting", category: "Marketing" },
-  { id: "4", icon: "🔒", title: "Security", category: "Protection" },
-  { id: "5", icon: "🔄", title: "Product Sync", category: "E-commerce" },
-  { id: "6", icon: "👥", title: "Team Collaboration", category: "Workflow" },
+  { 
+    id: "1", 
+    icon: "📊", 
+    title: "Real-Time Analytics", 
+    category: "INSIGHTS" 
+  },
+  { 
+    id: "2", 
+    icon: "🤖", 
+    title: "Smart Automation", 
+    category: "EFFICIENCY" 
+  },
+  { 
+    id: "3", 
+    icon: "🎯", 
+    title: "Lead Qualification", 
+    category: "CONVERSION" 
+  },
+  { 
+    id: "4", 
+    icon: "💡", 
+    title: "Predictive Insights", 
+    category: "STRATEGY" 
+  },
+  { 
+    id: "5", 
+    icon: "📈", 
+    title: "Revenue Optimization", 
+    category: "GROWTH" 
+  },
+  { 
+    id: "6", 
+    icon: "🔍", 
+    title: "Market Intelligence", 
+    category: "COMPETITIVE" 
+  },
 ];
 
 // FloatingIcon Component
