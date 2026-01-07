@@ -41,62 +41,68 @@ const Hero3D = () => {
   }, [text, isDeleting, wordIndex]);
 
   return (
-    <BackgroundGradient className="min-h-screen flex items-center justify-center pt-20 sm:pt-28 pb-20 sm:pb-28">
+    <BackgroundGradient className="min-h-screen flex items-center justify-center pt-10 sm:pt-10 pb-20 sm:pb-20">
       <section id="home" className="w-full text-zinc-900 flex flex-col items-center justify-start relative overflow-hidden">
         <div className="w-full max-w-6xl space-y-6 relative z-10">
 
           {/* Partners Section - Moved to Top */}
           <div
-            className="flex flex-col items-center justify-center gap-6 sm:flex-row sm:gap-10 lg:gap-16 max-w-4xl mx-auto pt-5 sm:pt-5 px-2 sm:px-0 font-sans"
+            className="flex flex-row items-center justify-center gap-4 sm:gap-10 lg:gap-16 max-w-4xl mx-auto pt-3 sm:pt-3 px-4 sm:px-0 font-sans"
           >
 
             {/* Meta Partner */}
-            <div className="flex items-center gap-2">
-              <Image
-                src="/logos/meta.png"
-                alt="Meta Business"
-                width={42}
-                height={42}
-                className="w-16 h-16 sm:w-16 sm:h-16 object-contain mix-blend-multiply"
-              />
-              <div className="flex flex-col">
-                <span className="text-sm sm:text-base font-bold text-zinc-600 leading-[1.1]">Meta Business</span>
-                <span className="text-sm sm:text-base font-bold text-zinc-600 leading-[1.1]">Partners</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-auto  sm:max-w-[200px]">
+                <Image
+                  src="/logos/meta.png"
+                  alt="Meta Business"
+                  width={180}   // increase base width
+                  height={80}
+                  className="h-[70px] sm:h-auto w-auto"
+                />
+
               </div>
             </div>
 
             {/* Microsoft Partner */}
             <div className="flex items-center gap-2">
-              <Image
-                src="/logos/microsoft.png"
-                alt="Microsoft"
-                width={38}
-                height={38}
-                className="w-16 h-16 sm:w-16 sm:h-16 object-contain mix-blend-multiply"
-              />
-              <div className="flex flex-col">
-                <span className="text-sm sm:text-base font-bold text-zinc-600 leading-[1.1]">Backed by</span>
-                <span className="text-sm sm:text-base font-bold text-zinc-600 leading-[1.1]">Microsoft</span>
+              <div className="flex items-center justify-center w-auto  sm:max-w-[250px]">
+                <Image
+                  src="/logos/microsoft.png"
+                  alt="Microsoft"
+                  width={180}
+                  height={80}
+                  className="h-[70px] sm:h-auto w-auto mt-[-5px]"
+                  style={{ objectFit: 'cover', objectPosition: 'center 70%' }}
+                />
               </div>
             </div>
           </div>
 
           <div className="flex flex-col items-center text-center space-y-8">
             <div className="space-y-6 flex items-center justify-center flex-col">
-              <h1 className="font-[500] italic text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-5xl mx-auto text-center"
+              <h1 className="font-[500] italic text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-5xl mx-auto text-center leading-tight"
                 style={{ fontFamily: "'Awesome Serif', serif" }}>
                 AI that{" "}
                 <span className="bg-gradient-to-r from-stone-950 via-amber-900 to-stone-950 bg-clip-text text-transparent animate-gradient-soft">
                   {text}
                 </span>
                 {" "}
-                <span className="animate-pulse not-italic">|</span>
-                <span className="block sm:inline"> while you sleep</span>
+                <br className="sm:hidden" />
+                <span className="not-italic inline sm:hidden">while you sleep</span>
+                <span className="hidden sm:inline">
+                  <span className="animate-pulse not-italic">|</span> while you sleep
+                </span>
               </h1>
 
               <p
-                className="mt-6 text-sm leading-relaxed text-zinc-500 sm:text-base md:text-lg max-w-3xl mx-auto px-4 sm:px-0 font-medium text-center">
-                Unify every social platform with an intelligent AI Companion that handles operations, analyzes performance in real time, and delivers actionable insights that actually scale revenue.
+                className="mt-6 text-sm leading-relaxed text-zinc-500 sm:text-base md:text-lg max-w-3xl mx-auto px-6 sm:px-0 font-medium text-center">
+                <span className="block sm:hidden">
+                  Unify your social growth. Automate engagement and scale revenue across all platforms in real-time.
+                </span>
+                <span className="hidden sm:block">
+                  Unify every social platform with an intelligent AI Companion that handles operations, analyzes performance in real time, and delivers actionable insights that actually scale revenue.
+                </span>
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 items-center">
@@ -111,7 +117,7 @@ const Hero3D = () => {
           <Scene />
         </div> */}
       </section>
-    </BackgroundGradient>
+    </BackgroundGradient >
   );
 };
 

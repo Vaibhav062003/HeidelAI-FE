@@ -21,6 +21,13 @@ import { useRouter } from 'next/navigation';
 //  Toaster, 
 // toast as sonnerToast } from 'sonner'
 import Image from 'next/image';
+import {
+	Sheet,
+	SheetContent,
+	SheetTrigger,
+	SheetHeader,
+	SheetTitle,
+} from "@/components/ui/sheet";
 
 const menuItems = [
 	{ name: 'Features', href: '#features' },
@@ -259,7 +266,7 @@ const Header = () => {
 
 	return (
 		<header>
-			<nav data-state={menuState && 'active'} className="fixed top-0 left-0 right-0 z-50 w-full px-4 group flex justify-center pt-2 pointer-events-none">
+			<nav className="fixed top-0 left-0 right-0 z-50 w-full px-4 group flex justify-center pt-2 pointer-events-none">
 				<div
 					className={cn(
 						'mx-auto w-full max-w-6xl px-6 border border-zinc-200/50 transition-all rounded-full backdrop-blur-md duration-500 lg:px-12 py-3 bg-white/80 shadow-sm pointer-events-auto',
@@ -300,17 +307,82 @@ const Header = () => {
 								</span>
 							</Link>
 
-							<button
-								onClick={() => setMenuState(!menuState)}
-								aria-label={menuState == true ? 'Close Menu' : 'Open Menu'}
-								className={cn(
-									'relative z-20 -m-2.5 -mr-4 block cursor-pointer p-2.5 lg:hidden transition-colors duration-300',
-									isDarkTheme ? 'text-gray-900' : 'text-gray-900'
-								)}
-							>
-								<Menu className="in-data-[state=active]:rotate-180 group-data-[state=active]:scale-0 group-data-[state=active]:opacity-0 m-auto size-6 duration-200" />
-								<X className="group-data-[state=active]:rotate-0 group-data-[state=active]:scale-100 group-data-[state=active]:opacity-100 absolute inset-0 m-auto size-6 -rotate-180 scale-0 opacity-0 duration-200" />
-							</button>
+							<div className="lg:hidden flex items-center">
+								<Sheet open={menuState} onOpenChange={setMenuState}>
+									<SheetTrigger asChild>
+										<button
+											aria-label={menuState ? 'Close Menu' : 'Open Menu'}
+											className={cn(
+												'relative z-20 -m-2.5 cursor-pointer p-2.5 text-gray-900 transition-colors duration-300'
+											)}
+										>
+											<Menu className="size-6" />
+										</button>
+									</SheetTrigger>
+									<SheetContent side="right" className="w-[300px] sm:w-[400px] border-l border-zinc-200 bg-white/95 backdrop-blur-md p-0">
+										<div className="flex flex-col h-full py-6 px-6">
+											<SheetHeader className="mb-8 items-start text-left">
+												<div className="flex items-center gap-2 group mb-2">
+													<div className="relative w-8 h-8 transition-transform group-hover:scale-110">
+														<Image
+															fill
+															src="/heidelai.png"
+															alt="Heidel AI Logo"
+															className="object-contain"
+														/>
+													</div>
+													<SheetTitle className="text-xl font-bold tracking-tight text-gray-900">
+														Heidel AI
+													</SheetTitle>
+												</div>
+												<p className="text-sm text-gray-500">
+													AI that stays awake while you sleep.
+												</p>
+											</SheetHeader>
+
+											<div className="flex flex-col flex-1 gap-8 mt-4">
+												<nav className="flex flex-col gap-6">
+													{menuItems.map((item, index) => (
+														<Link
+															key={index}
+															href={item.href}
+															onClick={(e) => handleNavClick(e, item.href)}
+															className={cn(
+																'text-lg font-semibold transition-all duration-300 py-2 border-b border-zinc-100',
+																currentSection === item.href.replace('#', '')
+																	? 'text-gray-900'
+																	: 'text-gray-500'
+															)}
+														>
+															{item.name}
+														</Link>
+													))}
+												</nav>
+
+												<div className="flex flex-col gap-4 mt-auto mb-8">
+													<Button
+														variant="outline"
+														className="w-full justify-center py-6 text-base font-semibold border-zinc-200 text-gray-700 hover:bg-zinc-50 rounded-2xl"
+														onClick={() => {
+															setMenuState(false);
+															router.push('/login');
+														}}
+													>
+														Login
+													</Button>
+													<ScheduleDemo trigger={
+														<Button
+															className="w-full justify-center py-6 text-base font-semibold bg-zinc-900 text-white hover:bg-zinc-800 rounded-2xl shadow-lg shadow-zinc-200"
+														>
+															Join Beta
+														</Button>
+													} />
+												</div>
+											</div>
+										</div>
+									</SheetContent>
+								</Sheet>
+							</div>
 						</div>
 
 						<div className="absolute inset-0 m-auto hidden size-fit lg:block">
@@ -334,55 +406,29 @@ const Header = () => {
 							</ul>
 						</div>
 
-						<div
-							className={cn(
-								'group-data-[state=active]:block lg:group-data-[state=active]:flex mb-6 hidden w-full flex-wrap items-center justify-end space-y-8 rounded-3xl border p-6 shadow-2xl md:flex-nowrap lg:m-0 lg:flex lg:w-fit lg:gap-6 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none transition-all duration-300 z-10',
-								isDarkTheme
-									? 'bg-white/90 border-gray-200 '
-									: 'bg-white/90 border-gray-200 '
-							)}
-						>
-							<div className="lg:hidden">
-								<ul className="space-y-6 text-base">
-									{menuItems.map((item, index) => (
-										<li key={index}>
-											<a
-												href={item.href}
-												onClick={(e) => handleNavClick(e, item.href)}
-												className={cn(
-													'block duration-300 font-medium transition-colors text-gray-600 hover:text-gray-900'
-												)}
-											>
-												<span>{item.name}</span>
-											</a>
-										</li>
-									))}
-								</ul>
-							</div>
-							<div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
+						<div className="hidden lg:flex items-center gap-6">
+							<Button
+								variant="ghost"
+								size="sm"
+								className={cn(
+									isScrolled && 'hidden opacity-0 pointer-events-none',
+									'text-sm font-semibold text-gray-600 hover:text-gray-900 hover:bg-transparent transition-all duration-300'
+								)}
+								onClick={() => router.push('/login')}
+							>
+								<span>Login</span>
+							</Button>
+							<ScheduleDemo trigger={
 								<Button
-									variant="ghost"
 									size="sm"
 									className={cn(
-										isScrolled && 'hidden opacity-0 pointer-events-none',
-										'text-sm font-semibold text-gray-600 hover:text-gray-900 hover:bg-transparent transition-all duration-300'
+										!isScrolled && 'hidden opacity-0 pointer-events-none',
+										'bg-zinc-900 text-white hover:bg-zinc-800 rounded-full px-6 py-5 text-sm font-semibold shadow-md transition-all hover:scale-105 active:scale-95'
 									)}
-									onClick={() => router.push('/login')}
 								>
-									<span>Login</span>
+									<span>Join Beta</span>
 								</Button>
-								<ScheduleDemo trigger={
-									<Button
-										size="sm"
-										className={cn(
-											!isScrolled && 'hidden opacity-0 pointer-events-none',
-											'bg-zinc-900 text-white hover:bg-zinc-800 rounded-full px-6 py-5 text-sm font-semibold shadow-md transition-all hover:scale-105 active:scale-95'
-										)}
-									>
-										<span>Join Beta</span>
-									</Button>
-								} />
-							</div>
+							} />
 						</div>
 					</div>
 				</div>
