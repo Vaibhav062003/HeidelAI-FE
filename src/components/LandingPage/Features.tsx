@@ -9,6 +9,7 @@ import {
   FaDollarSign,
   FaSearch,
 } from "react-icons/fa";
+import BackgroundGradient from "./ui/BackgroundGradient";
 
 // Types
 interface InputIcon {
@@ -391,61 +392,61 @@ const ProcessingNode: React.FC = () => {
 // Main Features Component
 const Features: React.FC = () => {
   return (
-    <section
-      id="features"
-      className="relative w-full min-h-screen bg-gradient-to-br from-[#FAFBFE] via-[#F8F9FC] to-[#F5F7FB] flex flex-col items-center justify-center py-16 sm:py-20 md:py-24 lg:py-28 overflow-hidden"
-      style={{ zIndex: 1 }}
-    >
-      <div className="absolute inset-0 z-0 opacity-[0.3] bg-[radial-gradient(#CBD5E1_1px,transparent_1px)] [background-size:20px_20px] sm:[background-size:24px_24px]"></div>
+  <BackgroundGradient>
+      <section
+        id="features"
+        className="relative w-full min-h-screen flex flex-col items-center justify-center py-16 sm:py-20 md:py-24 lg:py-28 overflow-hidden"
+        style={{ zIndex: 1 }}
+      >
+        {/* Your existing content stays exactly the same */}
+        <div className="absolute inset-0 z-0 opacity-[0.3] bg-[radial-gradient(#CBD5E1_1px,transparent_1px)] [background-size:20px_20px] sm:[background-size:24px_24px]"></div>
 
-      {/* Atmospheric Gradients */}
-      <div className="absolute top-[-8%] left-[-12%] w-[50vw] h-[50vw] bg-gradient-to-br from-blue-200/40 to-indigo-200/40 rounded-full blur-[120px] sm:blur-[140px] md:blur-[160px] animate-pulse"></div>
-      <div className="absolute bottom-[-8%] right-[-12%] w-[50vw] h-[50vw] bg-gradient-to-tl from-purple-200/40 to-pink-200/40 rounded-full blur-[120px] sm:blur-[140px] md:blur-[160px] animate-pulse"></div>
+        {/* Atmospheric Gradients */}
+        <div className="absolute top-[-8%] left-[-12%] w-[50vw] h-[50vw] bg-gradient-to-br from-blue-200/40 to-indigo-200/40 rounded-full blur-[120px] sm:blur-[140px] md:blur-[160px] animate-pulse"></div>
+        <div className="absolute bottom-[-8%] right-[-12%] w-[50vw] h-[50vw] bg-gradient-to-tl from-purple-200/40 to-pink-200/40 rounded-full blur-[120px] sm:blur-[140px] md:blur-[160px] animate-pulse"></div>
 
-      {/* Section Header */}
-      <div className="relative z-10 w-full">
-        <SectionHeader />
-      </div>
-
-      {/* Main Content Container */}
-      <div className="relative z-10 w-full flex-1 flex items-center justify-center">
-        {/* Central Intelligence Core - HeidelAI */}
-        <ProcessingNode />
-      </div>
-
-      {/* Input Stream - Platform Logos with RANDOM delays */}
-      {INPUT_ICONS.map((icon, idx) => (
-        <FloatingIcon
-          key={icon.id}
-          icon={icon}
-          delay={idx * 0.7 + Math.random() * 0.8}
-          index={idx}
-        />
-      ))}
-
-      {INPUT_ICONS.map((icon, idx) => (
-        <FloatingIcon
-          key={`${icon.id}-wave2`}
-          icon={icon}
-          delay={idx * 0.7 + 4.0 + Math.random() * 0.8}
-          index={idx}
-        />
-      ))}
-
-      {/* Output Stream - Feature Cards */}
-      <OutputCarousel cards={OUTPUT_CARDS} />
-
-      {/* Enhanced Footer Branding */}
-      <div className="relative z-10 mt-8 sm:mt-10 md:mt-12">
-        <div className="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 bg-white/60 backdrop-blur-md rounded-full border border-gray-200/60 shadow-lg">
-          <div className="h-px w-6 sm:w-7 md:w-8 bg-gradient-to-r from-transparent via-gray-400 to-transparent"></div>
-          <span className="text-[8px] sm:text-[9px] font-semibold text-gray-500 uppercase tracking-[0.2em] sm:tracking-[0.25em]">
-            HeidelAI
-          </span>
-
-          <div className="h-px w-6 sm:w-7 md:w-8 bg-gradient-to-r from-transparent via-gray-400 to-transparent"></div>
+        {/* Section Header */}
+        <div className="relative z-10 w-full">
+          <SectionHeader />
         </div>
-      </div>
+
+        {/* Main Content Container */}
+        <div className="relative z-10 w-full flex-1 flex items-center justify-center">
+          <ProcessingNode />
+        </div>
+
+        {/* Input Stream */}
+        {INPUT_ICONS.map((icon, idx) => (
+          <FloatingIcon
+            key={icon.id}
+            icon={icon}
+            delay={idx * 0.7 + Math.random() * 0.8}
+            index={idx}
+          />
+        ))}
+
+        {INPUT_ICONS.map((icon, idx) => (
+          <FloatingIcon
+            key={`${icon.id}-wave2`}
+            icon={icon}
+            delay={idx * 0.7 + 4.0 + Math.random() * 0.8}
+            index={idx}
+          />
+        ))}
+
+        {/* Output Stream */}
+        <OutputCarousel cards={OUTPUT_CARDS} />
+
+        {/* Footer Branding */}
+        <div className="relative z-10 mt-8 sm:mt-10 md:mt-12">
+          <div className="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 bg-white/60 backdrop-blur-md rounded-full border border-gray-200/60 shadow-lg">
+            <div className="h-px w-6 sm:w-7 md:w-8 bg-gradient-to-r from-transparent via-gray-400 to-transparent"></div>
+            <span className="text-[8px] sm:text-[9px] font-semibold text-gray-500 uppercase tracking-[0.2em] sm:tracking-[0.25em]">
+              HeidelAI
+            </span>
+            <div className="h-px w-6 sm:w-7 md:w-8 bg-gradient-to-r from-transparent via-gray-400 to-transparent"></div>
+          </div>
+        </div>
 
       {/* CSS Animations */}
       <style jsx>{`
@@ -535,6 +536,7 @@ const Features: React.FC = () => {
         }
       `}</style>
     </section>
+  </BackgroundGradient>
   );
 };
 

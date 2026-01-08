@@ -10,28 +10,28 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+// import { Calendar } from "@/components/ui/calendar";
+// import { format } from "date-fns";
+// import { CalendarIcon } from "lucide-react";
+// import { cn } from "@/lib/utils";
+// import {
+//   Popover,
+//   PopoverContent,
+//   PopoverTrigger,
+// } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label"
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { DemoContainer, DemoItem } from '@mui/x-date-pickers/internals/demo';
+// import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+// import { DemoContainer, DemoItem } from '@mui/x-date-pickers/internals/demo';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from "dayjs";
 import { Dayjs } from 'dayjs';
 import { StaticDateTimePicker } from '@mui/x-date-pickers/StaticDateTimePicker';
-import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
+// import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
 import { toast } from "sonner";
 // import { useToast } from "@/components/ui/use-toast"; 
-import api from '../../lib/session_api';
-import { useConversations } from "../hooks/useConversations";
+import api from '../../../../../lib/session_api';
+// import { useConversations } from "../../../../hooks/useConversations";
 
 
 interface ReminderDialogProps {
@@ -58,12 +58,12 @@ export default function ReminderDialog({
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { conversations } = useConversations();
+  // const { conversations } = useConversations();
 
-  const getCustomerName = () => {
-    const conversation = conversations.find(conv => conv.id === conversation_id);
-    return conversation ? conversation.customer_name : "Customer";
-  }
+  // const getCustomerName = () => {
+  //   const conversation = conversations.find(conv => conv.id === conversation_id);
+  //   return conversation ? conversation.customer_name : "Customer";
+  // }
 
   const handleSubmit = async () => {
     if (!title || !selectedDateTime) return;

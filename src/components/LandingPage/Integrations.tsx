@@ -2,15 +2,15 @@ import React from 'react';
 
 const Integrations = () => {
   const row1 = [
-    { name: "WordPress", logo: "/logos/wordpress.svg" }, // Added based on user list
+    { name: "WordPress", logo: "/logos/wordpress.svg" },
     { name: "Shopify", logo: "/logos/shopify.webp" },
     { name: "WhatsApp", logo: "/logos/whatsapp.png" },
     { name: "Instagram", logo: "/logos/instagram.webp" },
-    { name: "Facebook Messenger", logo: "/logos/facebook.png" }, // Assuming existing fb logo or similar
+    { name: "Facebook Messenger", logo: "/logos/facebook.png" },
   ];
 
   const row2 = [
-    { name: "SMS", logo: "/logos/sms.jpg", scale: 1.3 }, // Need to ensure these exist or use placeholders if necessary
+    { name: "SMS", logo: "/logos/sms.jpg", scale: 1.3 },
     { name: "Email", logo: "/logos/email.png" },
     { name: "TikTok", logo: "/logos/tiktok.jpg" },
     { name: "Telegram", logo: "/logos/telegram.webp" },
@@ -22,7 +22,7 @@ const Integrations = () => {
   const fullRow2 = [...row2, ...row2, ...row2];
 
   return (
-    <section id="integrations" className="py-16 bg-white overflow-hidden">
+    <section id="integrations" className="py-16 overflow-hidden relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <div className="flex flex-col items-center gap-4 text-center">
           <h2 className="text-4xl md:text-6xl font-[400] text-gray-800 leading-tight italic"

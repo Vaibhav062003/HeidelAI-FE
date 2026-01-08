@@ -39,8 +39,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-import ChatView from '@/components/inbox/ChatView';
+import ChatView from '@/components/inbox/chat/ChatView';
+import LandingDashboard from '@/components/inbox/LandingDashboard';
 
 const Sidebar = dynamic(() => import('@/components/inbox/Sidebar'), {
   ssr: false,
@@ -557,10 +557,10 @@ export default function DashboardPage() {
   const { conversations } = useConversations();
 
   const conversation = useMemo(() => {
-    if (!selectedConversationId) return null;
+    if (!selectedConversationId) return undefined;
 
     const conv = conversations.find(c => c.id === selectedConversationId);
-    if (!conv) return null;
+    if (!conv) return undefined;
 
     return conv
   }, [conversations, selectedConversationId]);
@@ -656,14 +656,20 @@ export default function DashboardPage() {
                 )}
 
                 <section className="flex-1 min-w-0 h-full border-r border-gray-200 min-h-0">
-                  <ChatView
-                    selectedConversationId={selectedConversationId}
-                    conversation={conversation}
-                    sharedProduct={sharedProduct}
-                    onClearSharedProduct={handleClearSharedProduct}
-                    isRightSidebarVisible={isRightSidebarVisible}
-                    onOpenRightSidebar={handleToggleRightSidebar}
-                  />
+                  {conversation ? (
+                    <ChatView
+                      selectedConversationId={selectedConversationId}
+                      conversation={conversation}
+                      sharedProduct={sharedProduct}
+                      onClearSharedProduct={handleClearSharedProduct}
+                      isRightSidebarVisible={isRightSidebarVisible}
+                      onOpenRightSidebar={handleToggleRightSidebar}
+                    />
+                  ) : (
+                    <>
+                      <LandingDashboard />
+                    </>
+                  )}
                 </section>
 
                 {isRightSidebarVisible && (
