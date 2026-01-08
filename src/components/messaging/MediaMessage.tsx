@@ -1,6 +1,7 @@
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
-import { Message, MessageItem } from "../inbox/ChatView";
+import { Message } from "../inbox/chat/types";
+import { getStatusIcon, MessageItem } from "../inbox/chat/components/messages/MessageItem";
 
 interface MediaMessageProps {
   url: string;
@@ -13,10 +14,11 @@ interface MediaMessageProps {
   isMuted?: boolean;
   id: string;
   timestamp: string;
-  status?: "sending" | "sent" | "delivered" | "read";
-  message?: Message;
+  status?: "sending" | "sent" | "delivered" | "read" | "failed";
+  message: Message;
   onFullscreenToggle?: (isFullscreen: boolean) => void;
   caption?: string;
+  showStatusIcon: boolean;
 }
 
 export default function MediaMessage({
@@ -33,7 +35,8 @@ export default function MediaMessage({
   status,
   message,
   onFullscreenToggle,
-  caption
+  caption,
+  showStatusIcon,
 }: MediaMessageProps) {
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const [mediaHeight, setMediaHeight] = useState<number | null>(null);
@@ -163,8 +166,9 @@ export default function MediaMessage({
       className={`flex flex-col ${isAgent ? "items-end" : "items-start"
         } rounded-2xl w-fit max-w-[350px] p-1`}
     >
+      <div className="flex w-full items-end">
       <div
-        className={`relative h-fit overflow-hidden rounded-2xl bg-gray-200 shadow-sm cursor-pointer flex items-center justify-center`}
+        className={`relative h-fit overflow-hidden rounded-2xl ${message.status === 'failed' ? 'border border-red-600' : ''} bg-gray-200 shadow-sm cursor-pointer flex items-center justify-center `}
         style={{
           width: isUnavailable ? "190px" : mediaWidth,
           height: mediaHeight
@@ -253,8 +257,17 @@ export default function MediaMessage({
           </>
         )}
       </div>
+        {( ! caption && (showStatusIcon || message.status === "sending")) ? (
+          <div className="animate-in fade-in zoom-in duration-300 ml-1">
+            {getStatusIcon(message)}
+          </div>
+        ) : (
+          <div className="ml-4"></div>
+        )}
 
-      {caption && message ? (
+      </div>
+
+      {caption ? (
         console.log("Rendering caption:", caption),
         <div className="mt-2 text-sm text-gray-700">
           <MessageItem
@@ -262,6 +275,7 @@ export default function MediaMessage({
             isReplyMessage={false}
             isMediaMessage={true}
             caption={caption}
+            showStatusIcon={showStatusIcon}
           />
         </div>
       ) : (
@@ -271,20 +285,6 @@ export default function MediaMessage({
           </p>
         </div>
       )}
-
-      {message?.role === "agent" && message.status === "sending" && !caption && (
-        <div
-          className={`py-1 w-full ${isAgent ? "pr-2" : "pl-2"}`}
-        >
-          <p
-            className={`text-xs ${isAgent ? "text-right" : "text-left"
-              } text-gray-500 mt-1 tracking-wide`}
-          >
-            Sending...
-          </p>
-        </div>
-      )}
-
 
       {isFullscreen && type === "image" && (
         <div
@@ -299,7 +299,7 @@ export default function MediaMessage({
               fill
               src={url}
               alt="Full screen media"
-              className=" p-10 max-w-full max-h-full object-contain"
+              className=" p-10 max-w-full  max-h-full object-contain"
             />
             <button
               className="absolute top-4 right-4 text-white bg-white/10 hover:bg-white/20 rounded-full p-2 transition-colors"

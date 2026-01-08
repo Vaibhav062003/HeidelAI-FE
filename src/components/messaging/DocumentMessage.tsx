@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { useState } from "react";
 import FileIcon from "./ui/FileIcon";
-import { Message, MessageItem } from "../inbox/ChatView";
+import { Message } from "../inbox/chat/types";
+import { MessageItem } from "../inbox/chat/components/messages/MessageItem";
 
 interface DocumentMessageProps {
   url: string;
