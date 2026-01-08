@@ -187,7 +187,7 @@ export default function LoginPage() {
 
       {/* Secured by HeidelAI */}
       <p className="text-center text-sm text-neutral-600 mt-6">
-        Secured by <span className="font-medium text-neutral-800">HeidelAI</span>
+        Secured by <span className="font-semibold bg-gradient-to-r from-[#ff8c00] to-[#ff1744] bg-clip-text text-transparent">HeidelAI</span>
       </p>
     </BackgroundGradient>
   );
