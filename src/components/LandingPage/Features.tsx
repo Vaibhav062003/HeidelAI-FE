@@ -1,6 +1,14 @@
 "use client";
 import React from "react";
 import Image from "next/image";
+import {
+  FaChartLine,
+  FaRobot,
+  FaBullseye,
+  FaLightbulb,
+  FaDollarSign,
+  FaSearch,
+} from "react-icons/fa";
 
 // Types
 interface InputIcon {
@@ -54,12 +62,6 @@ const INPUT_ICONS: InputIcon[] = [
     logoUrl: "https://cdn.simpleicons.org/woocommerce/96588A",
     color: "border-purple-600",
   },
-  // {
-  //   id: "7",
-  //   name: "LinkedIn",
-  //   logoUrl: "https://cdn.simpleicons.org/linkedin/0A66C2",
-  //   color: "border-blue-600"
-  // },
   {
     id: "8",
     name: "Snapchat",
@@ -108,12 +110,6 @@ const INPUT_ICONS: InputIcon[] = [
     logoUrl: "https://cdn.simpleicons.org/discord/5865F2",
     color: "border-indigo-500",
   },
-  // {
-  //   id: "16",
-  //   name: "Slack",
-  //   logoUrl: "https://cdn.simpleicons.org/slack/4A154B",
-  //   color: "border-purple-700"
-  // },
   {
     id: "17",
     name: "Reddit",
@@ -132,51 +128,45 @@ const INPUT_ICONS: InputIcon[] = [
     logoUrl: "https://cdn.simpleicons.org/line/00C300",
     color: "border-green-500",
   },
-  // {
-  //   id: "20",
-  //   name: "Google Business",
-  //   logoUrl: "https://cdn.simpleicons.org/googlemybusiness/4285F4",
-  //   color: "border-blue-500"
-  // },
 ];
 
 // Output Feature Cards
 const OUTPUT_CARDS: OutputCard[] = [
-  { 
-    id: "1", 
-    icon: "📊", 
-    title: "Real-Time Analytics", 
-    category: "INSIGHTS" 
+  {
+    id: "1",
+    icon: "FaChartLine",
+    title: "Real-Time Analytics",
+    category: "INSIGHTS",
   },
-  { 
-    id: "2", 
-    icon: "🤖", 
-    title: "Smart Automation", 
-    category: "EFFICIENCY" 
+  {
+    id: "2",
+    icon: "FaRobot",
+    title: "Smart Automation",
+    category: "EFFICIENCY",
   },
-  { 
-    id: "3", 
-    icon: "🎯", 
-    title: "Lead Qualification", 
-    category: "CONVERSION" 
+  {
+    id: "3",
+    icon: "FaBullseye",
+    title: "Lead Qualification",
+    category: "CONVERSION",
   },
-  { 
-    id: "4", 
-    icon: "💡", 
-    title: "Predictive Insights", 
-    category: "STRATEGY" 
+  {
+    id: "4",
+    icon: "FaLightbulb",
+    title: "Predictive Insights",
+    category: "STRATEGY",
   },
-  { 
-    id: "5", 
-    icon: "📈", 
-    title: "Revenue Optimization", 
-    category: "GROWTH" 
+  {
+    id: "5",
+    icon: "FaDollarSign",
+    title: "Revenue Optimization",
+    category: "GROWTH",
   },
-  { 
-    id: "6", 
-    icon: "🔍", 
-    title: "Market Intelligence", 
-    category: "COMPETITIVE" 
+  {
+    id: "6",
+    icon: "FaSearch",
+    title: "Market Intelligence",
+    category: "COMPETITIVE",
   },
 ];
 
@@ -188,16 +178,15 @@ interface FloatingIconProps {
 }
 
 const FloatingIcon: React.FC<FloatingIconProps> = ({ icon, delay, index }) => {
-  const randomTop = 45 + Math.random() * 20;
+  const verticalOffset = (Math.random() - 0.5) * 400;
 
   return (
     <div
       className={`absolute w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-white flex items-center justify-center shadow-lg border-2 ${icon.color}`}
       style={{
-        left: "-10vw",
-        top: `${randomTop}%`,
-        animation: `flowToCenter 4.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${delay}s infinite`,
+        animation: `funnelFlow 5s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s infinite`,
         zIndex: 5,
+        ["--offset" as any]: `${verticalOffset}px`,
       }}
     >
       <div className="relative w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-9 lg:h-9 flex items-center justify-center">
@@ -221,19 +210,41 @@ interface OutputCardProps {
   rowIndex: number;
 }
 
-const OutputCard: React.FC<OutputCardProps> = ({ card, delay, rowIndex }) => {
+const OutputCard: React.FC<OutputCardProps> = ({
+  card,
+  delay,
+  rowIndex,
+}) => {
+  const getIconComponent = (iconName: string) => {
+    const iconMap: { [key: string]: any } = { 
+      FaChartLine: FaChartLine,
+      FaRobot: FaRobot,
+      FaBullseye: FaBullseye,
+      FaLightbulb: FaLightbulb,
+      FaDollarSign: FaDollarSign,
+      FaSearch: FaSearch,
+    };
+    return iconMap[iconName];
+  };
+
+  const IconComponent = getIconComponent(card.icon);
+
   return (
     <div
       className="absolute bg-white rounded-xl sm:rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100 flex items-center gap-2 sm:gap-3 md:gap-4 w-[200px] sm:w-[245px] md:w-[290px] lg:w-[315px] p-3.5 sm:p-5 lg:p-6 hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)] transition-shadow"
       style={{
         left: "50%",
-        top: `calc(50% - 60px + ${rowIndex * 140}px)`,
-        animation: `flowFromCenter 7s ease-in-out ${delay}s infinite`,
+        top: `calc(50% + 20px + ${rowIndex * 90}px)`,
+        animation: `sequentialFlow 15s linear ${delay}s infinite`,
         zIndex: 8,
       }}
     >
-      <div className="w-9 h-9 sm:w-11 sm:h-11 lg:w-14 lg:h-14 flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg sm:rounded-xl text-xl sm:text-2xl lg:text-3xl shadow-inner border border-indigo-100">
-        {card.icon}
+      <div className="w-9 h-9 sm:w-11 sm:h-11 lg:w-14 lg:h-14 flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg sm:rounded-xl shadow-inner border border-indigo-100">
+        {IconComponent ? (
+          <IconComponent className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-indigo-600" />
+        ) : (
+          <span className="text-2xl">📊</span>
+        )}
       </div>
       <div className="flex flex-col min-w-0">
         <p className="text-xs sm:text-sm lg:text-base font-bold text-gray-900 tracking-tight truncate">
@@ -253,23 +264,31 @@ interface OutputCarouselProps {
 }
 
 const OutputCarousel: React.FC<OutputCarouselProps> = ({ cards }) => {
-  const midIndex = Math.ceil(cards.length / 2);
-  const row1 = cards.slice(0, midIndex);
-  const row2 = cards.slice(midIndex);
+  const extendedCards = [...cards];
+
+  const cardInterval = 4.5;
+
+  const row1Cards = extendedCards.filter((_, index) => index % 2 === 0);
+  const row2Cards = extendedCards.filter((_, index) => index % 2 === 1);
 
   return (
     <>
-      {/* Row 1 (Top Row) */}
-      {row1.map((card, index) => (
-        <OutputCard key={card.id} card={card} delay={index * 2} rowIndex={0} />
+      {/* Row 1 - Top row (linear movement) */}
+      {row1Cards.map((card, index) => (
+        <OutputCard
+          key={`row1-${card.id}-${index}`}
+          card={card}
+          delay={index * cardInterval}
+          rowIndex={-1}
+        />
       ))}
 
-      {/* Row 2 (Bottom Row) */}
-      {row2.map((card, index) => (
+      {/* Row 2 - Bottom row (offset timing to fill gaps, linear movement) */}
+      {row2Cards.map((card, index) => (
         <OutputCard
-          key={card.id}
+          key={`row2-${card.id}-${index}`}
           card={card}
-          delay={1 + index * 2}
+          delay={index * cardInterval + cardInterval / 2}
           rowIndex={1}
         />
       ))}
@@ -350,9 +369,10 @@ const ProcessingNode: React.FC = () => {
                           "https://cdn-icons-png.flaticon.com/512/2103/2103633.png";
                       }}
                     />
-                    <span className="text-3xl sm:text-4xl md:text-[42px] lg:text-[48px] font-black tracking-tight text-gray-900">
-                      HeidelAI
-                    </span>
+                    <span className="text-3xl sm:text-4xl md:text-[42px] lg:text-[48px] font-bold tracking-tight text-gray-900">
+  HeidelAI
+</span>
+
                   </div>
                 ) : (
                   <p className="text-center text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-orange-500 via-orange-600 to-red-700 bg-clip-text text-transparent leading-snug max-w-[90%] px-2">
@@ -419,61 +439,87 @@ const Features: React.FC = () => {
       <div className="relative z-10 mt-8 sm:mt-10 md:mt-12">
         <div className="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 bg-white/60 backdrop-blur-md rounded-full border border-gray-200/60 shadow-lg">
           <div className="h-px w-6 sm:w-7 md:w-8 bg-gradient-to-r from-transparent via-gray-400 to-transparent"></div>
-          <span className="text-[8px] sm:text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] sm:tracking-[0.25em]">
+          <span className="text-[8px] sm:text-[9px] font-semibold text-gray-500 uppercase tracking-[0.2em] sm:tracking-[0.25em]">
             HeidelAI
           </span>
+
           <div className="h-px w-6 sm:w-7 md:w-8 bg-gradient-to-r from-transparent via-gray-400 to-transparent"></div>
         </div>
       </div>
 
       {/* CSS Animations */}
       <style jsx>{`
-        @keyframes flowToCenter {
+        @keyframes funnelFlow {
           0% {
-            transform: translateX(0) scale(0.7);
+            left: -10vw;
+            top: calc(50% + var(--offset, 0px));
+            transform: scale(1);
             opacity: 0;
           }
           10% {
             opacity: 1;
-            transform: translateX(15vw) scale(0.85);
+          }
+          20% {
+            left: 10vw;
+            top: calc(50% + var(--offset, 0px) * 0.85);
+            transform: scale(0.95);
+          }
+          40% {
+            left: 25vw;
+            top: calc(50% + var(--offset, 0px) * 0.6);
+            transform: scale(0.85);
+          }
+          60% {
+            left: 38vw;
+            top: calc(50% + var(--offset, 0px) * 0.3);
+            transform: scale(0.7);
           }
           80% {
-            opacity: 1;
-            transform: translateX(calc(50vw - 60px)) scale(1);
+            left: 46vw;
+            top: calc(50% + var(--offset, 0px) * 0.1);
+            transform: scale(0.5);
           }
           95% {
-            transform: translateX(calc(50vw - 20px)) scale(0.5);
-            opacity: 0.3;
+            left: 49vw;
+            top: 50%;
+            transform: scale(0.2);
+            opacity: 0.5;
           }
           100% {
-            transform: translateX(calc(50vw)) scale(0);
+            left: 50vw;
+            top: 50%;
+            transform: scale(0);
             opacity: 0;
           }
         }
 
-        @keyframes flowFromCenter {
+        /* SEQUENTIAL FLOW: One card fully emerges before next starts */
+        @keyframes sequentialFlow {
           0% {
             transform: translateX(0) scale(0);
             opacity: 0;
           }
+
+          /* Rapid emergence phase - card becomes fully visible */
           8% {
-            opacity: 0.5;
-            transform: translateX(20px) scale(0.5);
-          }
-          15% {
             opacity: 1;
             transform: translateX(80px) scale(1);
           }
+
+          /* Card travels across the screen */
           85% {
             opacity: 1;
-            transform: translateX(calc(50vw - 140px)) scale(1);
+            transform: translateX(calc(50vw + 50px)) scale(1);
           }
+
+          /* Fade out */
           95% {
-            transform: translateX(calc(50vw - 100px)) scale(0.9);
-            opacity: 0.6;
+            opacity: 0.5;
+            transform: translateX(calc(50vw + 80px)) scale(0.85);
           }
+
           100% {
-            transform: translateX(calc(50vw - 60px)) scale(0.5);
+            transform: translateX(calc(50vw + 100px)) scale(0);
             opacity: 0;
           }
         }
