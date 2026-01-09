@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image'
 import CountDownTimer from './CountDownTimer';
 import { ChevronRight } from 'lucide-react';
+import BackgroundGradient from './ui/BackgroundGradient';
 
 const Hero3D = () => {
   const router = useRouter();
@@ -40,13 +41,13 @@ const Hero3D = () => {
   }, [text, isDeleting, wordIndex]);
 
   return (
-    <section id="home" className="lg:min-h-[100svh] min-h-[70svh] w-full flex items-center justify-center px-4 sm:px-6 md:px-10 pb-20 sm:pb-24 md:pb-28 relative overflow-hidden">
-      <div className="w-full max-w-6xl space-y-6 relative z-10">
+    <BackgroundGradient className=" min-h-[100svh] w-full flex items-center justify-center px-4 sm:px-6 md:px-10 pb-20 sm:pb-24 md:pb-28 relative overflow-hidden">
+      <div className="w-full max-w-6xl space-y-5 sm:space-y-6 relative z-10 -mt-5 sm:mt-0">
 
         {/* Beta Status Badge */}
-        <div className="flex justify-center mb-[-10px] relative pt-36 z-20">
+        <div className="flex justify-center mb-[-20px] relative pt-10  sm:pt-36 z-20">
           <Badge className="bg-white/40 backdrop-blur-md border border-[#0080A0]/20 text-[#0080A0] px-4 py-1.5 rounded-full shadow-[0_8px_32px_rgba(0,128,160,0.1)] transition-all duration-500 hover:scale-105 hover:bg-white/60 group cursor-default">
-            <div className="flex items-center h-5 text-[10px] sm:text-xs font-bold tracking-[0.15em] uppercase">
+            <div className="flex items-center h-5 text-[10px] sm:text-xs font-normal font-sans font-[800] tracking-[0.15em] uppercase">
               <span className="flex items-center gap-2">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0080A0] opacity-75"></span>
@@ -60,7 +61,7 @@ const Hero3D = () => {
 
         {/* Partners Section - Moved to Top */}
         <div
-          className="flex flex-row items-center justify-center gap-4 sm:gap-10 lg:gap-16 max-w-4xl mx-auto pt-2 sm:pt-2 px-4 sm:px-0 font-sans"
+          className="flex flex-row items-center justify-center gap-2 sm:gap-10 lg:gap-16 max-w-4xl mx-auto pt-2 sm:pt-2 px-4 sm:px-0 font-sans"
         >
 
           {/* Meta Partner */}
@@ -95,7 +96,7 @@ const Hero3D = () => {
         <div className="flex flex-col items-center text-center space-y-8">
 
           <div className="space-y-6 flex items-center justify-center flex-col">
-            <h1 className="font-[500] italic text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-5xl mx-auto text-center leading-[1.1] tracking-tight px-4"
+            <h1 className="font-[500] italic text-5xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-5xl mx-auto text-center leading-[1.1] tracking-tight px-4"
               style={{ fontFamily: "'Awesome Serif', serif" }}>
               <span className="text-black">
                 AI that{" "}
@@ -117,16 +118,16 @@ const Hero3D = () => {
             </h1>
 
             <p
-              className="mt-2 sm:mt-4 text-sm leading-relaxed text-zinc-500 sm:text-base md:text-lg max-w-3xl mx-auto px-6 sm:px-0 font-medium text-center">
-              <span className="block sm:hidden font-sm font-[500] ">
+              className="mt-2 sm:mt-4 text-[15px] leading-relaxed text-zinc-500 sm:text-base md:text-lg max-w-3xl mx-auto px-6 sm:px-0 font-medium text-center">
+              <span className="block sm:hidden font-md font-[600] ">
                 AI that unifies your channels, automates sales, and delivers revenue-driven solutions.
               </span>
-              <span className="hidden sm:block font-sm font-[600] ">
+              <span className="hidden sm:block font-md font-[600] ">
                 Unify every social platform with an intelligent AI Companion that handles operations, analyzes performance in real time, and delivers actionable insights that actually scale revenue.
               </span>
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="flex flex-col sm:flex-row pt-7 gap-4 items-center">
               <HoverBorderGradientDemo />
             </div>
           </div>
@@ -137,7 +138,7 @@ const Hero3D = () => {
       <div className='absolute inset-0 opacity-[0.03] pointer-events-none'>
         <Scene />
       </div> */}
-    </section>
+    </BackgroundGradient>
   );
 };
 

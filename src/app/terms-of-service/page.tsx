@@ -3,21 +3,21 @@ import Image from "next/image";
 
 export default function TermsOfService() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-8 max-w-4xl mx-auto">
-            <Image
-              src="/heidelai.png"
-              alt="Privacy Policy"
-              width={100}
-              height={100}
-              className="rounded-lg mb-8"
-            />
-      <h1 className="text-3xl font-bold mb-8">Terms and Conditions of Use</h1>
+    <div className="min-h-screen bg-white text-zinc-900 p-8 max-w-4xl mx-auto">
+      <Image
+        src="/heidelai.png"
+        alt="Privacy Policy"
+        width={100}
+        height={100}
+        className="rounded-lg mb-8"
+      />
+      <h1 className="text-2xl md:text-3xl font-bold mb-8">Terms and Conditions of Use</h1>
 
       <div className="space-y-8">
         {/* Introduction */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Introduction</h2>
-          <p className="text-gray-300">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">Introduction</h2>
+          <p className="text-sm md:text-base text-zinc-700 text-justify">
             https://heidelai.com and any subdomains including client-specific domains are websites,
             services, and platforms that provide AI-powered SaaS solutions. The platform is owned and
             the service provided by HeidelAI Limited (&quot;HeidelAI&quot;, &quot;Supplier&quot;, &quot;us&quot;, &quot;our&quot; and &quot;we&quot; below),
@@ -25,13 +25,13 @@ export default function TermsOfService() {
             headquarters at Unit 82a James Carter Road, Mildenhall, Bury St. Edmunds, England, IP28 7DE,
             United Kingdom.
           </p>
-          <p className="text-gray-300">
+          <p className="text-sm md:text-base text-zinc-700 text-justify">
             These Terms and Conditions of Use (&quot;Terms&quot;) apply to your (&quot;Customer&quot; and &quot;you&quot; below) use
             of the website at https://heidelai.com (&quot;Website&quot;), any subdomains including client-specific
             domains, and any features or services (&quot;Services&quot;) offered through it, including but not limited to
-            Talkative and Understandative products.
+            Communicative and Understandative products.
           </p>
-          <p className="text-gray-300">
+          <p className="text-sm md:text-base text-zinc-700 text-justify">
             To use the Services, you must agree to these Terms. Please read them carefully. Please note that
             HeidelAI may change or update these Terms. HeidelAI will post any changes to our Website, so
             please revisit periodically because we will assume that you agree with them if you continue to
@@ -41,10 +41,10 @@ export default function TermsOfService() {
 
         {/* Definitions */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Definitions</h2>
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">Definitions</h2>
           <div className="space-y-4">
             {[
-              { term: "Services", definition: "means the services and products supplied by HeidelAI to the Customer under the Agreement specified below, including Talkative and Understandative products." },
+              { term: "Services", definition: "means the services and products supplied by HeidelAI to the Customer under the Agreement specified below, including Communicative and Understandative products." },
               { term: "Customer", definition: "means any user, person or entity who creates an account and uses HeidelAI Services supplied by HeidelAI under the Agreement." },
               { term: "Visitor", definition: "means any person who is browsing any website where HeidelAI Services are installed." },
               { term: "Agent", definition: "means any person who is employed by Customer to operate the Service." },
@@ -54,12 +54,12 @@ export default function TermsOfService() {
               { term: "Confidential Information", definition: "means all information, whether written or oral, provided by the disclosing party to the receiving party and which (i) is known by the receiving party to be confidential; (ii) is marked as or stated to be confidential; or (iii) ought reasonably to be considered by the receiving party to be confidential." },
               { term: "Third Party Service Provider", definition: "means any third party that collects, processes and/or uses Personal Information under the instruction of HeidelAI including any consultant, representative, advisor, or independent contractor (including Sub-processors) who renders services to the Company, a subsidiary, or an affiliate." },
               { term: "Sub-processor", definition: "means entities whose software, goods or services are used by HeidelAI in order to run a business, in particular while providing the Services." },
-              { term: "Talkative", definition: "means the multi-platform AI-powered chat solution offered by HeidelAI." },
+              { term: "Communicative", definition: "means the multi-platform AI-powered chat solution offered by HeidelAI." },
               { term: "Understandative", definition: "means the AI analytics platform offered by HeidelAI." }
             ].map((item, index) => (
               <div key={index}>
-                <h3 className="text-xl font-medium mb-2">{item.term}</h3>
-                <p className="text-gray-300">{item.definition}</p>
+                <h3 className="text-lg md:text-xl font-medium mb-2 text-zinc-900">{item.term}</h3>
+                <p className="text-sm md:text-base text-zinc-700 text-justify">{item.definition}</p>
               </div>
             ))}
           </div>
@@ -67,8 +67,8 @@ export default function TermsOfService() {
 
         {/* General Statements */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">General Statements</h2>
-          <ol className="list-decimal list-inside space-y-2 text-gray-300">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">General Statements</h2>
+          <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify">
             <li>
               On principles set out in these Terms and Conditions of Use, HeidelAI Limited renders its
               Services via the following Internet website https://heidelai.com and all relevant subdomains
@@ -103,8 +103,8 @@ export default function TermsOfService() {
 
         {/* Service Description */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Services Description</h2>
-          <ol className="list-decimal list-inside space-y-2 text-gray-300">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">Services Description</h2>
+          <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify">
             <li>
               The software used by the Customer in accordance with its application and purpose defined in
               these Terms and Conditions, available on the following Internet website https://heidelai.com and
@@ -123,12 +123,12 @@ export default function TermsOfService() {
               well as to freely add, change or remove particular elements.
             </li>
           </ol>
-          <p className="text-gray-300 font-semibold">HeidelAI&apos;s Services include but are not limited to:</p>
-          <ol className="list-decimal list-inside space-y-2 text-gray-300 pl-4">
+          <p className="text-zinc-700 font-semibold mb-2">HeidelAI&apos;s Services include but are not limited to:</p>
+          <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify pl-4">
             <li>
-              Talkative: A multi-platform, AI-powered chat solution that enables businesses to manage
+              Communicative: A multi-platform, AI-powered chat solution that enables businesses to manage
               customer communications across WhatsApp, Telegram, Facebook Messenger, Instagram
-              Message, and web applications from a single platform. Talkative uses artificial intelligence to
+              Message, and web applications from a single platform. Communicative uses artificial intelligence to
               interact with customers, assist in sales, provide customer support, and facilitate follow-ups.
             </li>
             <li>
@@ -142,8 +142,8 @@ export default function TermsOfService() {
 
         {/* Access and Use of Services */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Access and Use of Services</h2>
-          <ol className="list-decimal list-inside space-y-2 text-gray-300">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">Access and Use of Services</h2>
+          <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify">
             <li>
               HeidelAI Limited Services are exclusively designated for business use and must be used only
               in accordance with their purpose, application and the Terms and Conditions.
@@ -196,8 +196,8 @@ export default function TermsOfService() {
 
         {/* Acceptable Use Policy */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Acceptable Use Policy</h2>
-          <ol className="list-decimal list-inside space-y-2 text-gray-300">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">Acceptable Use Policy</h2>
+          <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify">
             <li>
               This Acceptable Use Policy applies to HeidelAI Limited Services accessible through
               https://heidelai.com and all relevant subdomains, mobile versions and successors URLs related
@@ -207,7 +207,7 @@ export default function TermsOfService() {
               To ensure proper and fluent functioning of the system we hereby declare that HeidelAI
               Limited Customers shall not misuse the Services and product. Consequently, the Customers
               agree not to:
-              <ol className="list-decimal list-inside space-y-2 text-gray-300 pl-4">
+              <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify pl-4">
                 <li>
                   hinder functioning of the Services especially in the form of reverse engineering or hacking
                   the Services, attempting to gain unauthorised access to the Services (or any portion
@@ -258,9 +258,9 @@ export default function TermsOfService() {
 
         {/* Trademarks and Copyrights */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Trademarks and Copyrights</h2>
-          <ol className="list-decimal list-inside space-y-2 text-gray-300">
-            <li>&quot;HeidelAI&quot;, &quot;Talkative&quot;, and &quot;Understandative&quot; are trademarks of HeidelAI Limited.</li>
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">Trademarks and Copyrights</h2>
+          <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify">
+            <li>&quot;HeidelAI&quot;, &quot;Communicative&quot;, and &quot;Understandative&quot; are trademarks of HeidelAI Limited.</li>
             <li>
               HeidelAI Limited states that it has rights to intangible assets in the form of a graphic project of
               offered services and software, website layout, computer software as well as to all company
@@ -312,8 +312,8 @@ export default function TermsOfService() {
 
         {/* Payment */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Payment</h2>
-          <ol className="list-decimal list-inside space-y-2 text-gray-300">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">Payment</h2>
+          <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify">
             <li>
               If the Customer wishes to use the Services they will be requested to make a payment
               according to currently effective price list placed on the HeidelAI website, price quote or pricing
@@ -352,8 +352,8 @@ export default function TermsOfService() {
 
         {/* Data Protection Compliance */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Data Protection Compliance</h2>
-          <ol className="list-decimal list-inside space-y-2 text-gray-300">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">Data Protection Compliance</h2>
+          <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify">
             <li>
               HeidelAI Limited is dedicated to protecting data protection and to promote compliance with
               rules set forth by, among others, United Kingdom and European Union data protection
@@ -383,7 +383,7 @@ export default function TermsOfService() {
             <li>
               As emphasized in our service description, HeidelAI maintains 100% data privacy for our
               business clients. This means:
-              <ol className="list-decimal list-inside space-y-2 text-gray-300 pl-4">
+              <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify pl-4">
                 <li>Business customer data belongs exclusively to the business customer;</li>
                 <li>
                   We process but do not store or use client business data for purposes other than providing
@@ -399,8 +399,8 @@ export default function TermsOfService() {
 
         {/* Account Closing */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Account Closing</h2>
-          <ol className="list-decimal list-inside space-y-2 text-gray-300">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">Account Closing</h2>
+          <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify">
             <li>The Customer may close its account at any time. Account closing means that the further use of Services with the use of current password and login shall no longer be possible.</li>
             <li>The Customer is responsible for closing their account.</li>
             <li>
@@ -421,8 +421,8 @@ export default function TermsOfService() {
 
         {/* AI Features and Limitations */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">AI Features and Limitations</h2>
-          <ol className="list-decimal list-inside space-y-2 text-gray-300">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">AI Features and Limitations</h2>
+          <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify">
             <li>
               Our Services utilize artificial intelligence technologies, including machine learning and natural
               language processing, to facilitate automated conversations, analyze conversation intent and
@@ -457,8 +457,8 @@ export default function TermsOfService() {
 
         {/* Guarantee and Limited Liability */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Guarantee and Limited Liability</h2>
-          <ol className="list-decimal list-inside space-y-2 text-gray-300">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">Guarantee and Limited Liability</h2>
+          <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify">
             <li>
               HeidelAI Limited guarantees the highest quality of its operations to ensure accessibility and
               continuity of offered Services and products in accordance with their use and purpose.
@@ -478,7 +478,7 @@ export default function TermsOfService() {
             </li>
             <li>
               HeidelAI Limited shall bear no liability in particular for:
-              <ol className="list-decimal list-inside space-y-2 text-gray-300 pl-4">
+              <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify pl-4">
                 <li>all negative consequences being the result of force majeure,</li>
                 <li>phrases and entries added to the network in connection with the use of offered Services,</li>
                 <li>
@@ -516,8 +516,8 @@ export default function TermsOfService() {
 
         {/* Term and Termination */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Term and Termination</h2>
-          <ol className="list-decimal list-inside space-y-2 text-gray-300">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">Term and Termination</h2>
+          <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify">
             <li>
               These Terms will commence on the date you first accept them and will continue until all
               subscriptions hereunder have expired or been terminated.
@@ -543,8 +543,8 @@ export default function TermsOfService() {
 
         {/* Miscellaneous */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Miscellaneous</h2>
-          <ol className="list-decimal list-inside space-y-2 text-gray-300">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">Miscellaneous</h2>
+          <ol className="list-decimal list-inside space-y-2 text-sm md:text-base text-zinc-700 text-justify">
             <li>
               If any reference in these Terms is found to be unenforceable or invalid, that provision will be
               limited or eliminated to the minimum extent necessary so that these Terms will otherwise remain
@@ -573,8 +573,8 @@ export default function TermsOfService() {
 
         {/* Privacy Policy */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Privacy Policy</h2>
-          <p className="text-gray-300">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">Privacy Policy</h2>
+          <p className="text-sm md:text-base text-zinc-700 text-justify">
             Principles of Customer privacy protection including Personal Data protection have been
             described in a separate Privacy Policy.
           </p>
@@ -582,17 +582,17 @@ export default function TermsOfService() {
 
         {/* Contact Information */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Contact Information</h2>
-          <p className="text-gray-300">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">Contact Information</h2>
+          <p className="text-sm md:text-base text-zinc-700 text-justify">
             If you have any questions about these Terms of Service, please contact us at:
           </p>
           <div className="mt-4 space-y-2">
-            <p className="text-gray-300">
+            <p className="text-sm md:text-base text-zinc-700 text-justify">
               Email: <a href="mailto:support@heidelai.com" className="text-blue-400 hover:text-blue-300">
                 support@heidelai.com
               </a>
             </p>
-            <p className="text-gray-300">
+            <p className="text-sm md:text-base text-zinc-700 text-justify">
               Address: HeidelAI Limited, Unit 82a James Carter Road, Mildenhall, Bury St. Edmunds, England,
               IP28 7DE, United Kingdom
             </p>
@@ -600,8 +600,8 @@ export default function TermsOfService() {
         </section>
 
         {/* Last Updated */}
-        <footer className="mt-12 pt-6 border-t border-gray-800">
-          <p className="text-gray-400 text-sm">
+        <footer className="mt-12 pt-6 border-t border-zinc-200">
+          <p className="text-zinc-500 text-sm">
             Last Updated: March 3, 2025
           </p>
         </footer>

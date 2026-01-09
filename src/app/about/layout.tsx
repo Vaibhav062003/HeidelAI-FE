@@ -27,9 +27,9 @@ export default function AboutLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="bg-black text-white">
+    <div className="bg-white text-zinc-900">
       <Header />
-      <main className="min-h-screen bg-zinc-950 text-white pt-16">
+      <main className="min-h-screen bg-white text-zinc-900 pt-16">
         {children}
       </main>
       <Footer />
