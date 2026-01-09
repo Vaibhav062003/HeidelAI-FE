@@ -17,10 +17,16 @@ const CountDownTimer = ({ targetDate }: { targetDate: string }) => {
       // 2. Trim microseconds (6 digits) to milliseconds (3 digits) for cross-browser compatibility.
       let safeDate = targetDate;
       
-      // If it doesn't end in Z, we assume it's UTC and append it.
-      if (!safeDate.endsWith('Z')) {
-         // Regex looks for the dot followed by 3 digits (group 1) and then extra digits, keeping only the first 3.
-         safeDate = safeDate.replace(/(\.\d{3})\d+$/, '$1') + 'Z';
+      // Robustly handle timestamp formats:
+      // - Truncate microseconds (>3 digits) to milliseconds (3 digits)
+      // - Ensure string ends with 'Z' for UTC interpretation
+      if (safeDate) {
+        if (safeDate.includes('.')) {
+             // Replace (.123)456...Z? with .123Z
+             safeDate = safeDate.replace(/(\.\d{3})\d*(?:Z)?$/, '$1Z');
+        } else if (!safeDate.endsWith('Z')) {
+             safeDate += 'Z';
+        }
       }
 
       const difference = +new Date(safeDate) - +new Date();

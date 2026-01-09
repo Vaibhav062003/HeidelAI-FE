@@ -61,6 +61,7 @@ export default function DashboardLayout({
               alt="HeidelAI"
               width={260}
               height={260}
+              loading={'eager'}
               className="mb-8 drop-shadow-2xl"
             />
             <motion.div

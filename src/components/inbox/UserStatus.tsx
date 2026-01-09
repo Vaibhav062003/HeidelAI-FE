@@ -62,10 +62,6 @@ interface UserStatusProps {
   setIsStatusDropdownOpen: (open: boolean) => void;
   selectedConversationId: string;
   statusLoading: boolean;
-  message: Message[];
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
-  lastMessageRef: React.RefObject<HTMLDivElement | null>;
-  setConversationStatus: (status: "open" | "closed" | "follow-up") => void;
   handleResolve: (id: string) => void;
   handleFollowUp: (id: string) => void;
   handleReopen: () => void;
@@ -77,10 +73,6 @@ const UserStatus: React.FC<UserStatusProps> = ({
   setIsStatusDropdownOpen,
   selectedConversationId,
   statusLoading,
-  message,
-  setMessages,
-  lastMessageRef,
-  setConversationStatus,
   handleResolve,
   handleFollowUp,
   handleReopen,
