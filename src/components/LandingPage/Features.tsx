@@ -150,19 +150,20 @@ interface FloatingIconProps {
 }
 
 const FloatingIcon: React.FC<FloatingIconProps> = ({ icon, delay, index }) => {
-  const isBottomWave = index >= 3; // Last 3 icons come from bottom
-  const verticalOffset = isBottomWave
-    ? Math.random() * 100 // Positive: bottom (200px to 800px below)
-    : (Math.random() - 0.5) * 600; // Mixed: top/bottom spread
+  const wave = Math.floor(index / 5);
+  const isBottomHeavy = index % 10 >= 5;
+
+  const verticalOffset = isBottomHeavy
+    ? Math.random() * 250 // Bottom cluster: 100-400px below
+    : (Math.random() - 0.5) * 400; // Top/middle spread: -250 to +250px
 
   return (
     <div
-      className={`absolute w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-white flex items-center justify-center shadow-lg border-2 ${icon.color}`}
+      className={`absolute w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-2xl bg-white flex items-center justify-center shadow-xl border-2 ${icon.color}`}
       style={{
-        animation: `funnelFlow 7s cubic-bezier(0.25, 0.1, 0.25, 1) ${delay}s infinite`,
+        animation: `funnelFlow 8s cubic-bezier(0.22, 0.44, 0.36, 0.98) ${delay}s infinite`,
         zIndex: 5,
         ["--offset" as any]: `${verticalOffset}px`,
-        ["--is-bottom" as any]: isBottomWave ? "1" : "0",
       }}
     >
       <div className="relative w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-9 lg:h-9 flex items-center justify-center">
@@ -298,10 +299,10 @@ const ProcessingNode: React.FC = () => {
   }, [slides.length]);
 
   return (
-    <div className="relative w-[85vw] max-w-[280px] sm:max-w-xl md:max-w-2xl lg:max-w-3xl flex justify-center z-[15] mx-auto transition-all duration-300">
-      <div className="w-full bg-white rounded-2xl sm:rounded-[3.5rem] shadow-2xl border border-gray-100 px-4 py-8 sm:px-16 sm:py-24 flex flex-col items-center">
-        {/* Aspect Ratio keeps it rectangular and stable */}
-        <div className="relative w-full aspect-[2.2/1] sm:aspect-[2.5/1]">
+  <div className="relative w-[75vw] max-w-[240px] sm:max-w-lg md:max-w-xl lg:max-w-2xl flex justify-center z-[15] mx-auto transition-all duration-300">
+    <div className="w-full bg-white rounded-2xl sm:rounded-[3.5rem] shadow-2xl border border-gray-100 px-3 py-6 sm:px-12 sm:py-16 flex flex-col items-center">
+      {/* Aspect Ratio - Reduced height */}
+      <div className="relative w-full aspect-[2.2/1] sm:aspect-[2.5/1] flex items-center justify-center pb-2">
           {slides.map((slide, index) => (
             <div
               key={index}
@@ -322,14 +323,21 @@ const ProcessingNode: React.FC = () => {
                         "https://cdn-icons-png.flaticon.com/512/2103/2103633.png";
                     }}
                   />
-                  <span className="text-3xl sm:text-4xl md:text-[42px] lg:text-[48px] font-bold tracking-tight text-gray-900">
-                    HeidelAI
+                  <span className="text-3xl sm:text-4xl md:text-[42px] lg:text-[48px] font-semibold tracking-tight text-gray-900">
+                    {" "}
+                    {slide.content} {/* Shows "HeidelAI" */}
                   </span>
                 </div>
               ) : (
-                <p className="text-center text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-orange-500 via-orange-600 to-red-700 bg-clip-text text-transparent leading-snug max-w-[90%] px-2">
-                  {slide.content}
-                </p>
+                // TEXT SLIDES - Your existing code
+                <div className="h-full flex items-center justify-center px-4">
+                  <p
+                    className="text-center font-bold bg-gradient-to-r from-orange-500 via-orange-600 to-red-700 bg-clip-text text-transparent 
+                        text-base sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl leading-normal max-w-[95%] break-words"
+                  >
+                    {slide.content}
+                  </p>
+                </div>
               )}
             </div>
           ))}
@@ -362,7 +370,7 @@ const Features: React.FC = () => {
           <FloatingIcon
             key={icon.id}
             icon={icon}
-            delay={idx * 0.7 + Math.random() * 0.8}
+            delay={idx * 0.6 + Math.random() * 0.6}
             index={idx}
           />
         ))}
@@ -370,62 +378,68 @@ const Features: React.FC = () => {
           <FloatingIcon
             key={`${icon.id}-wave2`}
             icon={icon}
-            delay={idx * 0.7 + 4.0 + Math.random() * 0.8}
-            index={idx}
+            delay={idx * 0.6 + 3.5 + Math.random() * 0.6}
+            index={idx + 14} // Different index for wave variation
           />
-        ))}{" "}
+        ))}
+        {INPUT_ICONS.slice(0, 8).map(
+          (
+            icon,
+            idx // Third wave - partial set
+          ) => (
+            <FloatingIcon
+              key={`${icon.id}-wave3`}
+              icon={icon}
+              delay={idx * 0.6 + 6.5 + Math.random() * 0.6}
+              index={idx + 28}
+            />
+          )
+        )}
         <OutputCarousel cards={OUTPUT_CARDS} />
       </div>
 
       <style jsx>{`
         @keyframes funnelFlow {
           0% {
-            left: -30vw;
-            /* TRUE FUNNEL: Wide mouth covers entire viewport height */
-            top: calc(50% + var(--offset, 0px));
-            transform: scale(1.3) rotate(-5deg);
+            left: clamp(-40vw, -25%, -15vw); /* Full viewport width entry */
+            top: calc(50% + var(--offset, 0px) * 1.3);
+            transform: scale(1.4) rotateY(10deg);
             opacity: 0;
           }
-          10% {
-            opacity: 0.9;
-            transform: scale(1.15) rotate(2deg);
+          12% {
+            opacity: 1;
+            transform: scale(1.2) rotateY(-5deg);
           }
-
-          25% {
-            left: 8vw;
-            top: calc(50% + var(--offset, 0px) * 1.1);
+          28% {
+            left: clamp(5vw, 8%, 12vw);
+            top: calc(50% + var(--offset, 0px) * 1.15);
             transform: scale(1.05);
           }
-
-          45% {
-            left: 22vw;
-            top: calc(50% + var(--offset, 0px) * 0.8);
+          48% {
+            left: clamp(18vw, 22%, 26vw);
+            top: calc(50% + var(--offset, 0px) * 0.75);
             transform: scale(0.9);
           }
-
-          65% {
-            left: 36vw;
-            top: calc(50% + var(--offset, 0px) * 0.5);
-            transform: scale(0.75);
+          68% {
+            left: clamp(32vw, 36%, 40vw);
+            top: calc(50% + var(--offset, 0px) * 0.4);
+            transform: scale(0.7);
           }
-
-          85% {
-            left: 46vw;
-            top: calc(50% + var(--offset, 0px) * 0.15);
-            transform: scale(0.45);
+          88% {
+            left: clamp(44vw, 47%, 49vw);
+            top: calc(50% + var(--offset, 0px) * 0.08);
+            transform: scale(0.4);
           }
-
-          95% {
-            left: 49vw;
+          98% {
+            left: 50vw;
             top: 50%;
-            transform: scale(0.2);
-            opacity: 0.6;
+            transform: scale(0.15);
+            opacity: 0.8;
           }
-
           100% {
             left: 50vw;
             top: 50%;
-            transform: scale(0) rotate(180deg);
+            transform: scale(0) rotate(360deg);
             opacity: 0;
           }
         }
