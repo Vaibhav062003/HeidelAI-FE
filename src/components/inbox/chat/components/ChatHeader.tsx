@@ -61,6 +61,8 @@ interface ChatHeaderProps {
     setConversationStatus: React.Dispatch<React.SetStateAction< "open" | "closed" | "follow-up" >>;
     setIsResolved: React.Dispatch<React.SetStateAction<boolean>>;
     setIsFollowUp: React.Dispatch<React.SetStateAction<boolean>>;
+    isWindowExpired: boolean;
+    targetExpiryDate: string | null;
 }
 
 const ChatHeader = ({
@@ -76,6 +78,8 @@ const ChatHeader = ({
     setConversationStatus,
     setIsResolved,
     setIsFollowUp,
+    isWindowExpired,
+    targetExpiryDate
     } : ChatHeaderProps) => {
     const { reminders, snoozeReminder, doneReminder, snoozing, completing, deleteReminder } = useReminders(selectedConversationId);
         
@@ -438,14 +442,14 @@ const ChatHeader = ({
             {/* Action Buttons Section */}
             <div className="flex items-center space-x-2">
             {/* Count down clock */}
-            {conversation?.reply_window_ends_at && (
+            {targetExpiryDate && (
                 <Badge
                 variant="secondary"
-                className="backdrop-blur-sm bg-green-100 border border-green-200 text-black hover:bg-green-200 hover:cursor-pointer px-2  rounded-full"
+                className={`backdrop-blur-sm ${isWindowExpired ? "bg-red-100 border-red-200 text-red-800 hover:bg-red-200" : "bg-green-100 border-green-200 text-black hover:bg-green-200"} hover:cursor-pointer px-2  rounded-full`}
                 >
-                <CountDownTimer
-                    targetDate={String(conversation?.reply_window_ends_at)}
-                />
+                    <CountDownTimer
+                        targetDate={targetExpiryDate}
+                    />
                 </Badge>
             )}
 
