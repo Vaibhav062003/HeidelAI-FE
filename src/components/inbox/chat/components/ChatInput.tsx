@@ -31,6 +31,7 @@ interface ChatInputProps {
     textAreaRef: React.RefObject<HTMLTextAreaElement | null>;
     sendMessage: (content: string, attachments: File[]) => Promise<void>;
     typingUsers: Map<string, {agent_name: string}>
+    isWindowExpired: boolean;
 }
 
 const ChatInput = ({
@@ -43,6 +44,7 @@ const ChatInput = ({
     textAreaRef,
     sendMessage,
     typingUsers,
+    isWindowExpired
 }: ChatInputProps) => {
 
     const { 
@@ -300,9 +302,10 @@ const ChatInput = ({
                 }}
             />
 
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-3 hover:border-gray-300/60 flex flex-col shadow-xl mx-3">
+                <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-3 hover:border-gray-300/60 flex flex-col shadow-xl mx-3 `}>
+
                 {/* Mode Toggle */}
-                <div className="mb-5 w-40 bg-gray-100/80 rounded-2xl p-0.5 flex items-center">
+                <div className="mb-5 w-40 bg-gray-100/80 rounded-2xl p-0.5 flex items-center relative z-50">
                     <button
                     className={`flex-1 text-xs px-4 py-2 rounded-2xl transition-all duration-300 font-medium ${mode === "reply"
                         ? "bg-blue-600 text-white shadow-md"
@@ -323,6 +326,14 @@ const ChatInput = ({
                     </button>
                 </div>
 
+                {isWindowExpired && mode === "reply" && (
+                    <div className="absolute inset-0 z-40 bg-gray-100/60 backdrop-blur-[1px] rounded-2xl flex items-center justify-center">
+                        <div className="bg-white text-red-600 px-4 py-2 rounded-xl border border-red-200 shadow-sm text-sm font-medium">
+                            You can’t reply to this conversation because the 24-hour reply window has expired.
+                        </div>
+                    </div>
+                )}
+
                 {/* Textarea */}
                 <div className="flex-1 mb-1.5 relative">
                     <div
@@ -342,6 +353,7 @@ const ChatInput = ({
                     onScroll={handleScroll}
                     value={message}
                     onChange={handleInputChange}
+                    disabled={mode === "reply" && isWindowExpired}
                     onPaste={handlePaste}
                     onKeyDown={handleKeyDown}
                     placeholder={
@@ -391,7 +403,7 @@ const ChatInput = ({
                     {/* Emoji picker */}
                     <Popover>
                         <PopoverTrigger asChild>
-                        <button className="p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors">
+                        <button disabled={mode === "reply" && isWindowExpired} className="p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors">
                             <Smile className="h-4 w-4 text-gray-600" />
                         </button>
                         </PopoverTrigger>
@@ -408,6 +420,7 @@ const ChatInput = ({
                     <Tooltip>
                         <TooltipTrigger asChild>
                         <button
+                            disabled={mode === "reply" && isWindowExpired}
                             onClick={handleFileClick}
                             className="p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors"
                         >
@@ -423,6 +436,7 @@ const ChatInput = ({
                     <input
                         ref={fileInputRef}
                         type="file"
+                        disabled={mode === "reply" && isWindowExpired}
                         accept="image/*,video/*"
                         className="hidden"
                         onChange={(e) => handleFiles(e.target.files)}
@@ -468,7 +482,7 @@ const ChatInput = ({
                         }}
                         // ONLY disable if input is empty.
                         // We removed 'isSending' so you can spam click like WhatsApp.
-                        disabled={(!message.trim() && attachments.length === 0) || message.length > maxLength}
+                        disabled={(!message.trim() && attachments.length === 0) || message.length > maxLength || (mode === "reply" && isWindowExpired)}
                     >
                         <Send className="h-4 w-4" />
                         <span className="ml-2">

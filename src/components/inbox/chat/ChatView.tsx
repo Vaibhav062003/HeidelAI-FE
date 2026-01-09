@@ -13,7 +13,7 @@ import LandingDashboard from "../LandingDashboard";
 import { useUser } from "@clerk/nextjs";
 import { useMainWebSocket } from "@/lib/websocket";
 import { ChatViewProps, CannedResponse} from "./types";
-import { getOrCreateChatClientId } from "../chat/utils";
+import { getOrCreateChatClientId, getUtcTime } from "../chat/utils";
 import { useChatMessages } from "./hooks/useChatMessages";
 import { useFileHandler } from "./hooks/useFileHandler";
 import MessageList from "./components/MessageList";
@@ -110,17 +110,21 @@ const ChatView = ({
     };
   }, [selectedConversationId]);
 
-  // const lastCustomerMessage = messages
-  //   .filter((m) => m.role === "customer")
-  //   .sort(
-  //     (a, b) =>
-  //       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  //   )[0];
+  const lastCustomerMessage = messages
+    .filter((m) => m.role === "customer")
+    .sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    )[0];
 
-  // const isWindowExpired = lastCustomerMessage
-  //   ? new Date().getTime() - new Date(lastCustomerMessage.timestamp).getTime() >
-  //   24 * 60 * 60 * 1000
-  //   : true;
+  const targetExpiryDate = lastCustomerMessage
+    ? new Date(getUtcTime(lastCustomerMessage.timestamp) + (24 * 60 * 60 * 1000) - (45 * 1000)).toISOString()
+    : null;
+
+  const isWindowExpired = lastCustomerMessage
+    ? new Date().getTime() - new Date(lastCustomerMessage.timestamp).getTime() >
+    24 * 60 * 60 * 1000
+    : false;
 
   return (
     <>
@@ -168,6 +172,8 @@ const ChatView = ({
               setConversationStatus={setConversationStatus}
               setIsResolved={setIsResolved}
               setIsFollowUp={setIsFollowUp}
+              isWindowExpired={isWindowExpired}
+              targetExpiryDate={targetExpiryDate}
             />
 
             {isDragging && (
@@ -201,6 +207,7 @@ const ChatView = ({
               textAreaRef={textareaRef}
               sendMessage={sendMessage}
               typingUsers={typingUsers}
+              isWindowExpired={isWindowExpired}
             />
             
           </Card>

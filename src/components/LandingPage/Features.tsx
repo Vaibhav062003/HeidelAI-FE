@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import {
   FaChartLine,
@@ -9,16 +9,13 @@ import {
   FaDollarSign,
   FaSearch,
 } from "react-icons/fa";
-import BackgroundGradient from "./ui/BackgroundGradient";
 
-// Types
 interface InputIcon {
   id: string;
   name: string;
   logoUrl: string;
   color: string;
 }
-
 interface OutputCard {
   id: string;
   icon: string;
@@ -105,33 +102,8 @@ const INPUT_ICONS: InputIcon[] = [
     logoUrl: "https://cdn.simpleicons.org/wechat/07C160",
     color: "border-green-500",
   },
-  {
-    id: "15",
-    name: "Discord",
-    logoUrl: "https://cdn.simpleicons.org/discord/5865F2",
-    color: "border-indigo-500",
-  },
-  {
-    id: "17",
-    name: "Reddit",
-    logoUrl: "https://cdn.simpleicons.org/reddit/FF4500",
-    color: "border-orange-500",
-  },
-  {
-    id: "18",
-    name: "Viber",
-    logoUrl: "https://cdn.simpleicons.org/viber/665CAC",
-    color: "border-purple-500",
-  },
-  {
-    id: "19",
-    name: "Line",
-    logoUrl: "https://cdn.simpleicons.org/line/00C300",
-    color: "border-green-500",
-  },
 ];
 
-// Output Feature Cards
 const OUTPUT_CARDS: OutputCard[] = [
   {
     id: "1",
@@ -171,7 +143,6 @@ const OUTPUT_CARDS: OutputCard[] = [
   },
 ];
 
-// FloatingIcon Component
 interface FloatingIconProps {
   icon: InputIcon;
   delay: number;
@@ -179,15 +150,19 @@ interface FloatingIconProps {
 }
 
 const FloatingIcon: React.FC<FloatingIconProps> = ({ icon, delay, index }) => {
-  const verticalOffset = (Math.random() - 0.5) * 400;
+  const isBottomWave = index >= 3; // Last 3 icons come from bottom
+  const verticalOffset = isBottomWave
+    ? Math.random() * 100 // Positive: bottom (200px to 800px below)
+    : (Math.random() - 0.5) * 600; // Mixed: top/bottom spread
 
   return (
     <div
       className={`absolute w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-white flex items-center justify-center shadow-lg border-2 ${icon.color}`}
       style={{
-        animation: `funnelFlow 5s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s infinite`,
+        animation: `funnelFlow 7s cubic-bezier(0.25, 0.1, 0.25, 1) ${delay}s infinite`,
         zIndex: 5,
         ["--offset" as any]: `${verticalOffset}px`,
+        ["--is-bottom" as any]: isBottomWave ? "1" : "0",
       }}
     >
       <div className="relative w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-9 lg:h-9 flex items-center justify-center">
@@ -204,126 +179,106 @@ const FloatingIcon: React.FC<FloatingIconProps> = ({ icon, delay, index }) => {
   );
 };
 
-// OutputCard Component
-interface OutputCardProps {
+const OutputCard: React.FC<{
   card: OutputCard;
-  delay: number;
   rowIndex: number;
-}
-
-const OutputCard: React.FC<OutputCardProps> = ({
-  card,
-  delay,
-  rowIndex,
-}) => {
-  const getIconComponent = (iconName: string) => {
-    const iconMap: { [key: string]: any } = { 
-      FaChartLine: FaChartLine,
-      FaRobot: FaRobot,
-      FaBullseye: FaBullseye,
-      FaLightbulb: FaLightbulb,
-      FaDollarSign: FaDollarSign,
-      FaSearch: FaSearch,
-    };
-    return iconMap[iconName];
+  delayOffset: number;
+  duration: number;
+}> = ({ card, rowIndex, delayOffset, duration }) => {
+  const iconMap: any = {
+    FaChartLine,
+    FaRobot,
+    FaBullseye,
+    FaLightbulb,
+    FaDollarSign,
+    FaSearch,
   };
+  const Icon = iconMap[card.icon];
 
-  const IconComponent = getIconComponent(card.icon);
+  const verticalMargin =
+    rowIndex === -1 ? "clamp(-50px, -5vw, -30px)" : "clamp(20px, 2vw, 30px)";
 
   return (
     <div
-      className="absolute bg-white rounded-xl sm:rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100 flex items-center gap-2 sm:gap-3 md:gap-4 w-[200px] sm:w-[245px] md:w-[290px] lg:w-[315px] p-3.5 sm:p-5 lg:p-6 hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)] transition-shadow"
+      className="absolute bg-white rounded-xl sm:rounded-[2rem] shadow-xl border border-gray-100 flex flex-col p-3 sm:p-5 pointer-events-none"
       style={{
+        // Prevents squishing on mobile
+        width: "clamp(130px, 15vw, 240px)",
+        height: "clamp(90px, 12vw, 160px)",
         left: "50%",
-        top: `calc(50% + 20px + ${rowIndex * 90}px)`,
-        animation: `sequentialFlow 15s linear ${delay}s infinite`,
+        top: "50%",
+        marginTop: verticalMargin,
         zIndex: 8,
+        animation: `emergeRightFlow ${duration}s linear infinite`,
+        animationDelay: `-${delayOffset}s`,
+        opacity: 0,
       }}
     >
-      <div className="w-9 h-9 sm:w-11 sm:h-11 lg:w-14 lg:h-14 flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg sm:rounded-xl shadow-inner border border-indigo-100">
-        {IconComponent ? (
-          <IconComponent className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-indigo-600" />
-        ) : (
-          <span className="text-2xl">📊</span>
-        )}
-      </div>
-      <div className="flex flex-col min-w-0">
-        <p className="text-xs sm:text-sm lg:text-base font-bold text-gray-900 tracking-tight truncate">
-          {card.title}
-        </p>
-        <p className="text-[9px] sm:text-[11px] text-indigo-600 font-semibold uppercase tracking-wider">
-          {card.category}
-        </p>
+      <div className="flex flex-col items-center justify-center h-full gap-2 sm:gap-4">
+        {/* Responsive Icon Box */}
+        <div className="w-8 h-8 sm:w-16 sm:h-16 flex items-center justify-center bg-indigo-50 rounded-lg sm:rounded-2xl text-indigo-600">
+          {Icon && <Icon className="w-5 h-5 sm:w-10 sm:h-10" />}
+        </div>
+        <div className="text-center w-full px-1">
+          <p className="text-[10px] sm:text-lg font-bold text-gray-900 truncate tracking-tight">
+            {card.title}
+          </p>
+          <p className="text-[7px] sm:text-[11px] text-indigo-500 font-black uppercase tracking-widest mt-0.5">
+            {card.category}
+          </p>
+        </div>
       </div>
     </div>
   );
 };
 
-// OutputCarousel Component
-interface OutputCarouselProps {
-  cards: OutputCard[];
-}
+const OutputCarousel: React.FC<{ cards: OutputCard[] }> = ({ cards }) => {
+  // Safe defaults
+  const [timing, setTiming] = useState({ duration: 22, interval: 5.5 });
 
-const OutputCarousel: React.FC<OutputCarouselProps> = ({ cards }) => {
-  const extendedCards = [...cards];
+  useEffect(() => {
+    const handleResize = () => {
+      const w = window.innerWidth;
+      // Mobile (<640px): 8s duration / 4s interval = Only 2 cards active. Zero chance of overlap.
+      // Desktop (>1280px): 22s duration / 5.5s interval = 4 cards active. Good density, no crash.
+      if (w < 640) setTiming({ duration: 8, interval: 4.0 });
+      else if (w < 1280) setTiming({ duration: 15, interval: 5.0 });
+      else setTiming({ duration: 22, interval: 7.5 });
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-  const cardInterval = 4.5;
-
-  const row1Cards = extendedCards.filter((_, index) => index % 2 === 0);
-  const row2Cards = extendedCards.filter((_, index) => index % 2 === 1);
+  const row1Cards = cards.filter((_, i) => i % 2 === 0);
+  const row2Cards = cards.filter((_, i) => i % 2 === 1);
 
   return (
-    <>
-      {/* Row 1 - Top row (linear movement) */}
-      {row1Cards.map((card, index) => (
+    <div className="absolute inset-0 pointer-events-none" key={timing.duration}>
+      {row1Cards.map((card, idx) => (
         <OutputCard
-          key={`row1-${card.id}-${index}`}
+          key={`r1-${idx}`}
           card={card}
-          delay={index * cardInterval}
           rowIndex={-1}
+          delayOffset={idx * timing.interval}
+          duration={timing.duration}
         />
       ))}
-
-      {/* Row 2 - Bottom row (offset timing to fill gaps, linear movement) */}
-      {row2Cards.map((card, index) => (
+      {row2Cards.map((card, idx) => (
         <OutputCard
-          key={`row2-${card.id}-${index}`}
+          key={`r2-${idx}`}
           card={card}
-          delay={index * cardInterval + cardInterval / 2}
           rowIndex={1}
+          delayOffset={idx * timing.interval + timing.interval / 2}
+          duration={timing.duration}
         />
       ))}
-    </>
-  );
-};
-
-// Header Component
-const SectionHeader: React.FC = () => {
-  return (
-    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-8 md:mb-10 lg:mb-16">
-      <h2
-        className="font-[500] italic text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-5xl mx-auto text-center leading-tight text-gray-900"
-        style={{ fontFamily: "'Playfair Display', ui-serif, Georgia, serif" }}
-      >
-        From Chaos to{" "}
-        <span className="bg-gradient-to-r from-orange-500 via-orange-600 to-red-700 bg-clip-text text-transparent">
-          Clarity
-        </span>
-      </h2>
-
-      <p className="text-gray-600 text-sm sm:text-base md:text-lg font-medium leading-relaxed max-w-3xl mx-auto text-center mt-3 sm:mt-4 md:mt-6">
-        Connect scattered conversations across 20+ platforms into one
-        intelligent command center that predicts trends, automates responses,
-        and scales your impact effortlessly{" "}
-      </p>
     </div>
   );
 };
 
-// ProcessingNode Component - HeidelAI Logo Center
 const ProcessingNode: React.FC = () => {
-  const [currentSlide, setCurrentSlide] = React.useState(0);
-
+  const [currentSlide, setCurrentSlide] = useState(0);
   const slides = [
     { type: "logo", content: "HeidelAI" },
     {
@@ -334,88 +289,75 @@ const ProcessingNode: React.FC = () => {
     { type: "text", content: "High impact actions" },
   ];
 
-  React.useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 3500);
+  useEffect(() => {
+    const interval = setInterval(
+      () => setCurrentSlide((prev) => (prev + 1) % slides.length),
+      3500
+    );
     return () => clearInterval(interval);
-  }, []);
+  }, [slides.length]);
 
   return (
-    <div className="relative" style={{ zIndex: 15 }}>
-      {/* Outer soft glow */}
-      <div className="absolute -inset-10 sm:-inset-12 md:-inset-14 lg:-inset-16 bg-gradient-to-b from-gray-200/60 via-white to-gray-200/40 blur-[60px] sm:blur-[70px] md:blur-[80px] rounded-[48px] -z-10 pointer-events-none" />
-
-      {/* Main white card */}
-      <div className="bg-white/95 rounded-[32px] sm:rounded-[40px] md:rounded-[44px] lg:rounded-[48px] shadow-[0_28px_80px_rgba(15,23,42,0.18)] border border-gray-100/90 px-6 py-8 sm:px-10 sm:py-10 md:px-14 md:py-12 lg:px-20 lg:py-14">
-        <div className="flex items-center justify-center">
-          <div className="relative w-[280px] sm:w-[340px] md:w-[400px] lg:w-[460px] h-[160px] sm:h-[190px] md:h-[220px] lg:h-[240px]">
-            {slides.map((slide, index) => (
-              <div
-                key={index}
-                className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${
-                  index === currentSlide
-                    ? "opacity-100 scale-100 translate-y-0"
-                    : "opacity-0 scale-95 translate-y-4"
-                }`}
-              >
-                {slide.type === "logo" ? (
-                  <div className="flex items-center justify-center gap-4 sm:gap-5">
-                    <img
-                      src="/heidelai.png"
-                      alt="HeidelAI Logo"
-                      className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 object-contain"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          "https://cdn-icons-png.flaticon.com/512/2103/2103633.png";
-                      }}
-                    />
-                    <span className="text-3xl sm:text-4xl md:text-[42px] lg:text-[48px] font-bold tracking-tight text-gray-900">
-  HeidelAI
-</span>
-
-                  </div>
-                ) : (
-                  <p className="text-center text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-orange-500 via-orange-600 to-red-700 bg-clip-text text-transparent leading-snug max-w-[90%] px-2">
-                    {slide.content}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
+    <div className="relative w-[85vw] max-w-[280px] sm:max-w-xl md:max-w-2xl lg:max-w-3xl flex justify-center z-[15] mx-auto transition-all duration-300">
+      <div className="w-full bg-white rounded-2xl sm:rounded-[3.5rem] shadow-2xl border border-gray-100 px-4 py-8 sm:px-16 sm:py-24 flex flex-col items-center">
+        {/* Aspect Ratio keeps it rectangular and stable */}
+        <div className="relative w-full aspect-[2.2/1] sm:aspect-[2.5/1]">
+          {slides.map((slide, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ${
+                index === currentSlide
+                  ? "opacity-100 scale-100"
+                  : "opacity-0 scale-95 pointer-events-none"
+              }`}
+            >
+              {slide.type === "logo" ? (
+                <div className="flex items-center justify-center gap-4 sm:gap-5">
+                  <img
+                    src="/heidelai.png"
+                    alt="HeidelAI Logo"
+                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        "https://cdn-icons-png.flaticon.com/512/2103/2103633.png";
+                    }}
+                  />
+                  <span className="text-3xl sm:text-4xl md:text-[42px] lg:text-[48px] font-bold tracking-tight text-gray-900">
+                    HeidelAI
+                  </span>
+                </div>
+              ) : (
+                <p className="text-center text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-orange-500 via-orange-600 to-red-700 bg-clip-text text-transparent leading-snug max-w-[90%] px-2">
+                  {slide.content}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
 };
 
-// Main Features Component
 const Features: React.FC = () => {
   return (
-  <BackgroundGradient>
-      <section
-        id="features"
-        className="relative w-full min-h-screen flex flex-col items-center justify-center py-16 sm:py-20 md:py-24 lg:py-28 overflow-hidden"
-        style={{ zIndex: 1 }}
-      >
-        {/* Your existing content stays exactly the same */}
-        <div className="absolute inset-0 z-0 opacity-[0.3] bg-[radial-gradient(#CBD5E1_1px,transparent_1px)] [background-size:20px_20px] sm:[background-size:24px_24px]"></div>
+    <section
+      id="features"
+      className="relative w-full min-h-[50vh] sm:min-h-screen flex flex-col items-center justify-center py-12 sm:py-24 overflow-hidden bg-white"
+    >
+      <div className="relative z-10 w-full mb-8 sm:mb-20 px-4">
+        <h2 className="text-2xl sm:text-7xl md:text-8xl font-serif italic text-center text-gray-900 tracking-tight">
+          From Chaos to <span className="text-orange-600">Clarity</span>
+        </h2>
+        <p className="text-gray-600 text-sm sm:text-base md:text-lg font-medium leading-relaxed max-w-3xl mx-auto text-center mt-3 sm:mt-4 md:mt-6">
+          Connect scattered conversations across 20+ platforms into one
+          intelligent command center that predicts trends, automates responses,
+          and scales your impact effortlessly{" "}
+        </p>
+      </div>
 
-        {/* Atmospheric Gradients */}
-        <div className="absolute top-[-8%] left-[-12%] w-[50vw] h-[50vw] bg-gradient-to-br from-blue-200/40 to-indigo-200/40 rounded-full blur-[120px] sm:blur-[140px] md:blur-[160px] animate-pulse"></div>
-        <div className="absolute bottom-[-8%] right-[-12%] w-[50vw] h-[50vw] bg-gradient-to-tl from-purple-200/40 to-pink-200/40 rounded-full blur-[120px] sm:blur-[140px] md:blur-[160px] animate-pulse"></div>
-
-        {/* Section Header */}
-        <div className="relative z-10 w-full">
-          <SectionHeader />
-        </div>
-
-        {/* Main Content Container */}
-        <div className="relative z-10 w-full flex-1 flex items-center justify-center">
-          <ProcessingNode />
-        </div>
-
-        {/* Input Stream */}
+      <div className="relative z-20 w-full flex items-center justify-center min-h-[300px] sm:min-h-[700px]">
+        <ProcessingNode />
         {INPUT_ICONS.map((icon, idx) => (
           <FloatingIcon
             key={icon.id}
@@ -424,7 +366,6 @@ const Features: React.FC = () => {
             index={idx}
           />
         ))}
-
         {INPUT_ICONS.map((icon, idx) => (
           <FloatingIcon
             key={`${icon.id}-wave2`}
@@ -432,111 +373,84 @@ const Features: React.FC = () => {
             delay={idx * 0.7 + 4.0 + Math.random() * 0.8}
             index={idx}
           />
-        ))}
-
-        {/* Output Stream */}
+        ))}{" "}
         <OutputCarousel cards={OUTPUT_CARDS} />
+      </div>
 
-        {/* Footer Branding */}
-        <div className="relative z-10 mt-8 sm:mt-10 md:mt-12">
-          <div className="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 bg-white/60 backdrop-blur-md rounded-full border border-gray-200/60 shadow-lg">
-            <div className="h-px w-6 sm:w-7 md:w-8 bg-gradient-to-r from-transparent via-gray-400 to-transparent"></div>
-            <span className="text-[8px] sm:text-[9px] font-semibold text-gray-500 uppercase tracking-[0.2em] sm:tracking-[0.25em]">
-              HeidelAI
-            </span>
-            <div className="h-px w-6 sm:w-7 md:w-8 bg-gradient-to-r from-transparent via-gray-400 to-transparent"></div>
-          </div>
-        </div>
-
-      {/* CSS Animations */}
       <style jsx>{`
         @keyframes funnelFlow {
           0% {
-            left: -10vw;
+            left: -30vw;
+            /* TRUE FUNNEL: Wide mouth covers entire viewport height */
             top: calc(50% + var(--offset, 0px));
-            transform: scale(1);
+            transform: scale(1.3) rotate(-5deg);
             opacity: 0;
           }
           10% {
-            opacity: 1;
+            opacity: 0.9;
+            transform: scale(1.15) rotate(2deg);
           }
-          20% {
-            left: 10vw;
-            top: calc(50% + var(--offset, 0px) * 0.85);
-            transform: scale(0.95);
+
+          25% {
+            left: 8vw;
+            top: calc(50% + var(--offset, 0px) * 1.1);
+            transform: scale(1.05);
           }
-          40% {
-            left: 25vw;
-            top: calc(50% + var(--offset, 0px) * 0.6);
-            transform: scale(0.85);
+
+          45% {
+            left: 22vw;
+            top: calc(50% + var(--offset, 0px) * 0.8);
+            transform: scale(0.9);
           }
-          60% {
-            left: 38vw;
-            top: calc(50% + var(--offset, 0px) * 0.3);
-            transform: scale(0.7);
+
+          65% {
+            left: 36vw;
+            top: calc(50% + var(--offset, 0px) * 0.5);
+            transform: scale(0.75);
           }
-          80% {
+
+          85% {
             left: 46vw;
-            top: calc(50% + var(--offset, 0px) * 0.1);
-            transform: scale(0.5);
+            top: calc(50% + var(--offset, 0px) * 0.15);
+            transform: scale(0.45);
           }
+
           95% {
             left: 49vw;
             top: 50%;
             transform: scale(0.2);
-            opacity: 0.5;
+            opacity: 0.6;
           }
+
           100% {
             left: 50vw;
             top: 50%;
-            transform: scale(0);
+            transform: scale(0) rotate(180deg);
             opacity: 0;
           }
         }
-
-        /* SEQUENTIAL FLOW: One card fully emerges before next starts */
-        @keyframes sequentialFlow {
+        @keyframes emergeRightFlow {
           0% {
-            transform: translateX(0) scale(0);
             opacity: 0;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.3);
           }
-
-          /* Rapid emergence phase - card becomes fully visible */
-          8% {
+          5% {
             opacity: 1;
-            transform: translateX(80px) scale(1);
+            transform: translate(-50%, -50%) scale(1);
           }
-
-          /* Card travels across the screen */
-          85% {
-            opacity: 1;
-            transform: translateX(calc(50vw + 50px)) scale(1);
-          }
-
-          /* Fade out */
           95% {
-            opacity: 0.5;
-            transform: translateX(calc(50vw + 80px)) scale(0.85);
-          }
-
-          100% {
-            transform: translateX(calc(50vw + 100px)) scale(0);
-            opacity: 0;
-          }
-        }
-
-        @keyframes pulse {
-          0%,
-          100% {
             opacity: 1;
           }
-          50% {
-            opacity: 0.6;
+          /* EXTENDED EXIT PATH: Ensures cards fully clear wide screens */
+          100% {
+            opacity: 0;
+            left: 150%;
+            transform: translate(0, -50%) scale(1.1);
           }
         }
       `}</style>
     </section>
-  </BackgroundGradient>
   );
 };
 

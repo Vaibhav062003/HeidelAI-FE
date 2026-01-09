@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Toaster, toast } from "sonner";
 import { cn } from "@/lib/utils";
+import BackgroundGradient from "@/components/LandingPage/ui/BackgroundGradient";
 
 export default function LoginPage() {
   const { isLoaded, signIn, setActive } = useSignIn();
@@ -16,6 +17,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const justSignedIn = useRef(false);
 
@@ -80,74 +82,121 @@ export default function LoginPage() {
   };
 
   return (
-    <section className="h-screen bg-black text-white px-6 flex items-center justify-center">
-      <div className="max-w-md shadow-none w-full border-2 border-white/10 mx-auto rounded-2xl p-4 md:p-8 shadow-input bg-black">
-        <h2 className="font-semibold pb-6 text-xl text-center text-neutral-200">
-          Sign in to your account
-        </h2>
-        <form className="my-8" onSubmit={handleSubmit}>
-          <LabelInputContainer className="mb-4">
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="border border-white/[0.1] rounded-[0.5rem] h-[45px] bg-zinc-800 placeholder:text-zinc-400 text-white"
-              placeholder="projectmayhem@fc.com"
-              type="email"
-              autoComplete="username"
-              required
-            />
-          </LabelInputContainer>
-          <LabelInputContainer className="mb-4">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="border border-white/[0.2] rounded-[0.5rem] h-[45px] bg-zinc-800 placeholder:text-zinc-400 text-white"
-              placeholder="••••••••"
-              type="password"
-              autoComplete="current-password"
-              required
-            />
-            {/* Forgot password link */}
-            <div className="text-right mt-1">
+    <BackgroundGradient className="min-h-screen text-white px-3 sm:px-4 md:px-6 py-6 sm:py-8 flex flex-col items-center justify-center">
+      <div className=" w-[500px] xs:w-[380px] sm:w-[360px] md:w-[360px] lg:w-[440px] mx-auto bg-white/[0.75] backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 shadow-[0_20px_60px_-15px_rgba(59,130,246,0.3),0_10px_25px_-8px_rgba(99,102,241,0.2)] border border-white/40 relative overflow-hidden transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(59,130,246,0.4),0_15px_30px_-8px_rgba(99,102,241,0.25)]">
+        {/* Subtle gradient overlay that matches background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white/20 to-indigo-50/30 rounded-2xl sm:rounded-3xl pointer-events-none" />
+
+        {/* Animated border glow */}
+        <div className="absolute inset-0 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+          <div className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-blue-400/20 via-indigo-400/20 to-blue-400/20 blur-xl" />
+        </div>
+
+        {/* Content wrapper with relative positioning */}
+        <div className="relative z-10">
+          <h1 className="font-semibold text-2xl sm:text-3xl text-center text-neutral-800 mb-2">
+            Welcome Back
+          </h1>
+          <p className="text-sm text-center text-neutral-600 mb-6 sm:mb-8">
+            Sign in to access your HeidelAI dashboard
+          </p>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <LabelInputContainer>
+              <Label htmlFor="email">Email Address</Label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <path d="m3 7 9 6 9-6" />
+                  </svg>
+                </div>
+                <Input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="border border-blue-200/50 rounded-[0.5rem] h-[44px] sm:h-[45px] bg-white/90 placeholder:text-neutral-400 text-neutral-800 focus:border-blue-400/60 focus:bg-white focus:ring-2 focus:ring-blue-100/50 transition-all pl-10"
+                  placeholder="you@example.com"
+                  type="email"
+                  autoComplete="username"
+                  required
+                />
+              </div>
+            </LabelInputContainer>
+            <LabelInputContainer>
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="5" y="11" width="14" height="10" rx="2" />
+                    <path d="M12 17a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" />
+                    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                  </svg>
+                </div>
+                <Input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="border border-blue-200/50 rounded-[0.5rem] h-[44px] sm:h-[45px] bg-white/90 placeholder:text-neutral-400 text-neutral-800 focus:border-blue-400/60 focus:bg-white focus:ring-2 focus:ring-blue-100/50 transition-all pl-10 pr-10"
+                  placeholder="••••••••"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                />
+              </div>
+              {/* Forgot password link */}
+              <div className="text-right mt-2">
+                <button
+                  type="button"
+                  className="text-sm text-neutral-600 hover:text-neutral-800 transition-colors"
+                  onClick={() => router.push("/forgot_password")}
+                >
+                  Forgot password?
+                </button>
+              </div>
+            </LabelInputContainer>
+            <button
+              className={cn(
+                "bg-gradient-to-br relative group/btn rounded-[0.5rem] from-neutral-800 to-neutral-900 block w-full text-white h-11 sm:h-12 font-medium shadow-lg hover:shadow-2xl hover:from-[#ff8c00] hover:via-[#ff5722] hover:to-[#ff1744] transition-all duration-1000 ease-out mt-6",
+                { "opacity-50 cursor-not-allowed": isLoggingIn }
+              )}
+              type="submit"
+              disabled={isLoggingIn}
+            >
+              {isLoggingIn ? "Signing in..." : "Sign In →"}
+              <BottomGradient />
+            </button>
+
+            {/* Need an account text */}
+            <p className="text-center text-sm text-neutral-600 mt-6">
+              Need an account?
+            </p>
+
+            {/* Don't have access section */}
+            <p className="text-center text-sm text-neutral-600">
+              Don&apos;t have access?{" "}
               <button
                 type="button"
-                className="text-sm text-cyan-400 hover:underline"
-                onClick={() => router.push("/forgot_password")}
+                className="text-neutral-800 font-medium hover:underline transition-colors"
+                onClick={() => router.push("/contact")}
               >
-                Forgot password?
+                Contact your admin
               </button>
-            </div>
-          </LabelInputContainer>
-          <button
-            className={cn(
-              "bg-gradient-to-br relative group/btn rounded-[0.5rem] from-zinc-900 to-zinc-900 block bg-zinc-800 w-full text-white h-10 font-medium shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]",
-              { "opacity-50 cursor-not-allowed": isLoggingIn }
-            )}
-            type="submit"
-            disabled={isLoggingIn}
-          >
-            {isLoggingIn ? "Logging in..." : "Log in →"}
-            <BottomGradient />
-          </button>
-          <div className="flex items-center my-8 text-neutral-400 text-sm">
-            <div className="flex-grow bg-neutral-800 h-[1px]" />
-            <p className="px-4 text-center whitespace-nowrap">
-              Don&apos;t have an account? Contact your admin
             </p>
-            <div className="flex-grow bg-neutral-800 h-[1px]" />
-          </div>
-        </form>
+
+          </form>
+        </div>
       </div>
-    </section>
+
+      {/* Secured by HeidelAI */}
+      <p className="text-center text-sm text-neutral-600 mt-6">
+        Secured by <span className="font-semibold bg-gradient-to-r from-[#ff8c00] to-[#ff1744] bg-clip-text text-transparent">HeidelAI</span>
+      </p>
+    </BackgroundGradient>
   );
 }
 
 const BottomGradient = () => (
   <>
-    <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
-    <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
+    <span className="group-hover/btn:opacity-100 block transition duration-1000 ease-in-out opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-[#ff8c00] to-transparent" />
+    <span className="group-hover/btn:opacity-100 blur-sm block transition duration-1000 ease-in-out opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-[#ff1744] to-transparent" />
   </>
 );
 

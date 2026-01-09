@@ -1,10 +1,11 @@
+"use client";
 import React from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/LandingPage/ui/button';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { ScheduleDemo } from '@/components/LandingPage/ui/schedule-demo';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 const menuItems = [
@@ -18,6 +19,7 @@ const Header = () => {
 	const [menuState, setMenuState] = React.useState(false);
 	const [isScrolled, setIsScrolled] = React.useState(false);
 	const [currentSection, setCurrentSection] = React.useState('hero');
+	const login = usePathname() === '/login';
 
 	React.useEffect(() => {
 		// Add smooth scroll behavior to html element
@@ -88,7 +90,7 @@ const Header = () => {
 	};
 
 	// Determine if we should use dark theme
-	const isDarkTheme = currentSection === 'cta';
+	const isDarkTheme = !login && currentSection === 'cta';
 
 
 	//   const [isOpen, setIsOpen] = React.useState(false);

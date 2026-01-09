@@ -245,18 +245,18 @@ const ReminderSideBar = ({ onToggleVisibility }: remindersideBarProps) => {
                     <p className="text-xs text-gray-600 leading-relaxed">{reminder.notes}</p>
                   </CardContent>
 
-                  <CardFooter className="flex justify-between px-3 py-2 border-t border-gray-100/60">
-                    <div className="flex items-center text-xs text-gray-500">
+                  <CardFooter className="flex items-center justify-between gap-2 px-3 py-2 border-t border-gray-100/60 overflow-hidden">
+                    <div className="flex items-center text-xs font-medium text-gray-500 whitespace-nowrap shrink-0">
                       <Calendar className="h-3 w-3 mr-1" />
                       {formatReminderDate(reminder.trigger_time)}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 shrink-0">
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-yellow-600 hover:text-yellow-600 hover:bg-red-50"
+                            className="h-7 w-7 p-0 text-yellow-600 hover:text-yellow-600 hover:bg-red-50"
                             onClick={() =>
                               snoozeReminder({ reminderId: reminder.id, snoozeUntil: 30 })
                             }
@@ -276,7 +276,7 @@ const ReminderSideBar = ({ onToggleVisibility }: remindersideBarProps) => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                            className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
                             onClick={() => doneReminder(reminder.id)}
                             disabled={reminder.status === 'DONE' || completing}
                           >
@@ -295,7 +295,7 @@ const ReminderSideBar = ({ onToggleVisibility }: remindersideBarProps) => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                             onClick={() => deleteReminder(reminder.id)}
                             disabled={deleting}
                           >

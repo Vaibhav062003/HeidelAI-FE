@@ -187,3 +187,13 @@ const extractAddressData = (content: string): AddressData | null => {
     return null;
   }
 };
+
+  // Helper to safely get UTC timestamp
+export  const getUtcTime = (timestamp: string) => {
+  if (!timestamp) return 0;
+  // If string doesn't end in Z, assume it's UTC and append Z to force UTC interpretation
+  // trimming potential microseconds if they exist to ensure compatibility might be handled by Date parser usually, 
+  // but ensuring 'Z' forces UTC context.
+  const safeTimestamp = timestamp.endsWith('Z') ? timestamp : `${timestamp}Z`; 
+  return new Date(safeTimestamp).getTime();
+};
