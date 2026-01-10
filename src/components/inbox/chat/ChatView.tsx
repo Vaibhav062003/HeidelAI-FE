@@ -155,7 +155,7 @@ const ChatView = ({
             }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
-            className={`relative h-full flex flex-col bg-white max-h-screen rounded-none overflow-hidden ${isDragging ? "" : "border border-gray-200"}`}
+            className={`relative h-full flex flex-col bg-gray-100/80 max-h-screen rounded-none overflow-hidden ${isDragging ? "" : "border border-gray-200"}`}
           >
 
             {/* Header */}
