@@ -137,10 +137,11 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
         if (response.status !== 200) throw new Error("Failed to send");
 
         // 4. Update Temp ID to Real ID on Success
-        if (response.data.details.message_id) {
-          console.log("received response message_id:", response.data.details.message_id);
+        if (response.data.details.message_id || response.data.details.response?.message_id) {
+          const messageId = response.data.details.message_id || response.data.details.response?.message_id;
+          console.log("received response message_id:", messageId);
           let payload : { id: string; status?: "sending" | "sent" | "delivered" | "read" } = {
-            id: response.data.details.message_id,
+            id: messageId,
           }
           if (response.data.details.status) {
             payload = {...payload, status: response.data.details.status }

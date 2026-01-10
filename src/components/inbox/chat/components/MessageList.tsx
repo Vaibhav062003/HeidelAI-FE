@@ -41,7 +41,7 @@ const MessageList = ({ messages, messagesLoading, selectedConversationId, lastMe
     return (
         <ScrollArea
             ref={scrollAreaRef}
-            className="flex-1 h-full pr-1 pl-4 py-0.1 bg-gray-100/80"
+            className="flex-1 h-full pr-1 pl-4 py-0.1"
         >
             <div className="space-y-3 max-w-full pb-4 sm:pb-0">
             {messagesLoading && messages.length === 0 ? (

@@ -4,6 +4,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { MessageCircle, AlertCircle, ThumbsUp, Bot, User2 } from "lucide-react";
 import { getRelativeTime } from '@/components/utils/dateUtils';
+import Image from "next/image";
 
 interface ConversationPreviewProps {
   id: string;
@@ -12,6 +13,7 @@ interface ConversationPreviewProps {
   sentiment: "positive" | "neutral" | "negative";
   customerName: string;
   lastMessage: string;
+  lastMessageIsPrivateNote?: boolean;
   timestamp: string;
   unreadCount: number; 
   avatarUrl: string;
@@ -28,6 +30,7 @@ const ConversationPreview = ({
   sentiment,
   customerName,
   lastMessage,
+  lastMessageIsPrivateNote,
   timestamp,
   unreadCount, 
   avatarUrl,
@@ -58,8 +61,11 @@ return (
   >
     <div className="flex items-start gap-2.5">
       {/* Avatar */}
-      <div className="w-6 h-6 flex-shrink-0 rounded-full overflow-hidden bg-gray-200 mt-0.5">
-        <img 
+      <div className="w-6 h-6 flex-shrink-0 rounded-full overflow-hidden  mt-0.5">
+        <Image
+          height={150} 
+          width={150} 
+          quality={100}
           src={
             channelType === "whatsapp" ? "/features/whatsapp.png" :
             channelType === "telegram" ? "/features/telegram.png" :
@@ -96,7 +102,20 @@ return (
           <p className={`text-[13px] text-gray-600 truncate flex-1 leading-relaxed ${
             unreadCount > 0 ? "font-bold" : "font-normal"
           }`}>
-            {lastMessage}
+            {lastMessageIsPrivateNote ? (
+              <>
+                <span className="flex-shrink-0 bg-purple-500 text-white text-[13px] px-1.5 py-0.5 rounded-md font-medium">
+                  Private Note
+                </span>
+                <span className="ml-1 truncate">
+                  {lastMessage.replace(/^Private Note:\s*/i, "")}
+                </span>
+              </>
+            ) : (
+              <span className="truncate">
+                {lastMessage}
+              </span>
+            )}
           </p>
           
           {unreadCount > 0 && (
