@@ -29,7 +29,7 @@ interface ChatInputProps {
     message: string;
     setMessage: React.Dispatch<React.SetStateAction<string>>;
     textAreaRef: React.RefObject<HTMLTextAreaElement | null>;
-    sendMessage: (content: string, attachments: File[]) => Promise<void>;
+    sendMessage: (content: string, attachments: File[], mode: "reply" | "private") => Promise<void>;
     typingUsers: Map<string, {agent_name: string}>
     isWindowExpired: boolean;
 }
@@ -104,7 +104,13 @@ const ChatInput = ({
         const val = e.target.value;
 
         setMessage(val);
-        filterResponses(val)
+        // PERFORMANCE FIX: Only run standard filtering logic if:
+        // 1. The message starts with "/" (user defines a command)
+        // 2. OR the menu is currently visible (so we can update/close it)
+        // This prevents re-renders on every keystroke for normal messages.
+        if (val.startsWith("/") || showCannedResponses) {
+            filterResponses(val);
+        }
 
         // Typing Indicator Throttle
         const now = Date.now();
@@ -119,12 +125,16 @@ const ChatInput = ({
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
             if (item.kind === "file") {
-            const file = item.getAsFile();
-            if (file) {
-                const dt = new DataTransfer();
-                dt.items.add(file);
-                handleFiles(dt.files);
-            }
+                if (mode === "private") {
+                    toast.error("Attachments are disabled in private mode");
+                    return;
+                }
+                const file = item.getAsFile();
+                if (file) {
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    handleFiles(dt.files);
+                }
             }
         }
     };
@@ -164,6 +174,10 @@ const ChatInput = ({
         toast.error(`Message exceeds limit`);
         return;
         }
+        if(mode === "private" && attachments.length > 0) {
+        toast.error("Attachments are disabled in private mode");
+        return;
+        }
     
         const contentToSend = message.trim();
     
@@ -178,7 +192,7 @@ const ChatInput = ({
     
         // 5. Call the Hook
         try {
-        await sendMessage(contentToSend, prevAttachments);
+        await sendMessage(contentToSend, prevAttachments, mode);
         
         // Scroll to bottom
         setTimeout(() => lastMessageRef.current?.scrollIntoView({ behavior: "smooth" }), 10);
@@ -420,15 +434,15 @@ const ChatInput = ({
                     <Tooltip>
                         <TooltipTrigger asChild>
                         <button
-                            disabled={mode === "reply" && isWindowExpired}
+                            disabled={(mode === "reply" && isWindowExpired) || mode === "private"}
                             onClick={handleFileClick}
-                            className="p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors"
+                            className={`p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors ${mode === "private" ? "cursor-not-allowed opacity-50" : ""}`}
                         >
                             <Paperclip className="h-4 w-4 text-gray-600" />
                         </button>
                         </TooltipTrigger>
                         <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl">
-                        Attach media
+                            {mode === "private" ? "Disabled in private mode" : "Attach media"}
                         </TooltipContent>
                     </Tooltip>
 
@@ -436,7 +450,7 @@ const ChatInput = ({
                     <input
                         ref={fileInputRef}
                         type="file"
-                        disabled={mode === "reply" && isWindowExpired}
+                        disabled={(mode === "reply" && isWindowExpired) || mode === "private"}
                         accept="image/*,video/*"
                         className="hidden"
                         onChange={(e) => handleFiles(e.target.files)}
