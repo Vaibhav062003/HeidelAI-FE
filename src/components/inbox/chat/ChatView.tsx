@@ -122,7 +122,7 @@ const ChatView = ({
     : null;
 
   const isWindowExpired = lastCustomerMessage
-    ? new Date().getTime() - new Date(lastCustomerMessage.timestamp).getTime() >
+    ? new Date().getTime() - getUtcTime(lastCustomerMessage.timestamp) >
     24 * 60 * 60 * 1000
     : false;
 

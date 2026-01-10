@@ -71,7 +71,7 @@ export const MessageItem = memo(
             : 
               ` backdrop-blur-sm 
               ${isReplyMessage || isMediaMessage ? "rounded-tr-lg" : "rounded-br-lg"} 
-              text-white ${message.status === 'failed' ? "border-red-500/60 bg-red-600/90" : "border-blue-500/60 bg-blue-600/90"}`
+              text-white ${message.status === 'failed' ? "border-red-500/60 bg-red-600/90" :  message.mode && message.mode === 'private' ? 'border-purple-500/60 bg-purple-600/90' : "border-blue-500/60 bg-blue-600/90"}`
             }`}
           style={{ wordBreak: "break-word" }}
         >
