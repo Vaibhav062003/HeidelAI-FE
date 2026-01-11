@@ -197,3 +197,25 @@ export  const getUtcTime = (timestamp: string) => {
   const safeTimestamp = timestamp.endsWith('Z') ? timestamp : `${timestamp}Z`; 
   return new Date(safeTimestamp).getTime();
 };
+
+export function formatPhoneNumber(raw: string): string {
+  if (!raw) return "";
+
+  // Remove everything except digits
+  const digits = raw.replace(/\D/g, "");
+
+  if (digits.length <= 10) {
+    // Not enough digits to contain a country code
+    return raw;
+  }
+
+  // Last 10 digits = local number
+  const local = digits.slice(-10);
+  const countryCode = digits.slice(0, -10);
+
+  // Split local number into 5 + 5
+  const first = local.slice(0, 5);
+  const second = local.slice(5);
+
+  return `+${countryCode} ${first} ${second}`;
+}

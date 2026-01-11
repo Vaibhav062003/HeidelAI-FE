@@ -65,6 +65,7 @@ export const MessageWrapper = ({ message, index, children, allMessages, forceHid
       {message.reaction && (
         <div className={`flex ${message.role === "customer" ? "justify-start" : "justify-end"} mt-1`}>
           <MessageReaction
+            platform={message.platform}
             reaction={message.reaction}
             messageId={message.id}
           />
