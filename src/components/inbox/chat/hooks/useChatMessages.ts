@@ -79,6 +79,7 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
     const sendMessage = useCallback(async (
         content: string, 
         attachments: File[],
+        mode: "reply" | "private"
     ) => {
         const platform = selectedConversationId.split("_")[0];
         const tempId = `temp-${Date.now()}`;
@@ -101,6 +102,7 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
             payload: { url: localPreviewUrl, caption: content },
             fileName: file.name,
             fileType: file.type,
+            mode: mode,
         };
         } else {
         optimisticMessage = {
@@ -112,6 +114,7 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
             timestamp: new Date(new Date().getTime() - 5.5 * 60 * 60 * 1000).toISOString(),
             type: "text",
             status: "sending",
+            mode: mode,
         };
         }
 
@@ -124,6 +127,7 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
         formData.append("temp_id", tempId);
         formData.append("conversation_id", selectedConversationId);
         formData.append("platform", platform);
+        formData.append("mode", mode);
         
         if (content.trim()) formData.append("content", content.trim());
         if (attachments.length > 0) formData.append("file", attachments[0]);
@@ -133,13 +137,24 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
         if (response.status !== 200) throw new Error("Failed to send");
 
         // 4. Update Temp ID to Real ID on Success
-        if (response.data.details.message_id) {
+        if (response.data.details.message_id || response.data.details.response?.message_id) {
+          const messageId = response.data.details.message_id || response.data.details.response?.message_id;
+          console.log("received response message_id:", messageId);
+          let payload : { id: string; status?: "sending" | "sent" | "delivered" | "read" } = {
+            id: messageId,
+          }
+          if (response.data.details.status) {
+            payload = {...payload, status: response.data.details.status }
+          }
             setMessages((prev) => {
             const index = prev.findIndex((m) => m.id === tempId);
+            console.log("optimistic message index:", index);
             if (index !== -1) {
+              console.log("updating optimistic message with real ID");
                 const newState = [...prev];
-                newState[index] = { ...newState[index], id: response.data.details.message_id };
+                newState[index] = { ...newState[index], ...payload };
                 // persistMessages(newState); // Call your IDB helper here
+                console.log("Updated message:", newState[index]);
                 return newState;
             }
             return prev;
@@ -213,14 +228,16 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
               // 2. Fallback: For IG we match the message_id
               // ---------------------------------------------------------
               else {
-                // const normalizeText = (text: string) => text ? text.replace(/\r/g, "") : "";
+                console.log("Attempting fuzzy match for incoming IG message:", incomingMsg);
                 const fuzzyMatchIndex = prev.findIndex(
                   (msg) =>
                     msg.id.toString() === incomingMsg.id.toString()
                 );
+                console.log("Fuzzy match index for incoming IG message:", fuzzyMatchIndex);
                 if (fuzzyMatchIndex !== -1) {
                   const newState = [...prev];
                   newState[fuzzyMatchIndex] = incomingMsg;
+                  console.log("Updated message with fuzzy match:", newState[fuzzyMatchIndex]);
                   persistMessages(newState);
                   return newState;
                 }

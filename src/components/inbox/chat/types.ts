@@ -69,6 +69,7 @@ export interface Message {
   fileName?: string;
   fileType?: string;
   reaction?: MessageReactions;
+  mode?: "reply" | "private";
 }
 
 export interface MessageReactions {

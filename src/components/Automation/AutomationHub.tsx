@@ -6,8 +6,7 @@ export type ViewState = 'dashboard' | 'editor';
 
 export default function AutomationHub() {
   return (
-    <div className="flex flex-col h-screen w-full bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/20 text-slate-900 font-sans overflow-hidden">
-      {/* Top Utility Navigation */}
+  <div className="flex flex-col h-dvh min-h-screen w-full text-slate-900 font-sans overflow-hidden">      {/* Top Utility Navigation */}
       {/* <header className="h-14 flex items-center justify-between px-6 bg-white/80 backdrop-blur-sm border-b border-slate-200/60 shrink-0 z-50">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 bg-indigo-600 rounded-md flex items-center justify-center shadow-sm">

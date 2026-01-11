@@ -283,45 +283,44 @@ const InfluencerBot = () => {
     }
   }, []);
 
-  return (
-    <div className="h-screen w-full flex items-center justify-center p-6 bg-gray-50">
+return (
+    <div className="h-full w-full flex flex-col p-0 bg-white">
       <style>{processingOverlayStyles}</style>
       
-      <Card className="h-full w-full max-w-full shadow-lg rounded-xl overflow-hidden">
-        <CardContent className="p-0 flex flex-col h-full">
+      <Card className="h-full w-full border-0 shadow-none rounded-none overflow-hidden flex flex-col">
+        <CardContent className="p-0 flex flex-col h-full w-full">
           <div className="flex flex-col h-full w-full bg-white">
-            {/* Header - Desktop */}
-            <div className="border-b p-6 bg-white flex-shrink-0">
+            
+            {/* Header */}
+            <div className="border-b border-gray-100 p-4 lg:p-6 bg-white flex-shrink-0">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <Instagram className="h-6 w-6 text-pink-600" />
-                  <h2 className="text-2xl font-semibold text-gray-900">
+                  <h2 className="text-xl font-semibold text-gray-900">
                     Instagram Influencer Analysis
                   </h2>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  {/* Clear chat button */}
                   <Button 
                     variant="ghost" 
                     onClick={clearChat}
-                    className="text-gray-500 hover:text-pink-500"
+                    className="text-gray-500 hover:text-pink-600 hover:bg-pink-50 text-sm h-9"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
                     Clear
                   </Button>
                   
-                  {/* Processing toggle */}
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setShowProcessing(prev => !prev)}
-                    className="h-10 w-10"
+                    className="h-9 w-9 hidden sm:flex hover:bg-gray-50"
                     title={showProcessing ? 'Hide processing' : 'Show processing'}
                   >
                     <Activity 
-                      size={16} 
-                      className={showProcessing ? 'text-pink-500' : 'text-gray-500'} 
+                      size={18} 
+                      className={showProcessing ? 'text-pink-500' : 'text-gray-400'} 
                     />
                   </Button>
                 </div>
@@ -329,35 +328,38 @@ const InfluencerBot = () => {
             </div>
 
             {/* Messages Container */}
-            <div className="flex-1 overflow-hidden relative">
-              <ScrollArea className="h-full w-full" ref={scrollContainerRef}>
-                <div className="p-6">
+            <div className="flex-1 overflow-hidden relative bg-white">
+              <ScrollArea
+                className="h-full w-full"
+                ref={scrollContainerRef}
+              >
+                <div className="p-4 lg:p-6 w-full">
                   {messages.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-full text-center py-16">
-                      <Instagram className="h-16 w-16 text-pink-400 mb-4" />
+                      <Instagram className="h-16 w-16 text-pink-200 mb-6" />
                       <h3 className="text-xl font-medium text-gray-900 mb-2">
                         Instagram Influencer Analyzer
                       </h3>
-                      <p className="text-base text-gray-600 max-w-md mb-6">
+                      <p className="text-base text-gray-500 max-w-md mb-8">
                         Enter Instagram usernames to get detailed influencer analysis 
                         including engagement rates, audience insights, and performance metrics.
                       </p>
                       <div className="flex flex-wrap gap-2 justify-center">
                         <button
                           onClick={() => setInputMessage("cristiano")}
-                          className="px-3 py-2 text-sm bg-pink-50 text-pink-600 rounded-full hover:bg-pink-100 transition-colors"
+                          className="px-4 py-2 text-sm bg-pink-50 text-pink-600 rounded-full hover:bg-pink-100 transition-colors font-medium"
                         >
                           Analyze @cristiano
                         </button>
                         <button
                           onClick={() => setInputMessage("arianagrande")}
-                          className="px-3 py-2 text-sm bg-pink-50 text-pink-600 rounded-full hover:bg-pink-100 transition-colors"
+                          className="px-4 py-2 text-sm bg-pink-50 text-pink-600 rounded-full hover:bg-pink-100 transition-colors font-medium"
                         >
                           Analyze @arianagrande
                         </button>
                         <button
                           onClick={() => setInputMessage("therock, kyliejenner")}
-                          className="px-3 py-2 text-sm bg-pink-50 text-pink-600 rounded-full hover:bg-pink-100 transition-colors"
+                          className="px-4 py-2 text-sm bg-pink-50 text-pink-600 rounded-full hover:bg-pink-100 transition-colors font-medium"
                         >
                           Compare profiles
                         </button>
@@ -365,7 +367,7 @@ const InfluencerBot = () => {
                     </div>
                   )}
                   
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {messages.map((message, index) => (
                       <div
                         key={index}
@@ -374,10 +376,10 @@ const InfluencerBot = () => {
                         }`}
                       >
                         <div
-                          className={`rounded-xl px-4 py-3 max-w-[75%] ${
+                          className={`rounded-2xl px-5 py-3.5 max-w-[85%] lg:max-w-[75%] shadow-sm ${
                             message.type === 'outgoing'
                               ? 'bg-pink-600 text-white'
-                              : 'bg-gray-100 text-gray-900'
+                              : 'bg-white border border-gray-100 text-gray-800'
                           }`}
                         >
                           <pre className="whitespace-pre-wrap font-sans text-base leading-relaxed">
@@ -389,7 +391,7 @@ const InfluencerBot = () => {
                     
                     {isTyping && (
                       <div className="flex justify-start">
-                        <div className="flex gap-1 px-4 py-3 bg-gray-100 rounded-xl">
+                        <div className="flex gap-1 px-4 py-3 bg-white border border-gray-100 rounded-2xl shadow-sm">
                           <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
                           <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></span>
                           <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></span>
@@ -402,16 +404,16 @@ const InfluencerBot = () => {
               </ScrollArea>
             </div>
 
-            {/* Input Area - Desktop */}
-            <div className="border-t bg-white p-6 flex-shrink-0">
-              <div className="flex gap-3 items-end">
-                <div className="flex-1">
+            {/* Input Area */}
+            <div className="border-t border-gray-200 bg-white p-6 lg:p-5.1 flex-shrink-0">
+              <div className="flex gap-3 lg:gap-4 items-end w-full">
+                <div className="flex-1 relative">
                   <input
                     type="text"
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     placeholder="Enter Instagram usernames (comma-separated)..."
-                    className="w-full rounded-xl border border-gray-300 p-3 text-base focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors"
+                    className="w-full rounded-xl border border-gray-200 p-3 text-base focus:outline-none focus:ring-2 focus:ring-pink-100 focus:border-pink-400 transition-all min-h-[50px] placeholder:text-gray-400"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -424,16 +426,16 @@ const InfluencerBot = () => {
                 <Button 
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim() || isTyping}
-                  className="h-12 w-12 rounded-xl bg-pink-600 hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                  className="h-[50px] w-[50px] rounded-xl bg-pink-600 hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 shadow-sm transition-all"
                 >
-                  <Send className="h-5 w-5" />
+                  <Send className="h-5 w-5 ml-0.5" />
                 </Button>
               </div>
             </div>
           </div>
         </CardContent>
         
-        {/* Processing Overlay - Desktop positioning */}
+        {/* Processing Overlay */}
         {showProcessing && (
           <div 
             className={`processing-overlay ${processingState.isVisible ? 'visible' : ''}`}
@@ -442,7 +444,7 @@ const InfluencerBot = () => {
             }}
           >
             <div className="processing-header">
-              <span className="font-medium text-base">Processing Analysis</span>
+              <span className="font-medium text-sm">Processing Analysis</span>
               <button
                 onClick={() => setShowProcessing(false)}
                 className="text-gray-300 hover:text-white transition-colors"
@@ -451,7 +453,7 @@ const InfluencerBot = () => {
               </button>
             </div>
             <div className="processing-steps">
-              <div className="processing-step active">
+              <div className="processing-step active text-sm">
                 {processingState.currentStep}
               </div>
             </div>
@@ -460,6 +462,6 @@ const InfluencerBot = () => {
       </Card>
     </div>
   );
-};
+}
 
 export default InfluencerBot;
