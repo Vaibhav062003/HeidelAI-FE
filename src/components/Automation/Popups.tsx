@@ -1,0 +1,301 @@
+// import React from 'react';
+
+// interface AddStepMenuProps {
+//   onClose: () => void;
+//   onSelect: (type: string, app?: string) => void;
+// }
+
+// // App Icon Component (reuse from before)
+// const AppIcon = ({ app, size = 'w-6 h-6' }: { app?: string; size?: string }) => {
+//   if (app === 'instagram') {
+//     return (
+//       <svg className={size} viewBox="0 0 24 24" fill="none">
+//         <rect x="2" y="2" width="20" height="20" rx="5" fill="url(#instagram-gradient-menu)" />
+//         <circle cx="12" cy="12" r="4" stroke="white" strokeWidth="2" fill="none" />
+//         <circle cx="17.5" cy="6.5" r="1.5" fill="white" />
+//         <defs>
+//           <linearGradient id="instagram-gradient-menu" x1="2" y1="22" x2="22" y2="2">
+//             <stop offset="0%" stopColor="#FD5949" />
+//             <stop offset="50%" stopColor="#D6249F" />
+//             <stop offset="100%" stopColor="#285AEB" />
+//           </linearGradient>
+//         </defs>
+//       </svg>
+//     );
+//   }
+  
+//   if (app === 'whatsapp') {
+//     return (
+//       <svg className={size} viewBox="0 0 24 24" fill="none">
+//         <circle cx="12" cy="12" r="10" fill="#25D366" />
+//         <path d="M17.5 14.45c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43s.17-.25.25-.41c.08-.17.04-.31-.02-.43s-.56-1.34-.76-1.84c-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.87.85-.87 2.07s.89 2.4 1.01 2.56c.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.14-1.18s-.22-.16-.47-.28z" fill="white" />
+//       </svg>
+//     );
+//   }
+  
+//   if (app === 'email') {
+//     return (
+//       <svg className={size} viewBox="0 0 24 24" fill="none">
+//         <rect x="3" y="5" width="18" height="14" rx="2" fill="#3B82F6" />
+//         <path d="M3 7l9 6 9-6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+//       </svg>
+//     );
+//   }
+  
+//   return null;
+// };
+
+// // Logic Icon Component
+// const LogicIcon = ({ type, size = 'w-6 h-6' }: { type: string; size?: string }) => {
+//   if (type === 'condition') {
+//     return (
+//       <svg className={size} viewBox="0 0 24 24" fill="none">
+//         <rect x="3" y="3" width="18" height="18" rx="2" fill="#8B5CF6" />
+//         <path d="M9 12h6M12 9v6" stroke="white" strokeWidth="2" strokeLinecap="round" />
+//       </svg>
+//     );
+//   }
+  
+//   if (type === 'delay') {
+//     return (
+//       <svg className={size} viewBox="0 0 24 24" fill="none">
+//         <circle cx="12" cy="12" r="9" fill="#F59E0B" />
+//         <path d="M12 7v5l3 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+//       </svg>
+//     );
+//   }
+  
+//   if (type === 'ai') {
+//     return (
+//       <svg className={size} viewBox="0 0 24 24" fill="none">
+//         <rect x="3" y="3" width="18" height="18" rx="4" fill="url(#ai-gradient-menu)" />
+//         <path d="M12 7v10M9 10l3-3 3 3M9 14l3 3 3-3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+//         <defs>
+//           <linearGradient id="ai-gradient-menu" x1="3" y1="3" x2="21" y2="21">
+//             <stop offset="0%" stopColor="#A855F7" />
+//             <stop offset="100%" stopColor="#EC4899" />
+//           </linearGradient>
+//         </defs>
+//       </svg>
+//     );
+//   }
+  
+//   if (type === 'trigger') {
+//     return (
+//       <svg className={size} viewBox="0 0 24 24" fill="none">
+//         <rect x="3" y="3" width="18" height="18" rx="2" fill="#10B981" />
+//         <path d="M8 12h8M12 8v8" stroke="white" strokeWidth="2" strokeLinecap="round" />
+//       </svg>
+//     );
+//   }
+  
+//   return null;
+// };
+
+// export function AddStepMenu({ onClose, onSelect }: AddStepMenuProps) {
+//   return (
+//     <>
+//       {/* Backdrop */}
+//       <div 
+//         className="fixed inset-0 bg-slate-900/20 backdrop-blur-[1px] z-[999]"
+//         onClick={onClose}
+//       />
+      
+//       {/* Right Sidebar Panel */}
+//       <div className="fixed right-0 top-0 h-full w-[420px] bg-white shadow-2xl z-[1000] animate-in slide-in-from-right duration-300 overflow-y-auto">
+//         {/* Header */}
+//         <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+//           <h2 className="text-lg font-bold text-slate-900">Choose Next Step</h2>
+//           <button 
+//             onClick={onClose}
+//             className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+//           >
+//             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+//               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+//             </svg>
+//           </button>
+//         </div>
+
+//         {/* Content */}
+//         <div className="p-6 space-y-8">
+//           {/* Starting Step Section */}
+//           <MenuSection 
+//             title="Starting Step"
+//             items={[
+//               { label: 'Trigger', desc: 'Start automation on event', type: 'trigger', iconType: 'trigger' }
+//             ]}
+//             onSelect={onSelect}
+//           />
+
+//           {/* Content Section */}
+//           <MenuSection 
+//             title="Content"
+//             items={[
+//               { label: 'Instagram', desc: 'Send DM or reply to comments', type: 'action', app: 'instagram' },
+//               { label: 'WhatsApp', desc: 'Send WhatsApp message', type: 'action', app: 'whatsapp' },
+//               { label: 'Channel', desc: 'Multi-channel message', type: 'action', app: 'email' }
+//             ]}
+//             onSelect={onSelect}
+//           />
+
+//           {/* AI Section */}
+//           <MenuSection 
+//             title="AI"
+//             items={[
+//               { label: 'AI Step', desc: 'Let AI handle conversations for you', type: 'logic', logicType: 'ai', badge: 'AI' }
+//             ]}
+//             onSelect={onSelect}
+//           />
+
+//           {/* Logic Section */}
+//           <MenuSection 
+//             title="Logic"
+//             items={[
+//               { label: 'Condition', desc: 'Branch based on criteria', type: 'logic', logicType: 'condition' },
+//               { label: 'Delay', desc: 'Wait before next step', type: 'logic', logicType: 'delay' }
+//             ]}
+//             onSelect={onSelect}
+//           />
+//         </div>
+//       </div>
+//     </>
+//   );
+// }
+
+// const MenuSection = ({ title, items, onSelect }: any) => (
+//   <div>
+//     <h3 className="text-sm font-bold text-slate-900 mb-3">{title}</h3>
+//     <div className="space-y-2">
+//       {items.map((item: any) => (
+//         <button
+//           key={item.label}
+//           onClick={() => onSelect(item.type, item.app)}
+//           className="w-full px-4 py-3 border-2 border-dashed border-slate-200 rounded-xl hover:border-slate-300 hover:bg-slate-50 transition-all group text-left flex items-center gap-3"
+//         >
+//           <div className="shrink-0">
+//             {item.app ? (
+//               <AppIcon app={item.app} />
+//             ) : (
+//               <LogicIcon type={item.iconType || item.logicType} />
+//             )}
+//           </div>
+//           <div className="flex-1 min-w-0">
+//             <div className="flex items-center gap-2">
+//               <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+//                 {item.label}
+//               </p>
+//               {item.badge && (
+//                 <span className="px-2 py-0.5 bg-slate-900 text-white text-[9px] font-bold uppercase rounded">
+//                   {item.badge}
+//                 </span>
+//               )}
+//             </div>
+//             {item.desc && (
+//               <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
+//             )}
+//           </div>
+//         </button>
+//       ))}
+//     </div>
+//   </div>
+// );
+
+// export function ConnectChannelModal({ onClose }: { onClose: () => void }) {
+//   const channels = [
+//     { name: 'Instagram', app: 'instagram', desc: 'Sync DMs and Comment threads.' },
+//     { name: 'WhatsApp', app: 'whatsapp', desc: 'Enterprise business API integration.' },
+//     { name: 'Email (SMTP)', app: 'email', desc: 'Direct transactional server delivery.' }
+//   ];
+
+//   return (
+//     <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-[2px] z-[1000] flex items-center justify-center p-6 animate-in fade-in duration-200">
+//        <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden border border-slate-200">
+//           <div className="p-10 border-b border-slate-100 flex items-center justify-between bg-slate-50/20">
+//              <div>
+//                 <h2 className="text-xl font-bold text-slate-900 tracking-tight">Active Integrations</h2>
+//                 <p className="text-xs text-slate-500 font-medium mt-1">Connect your workspace to target channels.</p>
+//              </div>
+//              <button onClick={onClose} className="text-slate-300 hover:text-slate-900 text-2xl font-light">✕</button>
+//           </div>
+//           <div className="p-10 space-y-4 overflow-y-auto">
+//              {channels.map(ch => (
+//                <div key={ch.name} className="p-5 border border-slate-200 rounded-xl flex items-center justify-between hover:border-indigo-400 hover:bg-slate-50/50 transition-all group">
+//                   <div className="flex items-center gap-5">
+//                     <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-white transition-all">
+//                       <AppIcon app={ch.app} size="w-7 h-7" />
+//                     </div>
+//                     <div>
+//                       <h4 className="text-sm font-bold text-slate-900 mb-0.5">{ch.name}</h4>
+//                       <p className="text-[11px] text-slate-400 font-medium tracking-tight">{ch.desc}</p>
+//                     </div>
+//                   </div>
+//                   <button className="px-4 py-1.5 bg-slate-100 text-[10px] font-black uppercase text-slate-600 hover:bg-indigo-600 hover:text-white rounded-lg transition-all">Authorize</button>
+//                </div>
+//              ))}
+//           </div>
+//        </div>
+//     </div>
+//   );
+// }
+
+// export function TemplatesModal({ onClose }: { onClose: () => void }) {
+//   return (
+//     <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-[2px] z-[1000] flex items-center justify-center p-6 animate-in fade-in duration-200">
+//        <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl flex flex-col h-[75vh] overflow-hidden border border-slate-200">
+//           <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+//              <h2 className="text-lg font-bold text-slate-900 tracking-tight">Flow Library</h2>
+//              <button onClick={onClose} className="text-slate-300 hover:text-slate-900 text-2xl font-light">✕</button>
+//           </div>
+          
+//           <div className="flex-1 flex overflow-hidden">
+//              <aside className="w-56 border-r border-slate-100 p-8 space-y-6 bg-slate-50/30">
+//                 <div className="space-y-4">
+//                    <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Industry</h4>
+//                    <p className="text-xs font-bold text-indigo-600 cursor-pointer">E-Commerce</p>
+//                    <p className="text-xs font-medium text-slate-500 hover:text-slate-900 cursor-pointer transition-colors">SaaS Lead Gen</p>
+//                    <p className="text-xs font-medium text-slate-500 hover:text-slate-900 cursor-pointer transition-colors">Support</p>
+//                 </div>
+//              </aside>
+
+//              <main className="flex-1 p-8 overflow-y-auto grid grid-cols-2 gap-6 bg-[#fcfcfd]">
+//                 <TemplateCard 
+//                   title="Post Comment to Discount" 
+//                   desc="Auto-replies to Reel comments with a trackable discount link."
+//                   apps={['instagram', 'email']}
+//                 />
+//                 <TemplateCard 
+//                   title="Keyword Intent Redirect" 
+//                   desc="Parses DMs for 'support' and connects to human agent."
+//                   apps={['whatsapp']}
+//                 />
+//                 <TemplateCard 
+//                   title="Email Follow-up Sequence" 
+//                   desc="Automated multi-day drip for abandoned checkout events."
+//                   apps={['email']}
+//                 />
+//              </main>
+//           </div>
+//        </div>
+//     </div>
+//   );
+// }
+
+// const TemplateCard = ({ title, desc, apps }: { title: string; desc: string; apps: string[] }) => (
+//   <div className="p-6 bg-white border border-slate-200 rounded-xl hover:border-indigo-400 hover:shadow-sm transition-all cursor-pointer group flex flex-col justify-between">
+//      <div>
+//         <div className="flex items-center gap-2 mb-3">
+//           {apps.map((app, idx) => (
+//             <div key={idx} className="w-6 h-6 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-white transition-all">
+//               <AppIcon app={app} size="w-4 h-4" />
+//             </div>
+//           ))}
+//         </div>
+//         <h4 className="text-sm font-bold text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">{title}</h4>
+//         <p className="text-[11px] text-slate-400 font-medium leading-relaxed">{desc}</p>
+//      </div>
+//      <div className="pt-5 border-t border-slate-50 mt-4 flex items-center justify-between">
+//         <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Production Ready</span>
+//         <button className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline transition-all">Use Blueprint →</button>
+//      </div>
+//   </div>
+// );
