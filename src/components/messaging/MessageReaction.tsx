@@ -4,6 +4,7 @@ import React, { useState, memo, useRef, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { X, User } from "lucide-react";
 import Image from "next/image";
+import { formatPhoneNumber } from "../inbox/chat/utils";
 
 interface MessageReaction {
   emoji: string;
@@ -16,6 +17,7 @@ interface MessageReaction {
 interface MessageReactionProps {
   reaction: MessageReaction;
   messageId: string;
+  platform: "instagram" | "whatsapp";
 }
 
 const ReactionPopover = memo(({ 
@@ -24,7 +26,8 @@ const ReactionPopover = memo(({
   onClose,
   position,
   onMouseEnter,
-  onMouseLeave
+  onMouseLeave,
+  platform
 }: {
   reaction: MessageReaction;
   isOpen: boolean;
@@ -32,6 +35,7 @@ const ReactionPopover = memo(({
   position: { top: number; left: number };
   onMouseEnter: () => void;
   onMouseLeave: () => void;
+  platform: "instagram" | "whatsapp";
 }) => {
   if (!isOpen) return null;
 
@@ -69,7 +73,7 @@ const ReactionPopover = memo(({
               {reaction.full_name}
             </p>
             <p className="text-xs text-gray-500">
-              @{reaction.username}
+              {platform === 'instagram' ? '@'+reaction.username : formatPhoneNumber(reaction.username)}
             </p>
           </div>
           
@@ -89,7 +93,8 @@ ReactionPopover.displayName = "ReactionPopover";
 
 const MessageReaction = memo(({ 
   reaction,
-  messageId
+  messageId,
+  platform
 }: MessageReactionProps) => {
   const [showPopover, setShowPopover] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
@@ -149,7 +154,7 @@ const MessageReaction = memo(({
           ref={buttonRef}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
-          className="flex items-center rounded-full text-md bg-gray-100 hover:bg-gray-200 border border-gray-200 transition-colors p-1"
+          className="flex items-center rounded-full text-md bg-white hover:bg-gray-200 border border-gray-200 transition-colors p-1"
         >
           <span>{reaction.emoji}</span>
         </button>
@@ -161,6 +166,7 @@ const MessageReaction = memo(({
           position={position}
           onMouseEnter={handlePopoverMouseEnter}
           onMouseLeave={handlePopoverMouseLeave}
+          platform={platform}
         />
       </div>
     )
