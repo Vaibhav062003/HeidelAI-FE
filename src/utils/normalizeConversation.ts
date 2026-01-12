@@ -10,6 +10,7 @@ export function normalizeConversation(conv: any): Conversation {
     customer_id: conv.customer_id || '',
     customer_name: conv.customer_name || 'Unknown',
     last_message: conv.last_message || '',
+    last_message_is_private_note: conv.last_message_is_private_note || false,
     timestamp: conv.last_message_timestamp,
     unread_count: conv.unread_count || 0,
     is_ai_enabled: conv.is_ai_enabled ?? true,

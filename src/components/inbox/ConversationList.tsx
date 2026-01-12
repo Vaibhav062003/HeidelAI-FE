@@ -101,6 +101,7 @@ const ConversationItem = memo(({
         channelType={conversation.platform as "telegram" | "whatsapp" | "instagram" | "web"}
         customerName={conversation.customer_name}
         lastMessage={lastMessage}
+        lastMessageIsPrivateNote={conversation.last_message_is_private_note}
         timestamp={formattedTime}
         unreadCount={conversation.unread_count}
         avatarUrl={conversation.avatar_url}

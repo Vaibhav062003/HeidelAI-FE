@@ -180,50 +180,51 @@ const TalkToDataTab = () => {
     }
   };
 
-  return (
-    <div className="h-screen w-full flex items-center justify-center p-6 bg-gray-50">
+return (
+    <div className="h-full w-full flex flex-col p-0 bg-white">
       <style>{typingIndicatorStyles}</style>
       
-      <Card className="h-full w-full max-w-full shadow-lg rounded-xl overflow-hidden">
-        <CardContent className="p-0 flex flex-col h-full">
+      <Card className="h-full w-full border-0 shadow-none rounded-none overflow-hidden flex flex-col">
+        <CardContent className="p-0 flex flex-col h-full w-full">
           <div className="flex flex-col h-full w-full bg-white">
-            {/* Header - Desktop */}
-            <div className="border-b p-6 bg-white flex-shrink-0">
-              <div className="flex items-center gap-2">
+            
+            {/* Header */}
+            <div className="border-b border-gray-100 p-4 lg:p-6 bg-white flex-shrink-0">
+              <div className="flex items-center gap-3">
                 <MessageSquare className="h-6 w-6 text-blue-600" />
-                <h2 className="text-2xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-900">
                   Talk to Data
                 </h2>
               </div>
             </div>
 
             {/* Messages Container */}
-            <div className="flex-1 overflow-hidden relative">
+            <div className="flex-1 overflow-hidden relative bg-white">
               <ScrollArea
                 className="h-full w-full"
                 ref={scrollContainerRef}
               >
-                <div className="p-6">
+                <div className="p-4 lg:p-6 w-full">
                   {messages.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-full text-center py-16">
-                      <MessageSquare className="h-16 w-16 text-gray-400 mb-4" />
+                      <MessageSquare className="h-16 w-16 text-gray-200 mb-6" />
                       <h3 className="text-xl font-medium text-gray-900 mb-2">
                         Start a conversation
                       </h3>
-                      <p className="text-base text-gray-600 max-w-md">
+                      <p className="text-base text-gray-500 max-w-md">
                         Ask me anything about your data. I can help you analyze trends, 
                         find insights, and answer questions.
                       </p>
-                      <div className="mt-6 flex flex-wrap gap-2 justify-center">
+                      <div className="mt-8 flex flex-wrap gap-2 justify-center">
                         <button
                           onClick={() => setInputMessage("Show me recent trends in my data")}
-                          className="px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors"
+                          className="px-4 py-2 text-sm bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors font-medium"
                         >
                           Recent trends
                         </button>
                         <button
                           onClick={() => setInputMessage("What are my top performing metrics?")}
-                          className="px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors"
+                          className="px-4 py-2 text-sm bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors font-medium"
                         >
                           Top metrics
                         </button>
@@ -231,7 +232,7 @@ const TalkToDataTab = () => {
                     </div>
                   )}
                   
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {messages.map((message, index) => (
                       <div
                         key={index}
@@ -242,10 +243,10 @@ const TalkToDataTab = () => {
                         }`}
                       >
                         <div
-                          className={`rounded-xl px-4 py-3 max-w-[75%] ${
+                          className={`rounded-2xl px-5 py-3.5 max-w-[85%] lg:max-w-[75%] shadow-sm ${
                             message.type === "outgoing"
                               ? "bg-blue-600 text-white"
-                              : "bg-gray-100 text-gray-900"
+                              : "bg-white border border-gray-100 text-gray-800"
                           }`}
                         >
                           <div
@@ -258,7 +259,7 @@ const TalkToDataTab = () => {
                     
                     {isTyping && (
                       <div className="flex justify-start">
-                        <div className="typing-indicator">
+                        <div className="typing-indicator bg-white border border-gray-100 shadow-sm">
                           <span></span>
                           <span></span>
                           <span></span>
@@ -271,10 +272,10 @@ const TalkToDataTab = () => {
               </ScrollArea>
             </div>
 
-            {/* Input Area - Desktop */}
-            <div className="border-t bg-white p-6 flex-shrink-0">
-              <div className="flex gap-3 items-end">
-                <div className="flex-1">
+            {/* Input Area */}
+            <div className=" bg-white p-3 lg:p-4 flex-shrink-0">
+              <div className="flex gap-3 lg:gap-4 items-end w-full">
+                <div className="flex-1 relative">
                   <textarea
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
@@ -285,17 +286,17 @@ const TalkToDataTab = () => {
                       }
                     }}
                     placeholder="Ask me anything about your data..."
-                    className="w-full resize-none rounded-xl border border-gray-300 p-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full resize-none rounded-xl border border-gray-200 p-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all min-h-[50px] placeholder:text-gray-400"
                     rows={1}
-                    style={{ minHeight: '44px' }}
+                    style={{ maxHeight: '120px' }}
                   />
                 </div>
                 <Button
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim() || isTyping}
-                  className="h-12 w-12 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                  className="h-[50px] w-[50px] rounded-xl bg-blue-500 hover:bg-blue-600 text-white shadow-sm flex-shrink-0 transition-all"
                 >
-                  <Send className="h-5 w-5" />
+                  <Send className="h-5 w-5 ml-0.5" />
                 </Button>
               </div>
             </div>
@@ -303,7 +304,6 @@ const TalkToDataTab = () => {
         </CardContent>
       </Card>
     </div>
-  );
-};
+  );};
 
 export default TalkToDataTab;
