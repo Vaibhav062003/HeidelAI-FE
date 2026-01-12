@@ -11,28 +11,60 @@ import Script from "next/script";
 import { GoogleTagManager } from "@next/third-parties/google";
 
 const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap'
+})
 
 const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: ["400"],
-  style: ["italic"],
-  variable: "--font-instrument-serif",
-  display: "swap",
-});
+  subsets: ['latin'],
+  weight: ['400'],
+  style: ['italic'],
+  variable: '--font-instrument-serif',
+  display: 'swap'
+})
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://heidelai.com"),
+  metadataBase: new URL('https://heidelai.com'),
   title: {
-    default: "HeidelAI - AI-Powered Customer Engagement & Analytics Platform",
-    template: "%s | HeidelAI",
+    default: 'HeidelAI - AI-Powered Customer Engagement & Analytics Platform',
+    template: '%s | HeidelAI'
   },
-  description:
-    "Transform your business with HeidelAI's AI-powered tools for customer engagement, real-time analytics, and smart chatbots.",
-};
+  description: 'Transform your business with HeidelAI\'s AI-powered tools for customer engagement, real-time analytics, and smart chatbots.',
+  keywords: [
+    'AI customer engagement tools',
+    'real-time business analytics',
+    'AI chatbots for businesses',
+    'ads optimization platform',
+    'influencer marketing analytics',
+    'WhatsApp chatbots',
+    'Telegram chatbots',
+    'conversation analytics tools',
+    'business growth with AI insights'
+  ],
+  authors: [{ name: 'HeidelAI' }],
+  icons: {
+    icon: '/heidelai.png',
+  },
+  openGraph: {
+    title: 'HeidelAI - AI-Powered Customer Engagement & Analytics Platform',
+    description: 'Transform your business with HeidelAI\'s AI-powered tools for customer engagement, real-time analytics, and smart chatbots.',
+    images: ['/heidelai_mockup.png'],
+    type: 'website'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'HeidelAI - AI-Powered Customer Engagement & Analytics Platform',
+    description: 'Transform your business with HeidelAI\'s AI-powered tools for customer engagement, real-time analytics, and smart chatbots.',
+    images: ['/heidelai_mockup.png']
+  },
+  // Add viewport for better mobile responsiveness
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+  }
+}
 
 export default function RootLayout({
   children,
