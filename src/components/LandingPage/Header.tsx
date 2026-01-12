@@ -253,7 +253,7 @@ const Header = () => {
 						isScrolled &&
 						cn(
 							'max-w-4xl rounded-2xl border backdrop-blur-md sm:backdrop-blur-lg lg:px-5',
-							isDarkTheme ? 'bg-black/30 border-white/20' : 'bg-white/50 border-gray-200'
+							isDarkTheme ? 'bg-white/40 border-white/20' : 'bg-white/50 border-gray-200'
 						)
 					)}
 				>
@@ -283,7 +283,7 @@ const Header = () => {
 								<span
 									className={cn(
 										'text-xl font-medium transition-colors duration-300',
-										isDarkTheme ? 'text-white' : 'text-gray-900'
+										isDarkTheme ? 'text-black' : 'text-gray-900'
 									)}
 								>
 									Heidel AI
@@ -295,7 +295,7 @@ const Header = () => {
 								aria-label={menuState == true ? 'Close Menu' : 'Open Menu'}
 								className={cn(
 									'relative z-20 -m-2.5 -mr-4 block cursor-pointer p-2.5 lg:hidden transition-colors duration-300',
-									isDarkTheme ? 'text-white' : 'text-gray-900'
+									isDarkTheme ? 'text-black' : 'text-gray-900'
 								)}
 							>
 								<Menu className="in-data-[state=active]:rotate-180 group-data-[state=active]:scale-0 group-data-[state=active]:opacity-0 m-auto size-6 duration-200" />
@@ -313,7 +313,7 @@ const Header = () => {
 											className={cn(
 												'block duration-300 font-medium transition-colors',
 												isDarkTheme
-													? 'text-white/70 hover:text-white'
+													? 'text-black hover:text-black'
 													: 'text-gray-600 hover:text-gray-900'
 											)}
 										>
@@ -328,8 +328,8 @@ const Header = () => {
 							className={cn(
 								'group-data-[state=active]:block lg:group-data-[state=active]:flex mb-6 hidden w-full flex-wrap items-center justify-end space-y-8 rounded-3xl border p-6 shadow-2xl md:flex-nowrap lg:m-0 lg:flex lg:w-fit lg:gap-6 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none transition-all duration-300',
 								isDarkTheme
-									? 'bg-black/20 border-white/20 shadow-black/20'
-									: 'bg-white/90 border-gray-200 shadow-gray-300/20'
+									? 'bg-white border-white/20  shadow-black/20'
+									: 'bg-white border-gray-200  shadow-gray-300/20'
 							)}
 						>
 							<div className="lg:hidden">
@@ -342,8 +342,8 @@ const Header = () => {
 												className={cn(
 													'block duration-300 font-medium transition-colors',
 													isDarkTheme
-														? 'text-white/70 hover:text-white'
-														: 'text-gray-600 hover:text-gray-900'
+														? 'text-black/70 hover:text-black'
+														: 'text-black/70 hover:text-black'
 												)}
 											>
 												<span>{item.name}</span>
@@ -360,7 +360,7 @@ const Header = () => {
 										isScrolled && 'hidden',
 										'backdrop-blur-sm transform hover:scale-105 transition-all duration-300',
 										isDarkTheme
-											? 'border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white hover:border-white/50'
+											? 'border-black bg-transparent text-black hover:bg-black/10 hover:text-black hover:border-black/50'
 											: 'border-gray-300 bg-transparent text-gray-900 hover:bg-gray-100 hover:border-gray-400'
 									)}
 									onClick={() => router.push('/login')}
@@ -384,8 +384,8 @@ const Header = () => {
 											isScrolled ? 'lg:inline-flex' : 'hidden',
 											'backdrop-blur-sm transform w-full hover:scale-105 transition-all duration-300 shadow-lg',
 											isDarkTheme
-												? 'bg-white text-black hover:bg-white/90'
-												: 'bg-gray-900 text-white hover:bg-gray-800'
+												? ' bg-gradient-to-r from-[#ff8c00] via-[#ff5722] to-[#ff1744] text-white border-none  shadow-[0_20px_50px_-15px_rgba(255,87,34,0.5)] hover:shadow-[0_30px_60px_-15px_rgba(255,87,34,0.6)] transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-95 before:!hidden overflow-hidden  '
+												: ' bg-gradient-to-r from-[#ff8c00] via-[#ff5722] to-[#ff1744] text-white border-none  shadow-[0_20px_50px_-15px_rgba(255,87,34,0.5)] hover:shadow-[0_30px_60px_-15px_rgba(255,87,34,0.6)] transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-95 before:!hidden overflow-hidden  '
 										)}
 									>
 										<span>Join Beta</span>

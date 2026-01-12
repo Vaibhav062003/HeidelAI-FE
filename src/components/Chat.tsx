@@ -24,13 +24,13 @@ const Chat = () => {
       if (!sessionId) {
         const newSessionId = crypto.randomUUID();
         setSessionId(newSessionId);
-        
+
         // Send initial greeting message
         const initialMessage: Message = {
           role: 'assistant',
           content: "Hello! I'm HeidelAI's AI Assistant. Before we begin, could you please tell me your name and the company you're representing?"
         };
-        
+
         setMessages([initialMessage]);
         await storeMessage(initialMessage, null, null, newSessionId);
         setIsInitializing(false);
@@ -67,20 +67,20 @@ const Chat = () => {
 
       if (error) throw error;
 
-      const assistantMessage = { 
-        role: 'assistant' as const, 
-        content: data.choices[0].message.content 
+      const assistantMessage = {
+        role: 'assistant' as const,
+        content: data.choices[0].message.content
       };
-      
+
       setMessages(prev => [...prev, assistantMessage]);
-      
+
       await storeMessage(assistantMessage, visitorName, visitorCompany, sessionId);
 
       // Only try to extract visitor info from the first user message
       if (!visitorName && !visitorCompany && messages.length === 1) {
         const nameMatch = userMessage.content.match(/(?:my name is|I'm|I am) ([^,.]+)/i);
         const companyMatch = userMessage.content.match(/(?:from|with|at) ([^,.]+)/i);
-        
+
         if (nameMatch) setVisitorName(nameMatch[1].trim());
         if (companyMatch) setVisitorCompany(companyMatch[1].trim());
       }
@@ -99,14 +99,14 @@ const Chat = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-black/90 text-white relative">
-      
+
       {/* Header */}
       <div className="relative z-10 p-6 border-b border-heidel-turquoise/20 bg-black/40 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-center gap-4 mb-4">
-            <img 
-              src="/lovable-uploads/3c5019cf-602e-4a0e-84cc-18891e3dbcb0.png" 
-              alt="HeidelAI Logo" 
+            <img
+              src="/lovable-uploads/3c5019cf-602e-4a0e-84cc-18891e3dbcb0.png"
+              alt="HeidelAI Logo"
               className="h-12 w-auto animate-float"
             />
           </div>
@@ -125,16 +125,15 @@ const Chat = () => {
           {messages.map((message, index) => (
             <div
               key={index}
-              className={`p-4 rounded-lg backdrop-blur-sm ${
-                message.role === 'user'
-                  ? 'bg-heidel-blue/20 border border-heidel-blue/30 ml-auto'
-                  : 'bg-heidel-turquoise/20 border border-heidel-turquoise/30'
-              } max-w-[80%] ${message.role === 'user' ? 'ml-auto' : 'mr-auto'}`}
+              className={`p-4 rounded-lg backdrop-blur-sm ${message.role === 'user'
+                ? 'bg-heidel-blue/20 border border-heidel-blue/30 ml-auto'
+                : 'bg-heidel-turquoise/20 border border-heidel-turquoise/30'
+                } max-w-[80%] ${message.role === 'user' ? 'ml-auto' : 'mr-auto'}`}
             >
               {message.role === 'user' ? (
                 <p className="whitespace-pre-wrap">{message.content}</p>
               ) : (
-                <ReactMarkdown 
+                <ReactMarkdown
                   className="prose prose-invert max-w-none"
                 >
                   {message.content}

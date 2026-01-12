@@ -6,19 +6,17 @@ import CustomerStories from '@/components/LandingPage/CustomerStories';
 import Integrations from '@/components/LandingPage/Integrations';
 import Pricing from '@/components/LandingPage/Pricing';
 import Footer from '@/components/LandingPage/Footer';
-import BackgroundGradient from '@/components/LandingPage/ui/BackgroundGradient';
+
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      <BackgroundGradient>
-        <Hero3D />
-        <Features />
-        <CustomerStories />
-        <Integrations />
-        <Pricing />
-      </BackgroundGradient>
+      <Hero3D />
+      <Features />
+      <CustomerStories />
+      <Integrations />
+      <Pricing />
       <Footer />
     </div>
   )
