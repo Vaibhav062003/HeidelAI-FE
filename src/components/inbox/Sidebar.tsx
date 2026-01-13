@@ -274,9 +274,8 @@ const TagDropdown = memo<TagDropdownProps>(
                   </span>
                 )}
                 <svg
-                  className={`h-4 w-4 text-gray-400 transition-transform ${
-                    isOpen ? "rotate-180" : ""
-                  }`}
+                  className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""
+                    }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -293,9 +292,8 @@ const TagDropdown = memo<TagDropdownProps>(
           </TooltipTrigger>
           <TooltipContent className="bg-gray-800 text-white text-xs rounded-lg px-3 py-1.5">
             {assignedTags.length > 0
-              ? `Manage ${assignedTags.length} tag${
-                  assignedTags.length > 1 ? "s" : ""
-                }`
+              ? `Manage ${assignedTags.length} tag${assignedTags.length > 1 ? "s" : ""
+              }`
               : "Assign tags to this contact"}
           </TooltipContent>
         </Tooltip>
@@ -394,18 +392,16 @@ const TagDropdown = memo<TagDropdownProps>(
                         key={tag}
                         onClick={() => onToggleTag(tag)}
                         disabled={isUpdatingTags}
-                        className={`w-full px-3 py-2.5 mb-1 flex items-center gap-3 text-left rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
-                          isSelected
-                            ? "bg-blue-50 border border-blue-200"
-                            : "hover:bg-gray-50 border border-transparent"
-                        }`}
+                        className={`w-full px-3 py-2.5 mb-1 flex items-center gap-3 text-left rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${isSelected
+                          ? "bg-blue-50 border border-blue-200"
+                          : "hover:bg-gray-50 border border-transparent"
+                          }`}
                       >
                         <div
-                          className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
-                            isSelected
-                              ? "bg-blue-500 border-blue-500"
-                              : "border-gray-300 bg-white"
-                          }`}
+                          className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${isSelected
+                            ? "bg-blue-500 border-blue-500"
+                            : "border-gray-300 bg-white"
+                            }`}
                         >
                           {isSelected && (
                             <Check
@@ -415,11 +411,10 @@ const TagDropdown = memo<TagDropdownProps>(
                           )}
                         </div>
                         <span
-                          className={`font-sans text-xs flex-1 transition-all ${
-                            isSelected
-                              ? "font-semibold text-blue-700"
-                              : "font-medium text-gray-700"
-                          }`}
+                          className={`font-sans text-xs flex-1 transition-all ${isSelected
+                            ? "font-semibold text-blue-700"
+                            : "font-medium text-gray-700"
+                            }`}
                         >
                           {tag}
                         </span>
@@ -732,69 +727,34 @@ const Sidebar = ({
         subtitle: "Messages",
         color: "blue",
         content: (
-          <>
-            <div className="flex items-center gap-[var(--sidebar-gap)] mb-[var(--sidebar-gap)] px-[var(--sidebar-padding)] pt-[var(--sidebar-padding)]">
-              <div className="relative flex-1 min-w-0">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-[calc(var(--icon-size)*0.8)] w-[calc(var(--icon-size)*0.8)]" />
-                <Input
-                  placeholder="Search templates..."
-                  value={searchTemplate}
-                  onChange={handleSearchChange}
-                  className="bg-white/80 border-gray-200/60 rounded-lg focus:ring-2 focus:ring-blue-500/30 transition-all duration-300 h-[clamp(2rem,4vw,2.5rem)] pl-8 text-[var(--sidebar-text-sm)]"
-                />
-              </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={handleShowTemplateBuilder}
-                    className="rounded-lg border-gray-200/60 hover:bg-blue-50/80 hover:border-blue-300/60 transition-all duration-300 h-[clamp(2rem,4vw,2.5rem)] w-[clamp(2rem,4vw,2.5rem)] flex-shrink-0"
-                  >
-                    <Plus className="h-[calc(var(--icon-size)*0.8)] w-[calc(var(--icon-size)*0.8)]" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="bg-gray-900/90 backdrop-blur-sm text-white rounded-xl text-xs">
-                  Create template
-                </TooltipContent>
-              </Tooltip>
+          <div className="flex-1 relative overflow-hidden flex items-center justify-center p-8 bg-white/50 min-h-[250px]">
+            {/* Animated Background Elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-indigo-200/20 rounded-full blur-2xl animate-pulse" />
+              <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-purple-200/20 rounded-full blur-2xl animate-pulse delay-700" />
             </div>
-            <ScrollArea className="h-[clamp(10rem,30vh,15rem)] ios-scrollbar px-[var(--sidebar-padding)]">
-              {loading ? (
-                <div className="flex items-center justify-center h-32 w-full">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="bg-blue-100/80 rounded-lg flex items-center justify-center w-[calc(var(--avatar-size)*0.8)] h-[calc(var(--avatar-size)*0.8)]">
-                      <div className="animate-spin rounded-full border-2 border-blue-600 border-t-transparent h-[calc(var(--icon-size)*1.2)] w-[calc(var(--icon-size)*1.2)]"></div>
-                    </div>
-                    <p className="text-gray-600 text-[var(--sidebar-text-sm)]">
-                      Loading...
-                    </p>
-                  </div>
-                </div>
-              ) : error ? (
-                <div className="flex items-center justify-center h-32">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="bg-red-100/80 rounded-lg flex items-center justify-center w-[calc(var(--avatar-size)*0.8)] h-[calc(var(--avatar-size)*0.8)]">
-                      <X className="text-red-600 h-[var(--icon-size)] w-[var(--icon-size)]" />
-                    </div>
-                    <p className="text-red-600 text-[var(--sidebar-text-sm)]">
-                      {error}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-[calc(var(--sidebar-gap)*0.5)]">
-                  {filteredTemplates.map((template) => (
-                    <TemplateCard
-                      key={template.id}
-                      template={template}
-                      onClick={() => handleTemplateSelect(template)}
-                    />
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </>
+
+            {/* Content */}
+            <div className="relative z-10 text-center">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-100/50 backdrop-blur-sm rounded-full border border-indigo-200/50 mb-4 mx-auto">
+                <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
+                <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-widest">Under Development</span>
+              </div>
+
+              <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
+                Coming Soon
+              </h3>
+
+              <p className="text-[var(--sidebar-text-sm)] text-slate-600 leading-relaxed max-w-[180px] mx-auto">
+                Powerful messaging templates are arriving soon to streamline your conversations.
+              </p>
+
+              <div className="mt-6 inline-flex items-center gap-2 text-[10px] font-medium text-slate-500">
+                <div className="w-3 h-3 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+                <span>ETA: FEB 2026</span>
+              </div>
+            </div>
+          </div>
         ),
       },
       {
@@ -828,15 +788,8 @@ const Sidebar = ({
     [
       selectedConversationId,
       currentAgentUsername,
-      loading,
-      error,
-      filteredTemplates,
-      handleTemplateSelect,
       handleProductSelect,
       onShareProduct,
-      searchTemplate,
-      handleSearchChange,
-      handleShowTemplateBuilder,
     ]
   );
 
