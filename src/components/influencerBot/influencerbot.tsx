@@ -1,467 +1,73 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { Activity, Send, X, Instagram, Trash2 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent } from '@/components/ui/card';
-
-interface ChatMessage {
-  type: 'incoming' | 'outgoing';
-  content: string;
-}
-
-interface ProcessingState {
-  isVisible: boolean;
-  currentStep: string;
-}
-
-const STORAGE_KEY = 'influencerBot_messages';
-const WELCOME_SHOWN_KEY = 'influencerBot_welcomeShown';
-
-const processingOverlayStyles = `
-  .processing-overlay {
-    position: fixed;
-    right: 20px;
-    bottom: 80px;
-    width: 320px;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(4px);
-    border-radius: 12px;
-    padding: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
-    opacity: 0;
-    transform: translateY(20px);
-    color: white;
-    z-index: 50;
-  }
-
-  .processing-overlay.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .processing-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 8px;
-  }
-
-  .processing-steps {
-    color: rgba(255, 255, 255, 0.7);
-  }
-
-  .processing-step {
-    margin: 8px 0;
-    transition: all 0.3s ease;
-    opacity: 0.5;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.9rem;
-  }
-
-  .processing-step.active {
-    opacity: 1;
-    font-weight: 500;
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .processing-step.completed {
-    opacity: 0.3;
-  }
-
-  .progress-bar {
-    width: 100%;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-    margin-top: 12px;
-  }
-
-  .progress-bar-fill {
-    height: 100%;
-    background: #EC4899;
-    border-radius: 2px;
-    transition: width 0.3s ease;
-  }
-`;
+import React from 'react';
 
 const InfluencerBot = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch (error) {
-      console.error('Error loading messages from localStorage:', error);
-      return [];
-    }
-  });
-  const [inputMessage, setInputMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [processingState, setProcessingState] = useState<ProcessingState>({
-    isVisible: false,
-    currentStep: ''
-  });
-  const [showProcessing, setShowProcessing] = useState(true);
-  const ws = useRef<WebSocket | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const lastMessageRef = useRef<HTMLDivElement>(null);
+  return (
+    <div className="flex flex-col h-dvh min-h-screen w-full text-slate-900 font-sans overflow-hidden bg-white">
+      {/* Coming Soon Content */}
+      <main className="flex-1 relative overflow-hidden flex items-center justify-center">
+        <div className="text-center px-6 max-w-2xl">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-indigo-200/20 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-purple-200/20 rounded-full blur-3xl animate-pulse delay-700" />
+          </div>
 
-  const scrollToBottom = useCallback(() => {
-    if (lastMessageRef.current) {
-      setTimeout(() => {
-        lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    }
-  }, []);
+          {/* Content */}
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100/50 backdrop-blur-sm rounded-full border border-indigo-200/50 mb-6">
+              <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
+              <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wider">Under Development</span>
+            </div>
 
-  useEffect(() => {
-    const wsUrl = 'wss://localhost:8001/ws/influencer-bot';
-    
-    const connectWebSocket = () => {
-      ws.current = new WebSocket(wsUrl);
+            <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-4 tracking-tight">
+              Coming Soon
+            </h1>
 
-      ws.current.onopen = () => {
-        console.log('Connected to local FastAPI backend');
-        const hasShownWelcome = localStorage.getItem(WELCOME_SHOWN_KEY);
-        
-        if (!hasShownWelcome) {
-          const welcomeMessage: ChatMessage = {
-            type: 'incoming',
-            content: '👋 Hello! I can analyze Instagram profiles. Enter usernames (comma-separated) to begin analysis.\n\nExample: username1, username2'
-          };
-          setMessages([welcomeMessage]);
-          localStorage.setItem(WELCOME_SHOWN_KEY, 'true');
-        }
-      };
+            <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+              We're building something amazing. Influencer Bot is being designed to analyze social media profiles, providing engagement rates, audience insights, and detailed performance metrics.
+            </p>
 
-      ws.current.onmessage = handleWebSocketMessage;
-      
-      ws.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setMessages(prev => [...prev, {
-          type: 'incoming',
-          content: '❌ Connection error. Please try again later.'
-        }]);
-      };
-
-      ws.current.onclose = () => {
-        console.log('WebSocket closed. Attempting to reconnect...');
-        localStorage.removeItem(WELCOME_SHOWN_KEY);
-        setTimeout(connectWebSocket, 3000);
-      };
-    };
-
-    localStorage.removeItem(WELCOME_SHOWN_KEY);
-    connectWebSocket();
-
-    return () => {
-      if (ws.current) {
-        ws.current.close();
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-    } catch (error) {
-      console.error('Error saving messages to localStorage:', error);
-    }
-  }, [messages]);
-  
-  const showProcessingState = (step: string) => {
-    setProcessingState({
-      isVisible: true,
-      currentStep: step
-    });
-  };
-
-  const handleWebSocketMessage = async (event: MessageEvent) => {
-    try {
-      if (!event.data) return;
-      
-      const data = JSON.parse(event.data);
-      if (!data?.type) return;
-
-      switch (data.type) {
-        case "status":
-          setIsTyping(true);
-          showProcessingState(data.content || 'Processing...');
-          break;
-
-        case "analysis":
-          if (data.content?.username && data.content?.analysis) {
-            const analysisMessage: ChatMessage = {
-              type: 'incoming',
-              content: `📊 Analysis for @${data.content.username}:\n${data.content.analysis}`
-            };
-            setMessages(prev => [...prev, analysisMessage]);
-          }
-          break;
-
-        case "complete":
-          setIsTyping(false);
-          setProcessingState({ isVisible: false, currentStep: '' });
-          const completeMessage: ChatMessage = {
-            type: 'incoming',
-            content: '✅ Analysis complete! Enter more Instagram profiles to analyze.'
-          };
-          setMessages(prev => [...prev, completeMessage]);
-          scrollToBottom();
-          break;
-
-        case "error":
-          setIsTyping(false);
-          setProcessingState({ isVisible: false, currentStep: '' });
-          const errorMessage: ChatMessage = {
-            type: 'incoming',
-            content: `❌ ${data.content || 'An unexpected error occurred'}`
-          };
-          setMessages(prev => [...prev, errorMessage]);
-          scrollToBottom();
-          break;
-      }
-    } catch (error) {
-      console.error('Error handling websocket message:', error);
-    }
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
-
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
-
-    const usernames = inputMessage.split(',').map(u => u.trim());
-    const validUsernames = usernames.every(u => /^[a-zA-Z0-9._]+$/.test(u));
-
-    if (!validUsernames) {
-      const errorMessage: ChatMessage = {
-        type: 'incoming',
-        content: '❌ Please enter valid Instagram usernames (letters, numbers, dots, and underscores only)'
-      };
-      setMessages(prev => [...prev, errorMessage]);
-      return;
-    }
-
-    const userMessage: ChatMessage = {
-      type: 'outgoing',
-      content: inputMessage
-    };
-    setMessages(prev => [...prev, userMessage]);
-    setIsTyping(true);
-
-    if (ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(inputMessage);
-    } else {
-      const errorMessage: ChatMessage = {
-        type: 'incoming',
-        content: '❌ Not connected to server. Please try again.'
-      };
-      setMessages(prev => [...prev, errorMessage]);
-      setIsTyping(false);
-    }
-
-    setInputMessage('');
-  };
-
-  const clearChat = useCallback(() => {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      setMessages([]);
-      const welcomeMessage: ChatMessage = {
-        type: 'incoming',
-        content: '👋 Hello! I can analyze Instagram profiles. Enter usernames (comma-separated) to begin analysis.\n\nExample: username1, username2'
-      };
-      setMessages([welcomeMessage]);
-    } catch (error) {
-      console.error('Error clearing chat history:', error);
-    }
-  }, []);
-
-return (
-    <div className="h-full w-full flex flex-col p-0 bg-white">
-      <style>{processingOverlayStyles}</style>
-      
-      <Card className="h-full w-full border-0 shadow-none rounded-none overflow-hidden flex flex-col">
-        <CardContent className="p-0 flex flex-col h-full w-full">
-          <div className="flex flex-col h-full w-full bg-white">
-            
-            {/* Header */}
-            <div className="border-b border-gray-100 p-4 lg:p-6 bg-white flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Instagram className="h-6 w-6 text-pink-600" />
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    Instagram Influencer Analysis
-                  </h2>
+            <div className="flex items-center justify-center gap-4 mb-12">
+              <div className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200/60 shadow-sm">
+                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-2">
+                  <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
                 </div>
-                
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="ghost" 
-                    onClick={clearChat}
-                    className="text-gray-500 hover:text-pink-600 hover:bg-pink-50 text-sm h-9"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Clear
-                  </Button>
-                  
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowProcessing(prev => !prev)}
-                    className="h-9 w-9 hidden sm:flex hover:bg-gray-50"
-                    title={showProcessing ? 'Hide processing' : 'Show processing'}
-                  >
-                    <Activity 
-                      size={18} 
-                      className={showProcessing ? 'text-pink-500' : 'text-gray-400'} 
-                    />
-                  </Button>
+                <span className="text-sm font-semibold text-slate-700">Audience Analysis</span>
+              </div>
+
+              <div className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200/60 shadow-sm">
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-2">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
                 </div>
+                <span className="text-sm font-semibold text-slate-700">Viral Trends</span>
+              </div>
+
+              <div className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200/60 shadow-sm">
+                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-2">
+                  <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <span className="text-sm font-semibold text-slate-700">Verified Data</span>
               </div>
             </div>
 
-            {/* Messages Container */}
-            <div className="flex-1 overflow-hidden relative bg-white">
-              <ScrollArea
-                className="h-full w-full"
-                ref={scrollContainerRef}
-              >
-                <div className="p-4 lg:p-6 w-full">
-                  {messages.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-full text-center py-16">
-                      <Instagram className="h-16 w-16 text-pink-200 mb-6" />
-                      <h3 className="text-xl font-medium text-gray-900 mb-2">
-                        Instagram Influencer Analyzer
-                      </h3>
-                      <p className="text-base text-gray-500 max-w-md mb-8">
-                        Enter Instagram usernames to get detailed influencer analysis 
-                        including engagement rates, audience insights, and performance metrics.
-                      </p>
-                      <div className="flex flex-wrap gap-2 justify-center">
-                        <button
-                          onClick={() => setInputMessage("cristiano")}
-                          className="px-4 py-2 text-sm bg-pink-50 text-pink-600 rounded-full hover:bg-pink-100 transition-colors font-medium"
-                        >
-                          Analyze @cristiano
-                        </button>
-                        <button
-                          onClick={() => setInputMessage("arianagrande")}
-                          className="px-4 py-2 text-sm bg-pink-50 text-pink-600 rounded-full hover:bg-pink-100 transition-colors font-medium"
-                        >
-                          Analyze @arianagrande
-                        </button>
-                        <button
-                          onClick={() => setInputMessage("therock, kyliejenner")}
-                          className="px-4 py-2 text-sm bg-pink-50 text-pink-600 rounded-full hover:bg-pink-100 transition-colors font-medium"
-                        >
-                          Compare profiles
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="space-y-6">
-                    {messages.map((message, index) => (
-                      <div
-                        key={index}
-                        className={`flex ${
-                          message.type === 'outgoing' ? 'justify-end' : 'justify-start'
-                        }`}
-                      >
-                        <div
-                          className={`rounded-2xl px-5 py-3.5 max-w-[85%] lg:max-w-[75%] shadow-sm ${
-                            message.type === 'outgoing'
-                              ? 'bg-pink-600 text-white'
-                              : 'bg-white border border-gray-100 text-gray-800'
-                          }`}
-                        >
-                          <pre className="whitespace-pre-wrap font-sans text-base leading-relaxed">
-                            {message.content}
-                          </pre>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {isTyping && (
-                      <div className="flex justify-start">
-                        <div className="flex gap-1 px-4 py-3 bg-white border border-gray-100 rounded-2xl shadow-sm">
-                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
-                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></span>
-                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></span>
-                        </div>
-                      </div>
-                    )}
-                    <div ref={lastMessageRef} />
-                  </div>
-                </div>
-              </ScrollArea>
-            </div>
-
-            {/* Input Area */}
-            <div className="border-t border-gray-200 bg-white p-6 lg:p-5.1 flex-shrink-0">
-              <div className="flex gap-3 lg:gap-4 items-end w-full">
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    placeholder="Enter Instagram usernames (comma-separated)..."
-                    className="w-full rounded-xl border border-gray-200 p-3 text-base focus:outline-none focus:ring-2 focus:ring-pink-100 focus:border-pink-400 transition-all min-h-[50px] placeholder:text-gray-400"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }
-                    }}
-                  />
-                </div>
-                
-                <Button 
-                  onClick={handleSendMessage}
-                  disabled={!inputMessage.trim() || isTyping}
-                  className="h-[50px] w-[50px] rounded-xl bg-pink-600 hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 shadow-sm transition-all"
-                >
-                  <Send className="h-5 w-5 ml-0.5" />
-                </Button>
-              </div>
+            <div className="inline-flex items-center gap-2 text-sm text-slate-500">
+              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <span>Expected launch: FEB 2026</span>
             </div>
           </div>
-        </CardContent>
-        
-        {/* Processing Overlay */}
-        {showProcessing && (
-          <div 
-            className={`processing-overlay ${processingState.isVisible ? 'visible' : ''}`}
-            style={{ 
-              display: processingState.isVisible ? 'block' : 'none' 
-            }}
-          >
-            <div className="processing-header">
-              <span className="font-medium text-sm">Processing Analysis</span>
-              <button
-                onClick={() => setShowProcessing(false)}
-                className="text-gray-300 hover:text-white transition-colors"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="processing-steps">
-              <div className="processing-step active text-sm">
-                {processingState.currentStep}
-              </div>
-            </div>
-          </div>
-        )}
-      </Card>
+        </div>
+      </main>
     </div>
   );
-}
+};
 
 export default InfluencerBot;

@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import React from "react";
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
 import {
-    IconTextScan2,
+  IconTextScan2,
   IconListSearch,
   IconToggleRightFilled,
   IconTemplate,
@@ -16,32 +16,32 @@ import { AnimateInView } from "./AnimateInView";
 export function BentoGridThirdDemo() {
   return (
     <>
-    <div id="features" className=" my-20">
-      <AnimateInView>
-        <h4 className="text-3xl lg:text-5xl lg:leading-tight max-w-5xl mx-auto px-4 text-center tracking-tight font-medium text-white">
-          
-          Packed with <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent thousands">thousands</span> of features
-        </h4>
+      <div id="features" className=" my-20">
+        <AnimateInView>
+          <h4 className="text-3xl lg:text-5xl lg:leading-tight max-w-5xl mx-auto px-4 text-center tracking-tight font-medium text-white">
 
-        <p className="text-sm lg:text-base  max-w-2xl  my-4 mx-auto text-center font-normal text-neutral-300">
-          From AI-Chatbot to Insightful Ads Targeting, Heidel AI has solutions for
-          literally everything. It can help you identify leads and convert them more quickly.
-        </p>
+            Packed with <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent thousands">thousands</span> of features
+          </h4>
+
+          <p className="text-sm lg:text-base  max-w-2xl  my-4 mx-auto text-center font-normal text-neutral-300">
+            From AI-Chatbot to Insightful Ads Targeting, Heidel AI has solutions for
+            literally everything. It can help you identify leads and convert them more quickly.
+          </p>
         </AnimateInView>
       </div>
       <AnimateInView delay={0.2}>
-    <BentoGrid className="max-w-4xl mx-auto md:auto-rows-[20rem]">
-      {items.map((item, i) => (
-        <BentoGridItem
-          key={i}
-          title={item.title}
-          description={item.description}
-          header={item.header}
-          className={cn("[&>p:text-lg]", item.className)}
-          icon={item.icon}
-        />
-      ))}
-    </BentoGrid>
+        <BentoGrid className="max-w-4xl mx-auto md:auto-rows-[20rem]">
+          {items.map((item, i) => (
+            <BentoGridItem
+              key={i}
+              title={item.title}
+              description={item.description}
+              header={item.header}
+              className={cn("[&>p:text-lg]", item.className)}
+              icon={item.icon}
+            />
+          ))}
+        </BentoGrid>
       </AnimateInView>
     </>
   );
@@ -79,7 +79,7 @@ const SkeletonOne = () => {
       whileHover="animate"
       className="flex flex-1 w-full h-full min-h-[7rem] dark:bg-dot-white/[0.2] bg-dot-black/[0.2] flex-col space-y-2"
     >
-      
+
       <motion.div
         variants={variantsSecond}
         className="flex flex-row rounded-full border  border-white/[0.2] p-2 items-center space-x-2 w-3/4 ml-auto bg-black"
@@ -96,16 +96,16 @@ const SkeletonOne = () => {
       </motion.div>
       <div className="flex flex-row bg-red">
         <div className="w-16 h-20 border mx-1.5 rounded p-1.5 border-white/[0.2]">
-            <div className="bg-neutral-900 w-full h-9 rounded-sm"></div>
-            <span className="text-neutral-500 text-[0.5rem] absolute mt-1 ml-0.5">$12.4</span>
+          <div className="bg-neutral-900 w-full h-9 rounded-sm"></div>
+          <span className="text-neutral-500 text-[0.5rem] absolute mt-1 ml-0.5">$12.4</span>
         </div>
         <div className="w-16 h-20 border mx-1.5 rounded p-1.5 border-white/[0.2]">
-            <div className="bg-neutral-900 w-full h-9 rounded-sm"></div>
-            <span className="text-neutral-500 text-[0.5rem] absolute mt-1 ml-0.5">$12.4</span>
+          <div className="bg-neutral-900 w-full h-9 rounded-sm"></div>
+          <span className="text-neutral-500 text-[0.5rem] absolute mt-1 ml-0.5">$12.4</span>
         </div>
         <div className="w-16 h-20 border mx-1.5 rounded p-1.5 border-white/[0.2]">
-            <div className="bg-neutral-900 w-full h-9 rounded-sm"></div>
-            <span className="text-neutral-500 text-[0.5rem] absolute mt-1 ml-0.5">$12.4</span>
+          <div className="bg-neutral-900 w-full h-9 rounded-sm"></div>
+          <span className="text-neutral-500 text-[0.5rem] absolute mt-1 ml-0.5">$12.4</span>
 
         </div>
       </div>
@@ -113,23 +113,23 @@ const SkeletonOne = () => {
   );
 };
 const SkeletonTwo = () => {
-//   const variants = {
-//     initial: {
-//       width: 0,
-//     },
-//     animate: {
-//       width: "100%",
-//       transition: {
-//         duration: 0.2,
-//       },
-//     },
-//     hover: {
-//       width: ["0%", "100%"],
-//       transition: {
-//         duration: 2,
-//       },
-//     },
-//   };
+  //   const variants = {
+  //     initial: {
+  //       width: 0,
+  //     },
+  //     animate: {
+  //       width: "100%",
+  //       transition: {
+  //         duration: 0.2,
+  //       },
+  //     },
+  //     hover: {
+  //       width: ["0%", "100%"],
+  //       transition: {
+  //         duration: 2,
+  //       },
+  //     },
+  //   };
   return (
     <motion.div
       initial="initial"
@@ -137,18 +137,18 @@ const SkeletonTwo = () => {
       whileHover="hover"
       className="flex flex-1 w-full h-full min-h-[6rem] bg-dot-white/[0.2] items-end justify-center flex-col space-y-2"
     >
-        <div className="flex flex-col justify-start items-end w-full h-full border rounded border-white/[0.1] p-4 bg-black">
-            <div className="flex items-center">
-                <span className="AI mx-1.5">AI</span>
-                <div className=" mx-1.5 h-8 w-14 flex items-center justify-end rounded-full p-2 bg-gradient-to-r from-pink-500 to-violet-500 flex-shrink-0" >
-                    <div className="w-5 h-5 rounded-full bg-white"> </div>
-                </div>
-            </div>
-            <div className="w-full  border-t my-4 border-white/[0.2]"></div>
-            <div className="w-48 h-4 bg-neutral-900 rounded-full my-1"></div>
-            <div className="w-36 h-4 bg-neutral-900 rounded-full my-1"></div>
-            <div className="w-40 h-4 bg-neutral-900 rounded-full my-1"></div>
+      <div className="flex flex-col justify-start items-end w-full h-full border rounded border-white/[0.1] p-4 bg-black">
+        <div className="flex items-center">
+          <span className="AI mx-1.5">AI</span>
+          <div className=" mx-1.5 h-8 w-14 flex items-center justify-end rounded-full p-2 bg-gradient-to-r from-pink-500 to-violet-500 flex-shrink-0" >
+            <div className="w-5 h-5 rounded-full bg-white"> </div>
+          </div>
         </div>
+        <div className="w-full  border-t my-4 border-white/[0.2]"></div>
+        <div className="w-48 h-4 bg-neutral-900 rounded-full my-1"></div>
+        <div className="w-36 h-4 bg-neutral-900 rounded-full my-1"></div>
+        <div className="w-40 h-4 bg-neutral-900 rounded-full my-1"></div>
+      </div>
     </motion.div>
   );
 };
@@ -178,15 +178,15 @@ const SkeletonThree = () => {
         backgroundSize: "400% 400%",
       }}
     >
-        <div className="w-full h-auto flex items-center justify-center">
-            <Image
-                src="/features/whatsapp.svg"
-                alt="avatar"
-                height="100"
-                width="100"
-                className="rounded-full h-10 w-10" />
-                <span className="templates text-xl">Templates</span>
-        </div>
+      <div className="w-full h-auto flex items-center justify-center">
+        <Image
+          src="/features/whatsapp.svg"
+          alt="avatar"
+          height="100"
+          width="100"
+          className="rounded-full h-10 w-10" />
+        <span className="templates text-xl">Templates</span>
+      </div>
     </motion.div>
   );
 };
@@ -273,30 +273,30 @@ const SkeletonFour = () => {
   );
 };
 const SkeletonFive = () => {
-//   const variants = {
-//     initial: {
-//       x: 0,
-//     },
-//     animate: {
-//       x: 10,
-//       rotate: 5,
-//       transition: {
-//         duration: 0.2,
-//       },
-//     },
-//   };
-//   const variantsSecond = {
-//     initial: {
-//       x: 0,
-//     },
-//     animate: {
-//       x: -10,
-//       rotate: -5,
-//       transition: {
-//         duration: 0.2,
-//       },
-//     },
-//   };
+  //   const variants = {
+  //     initial: {
+  //       x: 0,
+  //     },
+  //     animate: {
+  //       x: 10,
+  //       rotate: 5,
+  //       transition: {
+  //         duration: 0.2,
+  //       },
+  //     },
+  //   };
+  //   const variantsSecond = {
+  //     initial: {
+  //       x: 0,
+  //     },
+  //     animate: {
+  //       x: -10,
+  //       rotate: -5,
+  //       transition: {
+  //         duration: 0.2,
+  //       },
+  //     },
+  //   };
 
   return (
     <motion.div
@@ -306,9 +306,9 @@ const SkeletonFive = () => {
     >
       <span className="AI2 p-2">AI Summary</span>
       <div className="w-full border-t-2 my-4 border-white/[0.2]"></div>
-            <div className="w-48 h-4 bg-neutral-900 rounded-full my-1"></div>
-            <div className="w-36 h-4 bg-neutral-900 rounded-full my-1"></div>
-            <div className="w-40 h-4 bg-neutral-900 rounded-full my-1"></div>
+      <div className="w-48 h-4 bg-neutral-900 rounded-full my-1"></div>
+      <div className="w-36 h-4 bg-neutral-900 rounded-full my-1"></div>
+      <div className="w-40 h-4 bg-neutral-900 rounded-full my-1"></div>
     </motion.div>
   );
 };
@@ -361,7 +361,7 @@ const items = [
   {
     title: "Conversation Insights",
     description: (
-      <span className="text-sm">    
+      <span className="text-sm">
         AI summarizes key insights, saving you from reading the chat history.
       </span>
     ),
@@ -373,4 +373,3 @@ const items = [
 
 
 
-  
