@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-
+import { Construction } from 'lucide-react';
 export type ViewState = 'dashboard' | 'editor';
 
 
@@ -30,58 +29,23 @@ export default function AutomationHub() {
           </div>
 
           {/* Content */}
-          <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100/50 backdrop-blur-sm rounded-full border border-indigo-200/50 mb-6">
-              <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
-              <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wider">Under Development</span>
-            </div>
-
-            <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-4 tracking-tight">
-              Coming Soon
-            </h1>
-            
-            <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-              We're building something amazing. AutoFlow will revolutionize your workflow automation experience with intelligent triggers, seamless integrations, and powerful analytics.
-            </p>
-
-            <div className="flex items-center justify-center gap-4 mb-12">
-              <div className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200/60 shadow-sm">
-                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-2">
-                  <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <span className="text-sm font-semibold text-slate-700">Fast Setup</span>
-              </div>
-
-              <div className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200/60 shadow-sm">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-2">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                  </svg>
-                </div>
-                <span className="text-sm font-semibold text-slate-700">Smart Flows</span>
-              </div>
-
-              <div className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200/60 shadow-sm">
-                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-2">
-                  <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <span className="text-sm font-semibold text-slate-700">Reliable</span>
-              </div>
-            </div>
-
-            <div className="inline-flex items-center gap-2 text-sm text-slate-500">
-              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span>Expected launch: FEB 2026</span>
-            </div>
-          </div>
-        </div>
+<div className="max-w-md space-y-4">
+      <div className="mx-auto bg-orange-100 rounded-full p-4 w-fit">
+        <Construction className="h-8 w-8 text-orange-600" />
+      </div>
+      <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+        Coming Soon
+      </h2>
+      <p className="text-lg text-gray-600">
+        Our team is working hard to bring you this feature. Stay tuned for updates!
+      </p>
+      <div className="pt-4 border-t border-gray-200 mt-8">
+        <p className="text-sm text-gray-500">
+          Automation functionality will be available in our next release.
+          Check back soon or follow us for updates!
+        </p>
+      </div>
+    </div>        </div>
       </main>
     </div>
   );

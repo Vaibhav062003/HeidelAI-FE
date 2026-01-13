@@ -246,7 +246,7 @@ const Header = () => {
 
 	return (
 		<header>
-			<nav data-state={menuState && 'active'} className="fixed z-20 w-full px-2 group">
+			<nav data-state={menuState && 'active'} className="fixed z-50 w-full px-2 group">
 				<div
 					className={cn(
 						'mx-auto mt-2 max-w-6xl px-6 border-white/20 transition-all rounded-2xl backdrop-blur-md duration-300 lg:px-12',
