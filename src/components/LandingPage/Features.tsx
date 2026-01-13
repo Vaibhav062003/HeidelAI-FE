@@ -25,31 +25,111 @@ interface OutputCard {
 }
 
 const INPUT_ICONS: InputIcon[] = [
-  { id: "1", name: "WhatsApp", logoUrl: "https://cdn.simpleicons.org/whatsapp/25D366", color: "border-green-500" },
-  { id: "2", name: "Instagram", logoUrl: "https://cdn.simpleicons.org/instagram/E4405F", color: "border-pink-500" },
-  { id: "3", name: "Facebook", logoUrl: "https://cdn.simpleicons.org/facebook/1877F2", color: "border-blue-500" },
-  { id: "4", name: "Telegram", logoUrl: "https://cdn.simpleicons.org/telegram/2AABEE", color: "border-cyan-500" },
-  { id: "5", name: "Shopify", logoUrl: "https://cdn.simpleicons.org/shopify/96BF48", color: "border-green-600" },
-  { id: "6", name: "WooCommerce", logoUrl: "https://cdn.simpleicons.org/woocommerce/96588A", color: "border-purple-600" },
+  {
+    id: "1",
+    name: "WhatsApp",
+    logoUrl: "https://cdn.simpleicons.org/whatsapp/25D366",
+    color: "border-green-500",
+  },
+  {
+    id: "2",
+    name: "Instagram",
+    logoUrl: "https://cdn.simpleicons.org/instagram/E4405F",
+    color: "border-pink-500",
+  },
+  {
+    id: "3",
+    name: "Facebook",
+    logoUrl: "https://cdn.simpleicons.org/facebook/1877F2",
+    color: "border-blue-500",
+  },
+  {
+    id: "4",
+    name: "Telegram",
+    logoUrl: "https://cdn.simpleicons.org/telegram/2AABEE",
+    color: "border-cyan-500",
+  },
+  {
+    id: "5",
+    name: "Shopify",
+    logoUrl: "https://cdn.simpleicons.org/shopify/96BF48",
+    color: "border-green-600",
+  },
+  {
+    id: "6",
+    name: "WooCommerce",
+    logoUrl: "https://cdn.simpleicons.org/woocommerce/96588A",
+    color: "border-purple-600",
+  },
   // { id: "8", name: "Snapchat", logoUrl: "https://cdn.simpleicons.org/snapchat/FFFC00", color: "border-yellow-400" },
-  { id: "9", name: "Twitter/X", logoUrl: "https://cdn.simpleicons.org/x/000000", color: "border-gray-800" },
+  {
+    id: "9",
+    name: "Twitter/X",
+    logoUrl: "https://cdn.simpleicons.org/x/000000",
+    color: "border-gray-800",
+  },
   // { id: "10", name: "TikTok", logoUrl: "https://cdn.simpleicons.org/tiktok/000000", color: "border-gray-900" },
-  { id: "11", name: "YouTube", logoUrl: "https://cdn.simpleicons.org/youtube/FF0000", color: "border-red-600" },
+  {
+    id: "11",
+    name: "YouTube",
+    logoUrl: "https://cdn.simpleicons.org/youtube/FF0000",
+    color: "border-red-600",
+  },
   // { id: "12", name: "Pinterest", logoUrl: "https://cdn.simpleicons.org/pinterest/E60023", color: "border-red-500" },
-  { id: "13", name: "Messenger", logoUrl: "https://cdn.simpleicons.org/messenger/00B2FF", color: "border-blue-400" },
-  { id: "14", name: "WeChat", logoUrl: "https://cdn.simpleicons.org/wechat/07C160", color: "border-green-500" },
+  {
+    id: "13",
+    name: "Messenger",
+    logoUrl: "https://cdn.simpleicons.org/messenger/00B2FF",
+    color: "border-blue-400",
+  },
+  {
+    id: "14",
+    name: "WeChat",
+    logoUrl: "https://cdn.simpleicons.org/wechat/07C160",
+    color: "border-green-500",
+  },
 ];
 
 const OUTPUT_CARDS_1: OutputCard[] = [
-  { id: "1", icon: "FaChartLine", title: "Real-Time Analytics", category: "INSIGHTS" },
-  { id: "2", icon: "FaRobot", title: "Smart Automation", category: "EFFICIENCY" },
-  { id: "3", icon: "FaBullseye", title: "Lead Qualification", category: "CONVERSION" },
+  {
+    id: "1",
+    icon: "FaChartLine",
+    title: "Real-Time Analytics",
+    category: "INSIGHTS",
+  },
+  {
+    id: "2",
+    icon: "FaRobot",
+    title: "Smart Automation",
+    category: "EFFICIENCY",
+  },
+  {
+    id: "3",
+    icon: "FaBullseye",
+    title: "Lead Qualification",
+    category: "CONVERSION",
+  },
 ];
 
 const OUTPUT_CARDS_2: OutputCard[] = [
-  { id: "4", icon: "FaLightbulb", title: "Predictive Insights", category: "STRATEGY" },
-  { id: "5", icon: "FaDollarSign", title: "Revenue Optimization", category: "GROWTH" },
-  { id: "6", icon: "FaSearch", title: "Market Intelligence", category: "COMPETITIVE" },
+  {
+    id: "4",
+    icon: "FaLightbulb",
+    title: "Predictive Insights",
+    category: "STRATEGY",
+  },
+  {
+    id: "5",
+    icon: "FaDollarSign",
+    title: "Revenue Optimization",
+    category: "GROWTH",
+  },
+  {
+    id: "6",
+    icon: "FaSearch",
+    title: "Market Intelligence",
+    category: "COMPETITIVE",
+  },
 ];
 
 const FunnelIcon: React.FC<{ icon: InputIcon }> = ({ icon }) => {
@@ -95,7 +175,12 @@ const FunnelIcon: React.FC<{ icon: InputIcon }> = ({ icon }) => {
 
 const getIcon = (iconName: string) => {
   const icons: Record<string, React.ComponentType<any>> = {
-    FaChartLine, FaRobot, FaBullseye, FaLightbulb, FaDollarSign, FaSearch
+    FaChartLine,
+    FaRobot,
+    FaBullseye,
+    FaLightbulb,
+    FaDollarSign,
+    FaSearch,
   };
   const IconComponent = icons[iconName];
   return IconComponent ? <IconComponent className="w-full h-full" /> : null;
@@ -117,25 +202,31 @@ const CardItem = ({ card }: { card: OutputCard }) => (
   </div>
 );
 
-const MarqueeRow = ({ 
-  cards, 
-  direction = "left" 
-}: { 
-  cards: OutputCard[]; 
+const MarqueeRow = ({
+  cards,
+  direction = "left",
+}: {
+  cards: OutputCard[];
   direction?: "left" | "right";
 }) => {
   const segment = [...cards, ...cards, ...cards, ...cards, ...cards, ...cards];
 
   return (
-    <div 
+    <div
       className="flex overflow-hidden w-full"
       style={{
-        maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 90%, transparent 100%)',
-        WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 90%, transparent 100%)'
+        maskImage:
+          "linear-gradient(to right, transparent 0%, black 15%, black 90%, transparent 100%)",
+        WebkitMaskImage:
+          "linear-gradient(to right, transparent 0%, black 15%, black 90%, transparent 100%)",
       }}
     >
-      <div 
-        className={`flex gap-3 sm:gap-6 px-3 sm:px-6 w-max ${direction === "left" ? "animate-infinite-scroll-left" : "animate-infinite-scroll-right"}`}
+      <div
+        className={`flex gap-3 sm:gap-6 px-3 sm:px-6 w-max ${
+          direction === "left"
+            ? "animate-infinite-scroll-left"
+            : "animate-infinite-scroll-right"
+        }`}
       >
         {segment.map((card, idx) => (
           <CardItem key={`s1-${idx}`} card={card} />
@@ -165,7 +256,10 @@ const ProcessingNode: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const slides = [
     { type: "logo", content: "HeidelAI" },
-    { type: "text", content: "Derive actionable insights and optimize next steps" },
+    {
+      type: "text",
+      content: "Derive actionable insights and optimize next steps",
+    },
     { type: "text", content: "Optimized executive plans" },
     { type: "text", content: "High impact actions" },
   ];
@@ -225,11 +319,14 @@ const ProcessingNode: React.FC = () => {
 const Features: React.FC = () => {
   const denseIcons = useMemo(() => {
     let allIcons: (InputIcon & { uniqueKey: string })[] = [];
-    for(let i = 0; i < 7; i++) {
-        allIcons = [...allIcons, ...INPUT_ICONS.map((icon, j) => ({
-            ...icon,
-            uniqueKey: `${icon.id}-${i}-${j}`
-        }))];
+    for (let i = 0; i < 7; i++) {
+      allIcons = [
+        ...allIcons,
+        ...INPUT_ICONS.map((icon, j) => ({
+          ...icon,
+          uniqueKey: `${icon.id}-${i}-${j}`,
+        })),
+      ];
     }
     return allIcons;
   }, []);
@@ -240,9 +337,12 @@ const Features: React.FC = () => {
       className="relative w-full min-h-[60vh] sm:min-h-screen flex flex-col items-center justify-center py-12 sm:py-24 overflow-hidden bg-white"
     >
       <div className="relative z-10 w-full mb-8 sm:mb-20 px-4">
-        <h2 className="text-4xl sm:text-7xl md:text-8xl font-serif italic text-center text-gray-900 tracking-tight">
+        <h2
+          className="text-4xl md:text-6xl font-normal text-gray-800 italic mb-4 text-center"
+          style={{ fontFamily: "'Awesome Serif', serif" }}
+        >
           From Chaos to <span className="text-orange-600">Clarity</span>
-        </h2>
+        </h2>{" "}
         <p className="text-gray-600 text-sm sm:text-base md:text-lg font-medium leading-relaxed max-w-[90%] sm:max-w-3xl mx-auto text-center mt-3 sm:mt-4 md:mt-6">
           Connect scattered conversations across 20+ platforms into one
           intelligent command center that predicts trends, automates responses,
@@ -251,36 +351,43 @@ const Features: React.FC = () => {
       </div>
 
       <div className="relative w-full flex items-center justify-center min-h-[300px] sm:min-h-[700px]">
-        
         {/* Right Side */}
         <OutputCarousel />
 
         {denseIcons.map((icon) => (
           <FunnelIcon key={icon.uniqueKey} icon={icon} />
         ))}
-        
+
         {/* Center Node */}
         <ProcessingNode />
       </div>
 
       <style jsx global>{`
         :root {
-           --spread-height: 320px;
+          --spread-height: 320px;
         }
         @media (min-width: 640px) {
-           :root {
-             --spread-height: 800px;
-           }
+          :root {
+            --spread-height: 800px;
+          }
         }
 
         @keyframes infinite-scroll-left {
-          0% { transform: translate3d(0, 0, 0); }
-          100% { transform: translate3d(-50%, 0, 0); }
+          0% {
+            transform: translate3d(0, 0, 0);
+          }
+          100% {
+            transform: translate3d(-50%, 0, 0);
+          }
         }
-        
+
         @keyframes infinite-scroll-right {
-          0% { transform: translate3d(-50%, 0, 0); }
-          100% { transform: translate3d(0, 0, 0); }
+          0% {
+            transform: translate3d(-50%, 0, 0);
+          }
+          100% {
+            transform: translate3d(0, 0, 0);
+          }
         }
 
         .animate-infinite-scroll-left {
@@ -294,13 +401,25 @@ const Features: React.FC = () => {
 
         @keyframes funnelFlow {
           0% {
-            transform: translate3d(-10vw, calc(var(--y-ratio) * var(--spread-height)), 0) scale(var(--scale));
+            transform: translate3d(
+                -10vw,
+                calc(var(--y-ratio) * var(--spread-height)),
+                0
+              )
+              scale(var(--scale));
             opacity: 0;
           }
-          10% { opacity: 1; }
+          10% {
+            opacity: 1;
+          }
           70% {
-             transform: translate3d(calc(50vw - 180px), calc(var(--y-ratio) * var(--spread-height) * 0.15), 0) scale(var(--scale));
-             opacity: 1;
+            transform: translate3d(
+                calc(50vw - 180px),
+                calc(var(--y-ratio) * var(--spread-height) * 0.15),
+                0
+              )
+              scale(var(--scale));
+            opacity: 1;
           }
           100% {
             transform: translate3d(50vw, 0, 0) scale(0.1);
@@ -308,10 +427,18 @@ const Features: React.FC = () => {
           }
         }
         @keyframes emerge {
-          0% { opacity: 0; transform: scale(0.8); }
-          100% { opacity: 1; transform: scale(1); }
+          0% {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
-        .animate-emerge { animation: emerge 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-emerge {
+          animation: emerge 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
       `}</style>
     </section>
   );
