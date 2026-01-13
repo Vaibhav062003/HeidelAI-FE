@@ -4,14 +4,14 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { useUser, useOrganization } from '@clerk/nextjs';
 import { Users, Mail, UserPlus, UserMinus, Trash2, X } from 'lucide-react';
-import api from '@/lib/session_api';
+import { useApi } from "@/lib/session_api";
 import { useRole } from '@/contexts/RoleContext';
 
 interface TeamMember {
   name: string;
   email: string;
   role: 'Admin' | 'Member';
-  userId?: string; 
+  userId?: string;
 }
 
 interface InvitedMember {
@@ -30,22 +30,23 @@ export const TeamManagement = () => {
     },
     invitations: true,
   });
-  
-  
+
+
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [invitationsList, setInvitationsList] = useState<InvitedMember[]>([]);
-  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; member: TeamMember | null; type: 'member' | 'invitation' }>({ 
-    open: false, 
-    member: null, 
-    type: 'member' 
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; member: TeamMember | null; type: 'member' | 'invitation' }>({
+    open: false,
+    member: null,
+    type: 'member'
   });
   const [activeTab, setActiveTab] = useState<'members' | 'invitations'>('members');
   // const [isAdmin, setIsAdmin] = useState(false);
   const { isAdmin } = useRole();
   const [showTooltip, setShowTooltip] = useState(false);
-  
+  const api = useApi();
+
   React.useEffect(() => {
     if (!memberships?.data) return;
     if (!invitations?.data) return;
@@ -66,9 +67,9 @@ export const TeamManagement = () => {
 
     // Members mapping
     const mapped: TeamMember[] = memberships.data.map((m) => ({
-  
+
       name: `${m.publicUserData?.firstName ?? ''} ${m.publicUserData?.lastName ?? ''}`.trim() ||
-            m.publicUserData?.identifier || 'Unknown',
+        m.publicUserData?.identifier || 'Unknown',
       email: m.publicUserData?.identifier ?? 'Unknown',
       role: m.roleName as 'Admin' | 'Member',
       userId: m.publicUserData?.userId,
@@ -91,31 +92,31 @@ export const TeamManagement = () => {
   }, [memberships?.data, invitations?.data, organization, user]);
 
   const refreshData = async () => {
-  if (!organization) return;
-  try {
-    const membershipsRes = await organization.getMemberships();
-    const mapped: TeamMember[] = membershipsRes.data.map((m) => ({
-      id: m.id,
-      name: `${m.publicUserData?.firstName ?? ''} ${m.publicUserData?.lastName ?? ''}`.trim() || 
-            m.publicUserData?.identifier || 'Unknown',
-      email: m.publicUserData?.identifier ?? 'Unknown',
-      role: m.roleName as 'Admin' | 'Member',
-      userId: m.publicUserData?.userId,
-    }));
-    setMembers(mapped);
+    if (!organization) return;
+    try {
+      const membershipsRes = await organization.getMemberships();
+      const mapped: TeamMember[] = membershipsRes.data.map((m) => ({
+        id: m.id,
+        name: `${m.publicUserData?.firstName ?? ''} ${m.publicUserData?.lastName ?? ''}`.trim() ||
+          m.publicUserData?.identifier || 'Unknown',
+        email: m.publicUserData?.identifier ?? 'Unknown',
+        role: m.roleName as 'Admin' | 'Member',
+        userId: m.publicUserData?.userId,
+      }));
+      setMembers(mapped);
 
-    const invitationsRes = await organization.getInvitations();
-    const inviteMapped: InvitedMember[] = invitationsRes.data.map((inv) => ({
-      id: inv.id,
-      name: inv.emailAddress || 'Invited User',
-      email: inv.emailAddress || 'No Email',
-      role: inv.roleName as 'Admin' | 'Member',
-    }));
-    setInvitationsList(inviteMapped);
-  } catch (err) {
-    console.error("Failed to refresh data:", err);
-  }
-};
+      const invitationsRes = await organization.getInvitations();
+      const inviteMapped: InvitedMember[] = invitationsRes.data.map((inv) => ({
+        id: inv.id,
+        name: inv.emailAddress || 'Invited User',
+        email: inv.emailAddress || 'No Email',
+        role: inv.roleName as 'Admin' | 'Member',
+      }));
+      setInvitationsList(inviteMapped);
+    } catch (err) {
+      console.error("Failed to refresh data:", err);
+    }
+  };
 
 
   const handleInvite = async () => {
@@ -137,7 +138,7 @@ export const TeamManagement = () => {
         toast.success('Team member invited successfully!');
         setIsInviteOpen(false);
         setEmail('');
-        await refreshData(); 
+        await refreshData();
       } else {
         throw new Error(resData?.error || 'Failed to send invitation');
       }
@@ -172,7 +173,7 @@ export const TeamManagement = () => {
         if (response?.status === 200 || resData?.status === 200 || resData?.ok || resData?.success) {
           setMembers((prev) => prev.filter(m => m.userId !== userId));
           toast.success('Member removed successfully');
-          await refreshData(); 
+          await refreshData();
         } else {
           throw new Error(resData?.error || 'Failed to remove member');
         }
@@ -188,7 +189,7 @@ export const TeamManagement = () => {
         if (response?.status === 200 || resData?.status === 200 || resData?.ok || resData?.success) {
           toast.success('Invitation revoked successfully');
           setInvitationsList((prev) => prev.filter(i => i.id !== invitationId));
-          await refreshData(); 
+          await refreshData();
         } else {
           throw new Error(resData?.error || 'Failed to revoke invitation');
         }
@@ -235,21 +236,21 @@ export const TeamManagement = () => {
     <div className="w-full min-h-screen bg-white overflow-hidden">
       <div className="w-full max-w-10xl mx-auto px-6 py-10">
         {/* Header */}
-       <div className="mb-10">
-        <div className="flex items-start gap-3">
-          <div className="p-2.5 bg-blue-600 rounded-lg flex-shrink-0">
-            <Users className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-semibold text-gray-900">
-              Team Management
-            </h1>
-            <p className="text-gray-600 text-sm">
-              Manage your team members and invite new collaborators
-            </p>
+        <div className="mb-10">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 bg-blue-600 rounded-lg flex-shrink-0">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-semibold text-gray-900">
+                Team Management
+              </h1>
+              <p className="text-gray-600 text-sm">
+                Manage your team members and invite new collaborators
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
 
         {/* Stats Section */}
@@ -266,20 +267,19 @@ export const TeamManagement = () => {
             >
               {isAdmin && (
                 <button
-                onClick={() => setIsInviteOpen(true)}
-                className={`flex text-black items-center gap-2 bg-gray-200 px-4 py-2.5 rounded-lg transition-colors font-medium ${
-                  inviteDisabled
+                  onClick={() => setIsInviteOpen(true)}
+                  className={`flex text-black items-center gap-2 bg-gray-200 px-4 py-2.5 rounded-lg transition-colors font-medium ${inviteDisabled
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:bg-blue-500 hover:text-white"
-                }`}
-                disabled={inviteDisabled}
-                id="invite-member-btn"
-              >
-                <UserPlus className="w-4 h-4" />
-                Invite Member
-              </button>
+                    }`}
+                  disabled={inviteDisabled}
+                  id="invite-member-btn"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Invite Member
+                </button>
               )}
-              
+
               {inviteDisabled && showTooltip && (
                 <div className="absolute left-1/2 -translate-x-1/2 mt-2 px-4 py-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 whitespace-nowrap">
                   limit of {maxAllowedMemberships} members for this organization.
@@ -290,7 +290,7 @@ export const TeamManagement = () => {
         </div>
 
         {/* Invite Modal */}
-        {isInviteOpen &&  (
+        {isInviteOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
               <div className="flex items-center justify-between mb-4">
@@ -373,11 +373,10 @@ export const TeamManagement = () => {
             <div className="flex">
               <button
                 onClick={() => setActiveTab('members')}
-                className={`flex-1 px-6 py-4 text-center font-medium text-sm uppercase tracking-wide border-b-2 transition-colors ${
-                  activeTab === 'members'
-                    ? 'border-gray-900 text-gray-900 bg-gray-50'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
+                className={`flex-1 px-6 py-4 text-center font-medium text-sm uppercase tracking-wide border-b-2 transition-colors ${activeTab === 'members'
+                  ? 'border-gray-900 text-gray-900 bg-gray-50'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  }`}
               >
                 Members
                 <span className="ml-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 text-gray-700 text-xs font-semibold">
@@ -386,20 +385,19 @@ export const TeamManagement = () => {
               </button>
               {isAdmin && (
                 <button
-                onClick={() => setActiveTab('invitations')}
-                className={`flex-1 px-6 py-4 text-center font-medium text-sm uppercase tracking-wide border-b-2 transition-colors ${
-                  activeTab === 'invitations'
+                  onClick={() => setActiveTab('invitations')}
+                  className={`flex-1 px-6 py-4 text-center font-medium text-sm uppercase tracking-wide border-b-2 transition-colors ${activeTab === 'invitations'
                     ? 'border-gray-900 text-gray-900 bg-gray-50'
                     : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Invitations
-                <span className="ml-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 text-gray-700 text-xs font-semibold">
-                  {invitationsList.length}
-                </span>
-              </button>
+                    }`}
+                >
+                  Invitations
+                  <span className="ml-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 text-gray-700 text-xs font-semibold">
+                    {invitationsList.length}
+                  </span>
+                </button>
               )}
-              
+
             </div>
           </div>
 

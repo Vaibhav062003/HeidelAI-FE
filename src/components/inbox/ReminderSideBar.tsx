@@ -17,7 +17,7 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip";
-import api from "@/lib/session_api";
+import { useApi } from "@/lib/session_api";
 import {
   useQuery,
   useMutation,
@@ -90,7 +90,7 @@ const formatReminderDate = (dateStr: string): string => {
 const ReminderSideBar = ({ onToggleVisibility }: remindersideBarProps) => {
   const { conversations } = useConversations();
   const { reminders, loading, error, snoozeReminder, doneReminder, deleteReminder, snoozing, completing, deleting, refetch } = useReminders();
-
+  const api = useApi();
   const getCustomerName = (conversationId: string): string => {
     const conversation = conversations.find((conv) => conv.id === conversationId);
     return conversation?.customer_name || 'Unknown Customer';

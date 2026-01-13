@@ -47,7 +47,7 @@ import { WhatsAppTemplate } from "../types/template";
 import { Conversation } from "../types/conversation";
 import { Product } from "../types/product";
 import AssignDropdown from "./AssignToAgent";
-import api from "@/lib/session_api";
+import { useApi } from "@/lib/session_api";
 import AnalyticsSection from "./AnalyticsSection";
 import { ApiContact } from "../types/contacts";
 
@@ -274,9 +274,8 @@ const TagDropdown = memo<TagDropdownProps>(
                   </span>
                 )}
                 <svg
-                  className={`h-4 w-4 text-gray-400 transition-transform ${
-                    isOpen ? "rotate-180" : ""
-                  }`}
+                  className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""
+                    }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -293,9 +292,8 @@ const TagDropdown = memo<TagDropdownProps>(
           </TooltipTrigger>
           <TooltipContent className="bg-gray-800 text-white text-xs rounded-lg px-3 py-1.5">
             {assignedTags.length > 0
-              ? `Manage ${assignedTags.length} tag${
-                  assignedTags.length > 1 ? "s" : ""
-                }`
+              ? `Manage ${assignedTags.length} tag${assignedTags.length > 1 ? "s" : ""
+              }`
               : "Assign tags to this contact"}
           </TooltipContent>
         </Tooltip>
@@ -394,18 +392,16 @@ const TagDropdown = memo<TagDropdownProps>(
                         key={tag}
                         onClick={() => onToggleTag(tag)}
                         disabled={isUpdatingTags}
-                        className={`w-full px-3 py-2.5 mb-1 flex items-center gap-3 text-left rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
-                          isSelected
-                            ? "bg-blue-50 border border-blue-200"
-                            : "hover:bg-gray-50 border border-transparent"
-                        }`}
+                        className={`w-full px-3 py-2.5 mb-1 flex items-center gap-3 text-left rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${isSelected
+                          ? "bg-blue-50 border border-blue-200"
+                          : "hover:bg-gray-50 border border-transparent"
+                          }`}
                       >
                         <div
-                          className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
-                            isSelected
-                              ? "bg-blue-500 border-blue-500"
-                              : "border-gray-300 bg-white"
-                          }`}
+                          className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${isSelected
+                            ? "bg-blue-500 border-blue-500"
+                            : "border-gray-300 bg-white"
+                            }`}
                         >
                           {isSelected && (
                             <Check
@@ -415,11 +411,10 @@ const TagDropdown = memo<TagDropdownProps>(
                           )}
                         </div>
                         <span
-                          className={`font-sans text-xs flex-1 transition-all ${
-                            isSelected
-                              ? "font-semibold text-blue-700"
-                              : "font-medium text-gray-700"
-                          }`}
+                          className={`font-sans text-xs flex-1 transition-all ${isSelected
+                            ? "font-semibold text-blue-700"
+                            : "font-medium text-gray-700"
+                            }`}
                         >
                           {tag}
                         </span>
@@ -477,6 +472,7 @@ const Sidebar = ({
   const [allTags, setAllTags] = useState<string[]>([]);
   const [assignedTags, setAssignedTags] = useState<string[]>([]);
   const [isUpdatingTags, setIsUpdatingTags] = useState(false);
+  const api = useApi();
 
   // Fetch contact tags
   const fetchContactTags = useCallback(async () => {

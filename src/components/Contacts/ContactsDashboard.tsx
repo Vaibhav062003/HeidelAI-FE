@@ -8,7 +8,7 @@ import { PaginationFooter } from "../Contacts/PaginationFooter";
 import { ContactForm } from "../Contacts/ContactFormModal";
 import { Spinner } from "../Contacts/Spinner";
 import TagSidebar from "./TagSidebar";
-import api from "@/lib/session_api";
+import { useApi } from "@/lib/session_api";
 import { ApiContact, Contact } from "../types/contacts";
 import { TagIcon, X } from "lucide-react";
 
@@ -55,12 +55,13 @@ const ContactsDashboard = () => {
   const [importingCount, setImportingCount] = useState(0);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [tags, setTags] = useState<Tag[]>([]);
-  
-  const [sidebarSelectedTag, setSidebarSelectedTag] = useState<string | null>(null); 
-  const [filterSelectedTags, setFilterSelectedTags] = useState<string[]>([]); 
-  
+
+  const [sidebarSelectedTag, setSidebarSelectedTag] = useState<string | null>(null);
+  const [filterSelectedTags, setFilterSelectedTags] = useState<string[]>([]);
+
   const [tagsLoading, setTagsLoading] = useState(true);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const api = useApi();
 
   const fetchContacts = useCallback(async () => {
     setLoading(true);
@@ -285,9 +286,8 @@ const ContactsDashboard = () => {
     // Filter by search query 
     if (searchQuery) {
       filtered = filtered.filter((contact) => {
-        const searchText = `${contact.firstName} ${contact.lastName} ${
-          contact.email
-        } ${contact.username || ""} ${contact.phone || ""}`;
+        const searchText = `${contact.firstName} ${contact.lastName} ${contact.email
+          } ${contact.username || ""} ${contact.phone || ""}`;
         return searchText.toLowerCase().includes(searchQuery.toLowerCase());
       });
     }
@@ -321,10 +321,10 @@ const ContactsDashboard = () => {
           onDeleteTag={handleDeleteTag}
           onTagSelect={(tag) => {
             if (sidebarSelectedTag === tag) {
-              setSidebarSelectedTag(null); 
+              setSidebarSelectedTag(null);
             } else {
               setSidebarSelectedTag(tag);
-              setFilterSelectedTags([]); 
+              setFilterSelectedTags([]);
             }
           }}
           selectedTag={sidebarSelectedTag}
@@ -342,12 +342,12 @@ const ContactsDashboard = () => {
             onSearch={setSearchQuery}
             onAddContact={() => setSelectedContact({} as Contact)}
             onImportCSV={handleFileUpload}
-            onMessageSend={() => {}}
+            onMessageSend={() => { }}
             tags={tags}
-            selectedTags={filterSelectedTags} 
+            selectedTags={filterSelectedTags}
             onTagsChange={(tags) => {
               setFilterSelectedTags(tags);
-              setSidebarSelectedTag(null); 
+              setSidebarSelectedTag(null);
             }}
           />
         </div>
@@ -358,7 +358,7 @@ const ContactsDashboard = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 flex-wrap">
                 <TagIcon className="w-4 h-4 text-blue-600" />
-                
+
                 {/* Sidebar Tag Display */}
                 {sidebarSelectedTag && (
                   <>
@@ -430,10 +430,10 @@ const ContactsDashboard = () => {
                   {sidebarSelectedTag
                     ? `No contacts with tag "${sidebarSelectedTag}" 🔍`
                     : filterSelectedTags.length > 0
-                    ? `No contacts with selected tags 🔍`
-                    : searchQuery
-                    ? "No matching contacts found 🔍"
-                    : "No contacts found 🔍"}
+                      ? `No contacts with selected tags 🔍`
+                      : searchQuery
+                        ? "No matching contacts found 🔍"
+                        : "No contacts found 🔍"}
                 </p>
                 {(sidebarSelectedTag || filterSelectedTags.length > 0 || searchQuery) && (
                   <button
