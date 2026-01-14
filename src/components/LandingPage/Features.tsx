@@ -222,11 +222,10 @@ const MarqueeRow = ({
       }}
     >
       <div
-        className={`flex gap-3 sm:gap-6 px-3 sm:px-6 w-max ${
-          direction === "left"
-            ? "animate-infinite-scroll-left"
-            : "animate-infinite-scroll-right"
-        }`}
+        className={`flex gap-3 sm:gap-6 px-3 sm:px-6 w-max ${direction === "left"
+          ? "animate-infinite-scroll-left"
+          : "animate-infinite-scroll-right"
+          }`}
       >
         {segment.map((card, idx) => (
           <CardItem key={`s1-${idx}`} card={card} />
@@ -279,11 +278,10 @@ const ProcessingNode: React.FC = () => {
           {slides.map((slide, index) => (
             <div
               key={index}
-              className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${
-                index === currentSlide
-                  ? "opacity-100 scale-100 translate-y-0"
-                  : "opacity-0 scale-95 translate-y-4 pointer-events-none"
-              }`}
+              className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${index === currentSlide
+                ? "opacity-100 scale-100 translate-y-0"
+                : "opacity-0 scale-95 translate-y-4 pointer-events-none"
+                }`}
             >
               {slide.type === "logo" ? (
                 <div className="flex items-center justify-center gap-2 sm:gap-4 whitespace-nowrap">
@@ -350,7 +348,7 @@ const Features: React.FC = () => {
         </p>
       </div>
 
-      <div className="relative w-full flex items-center justify-center min-h-[300px] sm:min-h-[700px]">
+      <div className="relative w-full flex items-center justify-center min-h-[200px] sm:min-h-[500px]">
         {/* Right Side */}
         <OutputCarousel />
 
