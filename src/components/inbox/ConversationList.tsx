@@ -170,7 +170,7 @@ const ConversationList = ({
 
     if (!hasFilters && activeTab === 'all') {
       return [...filtered].sort((a, b) => 
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        (b.timestamp || "").localeCompare(a.timestamp || "")
       );
     }
 
@@ -211,7 +211,7 @@ const ConversationList = ({
     }
 
     return [...filtered].sort((a, b) => 
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      (b.timestamp || "").localeCompare(a.timestamp || "")
     );
   }, [conversations, filters, searchQuery, activeTab]);
 

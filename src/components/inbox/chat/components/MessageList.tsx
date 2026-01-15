@@ -39,6 +39,16 @@ const MessageList = memo(({ messages, messagesLoading, selectedConversationId, l
     const handleMuteToggle = (muted: boolean) => {
         setGlobalMuted(muted);
     };
+
+    const latestMediaMessage = React.useMemo(() => {
+      return [...messages]
+        .reverse()
+        .find((m) => m.type === "ig_reel" || m.type === "ig_story");
+    }, [messages]);
+
+    const latestMediaId =
+      latestMediaMessage?.payload?.reel_video_id ||
+      latestMediaMessage?.payload?.story_media_id;
     
 
     return (
@@ -78,15 +88,6 @@ const MessageList = memo(({ messages, messagesLoading, selectedConversationId, l
                     }
                     // ####################################################
                     
-                    const latestMediaMessage = [...messages]
-                    .reverse()
-                    .find(
-                        (m) => m.type === "ig_reel" || m.type === "ig_story"
-                    );
-
-                    const latestMediaId =
-                    latestMediaMessage?.payload?.reel_video_id ||
-                    latestMediaMessage?.payload?.story_media_id;
 
                     const isLatest =
                     (message.type === "ig_reel" &&

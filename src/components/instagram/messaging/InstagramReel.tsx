@@ -126,7 +126,7 @@ export default function InstagramReel({
             >
                 <div
                     className={`relative w-full ${isFullscreen ? "h-[90vh]" : "aspect-[9/16]"
-                        } bg-gray-200 rounded-2xl`}
+                        } bg-gray-200 flex items-center rounded-2xl`}
                     onClick={isFullscreen ? handleVideoClick : undefined}
                 >
                     <video
@@ -137,7 +137,7 @@ export default function InstagramReel({
                         playsInline
                         onClick={!isFullscreen ? handleVideoClick : undefined}
                         onPlay={() => onPlay?.(id)}
-                        className="object-cover w-[250px]"
+                        className="object-cover w-[250px] bg-black"
                     />
 
                     {/* Profile Info */}
