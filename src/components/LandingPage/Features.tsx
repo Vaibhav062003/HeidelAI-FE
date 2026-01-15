@@ -310,7 +310,6 @@ const ProcessingNode: React.FC = () => {
   );
 };
 
-// Main Feature Section
 const Features: React.FC = () => {
   const denseIcons = useMemo(() => {
     let allIcons: (InputIcon & { uniqueKey: string })[] = [];
@@ -331,7 +330,7 @@ const Features: React.FC = () => {
       id="features"
       className="relative w-full min-h-[60vh] sm:min-h-screen flex flex-col items-center justify-center py-6 sm:py-6 overflow-hidden bg-white"
     >
-      <div className="relative z-10 w-full mb-1 sm:mb-3 px-4 mt-12 sm:mt-20">
+      <div className="relative z-10 w-full mb-20 sm:mb-20 px-4 mt-4 sm:mt-10">
         <h2
           className="text-4xl md:text-6xl font-normal text-gray-800 italic mb-0 text-center"
           style={{ fontFamily: "'Awesome Serif', serif" }}
@@ -345,7 +344,7 @@ const Features: React.FC = () => {
         </p>
       </div>
 
-      <div className="relative w-full flex items-center justify-center min-h-[300px] sm:min-h-[700px]">
+      <div className="relative w-full flex items-center justify-center min-h-[180px] sm:min-h-[400px]">
         {/* Right Side */}
         <OutputCarousel />
 
@@ -359,11 +358,11 @@ const Features: React.FC = () => {
 
       <style jsx global>{`
         :root {
-          --spread-height: 320px;
+          --spread-height: 180px;
         }
         @media (min-width: 640px) {
           :root {
-            --spread-height: 800px;
+            --spread-height: 400px;
           }
         }
 
