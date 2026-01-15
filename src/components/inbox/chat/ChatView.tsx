@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, memo } from "react";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
@@ -108,12 +108,14 @@ const ChatView = ({
     };
   }, [selectedConversationId]);
 
-  const lastCustomerMessage = messages
-    .filter((m) => m.role === "customer")
-    .sort(
-      (a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    )[0];
+  const lastCustomerMessage = useMemo(() => {
+    return messages
+      .filter((m) => m.role === "customer")
+      .sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      )[0];
+  }, [messages]);
 
   const targetExpiryDate = lastCustomerMessage
     ? new Date(getUtcTime(lastCustomerMessage.timestamp) + (24 * 60 * 60 * 1000) - (45 * 1000)).toISOString()
@@ -225,4 +227,4 @@ const ChatView = ({
 
 
 
-export default ChatView;
+export default memo(ChatView);
