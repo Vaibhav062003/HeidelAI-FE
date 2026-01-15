@@ -38,6 +38,7 @@ export const MessageComposer = ({ onMessageSend, directMode = false, preSelected
   const templateDropdownRef = useRef<HTMLDivElement>(null);
   const messageMenuRef = useRef<HTMLDivElement>(null);
   const triggerButtonRef = useRef<HTMLButtonElement>(null);
+  const api = useApi();
 
   useEffect(() => {
     if (directMode) {
