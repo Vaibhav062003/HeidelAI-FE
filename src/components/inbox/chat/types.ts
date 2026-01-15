@@ -48,22 +48,26 @@ export interface Message {
   role: "customer" | "ai" | "agent" | "system";
   sender_id: string;
   conversation_id: string;
+  sender_name?: string;
   status?: "sent" | "delivered" | "read" | "sending" | "failed";
-  type?:
-  | "text"
-  | "image"
-  | "file"
-  | "voice"
-  | "video"
-  | "share"
-  | "ig_story"
-  | "ig_reel"
-  | "story_reply"
-  | "system"
-  | "message_reply"
-  | "document";
+  platform: "whatsapp" | "instagram";
+ type?:
+    | "text"
+    | "image"
+    | "file"
+    | "voice"
+    | "video"
+    | "share"
+    | "ig_story"
+    | "ig_reel"
+    | "story_reply"
+    | "system"
+    | "document";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
+  context_type?: "message_reply" | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  context?: any;
   product_data?: ProductData[];
   fileUrl?: string;
   fileName?: string;

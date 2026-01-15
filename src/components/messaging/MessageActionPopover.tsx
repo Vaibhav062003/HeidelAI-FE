@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import Picker from "@emoji-mart/react";
-import data from "@emoji-mart/data";
-import { Plus, Reply } from "lucide-react";
+// import Picker from "@emoji-mart/react";
+// import data from "@emoji-mart/data";
+import { 
+  // Plus,
+   Reply } from "lucide-react";
 import { createPortal } from "react-dom";
 
 interface MessageActionsPopoverProps {
@@ -10,10 +12,9 @@ interface MessageActionsPopoverProps {
   onClose: () => void;
   isAgent: boolean;
   anchorRef: React.RefObject<HTMLDivElement | null>;
+  platform: "whatsapp" | "instagram";
 }
 
-const defaultEmojis = ["❤️"];
-// const defaultEmojis = ["❤️", "😂", "😮", "😢", "👍", "👎"];
 
 export const MessageActionsPopover: React.FC<MessageActionsPopoverProps> = ({
   isAgent,
@@ -21,14 +22,20 @@ export const MessageActionsPopover: React.FC<MessageActionsPopoverProps> = ({
   onReply,
   onClose,
   anchorRef,
+  platform
 }) => {
-  const [showPicker, setShowPicker] = useState(false);
+  // const [showPicker, setShowPicker] = useState(false);
   const [hoveredEmoji, setHoveredEmoji] = useState<string | null>(null);
-
+  
   const [pos, setPos] = useState({ top: 20, left: 50 });
   const popoverRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
-
+  let defaultEmojis: string[] = ["❤️", "😂", "😮", "😢", "👍", "👎"];
+  if (platform === "instagram") {
+    defaultEmojis = ["❤️"];
+  } else if (platform === "whatsapp") {
+    defaultEmojis = ["❤️", "😂", "😮", "😢", "👍", "👎"];
+  }
 
   useEffect(() => {
     const anchor = anchorRef?.current;
@@ -81,9 +88,9 @@ export const MessageActionsPopover: React.FC<MessageActionsPopoverProps> = ({
         transition: "opacity 120ms ease", // fade only, no sliding
         zIndex: 9999,
       }}
-      className={`animate-in fade-in duration-200 flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-300 rounded-lg px-1 py-0.5 shadow-md z-50`}
+      className={`animate-in fade-in duration-200 flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-1 py-0.5 shadow-md z-50`}
     >
-      {!showPicker ? (
+      {/* {!showPicker ? ( */}
         <>
           {defaultEmojis.map((emoji) => (
             <button
@@ -102,37 +109,38 @@ export const MessageActionsPopover: React.FC<MessageActionsPopoverProps> = ({
 
           {/* <button
             onClick={() => setShowPicker(true)}
-            className="p-1 rounded-full border hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            className="p-1 rounded-full border hover:bg-gray-100  transition"
             title="More emojis"
           >
-            <Plus size={18} className="text-gray-600 dark:text-gray-300" />
+            <Plus size={18} className="text-gray-600" />
           </button> */}
 
-          <div className="w-[2px] h-5 bg-gray-300 dark:bg-gray-600 mx-1" />
+          <div className="w-[2px] h-5 bg-gray-300  mx-1" />
 
           {/* Reply icon */}
           <button
             onClick={handleReply}
-            className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            className="p-1 rounded-full hover:bg-gray-100  transition"
             title="Reply"
           >
-            <Reply size={18} className="text-gray-600 dark:text-gray-300" />
+            <Reply size={20} className="text-gray-600" />
           </button>
         </>
-      ) : (
-        <div className="absolute top-10 right-0 z-50">
-          <Picker
-            data={data}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            onEmojiSelect={(emoji: any) => {
-              handleReact(emoji.native);
-              setShowPicker(false);
-            }}
-            theme="light"
-            previewPosition="none"
-          />
-        </div>
-      )}
+       {/* ) : 
+      // (
+      //   <div className="absolute top-10 right-0 z-50">
+      //     <Picker
+      //       data={data}
+      //       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      //       onEmojiSelect={(emoji: any) => {
+      //         handleReact(emoji.native);
+      //         setShowPicker(false);
+      //       }}
+      //       theme="light"
+      //       previewPosition="none"
+      //     />
+      //   </div>
+      // )} */}
     </div>
   );
 

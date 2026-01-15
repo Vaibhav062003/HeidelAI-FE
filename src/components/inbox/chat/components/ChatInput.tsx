@@ -7,7 +7,7 @@ import { X, Send, Paperclip, Smile,
 } from "lucide-react";
 import { CannedResponses } from "./CannedResponses";
 import { useCannedResponses } from "../hooks/useCannedResponses";
-import { CannedResponse } from "../types";
+import { CannedResponse, Message } from "../types";
 import { useTypingIndicator } from "@/components/hooks/typingIndicator";
 import { useMainWebSocket } from "@/lib/websocket";
 import { useFileHandler } from "../hooks/useFileHandler";
@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { MIN_HEIGHT, MAX_HEIGHT } from "../constants";
+import { ReplyPreview } from "./ReplyPreview";
 
 interface ChatInputProps {
     sharedProduct: Product | null;
@@ -29,9 +30,13 @@ interface ChatInputProps {
     message: string;
     setMessage: React.Dispatch<React.SetStateAction<string>>;
     textAreaRef: React.RefObject<HTMLTextAreaElement | null>;
-    sendMessage: (content: string, attachments: File[], mode: "reply" | "private") => Promise<void>;
+    sendMessage: (content: string, attachments: File[], mode: "reply" | "private", contextMessageId?: string) => Promise<void>;
     typingUsers: Map<string, {agent_name: string}>
     isWindowExpired: boolean;
+    contextMessageId: string | null;
+    contextMessage: Message | null;
+    setContextMessageId: React.Dispatch<React.SetStateAction<string | null>>;
+    setContextMessage: React.Dispatch<React.SetStateAction<Message | null>>;
 }
 
 const ChatInput = ({
@@ -44,7 +49,11 @@ const ChatInput = ({
     textAreaRef,
     sendMessage,
     typingUsers,
-    isWindowExpired
+    isWindowExpired,
+    contextMessageId,
+    contextMessage,
+    setContextMessageId,
+    setContextMessage
 }: ChatInputProps) => {
 
     const { 
@@ -164,6 +173,17 @@ const ChatInput = ({
             e.preventDefault();
             handleSend();
         }
+        if(e.key === "Escape") {
+            e.preventDefault();
+            textAreaRef.current?.focus();
+            setContextMessageId(null);
+            setContextMessage(null);
+            setAttachments([]);
+        }
+        // if(e.key === "/") {
+        //     // Open canned responses
+        //     setShowCannedResponses(true);
+        // }
         }
     };
 
@@ -184,15 +204,21 @@ const ChatInput = ({
         // 3. Save current state for rollback if needed
         const prevMessage = message;
         const prevAttachments = attachments;
+        const prevContextId = contextMessageId;
+        const prevContextMessage = contextMessage;
+
+        console.log(prevContextId)
     
         // 4. Clear UI immediately for responsiveness
         setMessage("");
         setAttachments([]);
         setShowCannedResponses(false);
+        setContextMessageId(null);
+        setContextMessage(null);
     
         // 5. Call the Hook
         try {
-        await sendMessage(contentToSend, prevAttachments, mode);
+        await sendMessage(contentToSend, prevAttachments, mode, prevContextId || undefined);
         
         // Scroll to bottom
         setTimeout(() => lastMessageRef.current?.scrollIntoView({ behavior: "smooth" }), 10);
@@ -201,6 +227,8 @@ const ChatInput = ({
         // Restore UI on error (The hook handles removing the message bubble, we restore the text)
         setMessage(prevMessage);
         setAttachments(prevAttachments);
+        setContextMessageId(prevContextId);
+        setContextMessage(prevContextMessage);
         }
     };
 
@@ -248,6 +276,7 @@ const ChatInput = ({
 
     const handleFileClick = () => {
         fileInputRef.current?.click(); // trigger hidden input
+        textAreaRef.current?.focus();
     };
 
     useEffect(() => {
@@ -285,13 +314,15 @@ const ChatInput = ({
 
 
             {sharedProduct && (
-            <div className="mb-3 px-3">
-                <SharedProductPreview
-                product={sharedProduct}
-                onRemove={onClearSharedProduct}
-                />
-            </div>
+                <div className="mb-3 px-3">
+                    <SharedProductPreview
+                    product={sharedProduct}
+                    onRemove={onClearSharedProduct}
+                    />
+                </div>
             )}
+
+           
 
             {/* {audioURL ? (
             <div className="flex items-center gap-3 bg-white/80 backdrop-blur-sm p-3 rounded-2xl border border-gray-200/60 mx-3">
@@ -346,6 +377,16 @@ const ChatInput = ({
                             You can’t reply to this conversation because the 24-hour reply window has expired.
                         </div>
                     </div>
+                )}
+
+                {contextMessageId && contextMessage && (
+                    <ReplyPreview
+                    message={contextMessage}
+                    onCancel={() => {
+                        setContextMessageId(null);
+                        setContextMessage(null);
+                    }}
+                    />
                 )}
 
                 {/* Textarea */}
@@ -414,7 +455,7 @@ const ChatInput = ({
                 {/* Action buttons */}
                 <div className="flex justify-between items-center">
                     <div className="flex gap-2">
-                    {/* Emoji picker */}
+                    {/* Emoji picker
                     <Popover>
                         <PopoverTrigger asChild>
                         <button disabled={mode === "reply" && isWindowExpired} className="p-2.5 rounded-xl bg-gray-100/80 hover:bg-gray-200/80 transition-colors">
@@ -426,9 +467,9 @@ const ChatInput = ({
                         side="top"
                         align="start"
                         >
-                        {/* Emoji picker content */}
                         </PopoverContent>
-                    </Popover>
+                    </Popover> 
+                    */}
 
                     {/* File attachment */}
                     <Tooltip>
