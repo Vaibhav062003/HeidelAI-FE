@@ -61,21 +61,18 @@ const INPUT_ICONS: InputIcon[] = [
     logoUrl: "https://cdn.simpleicons.org/woocommerce/96588A",
     color: "border-purple-600",
   },
-  // { id: "8", name: "Snapchat", logoUrl: "https://cdn.simpleicons.org/snapchat/FFFC00", color: "border-yellow-400" },
   {
     id: "9",
     name: "Twitter/X",
     logoUrl: "https://cdn.simpleicons.org/x/000000",
     color: "border-gray-800",
   },
-  // { id: "10", name: "TikTok", logoUrl: "https://cdn.simpleicons.org/tiktok/000000", color: "border-gray-900" },
   {
     id: "11",
     name: "YouTube",
     logoUrl: "https://cdn.simpleicons.org/youtube/FF0000",
     color: "border-red-600",
   },
-  // { id: "12", name: "Pinterest", logoUrl: "https://cdn.simpleicons.org/pinterest/E60023", color: "border-red-500" },
   {
     id: "13",
     name: "Messenger",
@@ -187,22 +184,22 @@ const getIcon = (iconName: string) => {
 };
 
 const CardItem = ({ card }: { card: OutputCard }) => (
-  <div className="flex items-center gap-2 sm:gap-4 bg-white/90 backdrop-blur-sm border border-gray-100 p-2 sm:p-4 rounded-xl sm:rounded-2xl shadow-sm w-[130px] sm:w-[280px] flex-shrink-0">
-    <div className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center bg-indigo-50 rounded-lg sm:rounded-xl text-indigo-600 p-1.5 sm:p-2.5">
+  <div className="flex items-center gap-1.5 sm:gap-4 bg-white/90 backdrop-blur-sm border border-gray-100 p-1.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-sm w-[110px] sm:w-[280px] flex-shrink-0">
+    <div className="w-7 h-7 sm:w-12 sm:h-12 flex items-center justify-center bg-indigo-50 rounded-lg sm:rounded-xl text-indigo-600 p-1.5 sm:p-2.5">
       {getIcon(card.icon)}
     </div>
     <div className="flex flex-col">
-      <span className="text-[9px] sm:text-sm font-bold text-gray-900 leading-tight">
+      <span className="text-[8px] sm:text-sm font-bold text-gray-900 leading-tight">
         {card.title}
       </span>
-      <span className="text-[7px] sm:text-[10px] text-indigo-500 font-black uppercase tracking-widest mt-0.5 sm:mt-1">
+      <span className="text-[6px] sm:text-[10px] text-indigo-500 font-black uppercase tracking-widest mt-0.5 sm:mt-1">
         {card.category}
       </span>
     </div>
   </div>
 );
 
-const MarqueeRow = ({
+const Row = ({
   cards,
   direction = "left",
 }: {
@@ -241,12 +238,10 @@ const MarqueeRow = ({
 
 const OutputCarousel = () => {
   return (
-    // right-0 to the Right side
-    // w-[50vw] Exact half width
     <div className="absolute right-0 top-0 bottom-0 w-[50vw] z-0 flex flex-col justify-center items-center overflow-hidden pointer-events-none">
       <div className="w-full flex flex-col gap-5 sm:gap-10 opacity-0 animate-emerge">
-        <MarqueeRow cards={OUTPUT_CARDS_1} direction="right" />
-        <MarqueeRow cards={OUTPUT_CARDS_2} direction="left" />
+        <Row cards={OUTPUT_CARDS_1} direction="right" />
+        <Row cards={OUTPUT_CARDS_2} direction="left" />
       </div>
     </div>
   );
@@ -273,8 +268,8 @@ const ProcessingNode: React.FC = () => {
   }, [slides.length]);
 
   return (
-    <div className="relative z-30 mx-auto transition-all duration-300 w-[260px] sm:w-auto sm:min-w-[450px] md:min-w-[550px] lg:min-w-[650px] max-w-5xl">
-      <div className="w-full bg-white shadow-[0_15px_40px_rgba(8,_112,_184,_0.1)] sm:shadow-[0_20px_50px_rgba(8,_112,_184,_0.15)] border border-gray-100 flex flex-col items-center justify-center rounded-[2rem] sm:rounded-[2.5rem] md:rounded-[3rem] px-4 py-8 sm:px-10 sm:py-12 md:px-14 md:py-16 min-h-[120px] sm:min-h-auto">
+    <div className="relative z-30 mx-auto transition-all duration-300 w-[220px] sm:w-auto sm:min-w-[450px] md:min-w-[550px] lg:min-w-[650px] max-w-5xl">
+      <div className="w-full bg-white shadow-[0_15px_40px_rgba(8,_112,_184,_0.1)] sm:shadow-[0_20px_50px_rgba(8,_112,_184,_0.15)] border border-gray-100 flex flex-col items-center justify-center rounded-[2rem] sm:rounded-[2.5rem] md:rounded-[3rem] px-3 py-6 sm:px-10 sm:py-12 md:px-14 md:py-16 min-h-[90px] sm:min-h-auto">
         <div className="relative w-full flex items-center justify-center min-h-[60px] sm:min-h-auto aspect-auto sm:aspect-[3/1]">
           {slides.map((slide, index) => (
             <div
@@ -296,13 +291,13 @@ const ProcessingNode: React.FC = () => {
                         "https://cdn-icons-png.flaticon.com/512/2103/2103633.png";
                     }}
                   />
-                  <span className="text-2xl sm:text-4xl md:text-5xl font-medium tracking-tight text-gray-900">
+                  <span className="text-xl sm:text-4xl md:text-5xl font-medium tracking-tight text-gray-900">
                     {slide.content}
                   </span>
                 </div>
               ) : (
                 <div className="w-full flex items-center justify-center px-1">
-                  <p className="text-center font-semibold bg-gradient-to-r from-orange-500 via-orange-600 to-red-700 bg-clip-text text-transparent text-lg sm:text-2xl md:text-3xl lg:text-4xl leading-tight sm:leading-snug max-w-full">
+                  <p className="text-center font-semibold bg-gradient-to-r from-orange-500 via-orange-600 to-red-700 bg-clip-text text-transparent text-base sm:text-2xl md:text-3xl lg:text-4xl leading-tight sm:leading-snug max-w-full">
                     {slide.content}
                   </p>
                 </div>
@@ -334,16 +329,16 @@ const Features: React.FC = () => {
   return (
     <section
       id="features"
-      className="relative w-full min-h-[60vh] sm:min-h-screen flex flex-col items-center justify-center py-12 sm:py-24 overflow-hidden bg-white"
+      className="relative w-full min-h-[60vh] sm:min-h-screen flex flex-col items-center justify-center py-6 sm:py-6 overflow-hidden bg-white"
     >
-      <div className="relative z-10 w-full mb-8 sm:mb-20 px-4">
+      <div className="relative z-10 w-full mb-1 sm:mb-3 px-4 mt-12 sm:mt-20">
         <h2
-          className="text-4xl md:text-6xl font-normal text-gray-800 italic mb-4 text-center"
+          className="text-4xl md:text-6xl font-normal text-gray-800 italic mb-0 text-center"
           style={{ fontFamily: "'Awesome Serif', serif" }}
         >
           From Chaos to <span className="text-orange-600">Clarity</span>
-        </h2>{" "}
-        <p className="text-gray-600 text-sm sm:text-base md:text-lg font-medium leading-relaxed max-w-[90%] sm:max-w-3xl mx-auto text-center mt-3 sm:mt-4 md:mt-6">
+        </h2>
+        <p className="text-gray-600 text-sm sm:text-base md:text-lg font-medium leading-relaxed max-w-[90%] sm:max-w-3xl mx-auto text-center mt-1 sm:mt-1">
           Connect scattered conversations across 20+ platforms into one
           intelligent command center that predicts trends, automates responses,
           and scales your impact effortlessly

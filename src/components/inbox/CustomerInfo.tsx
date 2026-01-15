@@ -35,8 +35,10 @@ const CustomerInfo = ({
     gstin: "",
     phoneOrUserId:
       platform === "whatsapp"
-        ? selectedConversationId?.split("_")[1]?.replace(/^(\d{2})(\d+)/, "+$1 $2")
-        : selectedConversationId?.split("_")[1] || "",
+        ? selectedConversationId
+            ?.replace(/^whatsapp_/, "")
+            ?.replace(/^(\d{2})(\d+)/, "+$1 $2")
+        : selectedConversationId?.replace(/^(instagram_|whatsapp_)/, "") || "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,7 +69,9 @@ const CustomerInfo = ({
     <div className="space-y-6 p-4">
       <div className="grid grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Name</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Name
+          </label>
           <Input
             name="name"
             value={formData.name}
@@ -77,7 +81,9 @@ const CustomerInfo = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Email
+          </label>
           <Input
             name="email"
             value={formData.email}

@@ -697,10 +697,11 @@ const Sidebar = ({
   );
 
   const contactPhone = useMemo(
-    () => selectedConversationId?.split("_")[1] || "Not Available",
+    () =>
+      selectedConversationId?.replace(/^(instagram_|whatsapp_)/, "") ||
+      "Not Available",
     [selectedConversationId]
   );
-
   const contactEmail = useMemo(
     () => conversation?.email || "Not Available",
     [conversation?.email]
