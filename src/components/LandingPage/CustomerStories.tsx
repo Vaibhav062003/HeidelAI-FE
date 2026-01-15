@@ -3,15 +3,8 @@ import Image from 'next/image';
 
 const CustomerStories = () => {
     return (
-        <section id="CustomerStories" className="py-24 relative overflow-hidden z-10">
+        <section id="CustomerStories" className="py-14 relative overflow-hidden z-10">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                {/* Badge */}
-                <div className="flex justify-center mb-6">
-                    <span className="text-[#0080A0] text-sm font-medium tracking-wider flex items-center gap-2">
-                        <span className="opacity-50">[</span> Customer's Stories <span className="opacity-50">]</span>
-                    </span>
-                </div>
-
                 {/* Heading */}
                 <div className="text-center mb-16">
                     <h2 className="text-4xl md:text-6xl font-normal text-gray-800 italic mb-4"

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
 import { createContext, useCallback, useContext, useEffect, useRef } from "react";
 
 interface WSPayload {
@@ -29,23 +30,9 @@ const generateClientId = () => {
     return id;
 };
 
-const fetchToken = async () => {
-    const sessionId = localStorage.getItem("sessionId");
-    if (!sessionId) throw new Error("Session ID missing");
-
-    const res = await fetch("/api/session-token", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ sessionId }),
-    });
-
-    if (!res.ok) throw new Error("Failed to fetch token");
-
-    const { token } = await res.json();
-    return token;
-};
-
 export const WebSocketProvider = ({ children }: any) => {
+    const { getToken } = useAuth()
+
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Store timeout ID
 
@@ -83,7 +70,7 @@ export const WebSocketProvider = ({ children }: any) => {
         }
 
         try {
-            const token = await fetchToken();
+            const token = await getToken();
             const clientId = generateClientId();
 
             const ws = new WebSocket(
@@ -133,7 +120,8 @@ export const WebSocketProvider = ({ children }: any) => {
                 connect();
             }, 5000); // Wait a bit longer if API is down
         }
-    }, []); // Dependencies are empty
+    }, [getToken]); // Add getToken to dependencies
+
 
     //   Handle "Tab Focus" Reconnection
     useEffect(() => {

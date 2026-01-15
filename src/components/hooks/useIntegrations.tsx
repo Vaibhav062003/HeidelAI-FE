@@ -1,4 +1,4 @@
-import api from "@/lib/session_api";
+import { useApi } from "@/lib/session_api";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { storeData, getData, DB_KEYS } from "@/lib/indexedDB";
 
@@ -45,13 +45,14 @@ interface InstagramPost {
 }
 
 export const useIntegrations = () => {
+    const api = useApi();
     const [integrations, setIntegrations] = useState<Integrations>({
         instagram: false,
         whatsapp: false,
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    
+
     // Ref to prevent double-fetching in React Strict Mode or rapid updates
     const isFetchingRef = useRef(false);
 
@@ -93,12 +94,12 @@ export const useIntegrations = () => {
 
                     // Fetch posts in background (fire and forget)
                     api.get(`/api/instagram/posts`).then(async (postsResponse) => {
-                         if (postsResponse.status === 200) {
-                             await storeData('integrations', DB_KEYS.INTEGRATIONS.INSTAGRAM_POSTS, {
-                                 posts: postsResponse.data.data,
-                                 lastUpdated: Date.now()
-                             });
-                         }
+                        if (postsResponse.status === 200) {
+                            await storeData('integrations', DB_KEYS.INTEGRATIONS.INSTAGRAM_POSTS, {
+                                posts: postsResponse.data.data,
+                                lastUpdated: Date.now()
+                            });
+                        }
                     }).catch(console.error);
                 }
             } else {
@@ -125,7 +126,7 @@ export const useIntegrations = () => {
                     await storeData("integrations", DB_KEYS.INTEGRATIONS.WHATSAPP, whatsappData);
                 }
             } else {
-                 setIntegrations(prev => ({ ...prev, whatsapp: false }));
+                setIntegrations(prev => ({ ...prev, whatsapp: false }));
             }
 
             setError(null);
@@ -173,7 +174,7 @@ export const useIntegrations = () => {
 
             // 4. If we found data for both, stop loading immediately (Optimistic UI)
             if (instagramData || whatsappData) {
-                setLoading(false); 
+                setLoading(false);
             }
 
             // 5. Trigger Network Sync if needed
@@ -186,7 +187,7 @@ export const useIntegrations = () => {
         } catch (err) {
             console.error("IDB Init Error", err);
             // If IDB fails, fallback to API
-            await fetchFromApi(); 
+            await fetchFromApi();
         }
     }, [fetchFromApi]);
 

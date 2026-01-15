@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import api from "@/lib/session_api";
+import { useApi } from "@/lib/session_api";
 import { CannedResponse } from "../types";
 
 export const useCannedResponses = () => {
@@ -7,6 +7,7 @@ export const useCannedResponses = () => {
   const [filteredResponses, setFilteredResponses] = useState<CannedResponse[]>([]);
   const [showCannedResponses, setShowCannedResponses] = useState(false);
   const [selectedCannedIndex, setSelectedCannedIndex] = useState(0);
+  const api = useApi();
 
   // 1. Fetch Responses on Mount
   useEffect(() => {

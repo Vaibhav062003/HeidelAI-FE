@@ -9,7 +9,7 @@ import {
   User,
 } from "lucide-react";
 import AnalyticsCard from "./AnalyticsCard";
-import api from "@/lib/session_api";
+import { useApi } from "@/lib/session_api";
 
 interface AnalyticsSectionProps {
   selectedConversationId: string | null;
@@ -45,6 +45,7 @@ const AnalyticsSection: React.FC<AnalyticsSectionProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [backendReturnsNull, setBackendReturnsNull] = useState(false);
+  const api = useApi()
 
   useEffect(() => {
     const fetchAssignment = async () => {

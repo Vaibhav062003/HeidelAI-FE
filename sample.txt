@@ -20,3 +20,4 @@ Merged Prithal's changes regarding update for all / open / closed filtering of c
 prithal's merge had errors he fixed them 
 prithal's merge had errors because of rounak, fixed
 rounak committed on dev branch by mistake, only small changes so letting it through
+solved merge conflicts of rounak's feature branch wa-message-reactions -> dev

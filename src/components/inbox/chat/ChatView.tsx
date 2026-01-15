@@ -12,12 +12,11 @@ import "../../../app/dashboard/dashboard.css";
 import LandingDashboard from "../LandingDashboard";
 import { useUser } from "@clerk/nextjs";
 import { useMainWebSocket } from "@/lib/websocket";
-import { ChatViewProps, CannedResponse} from "./types";
+import { ChatViewProps} from "./types";
 import { getOrCreateChatClientId, getUtcTime } from "../chat/utils";
 import { useChatMessages } from "./hooks/useChatMessages";
 import { useFileHandler } from "./hooks/useFileHandler";
 import MessageList from "./components/MessageList";
-import { useCannedResponses } from "./hooks/useCannedResponses";
 import ChatHeader from "./components/ChatHeader";
 import { useConversation } from "./hooks/useConversation";
 import ChatInput from "./components/ChatInput";
@@ -33,9 +32,8 @@ const ChatView = ({
 }: ChatViewProps) => {
   const {user} = useUser();
   const { setAttachments, handleDrop, isDragging, setIsDragging } = useFileHandler();
-  const { messages, setMessages, messagesLoading, setTypingUsers, sendMessage, typingUsers } = useChatMessages( selectedConversationId, user);
+  const { messages, setMessages, messagesLoading, setTypingUsers, sendMessage, typingUsers, contextMessageId, setContextMessageId, contextMessage, setContextMessage } = useChatMessages( selectedConversationId, user);
   const { message, setMessage } = useMessage();
-  const { setFilteredResponses, setSelectedCannedIndex, setShowCannedResponses } = useCannedResponses();  
   const { conversation, setConversation, conversationStatus, setConversationStatus, setIsResolved, setIsFollowUp } = useConversation({ initialConversation, selectedConversationId });
   const { sendWsMessage } = useMainWebSocket();
   
@@ -194,6 +192,9 @@ const ChatView = ({
               messagesLoading={messagesLoading}
               selectedConversationId={selectedConversationId}
               lastMessageRef={lastMessageRef}
+              setContextMessageId={setContextMessageId}
+              setContextMessage={setContextMessage}
+              textAreaRef={textareaRef}
             />
 
             {/* Input Section */}
@@ -208,6 +209,10 @@ const ChatView = ({
               sendMessage={sendMessage}
               typingUsers={typingUsers}
               isWindowExpired={isWindowExpired}
+              contextMessageId={contextMessageId}
+              contextMessage={contextMessage}
+              setContextMessage={setContextMessage}
+              setContextMessageId={setContextMessageId}
             />
             
           </Card>

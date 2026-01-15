@@ -1,34 +1,37 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useMainWebSocket } from "@/lib/websocket";
 import { Message } from "../types";
 import { storeData, getData } from "@/lib/indexedDB";
-import api from "@/lib/session_api";
+import { useApi } from "@/lib/session_api";
 import { toast } from "sonner";
-import { send } from "process";
+
 
 // Helper to save messages to IDB in background
 
 export const useChatMessages = (selectedConversationId: string, user: any) => {
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [typingUsers, setTypingUsers] = useState<
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [typingUsers, setTypingUsers] = useState<
     Map<string, { agent_name: string; timestamp: number }>
-    >(new Map());
-    const [messagesLoading, setMessagesLoading] = useState<boolean>(false);
-    const MESSAGE_STORAGE_KEY = `messages_${selectedConversationId}`;
+  >(new Map());
+  const [messagesLoading, setMessagesLoading] = useState<boolean>(false);
+    const [contextMessageId, setContextMessageId] = useState<string | null>(null);
+    const [contextMessage, setContextMessage] = useState<Message | null>(null);
+  const MESSAGE_STORAGE_KEY = `messages_${selectedConversationId}`;
+  const api = useApi()
 
-    
-    const persistMessages = useCallback(
-        async (msgs: Message[]) => {
-            if (!selectedConversationId) return;
-                try {
-                    await storeData("messages", MESSAGE_STORAGE_KEY, msgs);
-                } catch (err) {
-                    console.warn("Failed to cache messages:", err);
-                }
-        },
-        [selectedConversationId, MESSAGE_STORAGE_KEY]
-    );
+
+  const persistMessages = useCallback(
+    async (msgs: Message[]) => {
+      if (!selectedConversationId) return;
+      try {
+        await storeData("messages", MESSAGE_STORAGE_KEY, msgs);
+      } catch (err) {
+        console.warn("Failed to cache messages:", err);
+      }
+    },
+    [selectedConversationId, MESSAGE_STORAGE_KEY]
+  );
 
     const fetchMessages = async () => {
         if (!selectedConversationId) return;
@@ -79,10 +82,21 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
     const sendMessage = useCallback(async (
         content: string, 
         attachments: File[],
-        mode: "reply" | "private"
+        mode: "reply" | "private",
+        contextMessageId?: string
     ) => {
         const platform = selectedConversationId.split("_")[0];
         const tempId = `temp-${Date.now()}`;
+        let context_type = null;
+        let context = null;
+
+
+        if (contextMessageId) {
+          context_type = "message_reply";
+          context = JSON.stringify({
+              mid: contextMessageId,
+          });
+        }
         
         // 1. Create Optimistic Message Object
         let optimisticMessage: Message;
@@ -92,6 +106,7 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
         const localPreviewUrl = URL.createObjectURL(file);
         optimisticMessage = {
             id: tempId,
+            platform: platform as "whatsapp" | "instagram",
             content: content,
             sender_id: selectedConversationId.split("_")[1],
             role: "agent",
@@ -103,10 +118,13 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
             fileName: file.name,
             fileType: file.type,
             mode: mode,
+            context_type: context_type as "message_reply" | null,
+            context: context ? JSON.parse(context) : null,
         };
         } else {
         optimisticMessage = {
             id: tempId,
+            platform: platform as "whatsapp" | "instagram",
             content: content,
             sender_id: selectedConversationId.split("_")[1],
             role: "agent",
@@ -115,11 +133,16 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
             type: "text",
             status: "sending",
             mode: mode,
+            context_type: context_type as "message_reply" | null,
+            context: context ? JSON.parse(context) : null,
         };
         }
 
-        // 2. Update UI Immediately
-        setMessages((prev) => [...prev, optimisticMessage]);
+        console.log("Optimistic message created:", optimisticMessage);
+        console.log("Context type:", context_type, "Context:", context);
+
+    // 2. Update UI Immediately
+    setMessages((prev) => [...prev, optimisticMessage]);
 
         // 3. Send to Backend
         try {
@@ -128,212 +151,214 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
         formData.append("conversation_id", selectedConversationId);
         formData.append("platform", platform);
         formData.append("mode", mode);
+        if (context_type) formData.append("context_type", context_type);
+        if (context) formData.append("context", context);
         
         if (content.trim()) formData.append("content", content.trim());
         if (attachments.length > 0) formData.append("file", attachments[0]);
 
-        const response = await api.post(`/api/conversations/send-message`, formData);
+      const response = await api.post(`/api/conversations/send-message`, formData);
 
-        if (response.status !== 200) throw new Error("Failed to send");
+      if (response.status !== 200) throw new Error("Failed to send");
 
-        // 4. Update Temp ID to Real ID on Success
-        if (response.data.details.message_id || response.data.details.response?.message_id) {
-          const messageId = response.data.details.message_id || response.data.details.response?.message_id;
-          console.log("received response message_id:", messageId);
-          let payload : { id: string; status?: "sending" | "sent" | "delivered" | "read" } = {
-            id: messageId,
+      // 4. Update Temp ID to Real ID on Success
+      if (response.data.details.message_id || response.data.details.response?.message_id) {
+        const messageId = response.data.details.message_id || response.data.details.response?.message_id;
+        console.log("received response message_id:", messageId);
+        let payload: { id: string; status?: "sending" | "sent" | "delivered" | "read" } = {
+          id: messageId,
+        }
+        if (response.data.details.status) {
+          payload = { ...payload, status: response.data.details.status }
+        }
+        setMessages((prev) => {
+          const index = prev.findIndex((m) => m.id === tempId);
+          console.log("optimistic message index:", index);
+          if (index !== -1) {
+            console.log("updating optimistic message with real ID");
+            const newState = [...prev];
+            newState[index] = { ...newState[index], ...payload };
+            // persistMessages(newState); // Call your IDB helper here
+            console.log("Updated message:", newState[index]);
+            return newState;
           }
-          if (response.data.details.status) {
-            payload = {...payload, status: response.data.details.status }
-          }
-            setMessages((prev) => {
-            const index = prev.findIndex((m) => m.id === tempId);
-            console.log("optimistic message index:", index);
-            if (index !== -1) {
-              console.log("updating optimistic message with real ID");
-                const newState = [...prev];
-                newState[index] = { ...newState[index], ...payload };
-                // persistMessages(newState); // Call your IDB helper here
-                console.log("Updated message:", newState[index]);
-                return newState;
-            }
-            return prev;
+          return prev;
+        });
+      }
+    } catch (error) {
+      console.error("Send failed:", error);
+      toast.error("Failed to send message");
+      // Rollback on failure
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      throw error; // Re-throw so the UI component knows it failed
+    }
+  }, [selectedConversationId]);
+
+  // WebSocket logic
+  useMainWebSocket({
+    onTypingIndicator: (data: any) => {
+      const myClientId = localStorage.getItem("chat_client_id");
+
+      // Only show typing if it's for this conversation
+      if (
+        data.agent_id !== myClientId &&
+        data.conversation_id === selectedConversationId
+      ) {
+        if (data.is_typing) {
+          setTypingUsers((prev) => {
+            const next = new Map(prev);
+            next.set(data.agent_id, {
+              agent_name: data.user,
+              timestamp: Date.now(),
             });
+            return next;
+          });
+        } else {
+          setTypingUsers((prev) => {
+            const next = new Map(prev);
+            next.delete(data.agent_id);
+            return next;
+          });
         }
-        } catch (error) {
-        console.error("Send failed:", error);
-        toast.error("Failed to send message");
-        // Rollback on failure
-        setMessages((prev) => prev.filter((m) => m.id !== tempId));
-        throw error; // Re-throw so the UI component knows it failed
-        }
-    }, [selectedConversationId]);
+      }
+    },
 
-    // WebSocket logic
-    useMainWebSocket({
-        onTypingIndicator: (data: any) => {
-          const myClientId = localStorage.getItem("chat_client_id");
-    
-          // Only show typing if it's for this conversation
-          if (
-            data.agent_id !== myClientId &&
-            data.conversation_id === selectedConversationId
-          ) {
-            if (data.is_typing) {
-              setTypingUsers((prev) => {
-                const next = new Map(prev);
-                next.set(data.agent_id, {
-                  agent_name: data.user,
-                  timestamp: Date.now(),
-                });
-                return next;
-              });
-            } else {
-              setTypingUsers((prev) => {
-                const next = new Map(prev);
-                next.delete(data.agent_id);
-                return next;
-              });
+    onNewMessage: (data: any) => {
+      if (data.message.conversation_id === selectedConversationId) {
+        setMessages((prev) => {
+          const incomingMsg = data.message;
+
+          // ---------------------------------------------------------
+          // 1. DETERMINISTIC MATCH (The Fix)
+          // Check if the incoming message has a temp_id in its metadata
+          // ---------------------------------------------------------
+          if (incomingMsg.platform === 'whatsapp') {
+            const incomingTempId = incomingMsg.temp_id;
+
+            const exactMatchIndex = prev.findIndex(
+              (msg) =>
+                msg.id.toString() === incomingTempId // Direct ID comparison
+            );
+
+            if (exactMatchIndex !== -1) {
+              const newState = [...prev];
+              // Replace optimistic message with real message
+              newState[exactMatchIndex] = incomingMsg;
+              persistMessages(newState);
+              return newState;
             }
           }
-        },
-    
-        onNewMessage: (data: any) => {
-          if (data.message.conversation_id === selectedConversationId) {
-            setMessages((prev) => {
-              const incomingMsg = data.message;
-    
-              // ---------------------------------------------------------
-              // 1. DETERMINISTIC MATCH (The Fix)
-              // Check if the incoming message has a temp_id in its metadata
-              // ---------------------------------------------------------
-              if (incomingMsg.platform === 'whatsapp') {
-                const incomingTempId = incomingMsg.temp_id;
-    
-                const exactMatchIndex = prev.findIndex(
-                  (msg) =>
-                    msg.id.toString() === incomingTempId // Direct ID comparison
-                );
-    
-                if (exactMatchIndex !== -1) {
-                  const newState = [...prev];
-                  // Replace optimistic message with real message
-                  newState[exactMatchIndex] = incomingMsg;
-                  persistMessages(newState);
-                  return newState;
-                }
-              }
-    
-              // ---------------------------------------------------------
-              // 2. Fallback: For IG we match the message_id
-              // ---------------------------------------------------------
-              else {
-                console.log("Attempting fuzzy match for incoming IG message:", incomingMsg);
-                const fuzzyMatchIndex = prev.findIndex(
-                  (msg) =>
-                    msg.id.toString() === incomingMsg.id.toString()
-                );
-                console.log("Fuzzy match index for incoming IG message:", fuzzyMatchIndex);
-                if (fuzzyMatchIndex !== -1) {
-                  const newState = [...prev];
-                  newState[fuzzyMatchIndex] = incomingMsg;
-                  console.log("Updated message with fuzzy match:", newState[fuzzyMatchIndex]);
-                  persistMessages(newState);
-                  return newState;
-                }
-              }
-    
-              // 3. Standard New Message Logic
-              const messageExists = prev.some((msg) => msg.id === incomingMsg.id);
-              if (!messageExists) {
-                const newState = [...prev, incomingMsg];
+
+          // ---------------------------------------------------------
+          // 2. Fallback: For IG we match the message_id
+          // ---------------------------------------------------------
+          else {
+            console.log("Attempting fuzzy match for incoming IG message:", incomingMsg);
+            const fuzzyMatchIndex = prev.findIndex(
+              (msg) =>
+                msg.id.toString() === incomingMsg.id.toString()
+            );
+            console.log("Fuzzy match index for incoming IG message:", fuzzyMatchIndex);
+            if (fuzzyMatchIndex !== -1) {
+              const newState = [...prev];
+              newState[fuzzyMatchIndex] = incomingMsg;
+              console.log("Updated message with fuzzy match:", newState[fuzzyMatchIndex]);
+              persistMessages(newState);
+              return newState;
+            }
+          }
+
+          // 3. Standard New Message Logic
+          const messageExists = prev.some((msg) => msg.id === incomingMsg.id);
+          if (!messageExists) {
+            const newState = [...prev, incomingMsg];
+            persistMessages(newState);
+            return newState;
+          }
+
+          return prev;
+        });
+      }
+    },
+
+    onMessageStatusUpdate: (data: any) => {
+      if (data.message.conversation_id === selectedConversationId) {
+        setMessages((prev) => {
+          const incomingMsg = data.message;
+
+          // ---------------------------------------------------------
+          // 1. DETERMINISTIC MATCH (The Fix)
+          // Check if the incoming message has a temp_id in its metadata
+          // ---------------------------------------------------------
+          if (incomingMsg.platform === 'whatsapp') {
+            // Temp ID based match
+            const incomingTempId = incomingMsg.temp_id;
+
+            const exactMatchIndex = prev.findIndex(
+              (msg) =>
+                msg.id.toString() === incomingTempId // Direct ID comparison
+            );
+
+            if (exactMatchIndex !== -1) {
+              const newState = [...prev];
+              // Replace optimistic message with real message
+              newState[exactMatchIndex] = incomingMsg;
+              persistMessages(newState);
+              return newState;
+            }
+            else {
+              // If no Temp ID match, match on message ID
+              const fuzzyMatchIndex = prev.findIndex(
+                (msg) =>
+                  msg.id.toString() === incomingMsg.id.toString()
+              );
+              if (fuzzyMatchIndex !== -1) {
+                const newState = [...prev];
+                newState[fuzzyMatchIndex] = incomingMsg;
                 persistMessages(newState);
                 return newState;
               }
-    
-              return prev;
-            });
+            }
           }
-        },
-    
-        onMessageStatusUpdate: (data: any) => {
-          if (data.message.conversation_id === selectedConversationId) {
-            setMessages((prev) => {
-              const incomingMsg = data.message;
-    
-              // ---------------------------------------------------------
-              // 1. DETERMINISTIC MATCH (The Fix)
-              // Check if the incoming message has a temp_id in its metadata
-              // ---------------------------------------------------------
-              if (incomingMsg.platform === 'whatsapp') {
-                // Temp ID based match
-                const incomingTempId = incomingMsg.temp_id;
-    
-                const exactMatchIndex = prev.findIndex(
-                  (msg) =>
-                    msg.id.toString() === incomingTempId // Direct ID comparison
-                );
-    
-                if (exactMatchIndex !== -1) {
-                  const newState = [...prev];
-                  // Replace optimistic message with real message
-                  newState[exactMatchIndex] = incomingMsg;
-                  persistMessages(newState);
-                  return newState;
-                }
-                else {
-                  // If no Temp ID match, match on message ID
-                  const fuzzyMatchIndex = prev.findIndex(
-                    (msg) =>
-                      msg.id.toString() === incomingMsg.id.toString()
-                  );
-                  if (fuzzyMatchIndex !== -1) {
-                    const newState = [...prev];
-                    newState[fuzzyMatchIndex] = incomingMsg;
-                    persistMessages(newState);
-                    return newState;
-                  }
-                }
-              }
-    
-              return prev;
-            });
-          }
-        },
-    
-        onMessageReaction: (data: any) => {
-          if (data.message.conversation_id === selectedConversationId) {
-            const updatedMessage = data.message;
-            setMessages((prev) => {
-              const newState = prev.map((message) => {
-                if (
-                  message.id === updatedMessage.message_id ||
-                  message.id === updatedMessage.id
-                ) {
-                  return { ...message, reaction: updatedMessage.reaction };
-                }
-                return message;
-              });
-              persistMessages(newState); // <--- SAVE TO IDB
-              return newState;
-            });
-          }
-        },
-    
-        onMessageDeleted: (data: any) => {
-          if (data.conversation_id === selectedConversationId) {
-            setMessages((prev) => {
-              const newState = prev.filter((msg) => msg.id !== data.message_id);
-              persistMessages(newState); // <--- SAVE TO IDB
-              return newState;
-            });
-          }
-        },
-    });
 
-    useEffect(() => {
-        fetchMessages();
-    }, [selectedConversationId]);
+          return prev;
+        });
+      }
+    },
+
+    onMessageReaction: (data: any) => {
+      if (data.message.conversation_id === selectedConversationId) {
+        const updatedMessage = data.message;
+        setMessages((prev) => {
+          const newState = prev.map((message) => {
+            if (
+              message.id === updatedMessage.message_id ||
+              message.id === updatedMessage.id
+            ) {
+              return { ...message, reaction: updatedMessage.reaction };
+            }
+            return message;
+          });
+          persistMessages(newState); // <--- SAVE TO IDB
+          return newState;
+        });
+      }
+    },
+
+    onMessageDeleted: (data: any) => {
+      if (data.conversation_id === selectedConversationId) {
+        setMessages((prev) => {
+          const newState = prev.filter((msg) => msg.id !== data.message_id);
+          persistMessages(newState); // <--- SAVE TO IDB
+          return newState;
+        });
+      }
+    },
+  });
+
+  useEffect(() => {
+    fetchMessages();
+  }, [selectedConversationId]);
 
     return {
         messages,
@@ -343,5 +368,9 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
         fetchMessages,
         sendMessage,
         setTypingUsers,
+        contextMessageId,
+        setContextMessageId,
+        contextMessage,
+        setContextMessage
     };
 }
