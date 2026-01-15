@@ -1,4 +1,4 @@
-import api from '@/lib/session_api';
+import { useApi } from "@/lib/session_api";
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface Reminder {
@@ -31,60 +31,61 @@ const getSnoozeUntil = (minutes: number) =>
 
 export const useReminders = (conversationId?: string) => {
   const queryClient = useQueryClient();
+  const api = useApi();
 
   const remindersQuery = useQuery<Reminder[], Error>({
-    queryKey : conversationId
-    ?["Conversation_reminders", conversationId]
-    :["reminders"],
+    queryKey: conversationId
+      ? ["Conversation_reminders", conversationId]
+      : ["reminders"],
 
-    queryFn: async ()=>{
-      const Url =conversationId
-      ? `https://heidelai-2.koyeb.app/reminders/conversation/${conversationId}`
-      : `https://heidelai-2.koyeb.app/reminders`;
+    queryFn: async () => {
+      const Url = conversationId
+        ? `https://heidelai-2.koyeb.app/reminders/conversation/${conversationId}`
+        : `https://heidelai-2.koyeb.app/reminders`;
 
       const res = await api.get(Url);
       if ("reminders" in res.data) {
         return res.data.reminders as Reminder[];
       }
 
-    return res.data;
-      
+      return res.data;
+
     },
   })
 
   const doneMutation = useMutation({
-    mutationFn: async (reminderId:string) => {
+    mutationFn: async (reminderId: string) => {
       return api.post(`https://heidelai-2.koyeb.app/reminders/${reminderId}/done`);
-      
+
     },
-    onSuccess: ()=>{
-      queryClient.invalidateQueries({queryKey: ["reminders"]});
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
     }
   })
 
   const snoozeMutation = useMutation({
-    mutationFn: async ({reminderId, snoozeUntil}:{reminderId:string, snoozeUntil:number}) => {
+    mutationFn: async ({ reminderId, snoozeUntil }: { reminderId: string, snoozeUntil: number }) => {
       return api.post(`https://heidelai-2.koyeb.app/reminders/${reminderId}/snooze`, {
-        snooze_until: getSnoozeUntil(snoozeUntil),  
+        snooze_until: getSnoozeUntil(snoozeUntil),
       });
     },
-    onSuccess: ()=>{
-      queryClient.invalidateQueries({queryKey: ["reminders"]});
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
     }
   })
 
   const deleteMutation = useMutation({
-    mutationFn: async (reminderId:string) => {
+    mutationFn: async (reminderId: string) => {
       return api.post(`https://heidelai-2.koyeb.app/reminders/${reminderId}/delete`);
     },
-    onSuccess: ()=>{
-      queryClient.invalidateQueries({queryKey: ["reminders"]});
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
     }
   })
 
   return {
-  
-    reminders:  remindersQuery.data ?? [],
+
+    reminders: remindersQuery.data ?? [],
     loading: remindersQuery.isLoading,
     error: remindersQuery.error,
 

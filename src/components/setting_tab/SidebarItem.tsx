@@ -16,12 +16,12 @@ import CannedResponses from './CannedResponsesContext';
 // import AutomationPage from '../Automation/AutomationPage';
 import BillingPlans from '../inbox/BillingPlans';
 import { Construction, Loader2, Instagram } from 'lucide-react';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { createClient } from '@supabase/supabase-js';
@@ -35,20 +35,20 @@ import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
 
 // import { useIntegrations } from '@/components/hooks/useIntegrations';
 // import { getData, storeData, deleteData, DB_KEYS } from "@/lib/indexedDB";
-import { 
-  Table, 
-  TableBody, 
-  TableCell,  
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 // import { Shopify } from '@shopify/shopify-api';
 import { toast } from 'sonner';
 import WhatsAppLoginDialog from './WhatsappLoginDialog';
-import api from '@/lib/session_api';
+import { useApi } from "@/lib/session_api";
 import { useUser, useOrganization } from '@clerk/nextjs';
-import { Dialog as ConfirmDialog, DialogContent as ConfirmDialogContent, DialogHeader as ConfirmDialogHeader, DialogTitle as ConfirmDialogTitle } from "@/components/ui/dialog"; 
+import { Dialog as ConfirmDialog, DialogContent as ConfirmDialogContent, DialogHeader as ConfirmDialogHeader, DialogTitle as ConfirmDialogTitle } from "@/components/ui/dialog";
 import Image from 'next/image';
 
 // Function to fetch catalog data from the backend
@@ -75,19 +75,19 @@ interface CatalogResponse {
 
 interface InstagramConnectionData {
   status: boolean;          // Connection status
-    username: string;         // From API response
-    profileImage: string;     // From profile_picture_url in API
-    userId: string;           // From id in API
-    businessInfo: {
-        id?: string;
-        biography?: string;
-        followers_count?: number;
-        follows_count?: number;
-        media_count?: number;
-        name?: string;
-        website?: string;
-    };
-    lastUpdated?: number;
+  username: string;         // From API response
+  profileImage: string;     // From profile_picture_url in API
+  userId: string;           // From id in API
+  businessInfo: {
+    id?: string;
+    biography?: string;
+    followers_count?: number;
+    follows_count?: number;
+    media_count?: number;
+    name?: string;
+    website?: string;
+  };
+  lastUpdated?: number;
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -145,12 +145,12 @@ const WooCommerceDialog = () => {
         consumerSecret: credentials.consumerSecret,
         version: "wc/v3"
       });
-      
+
       // Test the connection by fetching products
       const response = await api.get("products", { per_page: 3 });
       console.log("Connection successful:", response.data);
       setSuccess(true);
-      
+
       // Store the credentials securely (you can implement your storage method here)
       localStorage.setItem('woocommerce_credentials', JSON.stringify({
         url: credentials.siteUrl,
@@ -160,7 +160,7 @@ const WooCommerceDialog = () => {
       setTimeout(() => {
         resetForm();
       }, 2000);
-      
+
     } catch (error) {
       console.error("WooCommerce connection error:", error);
       setError(error instanceof Error ? error.message : 'Failed to connect to WooCommerce');
@@ -229,8 +229,8 @@ const WooCommerceDialog = () => {
               Successfully connected to WooCommerce store!
             </div>
           )}
-          <Button 
-            onClick={handleConnect} 
+          <Button
+            onClick={handleConnect}
             className="bg-[#96588A] hover:bg-[#804674] text-white"
             disabled={isLoading || !credentials.siteUrl || !credentials.consumerKey || !credentials.consumerSecret}
           >
@@ -287,7 +287,7 @@ const ShopifyDialog = () => {
               }))}
             />
           </div>
-          <Button 
+          <Button
             className="bg-[#96bf48] hover:bg-[#7da039] text-white"
             onClick={() => console.log('Shopify connection clicked')}
           >
@@ -316,7 +316,7 @@ const InstagramDialog = () => {
 
   const { user } = useUser();
   // const isAdmin = user?.publicMetadata?.role === 'admin';
-  
+
 
   // const { integrations, loading: integrationsLoading, refreshIntegrations } = useIntegrations();
   // const { user } = useUser();
@@ -341,31 +341,31 @@ const InstagramDialog = () => {
     checkRole();
   }, [organization, user]);
 
-  
+
 
   const { integrations, loading: integrationsLoading, refreshIntegrations } = useIntegrations();
-  
+
   // Check if user has already connected Instagram
   useEffect(() => {
-  if (!integrationsLoading) {
-    if (integrations.instagram && integrations.instagram.status) {
-      setConnected(true);
-      setAccountInfo({
-        username: integrations.instagram.username,
-        profileImage: integrations.instagram.profileImage || '/default-avatar.png',
-        businessInfo: integrations.instagram.businessInfo || {}
-      });
-    } else {
-      setConnected(false);
+    if (!integrationsLoading) {
+      if (integrations.instagram && integrations.instagram.status) {
+        setConnected(true);
+        setAccountInfo({
+          username: integrations.instagram.username,
+          profileImage: integrations.instagram.profileImage || '/default-avatar.png',
+          businessInfo: integrations.instagram.businessInfo || {}
+        });
+      } else {
+        setConnected(false);
+      }
     }
-  }
-}, [integrations, integrationsLoading]);
+  }, [integrations, integrationsLoading]);
 
 
   const getInstagramUserId = async () => {
     try {
       const instagramData = await getData<InstagramConnectionData>(
-        'integrations', 
+        'integrations',
         DB_KEYS.INTEGRATIONS.INSTAGRAM
       );
       return instagramData?.userId || null;
@@ -408,25 +408,26 @@ const InstagramDialog = () => {
   };
 
   const disconnectInstagram = async () => {
+    const api = useApi();
     try {
       setIsLoading(true);
-      
+
       // Get the user ID from IndexedDB instead of localStorage
       const user_id = await getInstagramUserId();
-      
+
       if (user_id) {
         const data = { user_id };
-        
+
         // Disconnect using the dedicated Instagram API
         await api.post('/api/instagram/disconnect', { data });
-        
+
         // Update IndexedDB - set connected to false but keep other data
         try {
           const existingData = await getData<InstagramConnectionData>(
-            'integrations', 
+            'integrations',
             DB_KEYS.INTEGRATIONS.INSTAGRAM
           );
-          
+
           if (existingData) {
             await storeData('integrations', DB_KEYS.INTEGRATIONS.INSTAGRAM, {
               ...existingData,
@@ -437,16 +438,16 @@ const InstagramDialog = () => {
         } catch (dbError) {
           console.error("Error updating IndexedDB on disconnect:", dbError);
         }
-        
+
         // For backward compatibility, also clear localStorage
         localStorage.removeItem('instagram_auth_state');
-        
+
         setConnected(false);
         setAccountInfo(null);
-        
+
         // Update integrations status
         refreshIntegrations();
-        
+
         toast.success('Instagram account disconnected successfully');
       } else {
         toast.error('No Instagram account found to disconnect');
@@ -478,7 +479,7 @@ const InstagramDialog = () => {
         <DialogHeader>
           <DialogTitle className='text-black'>{connected ? 'Manage Instagram Connection' : 'Connect Instagram Account'}</DialogTitle>
         </DialogHeader>
-        
+
         {isLoading ? (
           <div className="py-8 flex justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
@@ -487,8 +488,8 @@ const InstagramDialog = () => {
           <div className="py-4 space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Image 
-                  src={accountInfo.profileImage} 
+                <Image
+                  src={accountInfo.profileImage}
                   alt={accountInfo.username}
                   className="h-16 w-16 rounded-full object-cover border-2 border-pink-200"
                 />
@@ -500,9 +501,9 @@ const InstagramDialog = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* View Profile button */}
-              <Button 
+              <Button
                 variant="outline"
                 className="border border-gray-300 hover:border-purple-500 hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition-all flex items-center gap-1 px-3 py-1.5 rounded-md shadow-sm"
                 onClick={() => setShowProfileView(true)}
@@ -515,75 +516,75 @@ const InstagramDialog = () => {
                 </span>
               </Button>
             </div>
-            
+
             <div className="space-y-2">
               <h4 className="text-sm text-black font-medium">Permissions granted:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li className="flex items-center gap-2">
+                  <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Access to your Instagram profile information.
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  </svg>
+                  Access to your Instagram profile information.
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Access to your Instagram media and content.
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  </svg>
+                  Access to your Instagram media and content.
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Permission to manage your Instagram messages.
-                  </li>
-                </ul>
+                  </svg>
+                  Permission to manage your Instagram messages.
+                </li>
+              </ul>
             </div>
-            
-              <Button 
-                variant="destructive" 
-                className="w-full mt-4" 
-                onClick={() => setShowDisconnectConfirm(true)}
-                disabled={isLoading || !isAdmin}
-                title={!isAdmin ? "Only admins can disconnect integrations" : ""}
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Processing...
-                  </span>
-                ) : !isAdmin ? (
-                  "Admin permission required"
-                ) : (
-                  'Disconnect Account'
-                )}
-              </Button>
 
-              <ConfirmDialog open={showDisconnectConfirm} onOpenChange={setShowDisconnectConfirm}>
-                <ConfirmDialogContent>
-                  <ConfirmDialogHeader>
-                    <ConfirmDialogTitle>Are you sure you want to disconnect Instagram?</ConfirmDialogTitle>
-                  </ConfirmDialogHeader>
-                  <div className="py-4 text-gray-700">
-                    This will archive all your currently stored messages and they will be deleted after 30 days automatically.
-                  </div>
-                  <div className="flex justify-end gap-2 mt-4">
-                    <Button variant="outline" onClick={() => setShowDisconnectConfirm(false)}>
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={async () => {
-                        setShowDisconnectConfirm(false);
-                        await disconnectInstagram();
-                      }}
-                    >
-                      Disconnect
-                    </Button>
-                  </div>
-                </ConfirmDialogContent>
-              </ConfirmDialog>
+            <Button
+              variant="destructive"
+              className="w-full mt-4"
+              onClick={() => setShowDisconnectConfirm(true)}
+              disabled={isLoading || !isAdmin}
+              title={!isAdmin ? "Only admins can disconnect integrations" : ""}
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Processing...
+                </span>
+              ) : !isAdmin ? (
+                "Admin permission required"
+              ) : (
+                'Disconnect Account'
+              )}
+            </Button>
 
-            
+            <ConfirmDialog open={showDisconnectConfirm} onOpenChange={setShowDisconnectConfirm}>
+              <ConfirmDialogContent>
+                <ConfirmDialogHeader>
+                  <ConfirmDialogTitle>Are you sure you want to disconnect Instagram?</ConfirmDialogTitle>
+                </ConfirmDialogHeader>
+                <div className="py-4 text-gray-700">
+                  This will archive all your currently stored messages and they will be deleted after 30 days automatically.
+                </div>
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button variant="outline" onClick={() => setShowDisconnectConfirm(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={async () => {
+                      setShowDisconnectConfirm(false);
+                      await disconnectInstagram();
+                    }}
+                  >
+                    Disconnect
+                  </Button>
+                </div>
+              </ConfirmDialogContent>
+            </ConfirmDialog>
+
+
             {/* Show explanatory text for members */}
             {!isAdmin && connected && (
               <p className="text-sm text-amber-600">
@@ -596,13 +597,13 @@ const InstagramDialog = () => {
             <p className="text-sm text-gray-600">
               Connect your Instagram account to manage messages and access media directly from this dashboard.
             </p>
-            
+
             <div className="p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700 text-sm rounded">
-                <p>
+              <p>
                 Your Instagram credentials are never stored on our servers. We use secure, industry-standard OAuth authentication directly with Instagram. You are always in control and can disconnect at any time.
-                </p>
+              </p>
             </div>
-            
+
             <div className="space-y-2">
               <h4 className="text-sm font-medium">This will allow HeidelAI to:</h4>
               <ul className="text-sm text-gray-600 space-y-1">
@@ -611,15 +612,15 @@ const InstagramDialog = () => {
                 <li>• Access your Instagram inbox to read and manage messages</li>
               </ul>
             </div>
-            
-            <Button 
-              className={`w-full mt-4 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white `} 
+
+            <Button
+              className={`w-full mt-4 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white `}
               onClick={handleInstagramLogin}
               disabled={isLoading || !isAdmin}
               title={!isAdmin ? "Only admins can connect integrations" : ""}
             >
               <span className="flex items-center gap-2">
-              {isLoading ? (
+                {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" /> Processing...
                   </>
@@ -629,11 +630,11 @@ const InstagramDialog = () => {
                   <>
                     <Instagram className="h-4 w-4" /> Login with Instagram
                   </>
-              )}
+                )}
               </span>
             </Button>
 
-             {/* Show explanatory text for members */}
+            {/* Show explanatory text for members */}
             {!isAdmin && !connected && (
               <p className="text-sm text-amber-600">
                 Only administrators can connect integrations.
@@ -642,7 +643,7 @@ const InstagramDialog = () => {
           </div>
         )}
       </DialogContent>
-      
+
       {connected && (
         <InstagramProfileView
           isOpen={showProfileView}
@@ -694,7 +695,7 @@ const TokenTestBox = () => {
   );
 };
 
- 
+
 
 // export const FacebookCatalogIntegration = () => {
 //   const [isConnected, setIsConnected] = useState(false);
@@ -920,7 +921,7 @@ const TokenTestBox = () => {
 //               </DialogContent>
 
 //             </Dialog>
-      
+
 //           )}
 //         </div>
 //       </div>
@@ -939,9 +940,9 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-    
+
       {/* Add component */}
-      <AgentsSettings/>
+      <AgentsSettings />
       <TeamsConfiguration />
       <CannedResponses onInsertResponse={handleInsertResponse} />
       {/* You can add other dashboard components here */}
@@ -980,9 +981,9 @@ export const InboxSettings = () => {
               <p className="text-sm text-gray-600">Automatically assign conversations to agents</p>
             </div>
           </div>
-          <Switch 
+          <Switch
             checked={inboxConfig.autoAssign}
-            onCheckedChange={(checked) => setInboxConfig(prev => ({...prev, autoAssign: checked}))}
+            onCheckedChange={(checked) => setInboxConfig(prev => ({ ...prev, autoAssign: checked }))}
             className="ml-4"
           />
         </div>
@@ -998,9 +999,9 @@ export const InboxSettings = () => {
             <div className="flex-1">
               <h3 className="font-semibold text-gray-900 mb-1">Email Routing</h3>
               <p className="text-sm text-gray-600 mb-3">Message distribution strategy</p>
-              <Select 
+              <Select
                 value={inboxConfig.emailRouting}
-                onValueChange={(value) => setInboxConfig(prev => ({...prev, emailRouting: value}))}
+                onValueChange={(value) => setInboxConfig(prev => ({ ...prev, emailRouting: value }))}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -1028,9 +1029,9 @@ export const InboxSettings = () => {
               <p className="text-sm text-gray-600">Auto-responder outside hours</p>
             </div>
           </div>
-          <Switch 
+          <Switch
             checked={inboxConfig.businessHours}
-            onCheckedChange={(checked) => setInboxConfig(prev => ({...prev, businessHours: checked}))}
+            onCheckedChange={(checked) => setInboxConfig(prev => ({ ...prev, businessHours: checked }))}
             className="ml-4"
           />
         </div>
@@ -1048,9 +1049,9 @@ export const InboxSettings = () => {
               <p className="text-sm text-gray-600">Enable agent alerts and reminders</p>
             </div>
           </div>
-          <Switch 
+          <Switch
             checked={inboxConfig.notifications}
-            onCheckedChange={(checked) => setInboxConfig(prev => ({...prev, notifications: checked}))}
+            onCheckedChange={(checked) => setInboxConfig(prev => ({ ...prev, notifications: checked }))}
             className="ml-4"
           />
         </div>
@@ -1083,13 +1084,13 @@ export const LabelsSettings = () => {
       {/* Labels Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {labels.map((label) => (
-          <div 
+          <div
             key={label.id}
             className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div 
+                <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center"
                   style={{ backgroundColor: `${label.color}20` }}
                 >
@@ -1139,7 +1140,7 @@ export const CustomAttributesSettings = () => {
       {/* Attributes Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {attributes.map((attr) => (
-          <div 
+          <div
             key={attr.id}
             className="bg-white border border-gray-200 rounded-xl p-6 flex items-center justify-between hover:shadow-md transition-shadow"
           >
@@ -1203,10 +1204,10 @@ export const MacrosSettings = () => (
 export const IntegrationsSettings = () => (
   <div className="min-h-[300px] flex flex-col items-start p-4 md:p-8">
     <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Platform Integrations</h2>
-    
+
     {/* Responsive Grid - 1 column mobile, 2 columns desktop */}
     <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-      
+
       {/* Facebook Integration Card */}
       <div className="border rounded-lg p-4 md:p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
         <div className="space-y-4">
@@ -1239,7 +1240,7 @@ export const IntegrationsSettings = () => (
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="bg-[#96588A] rounded-lg p-2 flex-shrink-0">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M19.2,6.2c-0.8-1.1-2.1-1.8-3.5-1.8c-0.8,0-1.6,0.2-2.2,0.6C12.9,4.4,12,4,11,4c-1.4,0-2.7,0.7-3.5,1.8C6.7,4.7,5.4,4,4,4C1.8,4,0,5.8,0,8c0,0.8,0.2,1.5,0.6,2.2C0.2,11.5,0,12.7,0,14c0,4.4,3.6,8,8,8h8c4.4,0,8-3.6,8-8c0-1.3-0.2-2.5-0.6-3.8C23.8,9.5,24,8.8,24,8C24,5.8,22.2,4,20,4C18.6,4,17.3,4.7,16.5,6.2z M11,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S11,15.6,11,15z M7,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S7,15.6,7,15z M15,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S15,15.6,15,15z"/>
+                  <path d="M19.2,6.2c-0.8-1.1-2.1-1.8-3.5-1.8c-0.8,0-1.6,0.2-2.2,0.6C12.9,4.4,12,4,11,4c-1.4,0-2.7,0.7-3.5,1.8C6.7,4.7,5.4,4,4,4C1.8,4,0,5.8,0,8c0,0.8,0.2,1.5,0.6,2.2C0.2,11.5,0,12.7,0,14c0,4.4,3.6,8,8,8h8c4.4,0,8-3.6,8-8c0-1.3-0.2-2.5-0.6-3.8C23.8,9.5,24,8.8,24,8C24,5.8,22.2,4,20,4C18.6,4,17.3,4.7,16.5,6.2z M11,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S11,15.6,11,15z M7,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S7,15.6,7,15z M15,15V9c0-0.6,0.4-1,1-1s1,0.4,1,1v6c0,0.6-0.4,1-1,1S15,15.6,15,15z" />
                 </svg>
               </div>
               <div className="min-w-0">
@@ -1355,11 +1356,10 @@ export const AuditLogsSettings = () => {
       {/* Logs List */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         {logs.map((log, index) => (
-          <div 
+          <div
             key={log.id}
-            className={`p-6 flex items-center justify-between hover:bg-gray-50 ${
-              index !== logs.length - 1 ? 'border-b border-gray-200' : ''
-            }`}
+            className={`p-6 flex items-center justify-between hover:bg-gray-50 ${index !== logs.length - 1 ? 'border-b border-gray-200' : ''
+              }`}
           >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
@@ -1372,11 +1372,10 @@ export const AuditLogsSettings = () => {
                 <p className="text-sm text-gray-600">{log.user} • {log.time}</p>
               </div>
             </div>
-            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-              log.status === 'success' 
-                ? 'bg-green-100 text-green-700' 
-                : 'bg-red-100 text-red-700'
-            }`}>
+            <span className={`px-3 py-1 rounded-full text-xs font-medium ${log.status === 'success'
+              ? 'bg-green-100 text-green-700'
+              : 'bg-red-100 text-red-700'
+              }`}>
               {log.status}
             </span>
           </div>
@@ -1422,7 +1421,7 @@ export const SLASettings = () => (
       </p>
       <div className="pt-4 border-t border-gray-200 mt-8">
         <p className="text-sm text-gray-500">
-        Service Level Agreements functionality will be available in our next release.
+          Service Level Agreements functionality will be available in our next release.
           Check back soon or follow us for updates!
         </p>
       </div>

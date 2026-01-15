@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { MessageActionsPopover } from "./MessageActionPopover";
-import MessageReaction  from "./MessageReaction";
-import api from "@/lib/session_api";
+import MessageReaction from "./MessageReaction";
+import { useApi } from "@/lib/session_api";
 import { RepliedMessagePreview } from "./RepliedMessagePreview";
 import { toast } from "sonner";
 
@@ -9,6 +9,7 @@ import { toast } from "sonner";
 export const MessageWrapper = ({ message, index, children, allMessages, forceHide }: any) => {
   const anchorRef = useRef(null);
   const [showActions, setShowActions] = useState(false);
+  const api = useApi()
 
   useEffect(() => {
     if (forceHide) {
@@ -29,7 +30,7 @@ export const MessageWrapper = ({ message, index, children, allMessages, forceHid
   };
 
   const handleReply = () => {
-    if(message.platform == "instagram") {
+    if (message.platform == "instagram") {
       toast.warning("Can't reply to Instagram messages yet ☹️");
       return;
     }
@@ -54,7 +55,7 @@ export const MessageWrapper = ({ message, index, children, allMessages, forceHid
           isAgent={message.role === "agent"}
           onReact={handleReact}
           onReply={handleReply}
-          onClose={() => setShowActions(false)} 
+          onClose={() => setShowActions(false)}
         />
       )}
 

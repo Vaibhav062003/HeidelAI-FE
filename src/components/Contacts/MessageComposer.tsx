@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { WhatsAppTemplateContent } from "./WhatsAppTemplateContent";
 import { WhatsAppTemplate } from "../types/template";
 import { ScrollArea } from "../ui/scroll-area";
-import api from "@/lib/session_api";
+import { useApi } from "@/lib/session_api";
 // const supabase = createClient(
 //   process.env.NEXT_PUBLIC_SUPABASE_URL!,
 //   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -23,7 +23,7 @@ interface MessageComposerProps {
 }
 
 export const MessageComposer = ({ onMessageSend, directMode = false, preSelectedTag = "" }: MessageComposerProps) => {
-  const [isMessageMenuOpen, setIsMessageMenuOpen] = useState(directMode); 
+  const [isMessageMenuOpen, setIsMessageMenuOpen] = useState(directMode);
   const [tags, setTags] = useState<string[]>([]);
   const [selectedTag, setSelectedTag] = useState<string>("");
   const [selectedPlatform, setSelectedPlatform] = useState<
@@ -45,20 +45,20 @@ export const MessageComposer = ({ onMessageSend, directMode = false, preSelected
     }
   }, [directMode]);
 
-useEffect(() => {
-  const fetchTags = async () => {
-    try {
-      const response = await api.get<{ tags: string[] }>("/api/org/metadata/tags");
-      if (response.data && response.data.tags) {
-        setTags(response.data.tags);
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await api.get<{ tags: string[] }>("/api/org/metadata/tags");
+        if (response.data && response.data.tags) {
+          setTags(response.data.tags);
+        }
+      } catch (error) {
+        console.error("Error fetching tags:", error);
+        setTags([]); // Optionally clear tags on error
       }
-    } catch (error) {
-      console.error("Error fetching tags:", error);
-      setTags([]); // Optionally clear tags on error
-    }
-  };
-  fetchTags();
-}, []);
+    };
+    fetchTags();
+  }, []);
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -126,7 +126,7 @@ useEffect(() => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isMessageMenuOpen, directMode]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (preSelectedTag) {
       setSelectedTag(preSelectedTag);
     }
@@ -192,22 +192,20 @@ useEffect(() => {
                 <button
                   type="button"
                   onClick={() => setSelectedPlatform("whatsapp")}
-                  className={`p-3 rounded-lg border text-black ${
-                    selectedPlatform === "whatsapp"
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
+                  className={`p-3 rounded-lg border text-black ${selectedPlatform === "whatsapp"
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-gray-300"
+                    }`}
                 >
                   WhatsApp
                 </button>
                 <button
                   type="button"
                   onClick={() => setSelectedPlatform("instagram")}
-                  className={`p-3 rounded-lg border text-black ${
-                    selectedPlatform === "instagram"
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
+                  className={`p-3 rounded-lg border text-black ${selectedPlatform === "instagram"
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-gray-300"
+                    }`}
                 >
                   Instagram
                 </button>
@@ -242,11 +240,10 @@ useEffect(() => {
                           {template.category} • {template.language}
                         </div>
                         <div
-                          className={`text-xs mt-1 ${
-                            template.status === "APPROVED"
-                              ? "text-green-600"
-                              : "text-red-600"
-                          }`}
+                          className={`text-xs mt-1 ${template.status === "APPROVED"
+                            ? "text-green-600"
+                            : "text-red-600"
+                            }`}
                         >
                           {template.status}
                         </div>
@@ -302,9 +299,9 @@ useEffect(() => {
         className="flex items-center gap-2 px-4 py-2 bg-white text-black border border-gray-300 rounded-lg hover:border-black-600 transition-colors shadow-sm"
       >
         <MessageSquare className="h-5 w-5" />
-          <h3 className="font-sans text-xs font-medium">
-            Message         
-           </h3>
+        <h3 className="font-sans text-xs font-medium">
+          Message
+        </h3>
       </button>
 
       {isMessageMenuOpen && (
@@ -343,22 +340,20 @@ useEffect(() => {
                     <button
                       type="button"
                       onClick={() => setSelectedPlatform("whatsapp")}
-                      className={`p-3 rounded-lg border text-black ${
-                        selectedPlatform === "whatsapp"
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
+                      className={`p-3 rounded-lg border text-black ${selectedPlatform === "whatsapp"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
+                        }`}
                     >
                       WhatsApp
                     </button>
                     <button
                       type="button"
                       onClick={() => setSelectedPlatform("instagram")}
-                      className={`p-3 rounded-lg border text-black ${
-                        selectedPlatform === "instagram"
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
+                      className={`p-3 rounded-lg border text-black ${selectedPlatform === "instagram"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
+                        }`}
                     >
                       Instagram
                     </button>
@@ -392,11 +387,10 @@ useEffect(() => {
                               {template.category} • {template.language}
                             </div>
                             <div
-                              className={`text-xs mt-1 ${
-                                template.status === "APPROVED"
-                                  ? "text-green-600"
-                                  : "text-red-600"
-                              }`}
+                              className={`text-xs mt-1 ${template.status === "APPROVED"
+                                ? "text-green-600"
+                                : "text-red-600"
+                                }`}
                             >
                               {template.status}
                             </div>

@@ -4,9 +4,11 @@ import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import api from "@/lib/session_api";
+import { useApi } from "@/lib/session_api";
 import { storeData, DB_KEYS } from "@/lib/indexedDB";
 import axios, { Axios, AxiosError } from "axios";
+
+
 
 interface InstagramProfileResponse {
   status?: string;
@@ -43,6 +45,7 @@ interface ErrorResponse {
 }
 
 function InstagramCallbackContent() {
+  const api = useApi()
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -103,7 +106,7 @@ function InstagramCallbackContent() {
         router.push("/dashboard#integrations");
       }, 3000);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: AxiosError | any) {
       console.error("Error exchanging Instagram code:", error);
 

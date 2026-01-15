@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import React, { useState } from "react";
-import api from "@/lib/session_api";
+import { useApi } from "@/lib/session_api";
 import { toast } from "sonner";
 
 interface SingleProductFormProps {
@@ -15,6 +15,7 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState("");
+  const api = useApi()
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -62,7 +63,7 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
     <form
       onSubmit={handleSubmit}
       className=" w-full max-w-full mx-auto max-h-[70vh] overflow-y-auto pr-2 space-y-6 sm:space-y-5 md:space-y-6 lg:space-y-7 px-2 sm:px-0 hide-scrollbar mt-2"
->
+    >
       {/* Header */}
       <div>
         <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">

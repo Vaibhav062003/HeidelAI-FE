@@ -30,7 +30,7 @@ import { StaticDateTimePicker } from '@mui/x-date-pickers/StaticDateTimePicker';
 // import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
 import { toast } from "sonner";
 // import { useToast } from "@/components/ui/use-toast"; 
-import api from '../../../../../lib/session_api';
+import { useApi } from "@/lib/session_api";
 // import { useConversations } from "../../../../hooks/useConversations";
 
 
@@ -38,7 +38,7 @@ interface ReminderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (reminder: ReminderData) => void;
-  conversation_id: string; 
+  conversation_id: string;
 }
 
 interface ReminderData {
@@ -48,16 +48,17 @@ interface ReminderData {
   trigger_time: string;
 }
 
-export default function ReminderDialog({ 
-  open, 
-  onOpenChange, 
-  onSave, 
+export default function ReminderDialog({
+  open,
+  onOpenChange,
+  onSave,
   conversation_id
 }: ReminderDialogProps) {
   const [selectedDateTime, setSelectedDateTime] = useState<Dayjs | null>(dayjs());
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const api = useApi();
   // const { conversations } = useConversations();
 
   // const getCustomerName = () => {
@@ -70,7 +71,7 @@ export default function ReminderDialog({
 
     setIsSubmitting(true);
     try {
-      const data ={
+      const data = {
         title,
         notes,
         trigger_time: selectedDateTime.toISOString(),
@@ -79,7 +80,7 @@ export default function ReminderDialog({
       console.log("set reminder data", data)
       const response = await api.post('https://heidelai-2.koyeb.app/reminders', data)
       console.log("set reminder response", response)
-    
+
       if (response.status !== 200) {
         throw new Error('Failed to set reminder');
       }
@@ -112,71 +113,71 @@ export default function ReminderDialog({
   };
 
   return (
-<Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="sm:max-w-[1000px]"> {/* Increased max width */}
-      <DialogHeader>
-        <DialogTitle>Set Reminder</DialogTitle>
-        <DialogDescription>
-          Set a reminder for this conversation
-        </DialogDescription>
-      </DialogHeader>
-      <div className="grid grid-cols-2 gap-6 py-4">
-        {/* Left Column - Title and Notes */}
-        <div className="space-y-4">
-          <div className="grid gap-2">
-            <Label className="font-medium" htmlFor="title">Reminder Title</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter reminder title"
-            />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[1000px]"> {/* Increased max width */}
+        <DialogHeader>
+          <DialogTitle>Set Reminder</DialogTitle>
+          <DialogDescription>
+            Set a reminder for this conversation
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-6 py-4">
+          {/* Left Column - Title and Notes */}
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <Label className="font-medium" htmlFor="title">Reminder Title</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter reminder title"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Add any additional notes"
+                className="min-h-[200px]" // Make textarea taller
+              />
+            </div>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add any additional notes"
-              className="min-h-[200px]" // Make textarea taller
-            />
-          </div>
-        </div>
 
-        {/* Right Column - Date Time Picker */}
-        <div className=" px-4 ">
-          <Label className="mb-2 block">Date & Time</Label>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <StaticDateTimePicker
-            value={selectedDateTime}
-            onChange={(newValue) => setSelectedDateTime(newValue)}
-            disablePast
-            defaultValue={dayjs()} // Set default to current date/time
-            minDateTime={dayjs()} // Prevent selecting past dates/times
-            slotProps={{
-              actionBar: {
-                actions: [] // Remove action buttons
-              },
-              toolbar: {
-                hidden: false // Show toolbar for better UX
-              }
-            }}
-            className="border rounded-md bg-background"
-          />
-          </LocalizationProvider>
+          {/* Right Column - Date Time Picker */}
+          <div className=" px-4 ">
+            <Label className="mb-2 block">Date & Time</Label>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <StaticDateTimePicker
+                value={selectedDateTime}
+                onChange={(newValue) => setSelectedDateTime(newValue)}
+                disablePast
+                defaultValue={dayjs()} // Set default to current date/time
+                minDateTime={dayjs()} // Prevent selecting past dates/times
+                slotProps={{
+                  actionBar: {
+                    actions: [] // Remove action buttons
+                  },
+                  toolbar: {
+                    hidden: false // Show toolbar for better UX
+                  }
+                }}
+                className="border rounded-md bg-background"
+              />
+            </LocalizationProvider>
+          </div>
         </div>
-      </div>
-      <DialogFooter>
-        <Button
-          onClick={handleSubmit}
-          disabled={!title || !notes || !selectedDateTime || isSubmitting}
-          className="w-full sm:w-auto"
-        >
-          {isSubmitting ? "Setting reminder..." : "Set Reminder"}
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
+        <DialogFooter>
+          <Button
+            onClick={handleSubmit}
+            disabled={!title || !notes || !selectedDateTime || isSubmitting}
+            className="w-full sm:w-auto"
+          >
+            {isSubmitting ? "Setting reminder..." : "Set Reminder"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

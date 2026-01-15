@@ -47,7 +47,7 @@ import { WhatsAppTemplate } from "../types/template";
 import { Conversation } from "../types/conversation";
 import { Product } from "../types/product";
 import AssignDropdown from "./AssignToAgent";
-import api from "@/lib/session_api";
+import { useApi } from "@/lib/session_api";
 import AnalyticsSection from "./AnalyticsSection";
 import { ApiContact } from "../types/contacts";
 
@@ -472,6 +472,7 @@ const Sidebar = ({
   const [allTags, setAllTags] = useState<string[]>([]);
   const [assignedTags, setAssignedTags] = useState<string[]>([]);
   const [isUpdatingTags, setIsUpdatingTags] = useState(false);
+  const api = useApi();
 
   // Fetch contact tags
   const fetchContactTags = useCallback(async () => {

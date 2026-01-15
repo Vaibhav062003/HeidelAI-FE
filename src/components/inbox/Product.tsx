@@ -19,7 +19,7 @@ import {
 import { ExternalLink, Send, Plus, Search, Eye, Share2, AlertTriangle, MoreVertical, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
-import api from "@/lib/session_api";
+import { useApi } from "@/lib/session_api";
 import { Product } from "../types/product";
 import { useOrganization, useUser } from "@clerk/nextjs";
 import { m } from "framer-motion";
@@ -121,7 +121,8 @@ const ProductsTab = ({
   const { organization } = useOrganization({
     memberships: true
   })
-  const {isAdmin} = useRole();
+  const api = useApi();
+  const { isAdmin } = useRole();
 
   const maxRetries = 5;
   const retryDelay = 3000;
@@ -465,8 +466,8 @@ const ProductsTab = ({
             </div>
 
             <div className="relative ml-auto">
-              
-                 <Button
+
+              <Button
                 variant="ghost"
                 size="sm"
                 className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
@@ -480,7 +481,7 @@ const ProductsTab = ({
 
                 <MoreVertical className="h-4 w-4" />
               </Button>
-                
+
               {openMenuProductId === product._id && (
                 <div
                   className={`absolute right-0 z-50 w-36 bg-white border border-gray-200 rounded-lg shadow-lg
@@ -508,19 +509,19 @@ const ProductsTab = ({
                     <Share2 className="h-4 w-4" /> Share
                   </button>
                   {isAdmin && (
-                     <button
-                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 text-left"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setProductToDelete(product);
-                      setDeleteDialogOpen(true);
-                      setOpenMenuProductId(null);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" /> Delete
-                  </button>
+                    <button
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 text-left"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setProductToDelete(product);
+                        setDeleteDialogOpen(true);
+                        setOpenMenuProductId(null);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" /> Delete
+                    </button>
                   )}
-                 
+
                 </div>
               )}
             </div>
@@ -534,85 +535,83 @@ const ProductsTab = ({
         </div>
       )}
 
-<Dialog
-  open={isModalOpen}
-  onOpenChange={async (open) => {
-    setIsModalOpen(open);
-    if (!open && selectedConversationId) {
-      await fetchProducts(selectedConversationId);
-    }
-  }}
->
-  <DialogContent
-    className="w-[95%] max-w-[300px] sm:max-w-[400px]  md:max-w-[500px] lg:max-w-[720px] xl:max-w-[1000px]  2xl:max-w-[1150px] rounded-xl max-h-[88vh] overflow-y-auto min-h-[350px] p-4 sm:p-6 hide-scrollbar">
-    {/* Header */}
-    <DialogHeader className="pb-3 border-b">
-      <DialogTitle className="text-xl sm:text-2xl font-semibold text-gray-900">
-        Add Product
-      </DialogTitle>
-      <DialogDescription className="text-gray-600 text-sm sm:text-base">
-        Add a single product manually or upload multiple items using a CSV file.
-      </DialogDescription>
-    </DialogHeader>
+      <Dialog
+        open={isModalOpen}
+        onOpenChange={async (open) => {
+          setIsModalOpen(open);
+          if (!open && selectedConversationId) {
+            await fetchProducts(selectedConversationId);
+          }
+        }}
+      >
+        <DialogContent
+          className="w-[95%] max-w-[300px] sm:max-w-[400px]  md:max-w-[500px] lg:max-w-[720px] xl:max-w-[1000px]  2xl:max-w-[1150px] rounded-xl max-h-[88vh] overflow-y-auto min-h-[350px] p-4 sm:p-6 hide-scrollbar">
+          {/* Header */}
+          <DialogHeader className="pb-3 border-b">
+            <DialogTitle className="text-xl sm:text-2xl font-semibold text-gray-900">
+              Add Product
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 text-sm sm:text-base">
+              Add a single product manually or upload multiple items using a CSV file.
+            </DialogDescription>
+          </DialogHeader>
 
-    {/* Main Section */}
-    <div className="mt-4 space-y-6">
+          {/* Main Section */}
+          <div className="mt-4 space-y-6">
 
-      {/* Segmented Control */}
-      <div
-        className="
+            {/* Segmented Control */}
+            <div
+              className="
           bg-gray-100 
           p-1 
           rounded-lg 
           grid grid-cols-2 
           text-sm sm:text-base
         "
-      >
-        <button
-          onClick={() => setSelectedMode("single")}
-          className={`py-2 rounded-md font-medium transition ${
-            selectedMode === "single"
-              ? "bg-white text-gray-700 border border-gray-500 shadow-sm  "
-              : "text-gray-700"
-          }`}
-        >
-          Single Product
-        </button>
+            >
+              <button
+                onClick={() => setSelectedMode("single")}
+                className={`py-2 rounded-md font-medium transition ${selectedMode === "single"
+                  ? "bg-white text-gray-700 border border-gray-500 shadow-sm  "
+                  : "text-gray-700"
+                  }`}
+              >
+                Single Product
+              </button>
 
-        <button
-          onClick={() => setSelectedMode("bulk")}
-          className={`py-2 rounded-md font-medium transition ${
-            selectedMode === "bulk"
-              ? "bg-white text-gray-700 border border-gray-500 shadow-sm  "
-              : "text-gray-700"
-          }`}
-        >
-          Bulk Upload
-        </button>
-      </div>
+              <button
+                onClick={() => setSelectedMode("bulk")}
+                className={`py-2 rounded-md font-medium transition ${selectedMode === "bulk"
+                  ? "bg-white text-gray-700 border border-gray-500 shadow-sm  "
+                  : "text-gray-700"
+                  }`}
+              >
+                Bulk Upload
+              </button>
+            </div>
 
-      {/* Form */}
-      <div
-        className="
+            {/* Form */}
+            <div
+              className="
           border border-gray-200 
           bg-white 
           rounded-xl 
           shadow-sm 
           p-4 sm:p-5
         "
-      >
-        {selectedMode === "single" && (
-          <SingleProductForm setIsModalOpen={setIsModalOpen} />
-        )}
+            >
+              {selectedMode === "single" && (
+                <SingleProductForm setIsModalOpen={setIsModalOpen} />
+              )}
 
-        {selectedMode === "bulk" && (
-          <BulkUploadForm setIsModalOpen={setIsModalOpen} />
-        )}
-      </div>
-    </div>
+              {selectedMode === "bulk" && (
+                <BulkUploadForm setIsModalOpen={setIsModalOpen} />
+              )}
+            </div>
+          </div>
 
-  </DialogContent>
-</Dialog>
+        </DialogContent>
+      </Dialog>
 
 
 

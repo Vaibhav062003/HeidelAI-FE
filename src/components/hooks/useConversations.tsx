@@ -2,11 +2,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from 'react';
 import { Conversation } from '../types/conversation';
-import { conversationService } from '../services/api';
+import { useConversationService } from '../services/api';
 import { normalizeConversation } from '@/utils/normalizeConversation';
 import { useMainWebSocket } from '@/lib/websocket';
 
 export const useConversations = () => {
+  const conversationService = useConversationService();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -14,7 +15,7 @@ export const useConversations = () => {
 
   // 1. Initial Data Fetching
   const fetchConversations = useCallback(async () => {
-    if(!hasFetched){
+    if (!hasFetched) {
       setLoading(true);
     }
     try {
@@ -48,25 +49,25 @@ export const useConversations = () => {
 
     setConversations(prev => {
       // 1. Find index
-      const index = prev.findIndex(c => 
-        (c.id === convData.conversation_id) || 
+      const index = prev.findIndex(c =>
+        (c.id === convData.conversation_id) ||
         (c.conversation_id === convData.conversation_id)
       );
 
       // 2. Handle New/Moved Item
       if (index === -1) {
-         // Respect the current filter status
-         if (status && updated.status !== status) return prev;
-         return [updated, ...prev];
+        // Respect the current filter status
+        if (status && updated.status !== status) return prev;
+        return [updated, ...prev];
       }
 
       const newList = [...prev];
       newList.splice(index, 1);
       newList.unshift(updated);
-      
+
       return newList;
     });
-  }, []); 
+  }, []);
 
   useMainWebSocket({
     onNewConversation: handleNewConversation,
@@ -87,6 +88,6 @@ export const useConversations = () => {
       return c;
     }));
   }, []);
-  
-  return { conversations, loading, error, markAsRead};
+
+  return { conversations, loading, error, markAsRead };
 };
