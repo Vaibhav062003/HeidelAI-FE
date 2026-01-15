@@ -1,9 +1,9 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Message } from "../types";
-import { useRef, useState } from "react";
+import React, { useRef, useState, memo } from "react";
 import { MessageSkeleton } from "./core/Skeletons";
 import { getNextAgentMessage, formatMessageTime } from "../utils";
-import { MessageWrapper } from "@/components/messaging/MessageWrapper";
+import MessageWrapper from "@/components/messaging/MessageWrapper";
 import LazyMediaLoader from "@/components/LazyMediaLoader";
 import InstagramPost from "@/components/instagram/messaging/InstagramPost";
 import InstagramReel from "@/components/instagram/messaging/InstagramReel";
@@ -16,10 +16,13 @@ interface MessageListProps {
   messages: Message[];
   messagesLoading: boolean;
   selectedConversationId: string;
-  lastMessageRef: React.RefObject<HTMLDivElement | null>; // <--- Add this
+  lastMessageRef: React.RefObject<HTMLDivElement | null>;
+  setContextMessageId: React.Dispatch<React.SetStateAction<string | null>>;
+  setContextMessage: React.Dispatch<React.SetStateAction<Message | null>>;
+  textAreaRef: React.RefObject<HTMLTextAreaElement | null>;
 }
 
-const MessageList = ({ messages, messagesLoading, selectedConversationId, lastMessageRef }: MessageListProps) => {
+const MessageList = memo(({ messages, messagesLoading, selectedConversationId, lastMessageRef, setContextMessageId, setContextMessage, textAreaRef }: MessageListProps) => {
     const scrollAreaRef = useRef(null);
     const [fullscreenMediaId, setFullscreenMediaId] = useState<string | null>(null);
     const [activeMediaType, setActiveMediaType] = useState<
@@ -112,6 +115,9 @@ const MessageList = ({ messages, messagesLoading, selectedConversationId, lastMe
                             index={index}
                             allMessages={messages}
                             forceHide={fullscreenMediaId === message.id}
+                            setContextMessageId={setContextMessageId}
+                            setContextMessage={setContextMessage}
+                            textAreaRef={textAreaRef}
                             >
                             {/* IG Media Messages */}
                             {message.payload && (
@@ -264,7 +270,7 @@ const MessageList = ({ messages, messagesLoading, selectedConversationId, lastMe
                                     isLatest={isLatest}
                                     isLast={index === messages.length - 1}
                                     isReplyMessage={
-                                    message.type == "message_reply"
+                                    message.context_type == "message_reply"
                                     }
                                     showStatusIcon={showStatusIcon}
                                     platform={selectedConversationId.split("_")[1]}
@@ -282,6 +288,8 @@ const MessageList = ({ messages, messagesLoading, selectedConversationId, lastMe
             </div>
         </ScrollArea>
     )
-}
+});
+
+MessageList.displayName = "MessageList";
 
 export default MessageList;

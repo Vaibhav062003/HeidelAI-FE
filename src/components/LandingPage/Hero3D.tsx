@@ -45,7 +45,7 @@ const Hero3D = () => {
       <div className="w-full max-w-6xl space-y-5 sm:space-y-6 relative z-10 -mt-5 sm:mt-0">
 
         {/* Beta Status Badge */}
-        <div className="flex justify-center mb-[-20px] relative pt-10  sm:pt-36 z-20">
+        <div className="flex justify-center mb-[-20px] relative pt-10 sm:pt-28 z-20">
           <Badge className="bg-white/40 backdrop-blur-md border border-[#0080A0]/20 text-[#0080A0] px-4 py-1.5 rounded-full shadow-[0_8px_32px_rgba(0,128,160,0.1)] transition-all duration-500 hover:scale-105 hover:bg-white/60 group cursor-default">
             <div className="flex items-center h-5 text-[10px] sm:text-xs font-normal font-sans font-[800] tracking-[0.15em] uppercase">
               <span className="flex items-center gap-2">

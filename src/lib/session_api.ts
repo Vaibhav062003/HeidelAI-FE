@@ -1,29 +1,34 @@
+"use client";
+
 import axios from "axios";
+import { useAuth } from "@clerk/nextjs";
+import { useEffect, useMemo } from "react";
 
-const api = axios.create({
-  // baseURL: process.env.NEXT_PUBLIC_API_URL
-  baseURL: "https://egenie-whatsapp.koyeb.app"
-})
+export const useApi = () => {
+  const { getToken } = useAuth();
 
-api.interceptors.request.use(async (config) => {
-  let sessionId: string | null = null;
-  if (typeof window !== "undefined") {
-    sessionId = localStorage.getItem("sessionId");
-  }
-  if (!sessionId) throw new Error("Session ID not found in localStorage");
+  const api = useMemo(() => {
+    return axios.create({
+      baseURL: "https://egenie-whatsapp.koyeb.app",
+    });
+  }, []);
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_HOST_URL}/api/session-token`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json"
-    },
-    body: JSON.stringify({ sessionId })
-  });
-  const { token: sessionToken } = await res.json();
+  useEffect(() => {
+    const interceptor = api.interceptors.request.use(
+      async (config) => {
+        const token = await getToken();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
 
-  config.headers.Authorization = `Bearer ${sessionToken}`;
-  return config;
-});
+    return () => {
+      api.interceptors.request.eject(interceptor);
+    };
+  }, [api, getToken]);
 
-export default api;
-
+  return api;
+};

@@ -1,13 +1,13 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Dialog as ConfirmDialog, DialogContent as ConfirmDialogContent, DialogHeader as ConfirmDialogHeader, DialogTitle as ConfirmDialogTitle } from "@/components/ui/dialog"; 
+import { Dialog as ConfirmDialog, DialogContent as ConfirmDialogContent, DialogHeader as ConfirmDialogHeader, DialogTitle as ConfirmDialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner"; 
+import { toast } from "sonner";
 import { WhatsAppLogo } from '@/components/icons/WhatsappLogo';
 import WhatsAppProfileView from '@/components/setting_tab/WhatAppProfileView'; // Add this import
-import api from '@/lib/session_api';
+import { useApi } from "@/lib/session_api";
 import { useOrganization, useUser } from '@clerk/nextjs';
 import { useIntegrations, WhatsappData } from '../hooks/useIntegrations';
 import { DB_KEYS, getData, storeData } from '@/lib/indexedDB';
@@ -41,27 +41,27 @@ const WHATSAPP_REDIRECT_URI = `${typeof window !== 'undefined' ? window.location
 // Add this utility function near the top of your file
 export const formatPhoneNumber = (phone: string) => {
   if (!phone) return "";
-  
+
   // Remove any non-digit characters
   const digitsOnly = phone.replace(/\D/g, '');
-  
+
   // US format: +1 (XXX) XXX-XXXX
   if (digitsOnly.startsWith('1') && digitsOnly.length === 11) {
     return `+1 (${digitsOnly.substring(1, 4)}) ${digitsOnly.substring(4, 7)}-${digitsOnly.substring(7)}`;
   }
-  
+
   // India format: +91 XXXXX XXXXX
   if (digitsOnly.startsWith('91') && digitsOnly.length === 12) {
     return `+91 ${digitsOnly.substring(2, 7)} ${digitsOnly.substring(7)}`;
   }
-  
+
   // Default international format with country code
   if (digitsOnly.length > 7) {
     // Try to extract country code (1-3 digits)
     const countryCodeLength = digitsOnly.length > 10 ? (digitsOnly.length - 10) : 2;
     return `+${digitsOnly.substring(0, countryCodeLength)} ${digitsOnly.substring(countryCodeLength)}`;
   }
-  
+
   // If all else fails, just return with + prefix
   return `+${digitsOnly}`;
 };
@@ -81,10 +81,11 @@ const WhatsAppLoginDialog = () => {
   const { organization } = useOrganization();
   const [isAdmin, setIsAdmin] = useState(false);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+  const api = useApi();
 
   // Store the embedded signup data (waba_id, phone_number_id) temporarily
   const whatsappSignupDataRef = useRef<WhatsAppSignupData | null>(null);
-  
+
   const { integrations, loading: integrationsLoading, refreshIntegrations } = useIntegrations();
   const { user } = useUser();
 
@@ -94,12 +95,12 @@ const WhatsAppLoginDialog = () => {
 
   // Load and Initialize Facebook SDK
   useEffect(() => {
-    window.fbAsyncInit = function() {
+    window.fbAsyncInit = function () {
       window.FB.init({
-        appId            : WHATSAPP_CLIENT_ID,
-        autoLogAppEvents : true,
-        xfbml            : true,
-        version          : 'v24.0'
+        appId: WHATSAPP_CLIENT_ID,
+        autoLogAppEvents: true,
+        xfbml: true,
+        version: 'v24.0'
       });
     };
 
@@ -129,11 +130,11 @@ const WhatsAppLoginDialog = () => {
     checkRole();
   }, [organization, user]);
 
-  
+
   const getWhatsappUserId = async () => {
     try {
       const whatsappData = await getData<WhatsappData>(
-        'integrations', 
+        'integrations',
         DB_KEYS.INTEGRATIONS.WHATSAPP
       );
       return whatsappData?.userId || null;
@@ -171,7 +172,7 @@ const WhatsAppLoginDialog = () => {
 
       try {
         let data = event.data;
-        
+
         if (typeof data === 'string') {
           try {
             data = JSON.parse(data);
@@ -205,7 +206,7 @@ const WhatsAppLoginDialog = () => {
         console.log('Error processing message event', e);
       }
     };
-    
+
     window.addEventListener('message', handleMessage);
     console.log('added event listener for whatsapp')
     return () => {
@@ -254,16 +255,16 @@ const WhatsAppLoginDialog = () => {
   const handleWhatsAppCallback = async (code: string) => {
     try {
       setIsLoading(true);
-      
+
       const signupData = whatsappSignupDataRef.current;
 
       // Exchange authorization code for access token via backend
-      const response = await api.post('/api/whatsapp/auth', { 
-          code,
-          redirect_uri: WHATSAPP_REDIRECT_URI,
-          ...signupData
+      const response = await api.post('/api/whatsapp/auth', {
+        code,
+        redirect_uri: WHATSAPP_REDIRECT_URI,
+        ...signupData
       });
-      
+
       if (response.status === 403) {
         const errorData = response.data as ErrorResponse;
         const errorMessage = errorData.message || "This WhatsApp account is already connected to another organization.If you think this is incorrect, please contact us at support@heidelai.com for further assistance.";
@@ -278,7 +279,7 @@ const WhatsAppLoginDialog = () => {
       }
 
       const profileData = response.data;
-      
+
       const whatsappData: WhatsappData = {
         status: true,
         name: profileData.name,
@@ -289,19 +290,19 @@ const WhatsAppLoginDialog = () => {
       };
 
       await storeData("integrations", DB_KEYS.INTEGRATIONS.WHATSAPP, whatsappData);
-      
+
       setConnected(true);
-      
+
       setAccountInfo({
         name: profileData.name,
         phone: profileData.phone,
         businessInfo: profileData.business_info || {}
       });
-      
+
       toast.success("WhatsApp connected successfully!", {
         description: "You can now receive and manage WhatsApp messages in HeidelAI"
       });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Error processing WhatsApp auth callback:', error);
       toast.error("Connection Failed", {
@@ -316,7 +317,7 @@ const WhatsAppLoginDialog = () => {
   const disconnectWhatsApp = async () => {
     try {
       setIsLoading(true);
-      
+
       // Revoke the token
       const user_id = await getWhatsappUserId();
 
@@ -325,14 +326,14 @@ const WhatsAppLoginDialog = () => {
 
         // Disconnect using the dedicated WhatsApp API
         await api.post('/api/instagram/disconnect', { data });
-        
+
         // Update IndexedDB - set connected to false but keep other data
         try {
           const existingData = await getData<WhatsappData>(
-            'integrations', 
+            'integrations',
             DB_KEYS.INTEGRATIONS.WHATSAPP
           );
-          
+
           if (existingData) {
             await storeData('integrations', DB_KEYS.INTEGRATIONS.WHATSAPP, {
               ...existingData,
@@ -385,7 +386,7 @@ const WhatsAppLoginDialog = () => {
         <DialogHeader>
           <DialogTitle className="text-black">{connected ? 'Manage WhatsApp Connection' : 'Connect WhatsApp Business'}</DialogTitle>
         </DialogHeader>
-        
+
         {isLoading ? (
           <div className="py-8 flex justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-green-500" />
@@ -403,14 +404,14 @@ const WhatsAppLoginDialog = () => {
                   <p className="text-xs text-green-600 mt-1">Connected</p>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowProfileView(true)}
               >
                 View Details
               </Button>
             </div>
-            
+
             <div className="space-y-2">
               <h4 className="text-sm text-black font-medium">Permissions granted:</h4>
               <ul className="text-sm text-gray-600 space-y-1">
@@ -423,7 +424,7 @@ const WhatsAppLoginDialog = () => {
                     xmlns="http://www.w3.org/2000/svg"
                     className="text-green-600 flex-shrink-0"
                   >
-                    <circle cx="8" cy="8" r="7.5" stroke="#10B981" strokeOpacity="0.2"/>
+                    <circle cx="8" cy="8" r="7.5" stroke="#10B981" strokeOpacity="0.2" />
                     <path
                       d="M5 8L7 10L11 6"
                       stroke="#10B981"
@@ -443,7 +444,7 @@ const WhatsAppLoginDialog = () => {
                     xmlns="http://www.w3.org/2000/svg"
                     className="text-green-600 flex-shrink-0"
                   >
-                    <circle cx="8" cy="8" r="7.5" stroke="#10B981" strokeOpacity="0.2"/>
+                    <circle cx="8" cy="8" r="7.5" stroke="#10B981" strokeOpacity="0.2" />
                     <path
                       d="M5 8L7 10L11 6"
                       stroke="#10B981"
@@ -463,7 +464,7 @@ const WhatsAppLoginDialog = () => {
                     xmlns="http://www.w3.org/2000/svg"
                     className="text-green-600 flex-shrink-0"
                   >
-                    <circle cx="8" cy="8" r="7.5" stroke="#10B981" strokeOpacity="0.2"/>
+                    <circle cx="8" cy="8" r="7.5" stroke="#10B981" strokeOpacity="0.2" />
                     <path
                       d="M5 8L7 10L11 6"
                       stroke="#10B981"
@@ -476,10 +477,10 @@ const WhatsAppLoginDialog = () => {
                 </li>
               </ul>
             </div>
-            
-            <Button 
-              variant="destructive" 
-              className="w-full mt-4" 
+
+            <Button
+              variant="destructive"
+              className="w-full mt-4"
               onClick={() => setShowDisconnectConfirm(true)}
               disabled={isLoading || !isAdmin}
               title={!isAdmin ? "Only admins can disconnect integrations" : ""}
@@ -520,26 +521,26 @@ const WhatsAppLoginDialog = () => {
               </ConfirmDialogContent>
             </ConfirmDialog>
 
-          
-          {/* Show explanatory text for members */}
-          {!isAdmin && connected && (
-            <p className="text-sm text-amber-600">
-              Only administrators can disconnect integrations.
-            </p>
-          )}
+
+            {/* Show explanatory text for members */}
+            {!isAdmin && connected && (
+              <p className="text-sm text-amber-600">
+                Only administrators can disconnect integrations.
+              </p>
+            )}
           </div>
         ) : (
           <div className="py-4 space-y-4">
             <p className="text-sm text-gray-600">
               Connect your WhatsApp Business account to manage messages and customer interactions directly from this dashboard.
             </p>
-            
+
             <div className="p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700 text-sm rounded">
               <p>
                 Your WhatsApp credentials are never stored on our servers. We use secure, industry-standard authentication directly with WhatsApp. You are always in control and can disconnect at any time.
               </p>
             </div>
-            
+
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-black">This will allow HeidelAI to:</h4>
               <ul className="text-sm text-gray-600 space-y-1">
@@ -557,21 +558,21 @@ const WhatsAppLoginDialog = () => {
                 </li>
               </ul>
             </div>
-            
-            <Button 
-              className="w-full mt-4 bg-[#25D366] hover:bg-green-600  text-white" 
+
+            <Button
+              className="w-full mt-4 bg-[#25D366] hover:bg-green-600  text-white"
               onClick={handleWhatsAppLogin}
               disabled={isLoading || !isAdmin}
               title={!isAdmin ? "Only admins can connect integrations" : ""}
             >
               {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Processing...
-                  </>
-                ) : !isAdmin ? (
-                  "Admin permission required"
-                ) : (
-                  "Connect WhatsApp"
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Processing...
+                </>
+              ) : !isAdmin ? (
+                "Admin permission required"
+              ) : (
+                "Connect WhatsApp"
               )}
             </Button>
 
@@ -584,9 +585,9 @@ const WhatsAppLoginDialog = () => {
           </div>
         )}
       </DialogContent>
-      
+
       {/* WhatsAppProfileView component would go here similar to Instagram */}
-      {connected  && (
+      {connected && (
         <WhatsAppProfileView
           whatsappId={getWhatsappUserId}
           isOpen={showProfileView}

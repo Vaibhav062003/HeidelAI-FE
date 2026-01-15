@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
-import api from "@/lib/session_api";
+import { useApi } from "@/lib/session_api";
 
 const WS_URL = 'wss://egenie-whatsapp.koyeb.app/cs';
 
@@ -13,12 +13,12 @@ interface ConversationSummaryProps {
 }
 
 interface ConversationData {
-  conversation_id: string; 
+  conversation_id: string;
   priority: "low" | "medium" | "high";
   summary: string[];
   sentiment: "positive" | "neutral" | "negative";
   suggestions: string[];
-  last_analyzed: string; 
+  last_analyzed: string;
 }
 
 const LoadingState = () => (
@@ -26,7 +26,7 @@ const LoadingState = () => (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Image height={30} width={30} src='/icons/summary_icon.png' alt="summary_icon"/>
+          <Image height={30} width={30} src='/icons/summary_icon.png' alt="summary_icon" />
           <h3 className="font-bold">Conversation Summary</h3>
         </div>
         <Skeleton className="h-6 w-20" />
@@ -70,50 +70,51 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
   const [conversation, setConversation] = useState<ConversationData | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [retries, setRetries] = useState(0);
+  const api = useApi()
 
   const maxRetries = 5;
   const retryDelay = 3000;
 
   //  fetch function
-const fetchConversation = async (conversationId: string) => {
-  if (!conversationId) {
-    console.log('No conversation ID provided');
-    return;
-  }
-  
-  setLoading(true);
-  setError(null);
-  
-  try {
-    const endpoint = `/api/ai/chat-analysis/${conversationId}`;
-    // console.log('endpoint:', endpoint);
-    
-    const response = await api.get(endpoint);
-    
-    console.log('API Response:', response);
-    console.log('Response data:', response.data);
-    
-    if (response.data) {
-      setConversation(response.data);
-      setError(null);
-    } else {
-      console.error(' No data in response');
-      setError('No data received from API');
+  const fetchConversation = async (conversationId: string) => {
+    if (!conversationId) {
+      console.log('No conversation ID provided');
+      return;
     }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
-    console.error(' Full Error Object:', err);
-    
-    if (err.response?.status === 404) {
-      setError(`Conversation not found (404). Check if ID "${conversationId}" exists.`);
-    } else {
-      setError(err.response?.data?.message || err.message || 'Failed to load conversation');
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const endpoint = `/api/ai/chat-analysis/${conversationId}`;
+      // console.log('endpoint:', endpoint);
+
+      const response = await api.get(endpoint);
+
+      console.log('API Response:', response);
+      console.log('Response data:', response.data);
+
+      if (response.data) {
+        setConversation(response.data);
+        setError(null);
+      } else {
+        console.error(' No data in response');
+        setError('No data received from API');
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error(' Full Error Object:', err);
+
+      if (err.response?.status === 404) {
+        setError(`Conversation not found (404). Check if ID "${conversationId}" exists.`);
+      } else {
+        setError(err.response?.data?.message || err.message || 'Failed to load conversation');
+      }
+      setConversation(null);
+    } finally {
+      setLoading(false);
     }
-    setConversation(null);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     if (!selectedConversationId) {
@@ -126,21 +127,21 @@ const fetchConversation = async (conversationId: string) => {
 
     const connectWebSocket = () => {
       const wsConnection = new WebSocket(`${WS_URL}/client-${Date.now()}`);
-      
+
       wsConnection.onopen = () => {
         console.log(' WebSocket connected');
         setError(null);
         setRetries(0);
       };
-      
+
       wsConnection.onmessage = (event) => {
         console.log(' WebSocket message:', event.data);
         try {
           const data = JSON.parse(event.data);
           console.log(' Parsed data:', data);
-          
+
           if (
-            data.type === 'summary_updated' && 
+            data.type === 'summary_updated' &&
             data.conversation_id === selectedConversationId
           ) {
             console.log(' Summary updated, refetching...');
@@ -175,14 +176,14 @@ const fetchConversation = async (conversationId: string) => {
     };
 
     connectWebSocket();
-    
+
     return () => {
       console.log('🧹 Cleaning up WebSocket');
       if (ws) {
         ws.close();
       }
     };
-  }, [selectedConversationId]); 
+  }, [selectedConversationId]);
 
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
@@ -219,7 +220,7 @@ const fetchConversation = async (conversationId: string) => {
             <p className="text-sm font-medium">Failed to load conversation summary</p>
           </div>
           <p className="text-xs text-gray-500">{error}</p>
-          <button 
+          <button
             onClick={() => selectedConversationId && fetchConversation(selectedConversationId)}
             className="text-xs text-blue-600 hover:text-blue-700 underline"
           >
@@ -254,54 +255,54 @@ const fetchConversation = async (conversationId: string) => {
     );
   }
 
-return (
-  <Card className="p-4 bg-white h-full">
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Image height={30} width={30} src='/icons/summary_icon.png' alt="summary_icon"/>
-          <h3 className="font-sans text-xs text-gray-800 leading-relaxed font-semibold">Conversation Summary</h3>
+  return (
+    <Card className="p-4 bg-white h-full">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Image height={30} width={30} src='/icons/summary_icon.png' alt="summary_icon" />
+            <h3 className="font-sans text-xs text-gray-800 leading-relaxed font-semibold">Conversation Summary</h3>
+          </div>
+          <Badge
+            variant="secondary"
+            className={getSentimentColor(conversation.sentiment)}
+          >
+            {conversation.sentiment.charAt(0).toUpperCase() + conversation.sentiment.slice(1)}
+          </Badge>
         </div>
-        <Badge
-          variant="secondary"
-          className={getSentimentColor(conversation.sentiment)}
-        >
-          {conversation.sentiment.charAt(0).toUpperCase() + conversation.sentiment.slice(1)}
-        </Badge>
-      </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Badge variant="outline" className={getUrgencyColor(conversation.priority)}>
-          {conversation.priority.toUpperCase()} Priority
-        </Badge>
-      </div>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline" className={getUrgencyColor(conversation.priority)}>
+            {conversation.priority.toUpperCase()} Priority
+          </Badge>
+        </div>
 
-      <div className="px-4">
-        <h4 className="font-sans text-xs text-gray-800 leading-relaxed font-semibold mb-2">Summary Points</h4>
-        <ul className="space-y-1">
-          {conversation.summary.map((point, index) => (
-            <li key={index} className="font-sans text-xs text-gray-600 leading-relaxed">
-              • {point}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {conversation.suggestions && conversation.suggestions.length > 0 && (
         <div className="px-4">
-          <h4 className="font-sans text-xs text-gray-800 leading-relaxed font-semibold mb-2">AI Suggestions</h4>
+          <h4 className="font-sans text-xs text-gray-800 leading-relaxed font-semibold mb-2">Summary Points</h4>
           <ul className="space-y-1">
-            {conversation.suggestions.map((suggestion, index) => (
+            {conversation.summary.map((point, index) => (
               <li key={index} className="font-sans text-xs text-gray-600 leading-relaxed">
-                • {suggestion}
+                • {point}
               </li>
             ))}
           </ul>
         </div>
-      )}
-    </div>
-  </Card>
-);
+
+        {conversation.suggestions && conversation.suggestions.length > 0 && (
+          <div className="px-4">
+            <h4 className="font-sans text-xs text-gray-800 leading-relaxed font-semibold mb-2">AI Suggestions</h4>
+            <ul className="space-y-1">
+              {conversation.suggestions.map((suggestion, index) => (
+                <li key={index} className="font-sans text-xs text-gray-600 leading-relaxed">
+                  • {suggestion}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
 };
 
 export default ConversationSummary;

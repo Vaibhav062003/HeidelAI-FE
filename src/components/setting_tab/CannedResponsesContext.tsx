@@ -9,7 +9,7 @@ import {
   AlertCircle,
   AlertTriangle,
 } from "lucide-react";
-import api from "@/lib/session_api";
+import { useApi } from "@/lib/session_api";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
 
@@ -74,6 +74,7 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
       id: null,
       shortcut: null,
     });
+  const api = useApi();
 
   const fetchCannedResponses = useCallback(async () => {
     setIsLoading(true);
@@ -360,9 +361,8 @@ const CannedResponses: React.FC<CannedResponsesProps> = ({
                     key={response.id}
                     role="article"
                     aria-labelledby={titleId}
-                    className={`bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-200 hover:shadow-md transition-all ${
-                      isDeleting ? "opacity-50 pointer-events-none" : ""
-                    }`}
+                    className={`bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-200 hover:shadow-md transition-all ${isDeleting ? "opacity-50 pointer-events-none" : ""
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">

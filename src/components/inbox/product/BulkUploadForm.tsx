@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import React, { useState } from "react";
-import api from "@/lib/session_api";
+import { useApi } from "@/lib/session_api";
 import { toast } from "sonner";
 import { Download, Upload, FileCheck, File } from "lucide-react";
 
@@ -14,6 +14,7 @@ interface BulkUploadFormProps {
 const BulkUploadForm = ({ setIsModalOpen }: BulkUploadFormProps) => {
   const [loading, setLoading] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const api = useApi()
 
   const handleBulkUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,10 +112,9 @@ const BulkUploadForm = ({ setIsModalOpen }: BulkUploadFormProps) => {
               text-center 
               transition-all
 
-              ${
-                selectedFileName
-                  ? "border-green-500 bg-green-50"
-                  : "border-gray-300 bg-gray-50 hover:bg-gray-100"
+              ${selectedFileName
+                ? "border-green-500 bg-green-50"
+                : "border-gray-300 bg-gray-50 hover:bg-gray-100"
               }
             `}
           >
