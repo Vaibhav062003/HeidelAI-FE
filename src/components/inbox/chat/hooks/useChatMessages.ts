@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useMainWebSocket } from "@/lib/websocket";
 import { Message } from "../types";
 import { storeData, getData } from "@/lib/indexedDB";
 import api from "@/lib/session_api";
 import { toast } from "sonner";
-import { send } from "process";
+
 
 // Helper to save messages to IDB in background
 
@@ -15,6 +15,8 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
     Map<string, { agent_name: string; timestamp: number }>
     >(new Map());
     const [messagesLoading, setMessagesLoading] = useState<boolean>(false);
+    const [contextMessageId, setContextMessageId] = useState<string | null>(null);
+    const [contextMessage, setContextMessage] = useState<Message | null>(null);
     const MESSAGE_STORAGE_KEY = `messages_${selectedConversationId}`;
 
     
@@ -79,10 +81,21 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
     const sendMessage = useCallback(async (
         content: string, 
         attachments: File[],
-        mode: "reply" | "private"
+        mode: "reply" | "private",
+        contextMessageId?: string
     ) => {
         const platform = selectedConversationId.split("_")[0];
         const tempId = `temp-${Date.now()}`;
+        let context_type = null;
+        let context = null;
+
+
+        if (contextMessageId) {
+          context_type = "message_reply";
+          context = JSON.stringify({
+              mid: contextMessageId,
+          });
+        }
         
         // 1. Create Optimistic Message Object
         let optimisticMessage: Message;
@@ -92,6 +105,7 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
         const localPreviewUrl = URL.createObjectURL(file);
         optimisticMessage = {
             id: tempId,
+            platform: platform as "whatsapp" | "instagram",
             content: content,
             sender_id: selectedConversationId.split("_")[1],
             role: "agent",
@@ -103,10 +117,13 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
             fileName: file.name,
             fileType: file.type,
             mode: mode,
+            context_type: context_type as "message_reply" | null,
+            context: context ? JSON.parse(context) : null,
         };
         } else {
         optimisticMessage = {
             id: tempId,
+            platform: platform as "whatsapp" | "instagram",
             content: content,
             sender_id: selectedConversationId.split("_")[1],
             role: "agent",
@@ -115,8 +132,13 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
             type: "text",
             status: "sending",
             mode: mode,
+            context_type: context_type as "message_reply" | null,
+            context: context ? JSON.parse(context) : null,
         };
         }
+
+        console.log("Optimistic message created:", optimisticMessage);
+        console.log("Context type:", context_type, "Context:", context);
 
         // 2. Update UI Immediately
         setMessages((prev) => [...prev, optimisticMessage]);
@@ -128,6 +150,8 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
         formData.append("conversation_id", selectedConversationId);
         formData.append("platform", platform);
         formData.append("mode", mode);
+        if (context_type) formData.append("context_type", context_type);
+        if (context) formData.append("context", context);
         
         if (content.trim()) formData.append("content", content.trim());
         if (attachments.length > 0) formData.append("file", attachments[0]);
@@ -343,5 +367,9 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
         fetchMessages,
         sendMessage,
         setTypingUsers,
+        contextMessageId,
+        setContextMessageId,
+        contextMessage,
+        setContextMessage
     };
 }

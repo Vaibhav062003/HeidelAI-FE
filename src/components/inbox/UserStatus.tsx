@@ -16,20 +16,23 @@ export interface Message {
   conversation_id: string;
   status?: "sent" | "delivered" | "read" | "sending";
   type?:
-    | "text"
-    | "image"
-    | "file"
-    | "voice"
-    | "video"
-    | "share"
-    | "ig_story"
-    | "ig_reel"
-    | "story_reply"
-    | "system"
-    | "message_reply"
-    | "document";
+  | "text"
+  | "image"
+  | "file"
+  | "voice"
+  | "video"
+  | "share"
+  | "ig_story"
+  | "ig_reel"
+  | "story_reply"
+  | "system"
+  | "document";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
+  context_type?: "message_reply";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  context?: any;
+  platform: "whatsapp" | "instagram" | "messenger" | "webchat";
   product_data?: ProductData[];
   fileUrl?: string;
   fileName?: string;

@@ -61,9 +61,9 @@ export const MessageItem = memo(
 
     return (
       <>
-        <div className="flex w-full items-end">
+        <div className="flex w-fit items-end ">
         <div
-          className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-3 w-full shadow-sm border hw-accel 
+          className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-3 w-fit shadow-sm border hw-accel 
             ${message.role === "customer"
               ? `bg-white/90 backdrop-blur-sm 
                 ${isReplyMessage || isMediaMessage ? "rounded-tl-lg" : "rounded-bl-lg"} 

@@ -115,6 +115,7 @@ const ChatHeader = ({
           content: `Conversation was marked Closed by ${agentName}`,
           type: "system",
           role: "system",
+          platform: selectedConversationId.split("_")[0] as "whatsapp" | "instagram",
           conversation_id: selectedConversationId || "",
           timestamp: new Date().toISOString(),
           sender_id: "system",
@@ -209,6 +210,7 @@ const ChatHeader = ({
         const systemMessage: Message = {
         id: `system-${Date.now()}`,
         content: `Conversation was marked for follow-up by ${agentName}`,
+        platform: selectedConversationId.split("_")[0] as "whatsapp" | "instagram",
         type: "system",
         role: "system",
         conversation_id: selectedConversationId || "",
@@ -241,6 +243,7 @@ const ChatHeader = ({
         id: `system-${Date.now()}`,
         content: `Conversation was reopened by ${agentName}`,
         type: "system",
+        platform: selectedConversationId.split("_")[0] as "whatsapp" | "instagram",
         role: "system",
         conversation_id: selectedConversationId || "",
         timestamp: new Date().toISOString(),

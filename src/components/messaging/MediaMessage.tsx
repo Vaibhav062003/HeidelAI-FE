@@ -268,7 +268,6 @@ export default function MediaMessage({
       </div>
 
       {caption ? (
-        console.log("Rendering caption:", caption),
         <div className="mt-2 text-sm text-gray-700">
           <MessageItem
             message={message}
