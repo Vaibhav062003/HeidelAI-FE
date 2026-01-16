@@ -134,9 +134,10 @@ const FunnelIcon: React.FC<{ icon: InputIcon }> = ({ icon }) => {
 
   useEffect(() => {
     const randomYRatio = Math.random() - 0.5;
-    const duration = 5 + Math.random() * 3;
-    const delay = Math.random() * -20;
+    const duration = 6 + Math.random() * 6;
+    const delay = Math.random() * -40;
     const scale = 0.5 + Math.random() * 0.4;
+    const randomZ = Math.floor(Math.random() * 20) + 10;
 
     setStyle({
       "--y-ratio": randomYRatio,
@@ -145,7 +146,7 @@ const FunnelIcon: React.FC<{ icon: InputIcon }> = ({ icon }) => {
       "--scale": scale,
       animation: `funnelFlow var(--duration) linear var(--delay) infinite`,
       willChange: "transform, opacity",
-      zIndex: 20,
+      zIndex: randomZ,
     } as React.CSSProperties & { [key: string]: any });
   }, []);
 
@@ -153,7 +154,7 @@ const FunnelIcon: React.FC<{ icon: InputIcon }> = ({ icon }) => {
 
   return (
     <div
-      className={`absolute left-0 top-1/2 rounded-2xl bg-white flex items-center justify-center shadow-md border ${icon.color} w-[28px] h-[28px] sm:w-[44px] sm:h-[44px]`}
+      className={`absolute left-0 top-1/2 rounded-full sm:rounded-2xl bg-white flex items-center justify-center shadow-md border ${icon.color} w-[28px] h-[28px] sm:w-[44px] sm:h-[44px]`}
       style={style}
     >
       <div className="relative w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center">
@@ -184,15 +185,15 @@ const getIcon = (iconName: string) => {
 };
 
 const CardItem = ({ card }: { card: OutputCard }) => (
-  <div className="flex items-center gap-1.5 sm:gap-4 bg-white/90 backdrop-blur-sm border border-gray-100 p-1.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-sm w-[110px] sm:w-[280px] flex-shrink-0">
-    <div className="w-7 h-7 sm:w-12 sm:h-12 flex items-center justify-center bg-indigo-50 rounded-lg sm:rounded-xl text-indigo-600 p-1.5 sm:p-2.5">
+  <div className="flex items-center gap-1 sm:gap-4 bg-white/90 backdrop-blur-sm border border-gray-100 p-0.5 sm:p-4 rounded-lg sm:rounded-2xl shadow-sm w-[75px] sm:w-[280px] flex-shrink-0">
+    <div className="w-5 h-5 sm:w-12 sm:h-12 flex items-center justify-center bg-indigo-50 rounded-md sm:rounded-xl text-indigo-600 p-1 sm:p-2.5">
       {getIcon(card.icon)}
     </div>
     <div className="flex flex-col">
-      <span className="text-[8px] sm:text-sm font-bold text-gray-900 leading-tight">
+      <span className="text-[6px] sm:text-sm font-bold text-gray-900 leading-tight">
         {card.title}
       </span>
-      <span className="text-[6px] sm:text-[10px] text-indigo-500 font-black uppercase tracking-widest mt-0.5 sm:mt-1">
+      <span className="text-[4px] sm:text-[10px] text-indigo-500 font-black uppercase tracking-widest mt-0.5 sm:mt-1">
         {card.category}
       </span>
     </div>
@@ -219,10 +220,11 @@ const Row = ({
       }}
     >
       <div
-        className={`flex gap-3 sm:gap-6 px-3 sm:px-6 w-max ${direction === "left"
-          ? "animate-infinite-scroll-left"
-          : "animate-infinite-scroll-right"
-          }`}
+        className={`flex gap-2 sm:gap-6 px-2 sm:px-6 w-max ${
+          direction === "left"
+            ? "animate-infinite-scroll-left"
+            : "animate-infinite-scroll-right"
+        }`}
       >
         {segment.map((card, idx) => (
           <CardItem key={`s1-${idx}`} card={card} />
@@ -238,7 +240,7 @@ const Row = ({
 const OutputCarousel = () => {
   return (
     <div className="absolute right-0 top-0 bottom-0 w-[50vw] z-0 flex flex-col justify-center items-center overflow-hidden pointer-events-none">
-      <div className="w-full flex flex-col gap-5 sm:gap-10 opacity-0 animate-emerge">
+      <div className="w-full flex flex-col gap-3 sm:gap-10 opacity-0 animate-emerge">
         <Row cards={OUTPUT_CARDS_1} direction="right" />
         <Row cards={OUTPUT_CARDS_2} direction="left" />
       </div>
@@ -267,35 +269,36 @@ const ProcessingNode: React.FC = () => {
   }, [slides.length]);
 
   return (
-    <div className="relative z-30 mx-auto transition-all duration-300 w-[220px] sm:w-auto sm:min-w-[450px] md:min-w-[550px] lg:min-w-[650px] max-w-5xl">
-      <div className="w-full bg-white shadow-[0_15px_40px_rgba(8,_112,_184,_0.1)] sm:shadow-[0_20px_50px_rgba(8,_112,_184,_0.15)] border border-gray-100 flex flex-col items-center justify-center rounded-[2rem] sm:rounded-[2.5rem] md:rounded-[3rem] px-3 py-6 sm:px-10 sm:py-12 md:px-14 md:py-16 min-h-[90px] sm:min-h-auto">
-        <div className="relative w-full flex items-center justify-center min-h-[60px] sm:min-h-auto aspect-auto sm:aspect-[3/1]">
+    <div className="relative z-30 mx-auto transition-all duration-300 w-[150px] sm:w-auto sm:min-w-[450px] md:min-w-[550px] lg:min-w-[650px] max-w-5xl">
+      <div className="w-full bg-white shadow-[0_15px_40px_rgba(8,_112,_184,_0.1)] sm:shadow-[0_20px_50px_rgba(8,_112,_184,_0.15)] border border-gray-100 flex flex-col items-center justify-center rounded-[1rem] sm:rounded-[2.5rem] md:rounded-[3rem] px-2 py-2 sm:px-10 sm:py-12 md:px-14 md:py-16 min-h-[80px] sm:min-h-auto">
+        <div className="relative w-full flex items-center justify-center min-h-[40px] sm:min-h-auto aspect-auto sm:aspect-[3/1]">
           {slides.map((slide, index) => (
             <div
               key={index}
-              className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${index === currentSlide
-                ? "opacity-100 scale-100 translate-y-0"
-                : "opacity-0 scale-95 translate-y-4 pointer-events-none"
-                }`}
+              className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${
+                index === currentSlide
+                  ? "opacity-100 scale-100 translate-y-0"
+                  : "opacity-0 scale-95 translate-y-4 pointer-events-none"
+              }`}
             >
               {slide.type === "logo" ? (
-                <div className="flex items-center justify-center gap-2 sm:gap-4 whitespace-nowrap">
+                <div className="flex items-center justify-center gap-1.5 sm:gap-4 whitespace-nowrap">
                   <img
                     src="/heidelai.png"
                     alt="HeidelAI Logo"
-                    className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain"
+                    className="w-6 h-6 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src =
                         "https://cdn-icons-png.flaticon.com/512/2103/2103633.png";
                     }}
                   />
-                  <span className="text-xl sm:text-4xl md:text-5xl font-medium tracking-tight text-gray-900">
+                  <span className="text-sm sm:text-4xl md:text-5xl font-medium tracking-tight text-gray-900">
                     {slide.content}
                   </span>
                 </div>
               ) : (
                 <div className="w-full flex items-center justify-center px-1">
-                  <p className="text-center font-semibold bg-gradient-to-r from-orange-500 via-orange-600 to-red-700 bg-clip-text text-transparent text-base sm:text-2xl md:text-3xl lg:text-4xl leading-tight sm:leading-snug max-w-full">
+                  <p className="text-center font-semibold bg-gradient-to-r from-orange-500 via-orange-600 to-red-700 bg-clip-text text-transparent text-[10px] sm:text-2xl md:text-3xl lg:text-4xl leading-tight sm:leading-snug max-w-full">
                     {slide.content}
                   </p>
                 </div>
@@ -328,7 +331,7 @@ const Features: React.FC = () => {
       id="features"
       className="relative w-full min-h-[60vh] sm:min-h-screen flex flex-col items-center justify-center py-6 sm:py-6 overflow-hidden bg-white"
     >
-      <div className="relative z-10 w-full mb-20 sm:mb-20 px-4 mt-4 sm:mt-10">
+      <div className="relative z-10 w-full mb-6 sm:mb-10 px-4 mt-4 sm:mt-10">
         <h2
           className="text-4xl md:text-6xl font-normal text-gray-800 italic mb-0 text-center"
           style={{ fontFamily: "'Awesome Serif', serif" }}
@@ -356,11 +359,16 @@ const Features: React.FC = () => {
 
       <style jsx global>{`
         :root {
-          --spread-height: 180px;
+          /* spread for mobile */
+          --spread-height: 250px;
+
+          --target-x: calc(50vw - 85px);
         }
         @media (min-width: 640px) {
           :root {
             --spread-height: 400px;
+            /* Desktop Convergence Point */
+            --target-x: calc(50vw - 180px);
           }
         }
 
@@ -393,6 +401,7 @@ const Features: React.FC = () => {
 
         @keyframes funnelFlow {
           0% {
+            /* Start: Far Left */
             transform: translate3d(
                 -10vw,
                 calc(var(--y-ratio) * var(--spread-height)),
@@ -405,8 +414,9 @@ const Features: React.FC = () => {
             opacity: 1;
           }
           70% {
+            /* Target: Uses the new responsive --target-x variable */
             transform: translate3d(
-                calc(50vw - 180px),
+                var(--target-x),
                 calc(var(--y-ratio) * var(--spread-height) * 0.15),
                 0
               )
@@ -414,6 +424,7 @@ const Features: React.FC = () => {
             opacity: 1;
           }
           100% {
+            /* End: Hit Center */
             transform: translate3d(50vw, 0, 0) scale(0.1);
             opacity: 0;
           }

@@ -78,7 +78,7 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
   //  fetch function
   const fetchConversation = async (conversationId: string) => {
     if (!conversationId) {
-      console.log('No conversation ID provided');
+      // console.log('No conversation ID provided');
       return;
     }
 
@@ -91,8 +91,8 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
 
       const response = await api.get(endpoint);
 
-      console.log('API Response:', response);
-      console.log('Response data:', response.data);
+      // console.log('API Response:', response);
+      // console.log('Response data:', response.data);
 
       if (response.data) {
         setConversation(response.data);
@@ -118,33 +118,33 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
 
   useEffect(() => {
     if (!selectedConversationId) {
-      console.log(' No conversation ID selected');
+      // console.log(' No conversation ID selected');
       return;
     }
 
-    console.log(' Selected conversation ID:', selectedConversationId);
+    // console.log(' Selected conversation ID:', selectedConversationId);
     fetchConversation(selectedConversationId);
 
     const connectWebSocket = () => {
       const wsConnection = new WebSocket(`${WS_URL}/client-${Date.now()}`);
 
       wsConnection.onopen = () => {
-        console.log(' WebSocket connected');
+        // console.log(' WebSocket connected');
         setError(null);
         setRetries(0);
       };
 
       wsConnection.onmessage = (event) => {
-        console.log(' WebSocket message:', event.data);
+        // console.log(' WebSocket message:', event.data);
         try {
           const data = JSON.parse(event.data);
-          console.log(' Parsed data:', data);
+          // console.log(' Parsed data:', data);
 
           if (
             data.type === 'summary_updated' &&
             data.conversation_id === selectedConversationId
           ) {
-            console.log(' Summary updated, refetching...');
+            // console.log(' Summary updated, refetching...');
             fetchConversation(selectedConversationId);
           }
         } catch (err) {
@@ -163,7 +163,7 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
       };
 
       wsConnection.onclose = () => {
-        console.log('🔌 WebSocket closed');
+        // console.log('🔌 WebSocket closed');
         if (retries < maxRetries) {
           setRetries(prevRetries => prevRetries + 1);
           setTimeout(() => {
@@ -178,7 +178,7 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
     connectWebSocket();
 
     return () => {
-      console.log('🧹 Cleaning up WebSocket');
+      // console.log('🧹 Cleaning up WebSocket');
       if (ws) {
         ws.close();
       }
