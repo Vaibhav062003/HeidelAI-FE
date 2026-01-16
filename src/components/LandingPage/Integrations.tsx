@@ -25,7 +25,7 @@ const Integrations = () => {
     <section id="integrations" className="py-16 overflow-hidden relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <div className="flex flex-col items-center gap-4 text-center">
-          <h2 className="text-4xl md:text-6xl font-[400] text-gray-800 leading-tight italic"
+          <h2 className="text-4xl md:text-6xl font-[500] text-black leading-[1.1] tracking-tight italic"
             style={{ fontFamily: "'Awesome Serif', serif" }}>
             Integrate With the Apps You Already Use
           </h2>
