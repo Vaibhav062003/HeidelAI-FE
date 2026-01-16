@@ -78,10 +78,10 @@ const Pricing = () => {
 			</div>
 
 			<div className="flex justify-center px-2 mb-12">
-				<div className="relative flex w-full max-w-[280px] sm:max-w-[320px] rounded-full bg-blue-100 p-1">
+				<div className="relative flex w-full max-w-[280px] sm:max-w-[320px] rounded-full bg-gray-100 p-1">
 					<div
 						className={cn(
-							"absolute top-1 left-1 h-[calc(100%-8px)] w-[calc(50%-4px)] rounded-full bg-blue-400 transition-transform duration-300 ease-in-out",
+							"absolute top-1 left-1 h-[calc(100%-8px)] w-[calc(50%-4px)] rounded-full bg-black transition-transform duration-300 ease-in-out",
 							plan === 'yearly' && "translate-x-full"
 						)}
 					/>
@@ -89,7 +89,7 @@ const Pricing = () => {
 						onClick={() => setPlan('monthly')}
 						className={cn(
 							"relative z-10 flex-1 rounded-full py-2.5 text-sm sm:text-base font-medium transition-colors font-inter",
-							plan === 'monthly' ? "text-black" : "text-gray-500"
+							plan === 'monthly' ? "text-white" : "text-gray-500"
 						)}
 					>
 						Monthly
@@ -98,7 +98,7 @@ const Pricing = () => {
 						onClick={() => setPlan('yearly')}
 						className={cn(
 							"relative z-10 flex-1 rounded-full py-2.5 text-sm sm:text-base font-medium transition-colors font-inter",
-							plan === 'yearly' ? "text-black" : "text-gray-500"
+							plan === 'yearly' ? "text-white" : "text-gray-500"
 						)}
 					>
 						Yearly
@@ -112,13 +112,18 @@ const Pricing = () => {
 						key={item.id}
 						onClick={() => setActiveCardId(item.id)}
 						className={cn(
-							"relative flex flex-col p-8 bg-white transition-all duration-500 border-[1.5px] rounded-3xl font-inter cursor-pointer",
-							activeCardId === item.id
-								? "border-[#3B82F6] shadow-[0_20px_50px_rgba(59,130,246,0.15)]"
-								: "border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.15)]"
+							"relative flex flex-col transition-all duration-500 rounded-3xl font-inter cursor-pointer overflow-hidden",
+							item.id === 'growth'
+								? "p-[1.5px] bg-gradient-to-r from-[#ff8c00] via-[#ff5722] to-[#ff1744] shadow-[0_20px_50px_rgba(255,87,34,0.15)]"
+								: activeCardId === item.id
+									? "border-[1.5px] border-gray-900 shadow-[0_20px_50px_rgba(0,0,0,0.15)]"
+									: "border-[1.5px] border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.1)]"
 						)}
 					>
-						<div className="flex flex-col h-full">
+						<div className={cn(
+							"flex flex-col h-full bg-white transition-all duration-500",
+							item.id === 'growth' ? "p-[30.5px] rounded-[22.5px]" : "p-8"
+						)}>
 							<div className="mb-6">
 								<h3 className="text-3xl font-semibold text-gray-900 mb-8 font-inter">
 									{item.title}
@@ -148,7 +153,13 @@ const Pricing = () => {
 									{item.features.map((feature, idx) => (
 										<li key={idx} className="flex items-start gap-3">
 											<div className="mt-1 flex-shrink-0">
-												<Check className="h-5 w-5 text-[#3B82F6]" strokeWidth={2.5} />
+												<Check
+													className={cn(
+														"h-5 w-5",
+														item.id === 'growth' ? "text-[#ff5722]" : "text-gray-900"
+													)}
+													strokeWidth={2.5}
+												/>
 											</div>
 											<span className="text-[14px] text-gray-700 leading-snug font-medium font-inter">
 												{feature}
@@ -163,7 +174,9 @@ const Pricing = () => {
 							<Button
 								className={cn(
 									"w-full h-14 rounded-xl text-lg font-bold transition-all duration-300 font-inter",
-									"bg-[#93C5FD] hover:bg-[#60A5FA] text-black border-none shadow-sm"
+									item.id === 'growth'
+										? "bg-gradient-to-r from-[#ff8c00] via-[#ff5722] to-[#ff1744] hover:opacity-90 text-white border-none shadow-md"
+										: "bg-black hover:bg-zinc-800 text-white border-none shadow-sm"
 								)}
 							>
 								{item.cta}
