@@ -7,7 +7,7 @@ const CustomerStories = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 {/* Heading */}
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl md:text-6xl font-normal text-gray-800 italic mb-4"
+                    <h2 className="text-4xl md:text-6xl font-[500] text-black italic mb-4 leading-[1.1] tracking-tight"
                         style={{ fontFamily: "'Awesome Serif', serif" }}>
                         Get Real, Measurable Results
                     </h2>
