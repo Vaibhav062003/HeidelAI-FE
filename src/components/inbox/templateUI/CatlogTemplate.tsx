@@ -13,8 +13,9 @@ import {
   X,
   Search,
 } from "lucide-react";
-import data from "@emoji-mart/react";
-import Picker from "@emoji-mart/react";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react"
+
+
 import { insertFormatting } from "./textFormatting";
 import { Input } from "@/components/ui/input";
 
@@ -85,7 +86,7 @@ export const Catalog: React.FC<CatalogProps> = ({
 
   const handleEmojiSelect = (emoji: any) => {
     // Append selected emoji to message body
-    setMessageBody(messageBody + emoji.native);
+    setMessageBody(messageBody + emoji.emoji);
     setEmojiPickerVisible(false); // Optionally hide picker after selection
   };
 
@@ -327,7 +328,12 @@ export const Catalog: React.FC<CatalogProps> = ({
                   </button>
                   {emojiPickerVisible && (
                     <div className="absolute mt-2 z-50 bg-white border rounded shadow-lg">
-                      <Picker data={data} onEmojiSelect={handleEmojiSelect} />
+                      <EmojiPicker
+                        onEmojiClick={(emoji: EmojiClickData) => {
+                          handleEmojiSelect(emoji.emoji)
+                        }}
+                      />
+
                     </div>
                   )}
                 </div>

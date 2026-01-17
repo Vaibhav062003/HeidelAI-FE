@@ -17,7 +17,7 @@ interface MessageWrapperProps {
   textAreaRef: React.RefObject<HTMLTextAreaElement | null>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const MessageWrapper = memo(({ message, index, children, allMessages, forceHide, setContextMessageId, setContextMessage, textAreaRef }: MessageWrapperProps) => {
   const anchorRef = useRef(null);
   const [showActions, setShowActions] = useState(false);

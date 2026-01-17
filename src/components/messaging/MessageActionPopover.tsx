@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-// import Picker from "@emoji-mart/react";
-// import data from "@emoji-mart/data";
+// import EmojiPicker, { EmojiClickData } from "emoji-picker-react"
+
+
 import { 
   // Plus,
    Reply } from "lucide-react";
@@ -136,6 +137,14 @@ export const MessageActionsPopover: React.FC<MessageActionsPopoverProps> = ({
       //         handleReact(emoji.native);
       //         setShowPicker(false);
       //       }}
+
+              <EmojiPicker
+                onEmojiClick={(emoji: EmojiClickData) => {
+                  handleReact(emoji.emoji)
+                  setShowPicker(false);
+                }}
+              />
+
       //       theme="light"
       //       previewPosition="none"
       //     />

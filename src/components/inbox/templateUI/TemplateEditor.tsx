@@ -12,8 +12,9 @@ import {
   Italic,
   Bold,
 } from "lucide-react";
-import data from "@emoji-mart/data";
-import Picker from "@emoji-mart/react";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react"
+
+
 import { AppSetup, Button, Variable } from "@/components/types/template_types";
 
 import { insertFormatting } from "./textFormatting";
@@ -154,7 +155,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   const handleEmojiSelect = (emoji: any) => {
     // Append selected emoji to message body
-    setMessageBody(messageBody + emoji.native);
+    setMessageBody(messageBody + emoji.emoji);
     setEmojiPickerVisible(false); // Optionally hide picker after selection
   };
 
@@ -535,7 +536,12 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                     </button>
                     {emojiPickerVisible && (
                       <div className="absolute mt-2 z-50 bg-white border rounded shadow-lg">
-                        <Picker data={data} onEmojiSelect={handleEmojiSelect} />
+                        <EmojiPicker
+                          onEmojiClick={(emoji: EmojiClickData) => {
+                            handleEmojiSelect(emoji.emoji)
+                          }}
+                        />
+
                       </div>
                     )}
                   </div>
