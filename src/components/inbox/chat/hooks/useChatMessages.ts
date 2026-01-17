@@ -20,6 +20,12 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
   const MESSAGE_STORAGE_KEY = `messages_${selectedConversationId}`;
   const api = useApi()
 
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
 
   const persistMessages = useCallback(
     async (msgs: Message[]) => {
@@ -224,6 +230,45 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
     },
 
     onNewMessage: (data: any) => {
+      const newMessage = data.message;
+      
+      const isCurrentChat = newMessage.conversation_id === selectedConversationId;
+      const isWindowVisible = document.visibilityState === "visible";
+      const userIsViewingThisChat = isCurrentChat && isWindowVisible;
+      const notificationIcon = newMessage.platform === "whatsapp"
+        ? "/features/whatsapp.png"
+        : "/features/instagram.png";
+
+      if (
+        newMessage.role !== "agent" && // Not from us
+        Notification.permission === "granted" &&
+        !userIsViewingThisChat // Trigger if user is NOT viewing this chat (Hidden window OR different chat)
+      ) {
+
+        const title = `Message from ${newMessage.sender_name || "Customer"}`;
+        const body = newMessage.type === "text" 
+          ? newMessage.content 
+          : `Sent a ${newMessage.type}`; // e.g., "Sent a image"
+
+        const notification = new Notification(title, { 
+            body, 
+            icon: notificationIcon,
+            // Tag: Updates existing notification for this chat instead of creating a new stack
+            tag: newMessage.conversation_id, 
+            // Renotify: Alerts again even if reusing the same tag
+            renotify: true,
+            // Image: Show preview if it's an image message (Works on Windows/Android)
+            image: newMessage.type === 'image' ? newMessage.payload?.url : undefined,
+            // Silent: Silence system default beep since we played custom audio above
+            silent: false,
+        } as any);
+
+        notification.onclick = () => {
+            window.focus(); // Bring window to front
+            notification.close();
+        };
+      }
+
       if (data.message.conversation_id === selectedConversationId) {
         setMessages((prev) => {
           const incomingMsg = data.message;

@@ -51,18 +51,18 @@ export interface Message {
   sender_name?: string;
   status?: "sent" | "delivered" | "read" | "sending" | "failed";
   platform: "whatsapp" | "instagram";
- type?:
-    | "text"
-    | "image"
-    | "file"
-    | "voice"
-    | "video"
-    | "share"
-    | "ig_story"
-    | "ig_reel"
-    | "story_reply"
-    | "system"
-    | "document";
+  type?:
+  | "text"
+  | "image"
+  | "file"
+  | "voice"
+  | "video"
+  | "share"
+  | "ig_story"
+  | "ig_reel"
+  | "story_reply"
+  | "system"
+  | "document";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
   context_type?: "message_reply" | null;
@@ -92,6 +92,7 @@ export interface ChatViewProps {
   isRightSidebarVisible?: boolean;
   onOpenRightSidebar?: () => void;
   onBackToList?: () => void;
+  onConversationUpdate?: (conversationId: string, updates: Partial<Conversation>) => void;
 }
 
 export interface CartProductData {
