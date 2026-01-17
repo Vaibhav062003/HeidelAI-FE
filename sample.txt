@@ -22,3 +22,4 @@ prithal's merge had errors because of rounak, fixed
 rounak committed on dev branch by mistake, only small changes so letting it through
 solved merge conflicts of rounak's feature branch wa-message-reactions -> dev
 rounak solved and pushed build errors -> deploying them
+solved build errors pt 2.0
