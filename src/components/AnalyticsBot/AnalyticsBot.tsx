@@ -24,7 +24,7 @@ const AnalyticsBot = () => {
             </h1>
 
             <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-              We're building something amazing. Analytics Bot will provide deep insights across multiple platforms, helping you understand trends, sentiments, and performance metrics with ease.
+              We&apos;re building something amazing. Analytics Bot will provide deep insights across multiple platforms, helping you understand trends, sentiments, and performance metrics with ease.
             </p>
 
             <div className="flex items-center justify-center gap-4 mb-12">

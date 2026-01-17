@@ -24,7 +24,7 @@ const InfluencerBot = () => {
             </h1>
 
             <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-              We're building something amazing. Influencer Bot is being designed to analyze social media profiles, providing engagement rates, audience insights, and detailed performance metrics.
+              We&apos;re building something amazing. Influencer Bot is being designed to analyze social media profiles, providing engagement rates, audience insights, and detailed performance metrics.
             </p>
 
             <div className="flex items-center justify-center gap-4 mb-12">

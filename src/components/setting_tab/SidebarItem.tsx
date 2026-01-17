@@ -316,6 +316,7 @@ const InstagramDialog = () => {
 
   const { user } = useUser();
   // const isAdmin = user?.publicMetadata?.role === 'admin';
+  const api = useApi();
 
 
   // const { integrations, loading: integrationsLoading, refreshIntegrations } = useIntegrations();
@@ -408,7 +409,6 @@ const InstagramDialog = () => {
   };
 
   const disconnectInstagram = async () => {
-    const api = useApi();
     try {
       setIsLoading(true);
 
