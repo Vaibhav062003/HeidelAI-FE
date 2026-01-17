@@ -11,6 +11,7 @@ import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query'
+import MobileBlockingOverlay from '@/components/dashboard/MobileBlockingOverlay';
 
 export default function DashboardLayout({
   children,
@@ -164,7 +165,8 @@ export default function DashboardLayout({
       <div className={!isOnline ? 'pt-10' : ''}>
         <WebSocketProvider>
           <QueryClientProvider client={queryClient}>
-          {children}
+            <MobileBlockingOverlay />
+            {children}
           </QueryClientProvider>
         </WebSocketProvider>
       </div>

@@ -50,6 +50,7 @@ import AssignDropdown from "./AssignToAgent";
 import { useApi } from "@/lib/session_api";
 import AnalyticsSection from "./AnalyticsSection";
 import { ApiContact } from "../types/contacts";
+import ComingSoon from "../shared/ComingSoon";
 
 interface SidebarProps {
   selectedConversationId: string;
@@ -729,34 +730,10 @@ const Sidebar = ({
         subtitle: "Messages",
         color: "blue",
         content: (
-          <div className="flex-1 relative overflow-hidden flex items-center justify-center p-8 bg-white/50 min-h-[250px]">
-            {/* Animated Background Elements */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-indigo-200/20 rounded-full blur-2xl animate-pulse" />
-              <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-purple-200/20 rounded-full blur-2xl animate-pulse delay-700" />
-            </div>
-
-            {/* Content */}
-            <div className="relative z-10 text-center">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-100/50 backdrop-blur-sm rounded-full border border-indigo-200/50 mb-4 mx-auto">
-                <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
-                <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-widest">Under Development</span>
-              </div>
-
-              <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
-                Coming Soon
-              </h3>
-
-              <p className="text-[var(--sidebar-text-sm)] text-slate-600 leading-relaxed max-w-[180px] mx-auto">
-                Powerful messaging templates are arriving soon to streamline your conversations.
-              </p>
-
-              <div className="mt-6 inline-flex items-center gap-2 text-[10px] font-medium text-slate-500">
-                <div className="w-3 h-3 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
-                <span>ETA: FEB 2026</span>
-              </div>
-            </div>
-          </div>
+          <ComingSoon
+            compact={true}
+            description="Powerful messaging templates are arriving soon to streamline your conversations."
+          />
         ),
       },
       {
