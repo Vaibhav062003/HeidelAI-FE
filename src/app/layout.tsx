@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Inter, Instrument_Serif } from "next/font/google";
 
@@ -59,11 +59,13 @@ export const metadata: Metadata = {
     images: ['/heidelai_mockup.png']
   },
   // Add viewport for better mobile responsiveness
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-  }
+  
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 }
 
 export default function RootLayout({
