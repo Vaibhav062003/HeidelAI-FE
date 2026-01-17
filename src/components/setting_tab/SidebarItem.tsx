@@ -978,7 +978,7 @@ export const CustomAttributesSettings = () => {
 
 
 export const Billing = () => (
-  <div className="space-y-6">
+  <div className="flex justify-center items-center">
     <Pricing showHeader={false} />
   </div>
 );

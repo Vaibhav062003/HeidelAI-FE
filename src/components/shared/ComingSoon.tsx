@@ -23,8 +23,11 @@ const ComingSoon: React.FC<ComingSoonProps> = ({
                     <p className="text-xs text-slate-600 leading-relaxed max-w-[200px] mx-auto">
                         {description}
                     </p>
-                    <div className="inline-block px-4 py-2 bg-purple-600 text-white rounded-lg shadow-md font-bold text-[10px] tracking-tight transform hover:scale-105 transition-transform uppercase">
-                        Expected launch - Feb 2026
+                    <div className="flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-slate-400 font-medium">
+                        <span className=''>Expected launch</span>
+                        <span className="px-2 py-0.5 bg-emerald-500 text-white rounded-md font-bold shadow-sm">
+                            Feb 2026
+                        </span>
                     </div>
                 </div>
             </div>
@@ -45,13 +48,16 @@ const ComingSoon: React.FC<ComingSoonProps> = ({
                         {description}
                     </p>
                 </div>
-                <div className="pt-2">
-                    <div className="inline-block px-8 py-4 bg-purple-600 text-white rounded-2xl shadow-2xl font-black text-lg md:text-xl tracking-tight transform hover:scale-110 active:scale-95 transition-all duration-300">
-                        Expected launch - Feb 2026
+                <div >
+                    <div className="flex flex-col items-center justify-center gap-3">
+                        <span className="text-[10px] md:text-sm uppercase tracking-[0.2em] text-gray-900 font-medium">
+                            Expected launch
+                        </span>
+                        <span className="px-4 py-1.5 bg-emerald-500 text-white rounded-lg font-bold text-sm md:text-base shadow-md transform hover:scale-105 transition-all duration-300">
+                            Feb 2026
+                        </span>
                     </div>
-                    <p className="text-xs md:text-sm text-gray-400 mt-8 font-semibold uppercase tracking-widest">
-                        Check back soon or follow us for updates!
-                    </p>
+
                 </div>
             </div>
         </div>
