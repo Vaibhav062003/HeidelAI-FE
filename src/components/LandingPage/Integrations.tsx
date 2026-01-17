@@ -84,7 +84,7 @@ const Integrations = () => {
       </div>
 
       {/* Call to Action */}
-      <div className="text-center mt-16 font-inter" style={{ fontFamily: "'Inter', sans-serif" }}>
+      {/* <div className="text-center mt-16 font-inter" style={{ fontFamily: "'Inter', sans-serif" }}>
         <p className="text-gray-600 mb-6 font-medium">
           Can't find your platform? We're constantly adding new integrations.
         </p>
@@ -94,7 +94,7 @@ const Integrations = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
-      </div>
+      </div> */}
 
       <style jsx>{`
         @keyframes scroll-right {
