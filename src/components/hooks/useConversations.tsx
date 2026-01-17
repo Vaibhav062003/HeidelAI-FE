@@ -89,5 +89,14 @@ export const useConversations = () => {
     }));
   }, []);
 
-  return { conversations, loading, error, markAsRead };
+  const updateConversation = useCallback((conversationId: string, updates: Partial<Conversation>) => {
+    setConversations(prev => prev.map(c => {
+      if (c.id === conversationId || c.conversation_id === conversationId) {
+        return { ...c, ...updates };
+      }
+      return c;
+    }));
+  }, []);
+
+  return { conversations, loading, error, markAsRead, updateConversation };
 };

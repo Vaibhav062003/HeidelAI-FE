@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, memo } from "react";
+import { useEffect, useMemo, useRef, memo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
@@ -12,7 +12,7 @@ import "../../../app/dashboard/dashboard.css";
 import LandingDashboard from "../LandingDashboard";
 import { useUser } from "@clerk/nextjs";
 import { useMainWebSocket } from "@/lib/websocket";
-import { ChatViewProps} from "./types";
+import { ChatViewProps } from "./types";
 import { getOrCreateChatClientId, getUtcTime } from "../chat/utils";
 import { useChatMessages } from "./hooks/useChatMessages";
 import { useFileHandler } from "./hooks/useFileHandler";
@@ -29,17 +29,19 @@ const ChatView = ({
   onClearSharedProduct,
   isRightSidebarVisible,
   onOpenRightSidebar,
+  onConversationUpdate,
 }: ChatViewProps) => {
-  const {user} = useUser();
+  const { user } = useUser();
   const { setAttachments, handleDrop, isDragging, setIsDragging } = useFileHandler();
-  const { messages, setMessages, messagesLoading, setTypingUsers, sendMessage, typingUsers, contextMessageId, setContextMessageId, contextMessage, setContextMessage } = useChatMessages( selectedConversationId, user);
+  const { messages, setMessages, messagesLoading, setTypingUsers, sendMessage, typingUsers, contextMessageId, setContextMessageId, contextMessage, setContextMessage } = useChatMessages(selectedConversationId, user);
   const { message, setMessage } = useMessage();
-  const { conversation, setConversation, conversationStatus, setConversationStatus, setIsResolved, setIsFollowUp } = useConversation({ initialConversation, selectedConversationId });
+  const { conversation, setConversation, setIsResolved, setIsFollowUp, setIsOpen } = useConversation({ initialConversation, selectedConversationId });
   const { sendWsMessage } = useMainWebSocket();
-  
+  const [conversationStatus, setConversationStatus] = useState<"open" | "closed" | "follow-up">("open");
+
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
+
   // Auto scroll to bottom on new message
   useEffect(() => {
     if (lastMessageRef.current) {
@@ -86,8 +88,7 @@ const ChatView = ({
     if (!selectedConversationId) return () => { };
 
     setConversation(initialConversation)
-    console.log("ChatView rendering for conversation:", initialConversation);
-    
+
     setMessage("");
     textareaRef.current?.focus();
     sendWsMessage({
@@ -107,6 +108,11 @@ const ChatView = ({
       });
     };
   }, [selectedConversationId]);
+
+  useEffect(() => {
+    if (!conversation) return;
+    setConversationStatus(conversation.status || "open");
+  }, [conversation])
 
   const lastCustomerMessage = useMemo(() => {
     return messages
@@ -159,7 +165,7 @@ const ChatView = ({
           >
 
             {/* Header */}
-            <ChatHeader 
+            <ChatHeader
               conversation={conversation}
               selectedConversationId={selectedConversationId}
               saveCustomerInfo={saveCustomerInfo}
@@ -174,6 +180,7 @@ const ChatView = ({
               setIsFollowUp={setIsFollowUp}
               isWindowExpired={isWindowExpired}
               targetExpiryDate={targetExpiryDate}
+              updateConversation={onConversationUpdate}
             />
 
             {isDragging && (
@@ -189,7 +196,7 @@ const ChatView = ({
             )}
 
             {/* Messages Area */}
-            <MessageList 
+            <MessageList
               messages={messages}
               messagesLoading={messagesLoading}
               selectedConversationId={selectedConversationId}
@@ -216,7 +223,7 @@ const ChatView = ({
               setContextMessage={setContextMessage}
               setContextMessageId={setContextMessageId}
             />
-            
+
           </Card>
         )}
       </TooltipProvider>

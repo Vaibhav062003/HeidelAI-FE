@@ -17,8 +17,8 @@ export interface Conversation {
   priority: "low" | "medium" | "high";
   sentiment: "positive" | "neutral" | "negative";
   query?: string;
-  status?: string;
+  status?: "open" | "closed" | "follow-up";
   reply_window_ends_at?: string;
-  categories?: string[]; 
+  categories?: string[];
   last_message_is_private_note?: boolean;
 }

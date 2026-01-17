@@ -4,7 +4,7 @@ import { Conversation } from '@/components/types/conversation';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function normalizeConversation(conv: any): Conversation {
   return {
-    conversation_id : conv.id || conv.conversation_id || '',
+    conversation_id: conv.id || conv.conversation_id || '',
     id: conv.id || conv.conversation_id || '',
     platform: conv.platform,
     customer_id: conv.customer_id || '',
@@ -18,6 +18,9 @@ export function normalizeConversation(conv: any): Conversation {
     priority: ['high', 'low'].includes(conv.priority) ? conv.priority : 'medium',
     sentiment: ['positive', 'negative'].includes(conv.sentiment) ? conv.sentiment : 'neutral',
     email: conv.email || '',
+    status: conv.status,
+    reply_window_ends_at: conv.reply_window_ends_at,
+    categories: conv.categories || [],
     billingAddress: conv.billingAddress || '',
     shippingAddress: conv.shippingAddress || '',
     gstin: conv.gstin || '',

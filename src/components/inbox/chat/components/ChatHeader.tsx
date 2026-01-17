@@ -63,6 +63,7 @@ interface ChatHeaderProps {
     setIsFollowUp: React.Dispatch<React.SetStateAction<boolean>>;
     isWindowExpired: boolean;
     targetExpiryDate: string | null;
+    updateConversation?: (conversationId: string, updates: Partial<Conversation>) => void;
 }
 
 const ChatHeader = ({
@@ -79,7 +80,8 @@ const ChatHeader = ({
     setIsResolved,
     setIsFollowUp,
     isWindowExpired,
-    targetExpiryDate
+    targetExpiryDate,
+    updateConversation
 }: ChatHeaderProps) => {
     const { reminders, snoozeReminder, doneReminder, snoozing, completing, deleteReminder } = useReminders(selectedConversationId);
 
@@ -104,6 +106,7 @@ const ChatHeader = ({
         avatarSource = "/features/instagram.png";
     }
 
+
     const handleResolve = useCallback(async (selectedConversationId: string) => {
         setIsResolved(true);
         setIsFollowUp(false);
@@ -113,14 +116,14 @@ const ChatHeader = ({
         const agentName = "You";
 
         const systemMessage: Message = {
-          id: `system-${Date.now()}`,
-          content: `Conversation was marked Closed by ${agentName}`,
-          type: "system",
-          role: "system",
-          platform: selectedConversationId.split("_")[0] as "whatsapp" | "instagram",
-          conversation_id: selectedConversationId || "",
-          timestamp: new Date().toISOString(),
-          sender_id: "system",
+            id: `system-${Date.now()}`,
+            content: `Conversation was marked Closed by ${agentName}`,
+            type: "system",
+            role: "system",
+            platform: selectedConversationId.split("_")[0] as "whatsapp" | "instagram",
+            conversation_id: selectedConversationId || "",
+            timestamp: new Date().toISOString(),
+            sender_id: "system",
         };
 
         setMessages((prev) => [...prev, systemMessage]);
@@ -148,6 +151,7 @@ const ChatHeader = ({
             }
             setConversation((prev) => prev ? { ...prev, status: "closed" } : prev);
             setConversationStatus("closed");
+            updateConversation?.(selectedConversationId, { status: "closed" });
             toast.success("Closed conversation successfully");
         } catch (err) {
             // Rollback optimistic UI: remove system message we added earlier
@@ -189,6 +193,7 @@ const ChatHeader = ({
 
             setConversation((prev) => prev ? { ...prev, status: "follow-up" } : prev);
             setConversationStatus("follow-up");
+            updateConversation?.(selectedConversationId, { status: "follow-up" });
             toast.success("Marked conversation for follow-up successfully");
         } catch (err) {
             console.error("Error scheduling message for follow-up:", err);
@@ -210,14 +215,14 @@ const ChatHeader = ({
         }
 
         const systemMessage: Message = {
-        id: `system-${Date.now()}`,
-        content: `Conversation was marked for follow-up by ${agentName}`,
-        platform: selectedConversationId.split("_")[0] as "whatsapp" | "instagram",
-        type: "system",
-        role: "system",
-        conversation_id: selectedConversationId || "",
-        timestamp: new Date().toISOString(),
-        sender_id: "system",
+            id: `system-${Date.now()}`,
+            content: `Conversation was marked for follow-up by ${agentName}`,
+            platform: selectedConversationId.split("_")[0] as "whatsapp" | "instagram",
+            type: "system",
+            role: "system",
+            conversation_id: selectedConversationId || "",
+            timestamp: new Date().toISOString(),
+            sender_id: "system",
         };
 
         setMessages((prev) => [...prev, systemMessage]);
@@ -242,14 +247,14 @@ const ChatHeader = ({
 
 
         const systemMessage: Message = {
-        id: `system-${Date.now()}`,
-        content: `Conversation was reopened by ${agentName}`,
-        type: "system",
-        platform: selectedConversationId.split("_")[0] as "whatsapp" | "instagram",
-        role: "system",
-        conversation_id: selectedConversationId || "",
-        timestamp: new Date().toISOString(),
-        sender_id: "system",
+            id: `system-${Date.now()}`,
+            content: `Conversation was reopened by ${agentName}`,
+            type: "system",
+            platform: selectedConversationId.split("_")[0] as "whatsapp" | "instagram",
+            role: "system",
+            conversation_id: selectedConversationId || "",
+            timestamp: new Date().toISOString(),
+            sender_id: "system",
         };
 
         setMessages((prev) => [...prev, systemMessage]);
@@ -274,6 +279,7 @@ const ChatHeader = ({
 
             setConversation((prev) => prev ? { ...prev, status: "open" } : prev);
             setConversationStatus("open");
+            updateConversation?.(selectedConversationId, { status: "open" });
             toast.success("Reopened conversation successfully");
         }
         catch (err) {

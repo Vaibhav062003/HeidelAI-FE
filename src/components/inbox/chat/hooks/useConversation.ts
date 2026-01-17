@@ -5,18 +5,20 @@ import { useApi } from "@/lib/session_api";
 
 export const useConversation = ({ initialConversation, selectedConversationId }: { initialConversation: Conversation, selectedConversationId: string }) => {
     const [conversation, setConversation] = useState<Conversation>(initialConversation);
-    const [conversationStatus, setConversationStatus] = useState<"open" | "closed" | "follow-up">("open");
+
     const [isResolved, setIsResolved] = useState(false);
     const [isFollowUp, setIsFollowUp] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
 
     return {
         conversation,
         setConversation,
-        conversationStatus,
-        setConversationStatus,
+
         isResolved,
         setIsResolved,
         isFollowUp,
         setIsFollowUp,
+        isOpen,
+        setIsOpen,
     }
 }

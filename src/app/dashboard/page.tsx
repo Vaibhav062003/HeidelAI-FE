@@ -215,9 +215,8 @@ const SidebarNavigation = React.memo(({
                       {user?.primaryEmailAddress?.emailAddress || 'user@example.com'}
                     </p>
                   </div>
-                  <ChevronDown className={`h-3.5 w-3.5 text-gray-400 transition-transform flex-shrink-0 ${
-                    isDropdownOpen ? 'rotate-180' : ''
-                  }`} />
+                  <ChevronDown className={`h-3.5 w-3.5 text-gray-400 transition-transform flex-shrink-0 ${isDropdownOpen ? 'rotate-180' : ''
+                    }`} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -413,11 +412,10 @@ const SidebarNavigation = React.memo(({
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => onNavigate(value)}
-                      className={`w-full h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                        activeView === value
+                      className={`w-full h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${activeView === value
                           ? 'bg-gray-100 text-gray-900'
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
+                        }`}
                     >
                       <Icon className="h-4 w-4" />
                     </button>
@@ -435,11 +433,10 @@ const SidebarNavigation = React.memo(({
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => onNavigate(value)}
-                      className={`w-full h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                        activeView === value
+                      className={`w-full h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${activeView === value
                           ? 'bg-gray-100 text-gray-900'
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
+                        }`}
                     >
                       <Icon className="h-4 w-4" />
                     </button>
@@ -481,11 +478,10 @@ const SidebarNavigation = React.memo(({
           {isExpanded ? (
             <button
               onClick={() => onNavigate('settings')}
-              className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
-                activeView === 'settings'
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${activeView === 'settings'
                   ? 'bg-gray-100 text-gray-900'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
+                }`}
             >
               <Settings className="h-4 w-4" />
               <span className="text-xs font-medium">Settings</span>
@@ -495,11 +491,10 @@ const SidebarNavigation = React.memo(({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onNavigate('settings')}
-                  className={`w-full h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                    activeView === 'settings'
+                  className={`w-full h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${activeView === 'settings'
                       ? 'bg-gray-100 text-gray-900'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   <Settings className="h-4 w-4" />
                 </button>
@@ -524,7 +519,7 @@ SidebarNavigation.displayName = 'SidebarNavigation';
 export default function DashboardPage() {
   const [isMounted, setIsMounted] = useState(false);
   const { user } = useUser();
-  
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -554,7 +549,7 @@ export default function DashboardPage() {
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [isNavExpanded, setIsNavExpanded] = useState(true);
-  const { conversations } = useConversations();
+  const { conversations, updateConversation } = useConversations();
 
   const conversation = useMemo(() => {
     if (!selectedConversationId) return undefined;
@@ -664,6 +659,7 @@ export default function DashboardPage() {
                       onClearSharedProduct={handleClearSharedProduct}
                       isRightSidebarVisible={isRightSidebarVisible}
                       onOpenRightSidebar={handleToggleRightSidebar}
+                      onConversationUpdate={updateConversation}
                     />
                   ) : (
                     <>
