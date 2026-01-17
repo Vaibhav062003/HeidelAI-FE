@@ -42,7 +42,7 @@ import {
 import ChatView from '@/components/inbox/chat/ChatView';
 import LandingDashboard from '@/components/inbox/LandingDashboard';
 
-const Sidebar = dynamic(() => import('@/components/inbox/Sidebar'), {
+const Sidebar = dynamic(() => import('@/components/inbox/sidebar/Sidebar'), {
   ssr: false,
   loading: () => <SidebarSkeleton />
 });

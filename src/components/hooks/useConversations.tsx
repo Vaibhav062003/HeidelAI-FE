@@ -42,7 +42,7 @@ export const useConversations = () => {
 
   const handleConversationUpdated = useCallback((conv: any) => {
     if (!conv) return;
-    console.log("Conversation updated received:", conv);
+    // console.log("Conversation updated received:", conv);
 
     const convData = conv.conversation || conv;
     const updated = normalizeConversation(convData);

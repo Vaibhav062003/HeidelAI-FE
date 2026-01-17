@@ -1,4 +1,4 @@
-/* eslint-disable prefer-const */
+ 
 
 import { useEffect, useRef } from "react";
 import * as THREE from 'three';
