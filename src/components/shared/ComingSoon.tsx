@@ -23,7 +23,7 @@ const ComingSoon: React.FC<ComingSoonProps> = ({
                     <p className="text-xs text-slate-600 leading-relaxed max-w-[200px] mx-auto">
                         {description}
                     </p>
-                    <div className="flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-slate-400 font-medium">
+                    <div className="flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-gray-800 font-medium">
                         <span className=''>Expected launch</span>
                         <span className="px-2 py-0.5 bg-emerald-500 text-white rounded-md font-bold shadow-sm">
                             Feb 2026
