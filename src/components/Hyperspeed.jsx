@@ -1,4 +1,4 @@
- 
+/* eslint-disable prefer-const */
 
 import { useEffect, useRef } from "react";
 import * as THREE from 'three';
@@ -581,7 +581,7 @@ const Hyperspeed = ({ effectOptions = {
         }
 
         if (this.options.isHyper) {
-          console.log(this.options.isHyper);
+          // console.log(this.options.isHyper);
         }
       }
 

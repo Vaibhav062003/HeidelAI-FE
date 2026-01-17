@@ -17,7 +17,7 @@ interface MessageWrapperProps {
   textAreaRef: React.RefObject<HTMLTextAreaElement | null>;
 }
 
- 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const MessageWrapper = memo(({ message, index, children, allMessages, forceHide, setContextMessageId, setContextMessage, textAreaRef }: MessageWrapperProps) => {
   const anchorRef = useRef(null);
   const [showActions, setShowActions] = useState(false);
@@ -30,14 +30,14 @@ const MessageWrapper = memo(({ message, index, children, allMessages, forceHide,
   }, [forceHide]);
 
   const handleReact = async (emoji: string) => {
-    console.log("Reacted with:", emoji, "on message:", message.id);
+    // console.log("Reacted with:", emoji, "on message:", message.id);
     
     const response = await api.post('/api/conversations/send_reaction', {
       "message_id": String(message.id),
       "platform": message.platform,
       "emoji": emoji
     });
-    console.log("Reaction response:", response.data);
+    // console.log("Reaction response:", response.data);
     if (response.data.status == "error") {
       toast.error("Failed to send reaction");
     }
