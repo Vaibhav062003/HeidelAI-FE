@@ -9,6 +9,7 @@ import { RoleProvider } from "@/contexts/RoleContext";
 import { Toaster } from "sonner";
 import Script from "next/script";
 import { GoogleTagManager } from "@next/third-parties/google";
+import MixpanelInit from "@/components/MixpanelInit";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -59,7 +60,7 @@ export const metadata: Metadata = {
     images: ['/heidelai_mockup.png']
   },
   // Add viewport for better mobile responsiveness
-  
+
 }
 
 export const viewport: Viewport = {
@@ -98,6 +99,7 @@ export default function RootLayout({
 
               {process.env.NODE_ENV === "production" && (
                 <>
+                  <MixpanelInit />
                   {/* Microsoft Clarity */}
                   <Script id="clarity-script" strategy="afterInteractive">
                     {`
