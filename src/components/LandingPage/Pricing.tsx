@@ -147,11 +147,23 @@ const Pricing = ({ showHeader = true, showToggle = true }: PricingProps) => {
 									</p>
 								</div>
 
-								<div className="flex items-baseline gap-1 mt-6">
-									<span className="text-4xl font-bold text-gray-900 font-inter">{item.price}</span>
-									{item.duration && (
-										<span className="text-gray-500 font-medium text-lg font-inter">{item.duration}</span>
+								<div className="flex flex-col gap-1 mt-6">
+									{plan === 'yearly' && item.id === 'growth' && (
+										<div className="flex items-center gap-2">
+											<span className="text-lg text-gray-400 line-through font-inter">{item.price}</span>
+											<span className="bg-gradient-to-r from-[#ff8c00] via-[#ff5722] to-[#ff1744] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+												-10% Discount
+											</span>
+										</div>
 									)}
+									<div className="flex items-baseline gap-1">
+										<span className="text-4xl font-bold text-gray-900 font-inter">
+											{plan === 'yearly' && item.id === 'growth' ? `₹${Math.round(parseInt(item.price.replace('₹', '')) * 0.9)}` : item.price}
+										</span>
+										{item.duration && (
+											<span className="text-gray-500 font-medium text-lg font-inter">{item.duration}</span>
+										)}
+									</div>
 								</div>
 							</div>
 
