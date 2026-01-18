@@ -1,12 +1,4 @@
-'use client'
-
-import { useMediaQuery } from "@/components/hooks/useMediaQuery";
-
 export default function MobileBlockingOverlay() {
-    const isMobile = useMediaQuery("(max-width: 767px)");
-
-    if (!isMobile) return null;
-
     return (
         <div style={{
             position: 'fixed',
