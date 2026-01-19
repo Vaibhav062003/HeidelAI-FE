@@ -545,34 +545,28 @@ const ProductsTab = ({
         }}
       >
         <DialogContent
-          className="w-[95%] max-w-[300px] sm:max-w-[400px]  md:max-w-[500px] lg:max-w-[720px] xl:max-w-[1000px]  2xl:max-w-[1150px] rounded-xl max-h-[88vh] overflow-y-auto min-h-[350px] p-4 sm:p-6 hide-scrollbar">
+          className="w-[95%] max-w-[300px] sm:max-w-[400px] md:max-w-[500px] lg:max-w-[600px] xl:max-w-[700px] rounded-xl max-h-[92vh] overflow-y-auto p-4 sm:p-5 hide-scrollbar">
           {/* Header */}
           <DialogHeader className="pb-3 border-b">
-            <DialogTitle className="text-xl sm:text-2xl font-semibold text-gray-900">
+            <DialogTitle className="text-xl font-semibold text-gray-900">
               Add Product
             </DialogTitle>
-            <DialogDescription className="text-gray-600 text-sm sm:text-base">
+            <DialogDescription className="text-gray-600 text-sm">
               Add a single product manually or upload multiple items using a CSV file.
             </DialogDescription>
           </DialogHeader>
 
           {/* Main Section */}
-          <div className="mt-4 space-y-6">
+          <div className="mt-4">
 
             {/* Segmented Control */}
             <div
-              className="
-          bg-gray-100 
-          p-1 
-          rounded-lg 
-          grid grid-cols-2 
-          text-sm sm:text-base
-        "
+              className="bg-gray-100 p-1 rounded-lg grid grid-cols-2 text-sm"
             >
               <button
                 onClick={() => setSelectedMode("single")}
                 className={`py-2 rounded-md font-medium transition ${selectedMode === "single"
-                  ? "bg-white text-gray-700 border border-gray-500 shadow-sm  "
+                  ? "bg-white text-gray-700 border border-gray-500 shadow-sm"
                   : "text-gray-700"
                   }`}
               >
@@ -582,7 +576,7 @@ const ProductsTab = ({
               <button
                 onClick={() => setSelectedMode("bulk")}
                 className={`py-2 rounded-md font-medium transition ${selectedMode === "bulk"
-                  ? "bg-white text-gray-700 border border-gray-500 shadow-sm  "
+                  ? "bg-white text-gray-700 border border-gray-500 shadow-sm"
                   : "text-gray-700"
                   }`}
               >
@@ -592,13 +586,7 @@ const ProductsTab = ({
 
             {/* Form */}
             <div
-              className="
-          border border-gray-200 
-          bg-white 
-          rounded-xl 
-          shadow-sm 
-          p-4 sm:p-5
-        "
+              className="mt-4 border border-gray-200 bg-white rounded-xl shadow-sm p-4"
             >
               {selectedMode === "single" && (
                 <SingleProductForm setIsModalOpen={setIsModalOpen} />
