@@ -450,7 +450,7 @@ const ProductsTab = ({
               <img
                 src={product.image_url}
                 alt={product.product_name}
-                className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
+                className="w-[80px] h-[50px] object-contain transition-opacity group-hover:opacity-90"
               />
             </div>
 
