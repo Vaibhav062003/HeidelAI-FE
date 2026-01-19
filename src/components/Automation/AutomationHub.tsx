@@ -1,51 +1,20 @@
-import React, { useState } from 'react';
-import { Construction } from 'lucide-react';
-export type ViewState = 'dashboard' | 'editor';
-
+import React from 'react';
+import ComingSoon from '../shared/ComingSoon';
 
 export default function AutomationHub() {
   return (
-  <div className="flex flex-col h-dvh min-h-screen w-full text-slate-900 font-sans overflow-hidden">      {/* Top Utility Navigation */}
-      {/* <header className="h-14 flex items-center justify-between px-6 bg-white/80 backdrop-blur-sm border-b border-slate-200/60 shrink-0 z-50">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-indigo-600 rounded-md flex items-center justify-center shadow-sm">
-            <span className="text-white font-bold text-xs tracking-tighter">AF</span>
-          </div>
-          <span className="font-bold text-sm tracking-tight text-slate-900">AutoFlow</span>
-        </div>
-        
-        <div className="w-8 h-8 bg-slate-100 rounded-full border border-slate-200 overflow-hidden">
-          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" />
-        </div>
-      </header> */}
-
+    <div className="flex flex-col h-dvh min-h-screen w-full text-slate-900 font-sans overflow-hidden">
       {/* Coming Soon Content */}
       <main className="flex-1 relative overflow-hidden flex items-center justify-center">
-        <div className="text-center px-6 max-w-2xl">
-          {/* Animated Background Elements */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-indigo-200/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-purple-200/20 rounded-full blur-3xl animate-pulse delay-700" />
-          </div>
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-indigo-200/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-purple-200/20 rounded-full blur-3xl animate-pulse delay-700" />
+        </div>
 
-          {/* Content */}
-<div className="max-w-md space-y-4">
-      <div className="mx-auto bg-orange-100 rounded-full p-4 w-fit">
-        <Construction className="h-8 w-8 text-orange-600" />
-      </div>
-      <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
-        Coming Soon
-      </h2>
-      <p className="text-lg text-gray-600">
-        Our team is working hard to bring you this feature. Stay tuned for updates!
-      </p>
-      <div className="pt-4 border-t border-gray-200 mt-8">
-        <p className="text-sm text-gray-500">
-          Automation functionality will be available in our next release.
-          Check back soon or follow us for updates!
-        </p>
-      </div>
-    </div>        </div>
+        <ComingSoon 
+          description="Our team is working hard to bring you the next generation of automation tools. Stay tuned for powerful workflow enhancements!" 
+        />
       </main>
     </div>
   );

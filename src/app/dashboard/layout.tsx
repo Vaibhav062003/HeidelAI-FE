@@ -11,6 +11,8 @@ import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query'
+import MobileBlockingOverlay from '@/components/dashboard/MobileBlockingOverlay';
+import { useMediaQuery } from "@/components/hooks/useMediaQuery";
 
 export default function DashboardLayout({
   children,
@@ -39,6 +41,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const queryClient = new QueryClient();
   const { isSignedIn, isLoaded } = useUser();
+  const isMobile = useMediaQuery("(max-width: 767px)");
 
   if (!isLoaded) {
     // HeidelAI Logo Loader with Shine Effect
@@ -153,21 +156,27 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-gray-100 relative">
-      {/* Offline Banner */}
-      {!isOnline && (
-        <div className="fixed top-0 left-0 w-full z-50 text-center text-red-600 border-[#fcb3b3] border-y bg-[#fff5f5] py-2 font-medium ">
-          ⚠️ You are not connected to the internet. Messages are not syncing
-        </div>
-      )}
+      {isMobile ? (
+        <MobileBlockingOverlay />
+      ) : (
+        <>
+          {/* Offline Banner */}
+          {!isOnline && (
+            <div className="fixed top-0 left-0 w-full z-50 text-center text-red-600 border-[#fcb3b3] border-y bg-[#fff5f5] py-2 font-medium ">
+              ⚠️ You are not connected to the internet. Messages are not syncing
+            </div>
+          )}
 
-      {/* Content wrapper with padding to avoid overlap */}
-      <div className={!isOnline ? 'pt-10' : ''}>
-        <WebSocketProvider>
-          <QueryClientProvider client={queryClient}>
-          {children}
-          </QueryClientProvider>
-        </WebSocketProvider>
-      </div>
+          {/* Content wrapper with padding to avoid overlap */}
+          <div className={!isOnline ? 'pt-10' : ''}>
+            <WebSocketProvider>
+              <QueryClientProvider client={queryClient}>
+                {children}
+              </QueryClientProvider>
+            </WebSocketProvider>
+          </div>
+        </>
+      )}
     </div>
   )
 }
