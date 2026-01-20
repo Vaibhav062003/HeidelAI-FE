@@ -103,21 +103,18 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
     const platform = selectedConversationId.split("_")[0];
     const tempId = `temp-${Date.now()}`;
     let context_type = null;
-    let context = null;
-
-    if (shared_product) {
-      context_type = "shared_product";
-      context = JSON.stringify({
-        product: formatSharedProduct(shared_product)
-      });
-    }
+    let context_obj: any = {};
 
     if (contextMessageId) {
       context_type = "message_reply";
-      context = JSON.stringify({
-        mid: contextMessageId,
-      });
+      context_obj.mid = contextMessageId;
     }
+
+    if (shared_product) {
+      context_obj.product = formatSharedProduct(shared_product);
+    }
+
+    const context = Object.keys(context_obj).length > 0 ? JSON.stringify(context_obj) : null;
 
     // 1. Create Optimistic Message Object
     let optimisticMessage: Message;
