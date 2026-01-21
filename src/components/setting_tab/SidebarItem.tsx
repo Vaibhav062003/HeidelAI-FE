@@ -50,6 +50,8 @@ import { useApi } from "@/lib/session_api";
 import { useUser, useOrganization } from '@clerk/nextjs';
 import { Dialog as ConfirmDialog, DialogContent as ConfirmDialogContent, DialogHeader as ConfirmDialogHeader, DialogTitle as ConfirmDialogTitle } from "@/components/ui/dialog";
 import Image from 'next/image';
+import ComingSoon from '../shared/ComingSoon';
+import Pricing from '../LandingPage/Pricing';
 
 // Function to fetch catalog data from the backend
 interface CatalogProduct {
@@ -951,252 +953,41 @@ export default function DashboardPage() {
 }
 
 export const InboxSettings = () => {
-  const [inboxConfig, setInboxConfig] = useState({
-    autoAssign: true,
-    emailRouting: 'intelligent',
-    businessHours: true,
-    notifications: true,
-  });
-
   return (
-    <div className="space-y-6 max-w-6xl">
-      {/* Simple Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">Inbox Management</h2>
-        <p className="text-sm text-gray-600">Configure how incoming messages are handled and routed</p>
-      </div>
-
-      {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Auto Assignment Card */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 flex items-start justify-between hover:shadow-md transition-shadow">
-          <div className="flex items-start gap-4 flex-1">
-            <div className="bg-blue-100 rounded-lg p-3 flex-shrink-0">
-              <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Auto Assignment</h3>
-              <p className="text-sm text-gray-600">Automatically assign conversations to agents</p>
-            </div>
-          </div>
-          <Switch
-            checked={inboxConfig.autoAssign}
-            onCheckedChange={(checked) => setInboxConfig(prev => ({ ...prev, autoAssign: checked }))}
-            className="ml-4"
-          />
-        </div>
-
-        {/* Email Routing Card */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-start gap-4 mb-4">
-            <div className="bg-purple-100 rounded-lg p-3 flex-shrink-0">
-              <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 mb-1">Email Routing</h3>
-              <p className="text-sm text-gray-600 mb-3">Message distribution strategy</p>
-              <Select
-                value={inboxConfig.emailRouting}
-                onValueChange={(value) => setInboxConfig(prev => ({ ...prev, emailRouting: value }))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="intelligent">Intelligent Routing</SelectItem>
-                  <SelectItem value="round-robin">Round Robin</SelectItem>
-                  <SelectItem value="manual">Manual Assignment</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-
-        {/* Business Hours Card */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 flex items-start justify-between hover:shadow-md transition-shadow">
-          <div className="flex items-start gap-4 flex-1">
-            <div className="bg-green-100 rounded-lg p-3 flex-shrink-0">
-              <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Business Hours</h3>
-              <p className="text-sm text-gray-600">Auto-responder outside hours</p>
-            </div>
-          </div>
-          <Switch
-            checked={inboxConfig.businessHours}
-            onCheckedChange={(checked) => setInboxConfig(prev => ({ ...prev, businessHours: checked }))}
-            className="ml-4"
-          />
-        </div>
-
-        {/* Notifications Card */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 flex items-start justify-between hover:shadow-md transition-shadow">
-          <div className="flex items-start gap-4 flex-1">
-            <div className="bg-orange-100 rounded-lg p-3 flex-shrink-0">
-              <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Notifications</h3>
-              <p className="text-sm text-gray-600">Enable agent alerts and reminders</p>
-            </div>
-          </div>
-          <Switch
-            checked={inboxConfig.notifications}
-            onCheckedChange={(checked) => setInboxConfig(prev => ({ ...prev, notifications: checked }))}
-            className="ml-4"
-          />
-        </div>
-      </div>
-    </div>
+    <ComingSoon
+      description="Configure how incoming messages are handled and routed. Advanced inbox management is arriving soon!"
+    />
   );
 };
 
 export const LabelsSettings = () => {
-  const [labels, setLabels] = useState([
-    { id: '1', name: 'Urgent', color: '#EF4444', count: 12 },
-    { id: '2', name: 'Follow Up', color: '#3B82F6', count: 8 },
-    { id: '3', name: 'VIP Customer', color: '#F59E0B', count: 5 },
-    { id: '4', name: 'Bug Report', color: '#8B5CF6', count: 3 },
-  ]);
-
   return (
-    <div className="space-y-6 max-w-6xl">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">Labels Management</h2>
-          <p className="text-sm text-gray-600">Organize conversations with custom labels</p>
-        </div>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-          + Create Label
-        </Button>
-      </div>
-
-      {/* Labels Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {labels.map((label) => (
-          <div
-            key={label.id}
-            className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: `${label.color}20` }}
-                >
-                  <svg className="w-5 h-5" style={{ color: label.color }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">{label.name}</h3>
-                  <p className="text-xs text-gray-600">{label.count} conversations</p>
-                </div>
-              </div>
-              <button className="text-gray-400 hover:text-gray-600">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <ComingSoon
+      description="Organize conversations with custom labels. Label management is arriving soon to help you categorize and prioritize your chats!"
+    />
   );
 };
 
 export const CustomAttributesSettings = () => {
-  const attributes = [
-    { id: '1', name: 'Customer Type', type: 'Dropdown', icon: '📋', color: 'blue' },
-    { id: '2', name: 'Order Value', type: 'Number', icon: '💰', color: 'green' },
-    { id: '3', name: 'Subscription Plan', type: 'Text', icon: '📝', color: 'purple' },
-    { id: '4', name: 'Priority Level', type: 'Dropdown', icon: '⭐', color: 'orange' },
-  ];
-
   return (
-    <div className="space-y-6 max-w-6xl">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">Custom Attributes</h2>
-          <p className="text-sm text-gray-600">Define custom fields for contacts and conversations</p>
-        </div>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-          + Add Attribute
-        </Button>
-      </div>
-
-      {/* Attributes Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {attributes.map((attr) => (
-          <div
-            key={attr.id}
-            className="bg-white border border-gray-200 rounded-xl p-6 flex items-center justify-between hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center gap-4">
-              <div className={`bg-${attr.color}-100 rounded-lg p-3 text-2xl`}>
-                {attr.icon}
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">{attr.name}</h3>
-                <p className="text-sm text-gray-600">Type: {attr.type}</p>
-              </div>
-            </div>
-            <Button variant="outline" size="sm">Manage</Button>
-          </div>
-        ))}
-      </div>
-    </div>
+    <ComingSoon
+      description="Define custom fields for contacts and conversations. Custom attributes are arriving soon to help you track business-specific data!"
+    />
   );
 };
 
 
 export const Billing = () => (
-  <div className="space-y-6 max-w-6xl">
-    {/* <div>
-      <h2 className="text-2xl font-bold text-gray-900">Automation Rules</h2>
-      <p className="text-sm text-gray-600 mt-1">
-        Create workflows to automate repetitive tasks and improve efficiency
-      </p>
-    </div> */}
-    <div className="bg-white border border-gray-200 rounded-xl p-6">
-      <BillingPlans />
-    </div>
+  <div className="flex justify-center items-center">
+    <Pricing showHeader={false} />
   </div>
 );
 
 
 export const MacrosSettings = () => (
-  <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
-    <div className="max-w-md space-y-4">
-      <div className="mx-auto bg-orange-100 rounded-full p-4 w-fit">
-        <Construction className="h-8 w-8 text-orange-600" />
-      </div>
-      <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
-        Coming Soon
-      </h2>
-      <p className="text-lg text-gray-600">
-        Our team is working hard to bring you this feature. Stay tuned for updates!
-      </p>
-      <div className="pt-4 border-t border-gray-200 mt-8">
-        <p className="text-sm text-gray-500">
-          Macros functionality will be available in our next release.
-          Check back soon or follow us for updates!
-        </p>
-      </div>
-    </div>
-  </div>
+  <ComingSoon
+    description="Streamline your workflow with powerful macros. Create automated responses and actions to handle common tasks with a single click!"
+  />
 );
 
 
@@ -1332,99 +1123,21 @@ export const IntegrationsSettings = () => (
 );
 
 export const AuditLogsSettings = () => {
-  const logs = [
-    { id: '1', action: 'User Login', user: 'John Doe', time: '10:30 AM', status: 'success' },
-    { id: '2', action: 'Label Created', user: 'Jane Smith', time: '09:15 AM', status: 'success' },
-    { id: '3', action: 'Integration Connected', user: 'Admin', time: '08:00 AM', status: 'success' },
-    { id: '4', action: 'Failed Login', user: 'Unknown', time: '11:45 PM', status: 'failed' },
-  ];
-
   return (
-    <div className="space-y-6 max-w-6xl">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">Audit Logs</h2>
-          <p className="text-sm text-gray-600">Track and review all system activities</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Input placeholder="Search logs..." className="w-56" />
-          <Button variant="outline">Filter</Button>
-        </div>
-      </div>
-
-      {/* Logs List */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        {logs.map((log, index) => (
-          <div
-            key={log.id}
-            className={`p-6 flex items-center justify-between hover:bg-gray-50 ${index !== logs.length - 1 ? 'border-b border-gray-200' : ''
-              }`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-gray-600">
-                  {log.user.split(' ').map(n => n[0]).join('')}
-                </span>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">{log.action}</h3>
-                <p className="text-sm text-gray-600">{log.user} • {log.time}</p>
-              </div>
-            </div>
-            <span className={`px-3 py-1 rounded-full text-xs font-medium ${log.status === 'success'
-              ? 'bg-green-100 text-green-700'
-              : 'bg-red-100 text-red-700'
-              }`}>
-              {log.status}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
+    <ComingSoon
+      description="Track and review all system activities. Comprehensive audit logs are arriving soon to ensure transparency and security!"
+    />
   );
 };
 
 export const CustomRolesSettings = () => (
-  <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
-    <div className="max-w-md space-y-4">
-      <div className="mx-auto bg-orange-100 rounded-full p-4 w-fit">
-        <Construction className="h-8 w-8 text-orange-600" />
-      </div>
-      <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
-        Coming Soon
-      </h2>
-      <p className="text-lg text-gray-600">
-        Our team is working hard to bring you this feature. Stay tuned for updates!
-      </p>
-      <div className="pt-4 border-t border-gray-200 mt-8">
-        <p className="text-sm text-gray-500">
-          Custom Role functionality will be available in our next release.
-          Check back soon or follow us for updates!
-        </p>
-      </div>
-    </div>
-  </div>
+  <ComingSoon
+    description="Define precise access controls with custom roles. Personalized permission management is arriving soon to help you scale your team securely!"
+  />
 );
 
 export const SLASettings = () => (
-  <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
-    <div className="max-w-md space-y-4">
-      <div className="mx-auto bg-orange-100 rounded-full p-4 w-fit">
-        <Construction className="h-8 w-8 text-orange-600" />
-      </div>
-      <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
-        Coming Soon
-      </h2>
-      <p className="text-lg text-gray-600">
-        Our team is working hard to bring you this feature. Stay tuned for updates!
-      </p>
-      <div className="pt-4 border-t border-gray-200 mt-8">
-        <p className="text-sm text-gray-500">
-          Service Level Agreements functionality will be available in our next release.
-          Check back soon or follow us for updates!
-        </p>
-      </div>
-    </div>
-  </div>
+  <ComingSoon
+    description="Maintain high standards with Service Level Agreements. Automated SLA tracking and reporting is arriving soon to help you deliver exceptional support!"
+  />
 );

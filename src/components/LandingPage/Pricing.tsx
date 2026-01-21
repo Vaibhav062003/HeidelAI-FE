@@ -59,52 +59,61 @@ const plans = [
 	},
 ]
 
-const Pricing = () => {
+interface PricingProps {
+	showHeader?: boolean;
+	showToggle?: boolean;
+}
+
+const Pricing = ({ showHeader = true, showToggle = true }: PricingProps) => {
 	const [plan, setPlan] = useState<'monthly' | 'yearly'>('monthly');
 	const [activeCardId, setActiveCardId] = useState<string>('growth');
 
 	return (
-		<section id="pricing" className="py-15 relative z-10 bg-white">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-				<div className="flex flex-col items-center gap-4 text-center">
-					<h2 className="text-4xl md:text-6xl font-[400] text-gray-800 leading-tight italic"
-						style={{ fontFamily: "'Awesome Serif', serif" }}>
-						Plans built for every business. Pick yours.
-					</h2>
-					<p className="text-lg md:text-xl max-w-[800px] font-medium text-gray-500 font-inter mt-4">
-						From your first customer to enterprise scale—flexible pricing that grows with you, with all the features you need at every stage.
-					</p>
+		<section id="pricing" className={cn("relative z-10 bg-white pb-24 md:pb-32", showHeader && "py-16 md:py-24")}>
+			{showHeader && (
+				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+					<div className="flex flex-col items-center gap-4 text-center">
+						<h2 className="text-4xl md:text-6xl font-[400] text-gray-800 leading-tight italic"
+							style={{ fontFamily: "'Awesome Serif', serif" }}>
+							Plans built for every business. Pick yours.
+						</h2>
+						<p className="text-lg md:text-xl max-w-[800px] font-medium text-gray-500 font-inter mt-4">
+							From your first customer to enterprise scale—flexible pricing that grows with you, with all the features you need at every stage.
+						</p>
+					</div>
 				</div>
-			</div>
+			)}
 
-			<div className="flex justify-center px-2 mb-12">
-				<div className="relative flex w-full max-w-[280px] sm:max-w-[320px] rounded-full bg-gray-100 p-1">
-					<div
-						className={cn(
-							"absolute top-1 left-1 h-[calc(100%-8px)] w-[calc(50%-4px)] rounded-full bg-black transition-transform duration-300 ease-in-out",
-							plan === 'yearly' && "translate-x-full"
-						)}
-					/>
-					<button
-						onClick={() => setPlan('monthly')}
-						className={cn(
-							"relative z-10 flex-1 rounded-full py-2.5 text-sm sm:text-base font-medium transition-colors font-inter",
-							plan === 'monthly' ? "text-white" : "text-gray-500"
-						)}
-					>
-						Monthly
-					</button>
-					<button
-						onClick={() => setPlan('yearly')}
-						className={cn(
-							"relative z-10 flex-1 rounded-full py-2.5 text-sm sm:text-base font-medium transition-colors font-inter",
-							plan === 'yearly' ? "text-white" : "text-gray-500"
-						)}
-					>
-						Yearly
-					</button>
+			{showToggle && (
+				<div className="flex justify-center px-2 mb-12">
+					<div className="relative flex w-full max-w-[280px] sm:max-w-[320px] rounded-full bg-gray-100 p-1">
+						<div
+							className={cn(
+								"absolute top-1 left-1 h-[calc(100%-8px)] w-[calc(50%-4px)] rounded-full bg-black transition-transform duration-300 ease-in-out",
+								plan === 'yearly' && "translate-x-full"
+							)}
+						/>
+						<button
+							onClick={() => setPlan('monthly')}
+							className={cn(
+								"relative z-10 flex-1 rounded-full py-2.5 text-sm sm:text-base font-medium transition-colors font-inter",
+								plan === 'monthly' ? "text-white" : "text-gray-500"
+							)}
+						>
+							Monthly
+						</button>
+						<button
+							onClick={() => setPlan('yearly')}
+							className={cn(
+								"relative z-10 flex-1 rounded-full py-2.5 text-sm sm:text-base font-medium transition-colors font-inter",
+								plan === 'yearly' ? "text-white" : "text-gray-500"
+							)}
+						>
+							Yearly
+						</button>
+					</div>
 				</div>
-			</div>
+			)}
 
 			<div className='max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch'>
 				{plans.map((item) => (
@@ -138,11 +147,23 @@ const Pricing = () => {
 									</p>
 								</div>
 
-								<div className="flex items-baseline gap-1 mt-6">
-									<span className="text-4xl font-bold text-gray-900 font-inter">{item.price}</span>
-									{item.duration && (
-										<span className="text-gray-500 font-medium text-lg font-inter">{item.duration}</span>
+								<div className="flex flex-col gap-1 mt-6">
+									{plan === 'yearly' && item.id === 'growth' && (
+										<div className="flex items-center gap-2">
+											<span className="text-lg text-gray-400 line-through font-inter">{item.price}</span>
+											<span className="bg-gradient-to-r from-[#ff8c00] via-[#ff5722] to-[#ff1744] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+												-10% Discount
+											</span>
+										</div>
 									)}
+									<div className="flex items-baseline gap-1">
+										<span className="text-4xl font-bold text-gray-900 font-inter">
+											{plan === 'yearly' && item.id === 'growth' ? `₹${Math.round(parseInt(item.price.replace('₹', '')) * 0.9)}` : item.price}
+										</span>
+										{item.duration && (
+											<span className="text-gray-500 font-medium text-lg font-inter">{item.duration}</span>
+										)}
+									</div>
 								</div>
 							</div>
 

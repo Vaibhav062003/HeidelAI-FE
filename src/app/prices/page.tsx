@@ -1,8 +1,6 @@
 'use client'
 
 import React, { useState } from 'react';
-import Header from '@/components/LandingPage/Header';
-import Footer from '@/components/LandingPage/Footer';
 import { Card } from '@/components/LandingPage/ui/card';
 import { Button } from '@/components/LandingPage/ui/button';
 import { Check, ChevronDown, ChevronUp } from 'lucide-react';
@@ -65,70 +63,70 @@ const plans = [
     },
 ]
 
-const featureGroups = [
+const activeFeatureGroups = [
     {
         title: "Messaging & Contacts",
         features: [
-            { name: "Tags", free: "3", growth: "30", enterprise: "Custom" },
-            { name: "Messaging Contacts", free: "1250", growth: "1750", enterprise: "Custom", note: "Free: Once reached limit cannot delete contacts" },
-            { name: "Contacts storage", free: "No limit", growth: "No limit", enterprise: "Custom" },
-            { name: "Contacts update", free: "No limit", growth: "No limit", enterprise: "Custom" },
-            { name: "Contact export", free: "NA", growth: "No limit", enterprise: "Custom" },
-            { name: "Contact Import", free: "No limit", growth: "No limit", enterprise: "Custom" },
-            { name: "Contacts delete", free: "NA", growth: "NA", enterprise: "Custom" },
+            { name: "Tags", free: "3", growth: "30", enterprise: "Custom", note: "" },
+            { name: "Messaging Contacts", free: "1000", growth: "1750", enterprise: "Custom", note: "Once reach limit cannot delete contacts" },
         ]
     },
     {
         title: "Automation & AI",
         features: [
-            { name: "Automation", free: "2 & 300", growth: "5 & 700", enterprise: "Custom", note: "Free: 2 at a time, 300 triggers / Mo" },
-            { name: "AI Chat", free: "NA", growth: "2250", enterprise: "Custom", note: "Growth: 2250 REQ PER MONTH" },
-            { name: "Customer buying intent segregation", free: "NA", growth: "2250", enterprise: "Custom", note: "Growth: 2250 API calls / month" },
-            { name: "Conversation summary", free: "NA", growth: "NA", enterprise: "Custom" },
-            { name: "Product recommendation as per conversation", free: "NA", growth: "NA", enterprise: "Custom" },
-            { name: "Auto Follow-up", free: "NA", growth: "NA", enterprise: "Custom" },
-            { name: "Upload Data-Section for AI chat / whatsapp", free: "Yes", growth: "Yes", enterprise: "Custom", note: "Includes company details, products" },
+            { name: "AI Chat", free: "NA", growth: "2250", enterprise: "Custom", note: "2250 requests per month" },
+            { name: "Customer buying intent segregation", free: "NA", growth: "2250", enterprise: "Custom", note: "Total API calls/requests per month" },
+            { name: "Conversation summary", free: "NA", growth: "YES", enterprise: "Custom", note: "" },
+            { name: "Product recommendation", free: "NA", growth: "YES", enterprise: "Custom", note: "" },
         ]
     },
     {
-        title: "Nos of Agents & Collaboration",
+        title: "Messaging & Media",
         features: [
-            { name: "Nos of Agents", free: "1 O & 1 E", growth: "1 O & 3 E", enterprise: "Custom", note: "O: Owner, E: employee" },
-            { name: "Transfer Limit", free: "No limit", growth: "No limit", enterprise: "Custom" },
-            { name: "Round robin assignment", free: "NA", growth: "YES", enterprise: "Custom" },
-            { name: "Private Notes", free: "Yes", growth: "YES", enterprise: "Custom" },
-            { name: "Canned Responses", free: "Yes", growth: "YES", enterprise: "Custom" },
-            { name: "Create Template", free: "Yes", growth: "YES", enterprise: "Custom" },
+            { name: "Seen, Delivered notification", free: "YES", growth: "YES", enterprise: "Custom", note: "" },
+            { name: "Video Support", free: "Yes", growth: "YES", enterprise: "Custom", note: "Free: 25mb limit, Growth: 40mb limit" },
+            { name: "Image support", free: "YES", growth: "YES", enterprise: "Custom", note: "" },
+            { name: "Document support", free: "YES", growth: "YES", enterprise: "Custom", note: "" },
+            { name: "Reaction support", free: "YES", growth: "YES", enterprise: "Custom", note: "" },
         ]
     },
     {
-        title: "Communication & Media",
+        title: "Tools & Integrations",
         features: [
-            { name: "Seen, Delivered Message notification", free: "YES", growth: "YES", enterprise: "Custom" },
-            { name: "Video Support", free: "Yes", growth: "YES", enterprise: "Custom", note: "Free: 25 MB, Growth: 40 MB" },
-            { name: "Image support", free: "Yes", growth: "YES", enterprise: "Custom" },
-            { name: "Document support", free: "Yes", growth: "YES", enterprise: "Custom" },
-            { name: "Reaction support", free: "YES", growth: "YES", enterprise: "Custom" },
-            { name: "Audio support", free: "NA", growth: "NA", enterprise: "Custom" },
+            { name: "Wordpress", free: "YES", growth: "YES", enterprise: "Custom", note: "" },
+            { name: "Telegram", free: "YES", growth: "YES", enterprise: "Custom", note: "" },
+            { name: "Private Notes", free: "YES", growth: "YES", enterprise: "Custom", note: "" },
+            { name: "Canned Responses", free: "YES", growth: "YES", enterprise: "Custom", note: "" },
+            { name: "Create Template", free: "YES", growth: "YES", enterprise: "Custom", note: "" },
+            { name: "Reminder feature", free: "Yes & No", growth: "Yes & No", enterprise: "Custom", note: "Yes for dashboard, no for email (Paid fixes email)" },
+        ]
+    }
+];
+
+const comingSoonFeatureGroups = [
+    {
+        title: "Coming Soon: Marketing & Scaling",
+        features: [
+            { name: "Broadcast limit", free: "YES", growth: "YES", enterprise: "Custom", note: "Free: 50 per batch, 2000/mo. Growth: 350 per batch, 15000/mo" },
+            { name: "CTWA Ads Dashboard", free: "YES", growth: "YES", enterprise: "Custom", note: "" },
+            { name: "Draft", free: "YES", growth: "YES", enterprise: "Custom", note: "" },
+            { name: "Shopify", free: "YES", growth: "YES", enterprise: "Custom", note: "" },
+            { name: "Web Chat widget", free: "Yes", growth: "YES", enterprise: "Custom", note: "" },
+            { name: "Round robin assignment", free: "NA", growth: "YES", enterprise: "Custom", note: "" },
         ]
     },
     {
-        title: "Marketing & Tools",
+        title: "Coming Soon: Advanced Contacts & AI",
         features: [
-            { name: "CTWA Ads Dashboard", free: "YES", growth: "YES", enterprise: "Custom" },
-            { name: "Draft", free: "YES", growth: "YES", enterprise: "Custom" },
-            { name: "Broadcast limit", free: "YES", growth: "YES", enterprise: "Custom", note: "Free: 50/time, 2k/mo. Growth: 350/time, 15k/mo" },
-            { name: "Reminder feature", free: "Yes & No", growth: "Yes & No", enterprise: "Custom", note: "Yes for dashboard, no for email" },
-        ]
-    },
-    {
-        title: "Integrations & Channels",
-        features: [
-            { name: "Shopify", free: "YES", growth: "YES", enterprise: "Custom" },
-            { name: "Wordpress", free: "YES", growth: "YES", enterprise: "Custom" },
-            { name: "telegram", free: "YES", growth: "YES", enterprise: "Custom" },
-            { name: "Web Chat widget", free: "Yes", growth: "YES", enterprise: "Custom" },
-            { name: "Whatsapp Calling", free: "NAT", growth: "NAT", enterprise: "Custom" },
+            { name: "Contacts storage", free: "NO LIMIT", growth: "NO LIMIT", enterprise: "Custom", note: "" },
+            { name: "Contacts update", free: "NO LIMIT", growth: "NO LIMIT", enterprise: "Custom", note: "" },
+            { name: "Contact Import", free: "NO LIMIT", growth: "NO LIMIT", enterprise: "Custom", note: "" },
+            { name: "Contact Export", free: "NA", growth: "NO LIMIT", enterprise: "Custom", note: "" },
+            { name: "Automation", free: "2 & 300", growth: "5 & 700", enterprise: "Custom", note: "Growth: 5 concurrent, 700 triggers/mo" },
+            { name: "Nos of Agents", free: "1", growth: "4", enterprise: "Custom", note: "Growth: 1 Owner + 3 Employees" },
+            { name: "Auto Follow-up", free: "NA", growth: "YES", enterprise: "Custom", note: "" },
+            { name: "Transfer Limit", free: "No limit", growth: "NO LIMIT", enterprise: "Custom", note: "" },
+            { name: "Upload Data-Section", free: "YES", growth: "YES", enterprise: "Custom", note: "Includes company details, products upload" },
         ]
     }
 ];
@@ -187,9 +185,19 @@ export default function PricesPage() {
                                             <p className="text-xl font-medium text-gray-900 leading-tight font-inter">{item.tagline}</p>
                                             <p className="text-[15px] text-gray-500 leading-relaxed font-medium font-inter">{item.description}</p>
                                         </div>
-                                        <div className="flex items-baseline gap-1 mt-6">
-                                            <span className="text-4xl font-bold text-gray-900 font-inter">{item.price}</span>
-                                            {item.duration && <span className="text-gray-500 font-medium text-lg font-inter">{item.duration}</span>}
+                                        <div className="flex flex-col gap-1 mt-6">
+                                            {planCycle === 'yearly' && item.id === 'growth' && (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-lg text-gray-400 line-through font-inter">{item.price}</span>
+                                                    <span className="bg-gradient-to-r from-[#ff8c00] via-[#ff5722] to-[#ff1744] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">-10% Discount</span>
+                                                </div>
+                                            )}
+                                            <div className="flex items-baseline gap-1">
+                                                <span className="text-4xl font-bold text-gray-900 font-inter">
+                                                    {planCycle === 'yearly' && item.id === 'growth' ? `₹${Math.round(parseInt(item.price.replace('₹', '')) * 0.9)}` : item.price}
+                                                </span>
+                                                {item.duration && <span className="text-gray-500 font-medium text-lg font-inter">{item.duration}</span>}
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="h-[1px] w-full bg-gray-200" />
@@ -250,7 +258,7 @@ export default function PricesPage() {
                     </div>
 
                     <div className="flex flex-col lg:flex-row gap-12 items-start">
-                        <div className="w-full lg:w-[260px] lg:sticky lg:top-32 z-30">
+                        <div className="hidden lg:block lg:w-[260px] lg:sticky lg:top-32 z-30">
                             <div className="flex flex-col gap-4">
                                 <div className="text-[11px] font-bold font-inter text-gray-400 uppercase tracking-widest ml-1">Billing</div>
                                 <div className="relative flex w-full max-w-[280px] rounded-2xl bg-gray-100 p-1.5 border border-gray-200/50 shadow-inner">
@@ -263,34 +271,65 @@ export default function PricesPage() {
                         <div className="flex-1 w-full">
                             <div className="hidden md:block overflow-x-auto lg:overflow-visible">
                                 <div className="min-w-[800px]">
-                                    <div className="sticky top-32 z-40 bg-white shadow-sm border-b border-gray-100 grid grid-cols-4 items-center h-24 px-8 rounded-t-[2rem]">
+                                    <div className="sticky top-32 z-40 bg-white shadow-sm border-b border-gray-100 grid grid-cols-4 items-center h-36 px-8 rounded-t-[2rem]">
                                         <div className="text-sm font-bold font-inter text-gray-400 uppercase tracking-widest">Features</div>
-                                        <div className="text-center font-bold font-inter text-gray-900 text-xl">Free</div>
-                                        <div className="text-center font-bold font-inter text-orange-600 text-xl">Growth</div>
-                                        <div className="text-center font-bold font-inter text-gray-900 text-xl">Enterprise</div>
+                                        <div className="text-center flex flex-col items-center gap-1">
+                                            <div className="font-bold font-inter text-gray-900 text-xl md:text-2xl">Free</div>
+                                            <div className="text-sm font-semibold text-gray-400 font-inter">₹0/mo</div>
+                                        </div>
+                                        <div className="text-center flex flex-col items-center">
+                                            <div className="font-bold font-inter text-orange-600 text-xl md:text-2xl">Growth</div>
+                                            <div className="flex flex-col items-center mt-1">
+                                                {planCycle === 'yearly' && (
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="text-sm text-gray-400 line-through font-inter font-medium">₹2199</span>
+                                                        <span className="bg-gradient-to-r from-[#ff8c00] via-[#ff5722] to-[#ff1744] text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tight">-10%</span>
+                                                    </div>
+                                                )}
+                                                <div className="text-lg font-bold text-gray-900 font-inter leading-none">
+                                                    {planCycle === 'yearly' ? '₹1979' : '₹2199'}<span className="text-sm text-gray-400 font-medium lowercase ml-1">/mo</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-center flex flex-col items-center gap-1">
+                                            <div className="font-bold font-inter text-gray-900 text-xl md:text-2xl">Enterprise</div>
+                                            <div className="text-sm font-semibold text-gray-400 font-inter italic">On Request</div>
+                                        </div>
                                     </div>
 
                                     <div className="bg-white border-x border-b border-gray-100 rounded-b-[2rem] overflow-hidden">
-                                        {featureGroups.map((group, groupIdx) => (
+                                        {[...activeFeatureGroups, ...comingSoonFeatureGroups].map((group, groupIdx) => (
                                             <div key={groupIdx} className="border-t border-gray-100 first:border-t-0">
                                                 <div className="bg-gray-50/50 px-6 sm:px-8 py-4 text-xs sm:text-sm font-bold font-inter text-gray-900 uppercase tracking-wide">{group.title}</div>
-                                                {group.features.map((feature, featureIdx) => (
-                                                    <div key={featureIdx} className="grid grid-cols-4 px-6 sm:px-8 py-5 sm:py-6 border-t border-gray-50/50 hover:bg-gray-50/30 transition-colors group">
-                                                        <div className="flex flex-col pr-4">
-                                                            <span className="text-sm sm:text-[15px] font-semibold font-inter text-gray-700">{feature.name}</span>
-                                                            {feature.note && <span className="text-[10px] sm:text-[11px] text-gray-400 mt-1 font-medium italic leading-tight font-inter">{feature.note}</span>}
+                                                {group.features.map((feature, featureIdx) => {
+                                                    const renderValue = (val: string, isGrowth?: boolean, isEnterprise?: boolean) => {
+                                                        if (isEnterprise) return <span className="text-gray-900 font-bold italic">Custom</span>;
+                                                        if (val === "Yes" || val === "YES") {
+                                                            return <Check className={cn("h-4 w-4 sm:h-5 sm:w-5", isGrowth ? "text-orange-600" : "text-gray-900")} strokeWidth={2.5} />;
+                                                        }
+                                                        if (val === "NA" || val === "NAT" || val === "NAT") return <span className="text-gray-300">—</span>;
+                                                        if (val === "Custom") return <span className="text-gray-900 font-bold italic">Custom</span>;
+                                                        return val;
+                                                    };
+
+                                                    return (
+                                                        <div key={featureIdx} className="grid grid-cols-4 px-6 sm:px-8 py-5 sm:py-6 border-t border-gray-50/50 hover:bg-gray-50/30 transition-colors group">
+                                                            <div className="flex flex-col pr-4">
+                                                                <span className="text-sm sm:text-[15px] font-semibold font-inter text-gray-700">{feature.name}</span>
+                                                                {feature.note && <span className="text-[10px] sm:text-[11px] text-gray-400 mt-1 font-medium italic leading-tight font-inter">{feature.note}</span>}
+                                                            </div>
+                                                            <div className="flex items-center justify-center text-sm sm:text-[15px] font-medium font-inter text-gray-600">
+                                                                {renderValue(feature.free)}
+                                                            </div>
+                                                            <div className="flex items-center justify-center text-sm sm:text-[15px] font-bold font-inter text-gray-900">
+                                                                {renderValue(feature.growth, true)}
+                                                            </div>
+                                                            <div className="flex items-center justify-center text-sm sm:text-[15px] font-medium font-inter text-gray-600">
+                                                                {renderValue(feature.enterprise, false, true)}
+                                                            </div>
                                                         </div>
-                                                        <div className="flex items-center justify-center text-sm sm:text-[15px] font-medium font-inter text-gray-600">
-                                                            {feature.free === "Yes" || feature.free === "YES" ? <Check className="h-4 w-4 sm:h-5 sm:w-5 text-gray-900" /> : feature.free === "NA" ? <span className="text-gray-300">—</span> : feature.free}
-                                                        </div>
-                                                        <div className="flex items-center justify-center text-sm sm:text-[15px] font-bold font-inter text-gray-900">
-                                                            {feature.growth === "Yes" || feature.growth === "YES" ? <Check className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" /> : feature.growth === "NA" ? <span className="text-gray-300">—</span> : feature.growth}
-                                                        </div>
-                                                        <div className="flex items-center justify-center text-sm sm:text-[15px] font-medium font-inter text-gray-600">
-                                                            {feature.enterprise === "Custom" ? <span className="text-gray-900 font-bold italic">Custom</span> : feature.enterprise}
-                                                        </div>
-                                                    </div>
-                                                ))}
+                                                    );
+                                                })}
                                             </div>
                                         ))}
                                     </div>
@@ -306,13 +345,24 @@ export default function PricesPage() {
 
 
                             <div className="md:hidden w-full space-y-8">
-                                {featureGroups.map((group, groupIdx) => (
+                                {activeFeatureGroups.map((group, groupIdx) => (
                                     <div key={groupIdx} className="flex flex-col">
                                         <div className="text-[12px] font-bold font-inter text-gray-900 uppercase tracking-[0.15em] mb-4">{group.title}</div>
                                         <div className="border-t border-gray-100">
                                             {group.features.map((feature, featureIdx) => {
                                                 const uniqueId = `${groupIdx}-${featureIdx}`;
                                                 const isExpanded = expandedFeature === uniqueId;
+
+                                                const renderMobileValue = (val: string, isGrowth?: boolean, isEnterprise?: boolean) => {
+                                                    if (isEnterprise) return <span className="text-gray-900 font-bold italic">Custom</span>;
+                                                    if (val === "Yes" || val === "YES") {
+                                                        return <Check className={cn("h-4 w-4", isGrowth ? "text-orange-600" : "text-gray-900")} strokeWidth={2.5} />;
+                                                    }
+                                                    if (val === "NA" || val === "NAT") return <span className="text-gray-300">—</span>;
+                                                    if (val === "Custom") return <span className="text-gray-900 font-bold italic">Custom</span>;
+                                                    return val;
+                                                };
+
                                                 return (
                                                     <div key={featureIdx} className="border-b border-gray-100 bg-white">
                                                         <button
@@ -334,19 +384,19 @@ export default function PricesPage() {
                                                                 <div className="flex justify-between items-center px-2">
                                                                     <span className="text-sm font-medium text-gray-400 font-inter">Free</span>
                                                                     <div className="text-sm font-bold text-gray-900 font-inter">
-                                                                        {feature.free === "Yes" || feature.free === "YES" ? <Check className="h-4 w-4 text-gray-900" /> : feature.free === "NA" ? <span className="text-gray-300">—</span> : feature.free}
+                                                                        {renderMobileValue(feature.free)}
                                                                     </div>
                                                                 </div>
                                                                 <div className="flex justify-between items-center px-2">
                                                                     <span className="text-sm font-medium text-gray-400 font-inter">Growth</span>
                                                                     <div className="text-sm font-bold text-gray-900 font-inter">
-                                                                        {feature.growth === "Yes" || feature.growth === "YES" ? <Check className="h-4 w-4 text-orange-600" /> : feature.growth === "NA" ? <span className="text-gray-300">—</span> : feature.growth}
+                                                                        {renderMobileValue(feature.growth, true)}
                                                                     </div>
                                                                 </div>
                                                                 <div className="flex justify-between items-center px-2">
                                                                     <span className="text-sm font-medium text-gray-400 font-inter">Enterprise</span>
-                                                                    <div className="text-sm font-bold text-gray-900 font-inter italic">
-                                                                        {feature.enterprise === "Custom" ? "Custom" : feature.enterprise}
+                                                                    <div className="text-sm font-bold text-gray-900 font-inter">
+                                                                        {renderMobileValue(feature.enterprise, false, true)}
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -358,12 +408,71 @@ export default function PricesPage() {
                                     </div>
                                 ))}
 
-                                <div className="pt-8 grid grid-cols-2 gap-4">
-                                    <Button className="w-full bg-black text-white font-inter rounded-xl h-12 text-sm font-bold">Get Started</Button>
-                                    <Button className="w-full bg-gradient-to-r from-[#ff8c00] via-[#ff5722] to-[#ff1744] text-white font-inter rounded-xl h-12 text-sm font-bold hover:opacity-90">Get Started</Button>
-                                </div>
+                                {comingSoonFeatureGroups.map((group, groupIdx) => (
+                                    <div key={`cs-${groupIdx}`} className="flex flex-col mt-8">
+                                        <div className="text-[12px] font-bold font-inter text-gray-400 uppercase tracking-[0.15em] mb-4">{group.title}</div>
+                                        <div className="border-t border-gray-100">
+                                            {group.features.map((feature, featureIdx) => {
+                                                const uniqueId = `cs-${groupIdx}-${featureIdx}`;
+                                                const isExpanded = expandedFeature === uniqueId;
+
+                                                const renderMobileValue = (val: string, isGrowth?: boolean, isEnterprise?: boolean) => {
+                                                    if (isEnterprise) return <span className="text-gray-900 font-bold italic">Custom</span>;
+                                                    if (val === "Yes" || val === "YES") {
+                                                        return <Check className={cn("h-4 w-4", isGrowth ? "text-orange-600" : "text-gray-900")} strokeWidth={2.5} />;
+                                                    }
+                                                    if (val === "NA" || val === "NAT") return <span className="text-gray-300">—</span>;
+                                                    if (val === "Custom") return <span className="text-gray-900 font-bold italic">Custom</span>;
+                                                    return val;
+                                                };
+
+                                                return (
+                                                    <div key={featureIdx} className="border-b border-gray-100 bg-white">
+                                                        <button
+                                                            onClick={() => setExpandedFeature(isExpanded ? null : uniqueId)}
+                                                            className="w-full flex items-center justify-between py-6 text-left"
+                                                        >
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[15px] font-semibold font-inter text-gray-400 italic">{feature.name}</span>
+                                                            </div>
+                                                            {isExpanded ? <ChevronUp className="h-5 w-5 text-gray-400" /> : <ChevronDown className="h-5 w-5 text-gray-400" />}
+                                                        </button>
+
+                                                        <div className={cn(
+                                                            "overflow-hidden transition-all duration-300 ease-in-out bg-gray-50/50",
+                                                            isExpanded ? "max-h-[300px]" : "max-h-0"
+                                                        )}>
+                                                            <div className="py-6 space-y-4">
+                                                                <div className="flex justify-between items-center px-2">
+                                                                    <span className="text-sm font-medium text-gray-400 font-inter">Free</span>
+                                                                    <div className="text-sm font-bold text-gray-900 font-inter">
+                                                                        {renderMobileValue(feature.free)}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex justify-between items-center px-2">
+                                                                    <span className="text-sm font-medium text-gray-400 font-inter">Growth</span>
+                                                                    <div className="text-sm font-bold text-gray-900 font-inter">
+                                                                        {renderMobileValue(feature.growth, true)}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex justify-between items-center px-2">
+                                                                    <span className="text-sm font-medium text-gray-400 font-inter">Enterprise</span>
+                                                                    <div className="text-sm font-bold text-gray-900 font-inter">
+                                                                        {renderMobileValue(feature.enterprise, false, true)}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
+
+
                     </div>
                 </div>
             </main>

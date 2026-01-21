@@ -4,11 +4,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import {
   User,
-  Phone,
-  IdCard,
-  FileText,
-  Package,
-  ArrowLeftRight,
   MessageSquare,
   X,
 } from "lucide-react";
@@ -37,11 +32,9 @@ import ConversationSummary from "../ConversationSummary";
 import TemplateBuilders from "../TemplateBuilders";
 import { WhatsAppTemplateDialog } from "../WhatsAppTemplateDialog";
 import AnalyticsSection from "../AnalyticsSection";
-import AssignDropdown from "../AssignToAgent";
-
-import ContactDetail from "./ContactDetail";
 import AccordionSection from "./AccordionSection";
 import TagDropdown from "./TagDropdown";
+import ComingSoon from "@/components/shared/ComingSoon";
 
 // Types & Libs
 import { WhatsAppTemplate } from "@/components/types/template";
@@ -66,7 +59,7 @@ const Sidebar = ({
   onToggleVisibility,
   currentAgentUsername,
 }: SidebarProps) => {
-  // 1. Logic Extracted to Hook
+  // Logic Extracted to Hook
   const {
     conversation,
     allTags,
@@ -77,7 +70,6 @@ const Sidebar = ({
     saveCustomerInfo,
   } = useSidebarLogic(selectedConversationId, passedConversation);
 
-  // 2. UI State
   const [uiState, setUiState] = useState({
     showTemplateBuilder: false,
     showCustomerInfo: false,
@@ -128,7 +120,7 @@ const Sidebar = ({
     [conversation?.customer_name],
   );
 
-  // 5. Re-ordering Logic (RESTORED)
+  // Re-ordering Logic (RESTORED)
   // This ensures the open accordion item moves to the top of the list
   const orderedSections = useMemo(() => {
     if (!uiState.accordionValue) return ACCORDION_CONFIG;
@@ -143,7 +135,7 @@ const Sidebar = ({
     return activeSection ? [activeSection, ...otherSections] : ACCORDION_CONFIG;
   }, [uiState.accordionValue]);
 
-  // 6. Render Logic for Accordion Content
+  // Render Logic for Accordion Content
   const renderAccordionContent = (sectionValue: string) => {
     switch (sectionValue) {
       case "summary":
@@ -153,33 +145,12 @@ const Sidebar = ({
           />
         );
       case "templates":
-        return (
-          <div className="flex-1 relative overflow-hidden flex items-center justify-center p-8 bg-white/50 min-h-[250px]">
-            {/* Animated Background Elements */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-indigo-200/20 rounded-full blur-2xl animate-pulse" />
-              <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-purple-200/20 rounded-full blur-2xl animate-pulse delay-700" />
-            </div>
-            <div className="relative z-10 text-center">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-100/50 backdrop-blur-sm rounded-full border border-indigo-200/50 mb-4 mx-auto">
-                <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
-                <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-widest">
-                  Under Development
-                </span>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
-                Coming Soon
-              </h3>
-              <p className="text-[var(--sidebar-text-sm)] text-slate-600 leading-relaxed max-w-[180px] mx-auto">
-                Powerful messaging templates are arriving soon.
-              </p>
-              <div className="mt-6 inline-flex items-center gap-2 text-[10px] font-medium text-slate-500">
-                <div className="w-3 h-3 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
-                <span>ETA: FEB 2026</span>
-              </div>
-            </div>
-          </div>
-        );
+  return (
+    <ComingSoon
+      compact={true}
+      description="Powerful messaging templates are arriving soon to streamline your conversations."
+    />
+  );
       case "products":
         return (
           <ProductsTab
