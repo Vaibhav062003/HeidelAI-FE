@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import Image from "next/image";
 import { useApi } from "@/lib/session_api";
 
 const WS_URL = 'wss://egenie-whatsapp.koyeb.app/cs';
@@ -26,19 +25,18 @@ const LoadingState = () => (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Image height={30} width={30} src='/icons/summary_icon.png' alt="summary_icon" />
-          <h3 className="font-bold">Conversation Summary</h3>
+          <h3 className="font-sans text-xs text-gray-800 leading-relaxed font-semibold">Conversation Summary</h3>
         </div>
         <Skeleton className="h-6 w-20" />
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      {/* <div className="flex flex-wrap gap-2">
         <Skeleton className="h-6 w-24" />
         <Skeleton className="h-6 w-32" />
-      </div>
+      </div> */}
 
       <div>
-        <h4 className="text-base font-medium mb-2">Summary Points</h4>
+        <h4 className="font-sans text-xs text-gray-800 leading-relaxed font-semibold mb-2">Summary Points</h4>
         <div className="space-y-2">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="flex items-center gap-2">
@@ -50,7 +48,7 @@ const LoadingState = () => (
       </div>
 
       <div>
-        <h4 className="text-base font-medium mb-2">AI suggestions</h4>
+        <h4 className="font-sans text-xs text-gray-800 leading-relaxed font-semibold mb-2">AI suggestions</h4>
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-2">
@@ -259,16 +257,16 @@ const ConversationSummary = ({ selectedConversationId }: ConversationSummaryProp
     <Card className="p-4 bg-white h-full">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Image height={30} width={30} src='/icons/summary_icon.png' alt="summary_icon" />
+          <div className="flex items-center gap-2 ">
+            {/* <Image height={30} width={30} src='/icons/summary_icon.png' alt="summary_icon" /> */}
             <h3 className="font-sans text-xs text-gray-800 leading-relaxed font-semibold">Conversation Summary</h3>
-          </div>
-          <Badge
+             <Badge
             variant="secondary"
             className={getSentimentColor(conversation.sentiment)}
           >
             {conversation.sentiment.charAt(0).toUpperCase() + conversation.sentiment.slice(1)}
           </Badge>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">

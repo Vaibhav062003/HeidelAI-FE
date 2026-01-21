@@ -47,8 +47,8 @@ import TagDropdown from "./TagDropdown";
 import { WhatsAppTemplate } from "@/components/types/template";
 import { Conversation } from "@/components/types/conversation";
 import { Product } from "@/components/types/product";
-import { useApi } from "@/lib/session_api";
-import { ApiContact } from "@/components/types/contacts";
+// import { useApi } from "@/lib/session_api";
+// import { ApiContact } from "@/components/types/contacts";
 
 interface SidebarProps {
   selectedConversationId: string;
@@ -74,7 +74,7 @@ const Sidebar = ({
     templates,
     isUpdatingTags,
     handleToggleTag,
-    saveCustomerInfo
+    saveCustomerInfo,
   } = useSidebarLogic(selectedConversationId, passedConversation);
 
   // 2. UI State
@@ -90,78 +90,94 @@ const Sidebar = ({
     template: WhatsAppTemplate | null;
   }>({ product: null, template: null });
 
-  // 3. UI Handlers
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const toggleUi = (key: keyof typeof uiState, value: any) => {
-    setUiState(prev => ({ ...prev, [key]: value }));
+    setUiState((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleProductSelect = useCallback((product: Product) => {
-    setSelectedData(prev => ({ ...prev, product }));
+    setSelectedData((prev) => ({ ...prev, product }));
   }, []);
 
-  const handleProductShare = useCallback((product: Product) => {
-    onShareProduct(product);
-    setSelectedData(prev => ({ ...prev, product: null }));
-  }, [onShareProduct]);
+  const handleProductShare = useCallback(
+    (product: Product) => {
+      onShareProduct(product);
+      setSelectedData((prev) => ({ ...prev, product: null }));
+    },
+    [onShareProduct],
+  );
 
-  const handleRemoveTag = useCallback((tag: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    handleToggleTag(tag);
-  }, [handleToggleTag]);
+  const handleRemoveTag = useCallback(
+    (tag: string, event: React.MouseEvent) => {
+      event.stopPropagation();
+      handleToggleTag(tag);
+    },
+    [handleToggleTag],
+  );
 
-  // 4. Derived Data
-  const contactPhone = useMemo(() => 
-    selectedConversationId?.replace(/^(instagram_|whatsapp_)/, "") || "Not Available", 
-  [selectedConversationId]);
+  // Derived Data
+  const contactPhone = useMemo(
+    () =>
+      selectedConversationId?.replace(/^(instagram_|whatsapp_)/, "") ||
+      "Not Available",
+    [selectedConversationId],
+  );
 
-  const customerInitial = useMemo(() => 
-    conversation?.customer_name?.charAt(0).toUpperCase() || "U", 
-  [conversation?.customer_name]);
+  const customerInitial = useMemo(
+    () => conversation?.customer_name?.charAt(0).toUpperCase() || "U",
+    [conversation?.customer_name],
+  );
 
   // 5. Re-ordering Logic (RESTORED)
   // This ensures the open accordion item moves to the top of the list
   const orderedSections = useMemo(() => {
     if (!uiState.accordionValue) return ACCORDION_CONFIG;
-    
+
     const activeSection = ACCORDION_CONFIG.find(
-      (s) => s.value === uiState.accordionValue
+      (s) => s.value === uiState.accordionValue,
     );
     const otherSections = ACCORDION_CONFIG.filter(
-      (s) => s.value !== uiState.accordionValue
+      (s) => s.value !== uiState.accordionValue,
     );
-    
-    return activeSection 
-      ? [activeSection, ...otherSections] 
-      : ACCORDION_CONFIG;
+
+    return activeSection ? [activeSection, ...otherSections] : ACCORDION_CONFIG;
   }, [uiState.accordionValue]);
 
   // 6. Render Logic for Accordion Content
   const renderAccordionContent = (sectionValue: string) => {
     switch (sectionValue) {
       case "summary":
-        return <ConversationSummary selectedConversationId={selectedConversationId} />;
+        return (
+          <ConversationSummary
+            selectedConversationId={selectedConversationId}
+          />
+        );
       case "templates":
         return (
           <div className="flex-1 relative overflow-hidden flex items-center justify-center p-8 bg-white/50 min-h-[250px]">
-             {/* Animated Background Elements */}
-             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-               <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-indigo-200/20 rounded-full blur-2xl animate-pulse" />
-               <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-purple-200/20 rounded-full blur-2xl animate-pulse delay-700" />
-             </div>
-             <div className="relative z-10 text-center">
-               <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-100/50 backdrop-blur-sm rounded-full border border-indigo-200/50 mb-4 mx-auto">
-                 <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
-                 <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-widest">Under Development</span>
-               </div>
-               <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Coming Soon</h3>
-               <p className="text-[var(--sidebar-text-sm)] text-slate-600 leading-relaxed max-w-[180px] mx-auto">
-                 Powerful messaging templates are arriving soon.
-               </p>
-               <div className="mt-6 inline-flex items-center gap-2 text-[10px] font-medium text-slate-500">
-                 <div className="w-3 h-3 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
-                 <span>ETA: FEB 2026</span>
-               </div>
-             </div>
+            {/* Animated Background Elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-indigo-200/20 rounded-full blur-2xl animate-pulse" />
+              <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-purple-200/20 rounded-full blur-2xl animate-pulse delay-700" />
+            </div>
+            <div className="relative z-10 text-center">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-100/50 backdrop-blur-sm rounded-full border border-indigo-200/50 mb-4 mx-auto">
+                <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
+                <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-widest">
+                  Under Development
+                </span>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
+                Coming Soon
+              </h3>
+              <p className="text-[var(--sidebar-text-sm)] text-slate-600 leading-relaxed max-w-[180px] mx-auto">
+                Powerful messaging templates are arriving soon.
+              </p>
+              <div className="mt-6 inline-flex items-center gap-2 text-[10px] font-medium text-slate-500">
+                <div className="w-3 h-3 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+                <span>ETA: FEB 2026</span>
+              </div>
+            </div>
           </div>
         );
       case "products":
@@ -192,11 +208,11 @@ const Sidebar = ({
       {uiState.showTemplateBuilder && (
         <TemplateBuilders
           isOpen={uiState.showTemplateBuilder}
-          setIsOpen={(v) => toggleUi('showTemplateBuilder', v)}
+          setIsOpen={(v) => toggleUi("showTemplateBuilder", v)}
           templates={templates}
-          setTemplates={() => {}} 
+          setTemplates={() => {}}
           searchTemplate={uiState.searchTemplate}
-          setSearchTemplate={(v) => toggleUi('searchTemplate', v)}
+          setSearchTemplate={(v) => toggleUi("searchTemplate", v)}
         />
       )}
 
@@ -204,14 +220,21 @@ const Sidebar = ({
         <WhatsAppTemplateDialog
           template={selectedData.template}
           isOpen={!!selectedData.template}
-          onClose={() => setSelectedData(prev => ({ ...prev, template: null }))}
-          onSend={() => setSelectedData(prev => ({ ...prev, template: null }))}
+          onClose={() =>
+            setSelectedData((prev) => ({ ...prev, template: null }))
+          }
+          onSend={() =>
+            setSelectedData((prev) => ({ ...prev, template: null }))
+          }
           selectedConversationId={selectedConversationId}
           languageCode={selectedData.template.language}
         />
       )}
 
-      <Dialog open={uiState.showCustomerInfo} onOpenChange={(v) => toggleUi('showCustomerInfo', v)}>
+      <Dialog
+        open={uiState.showCustomerInfo}
+        onOpenChange={(v) => toggleUi("showCustomerInfo", v)}
+      >
         <DialogContent className="max-w-4xl rounded-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -234,7 +257,7 @@ const Sidebar = ({
 
       {/* --- Sidebar UI --- */}
       <Card className="h-full max-h-screen bg-white/95 backdrop-blur-sm flex flex-col border-l border-gray-200/60 shadow-lg">
-        <div className="bg-white/40 backdrop-blur-sm border-b border-gray-200 flex items-center justify-between px-[var(--sidebar-padding)] py-2">
+        <div className="bg-white/40 backdrop-blur-sm border-b border-gray-200 flex items-center justify-between px-[var(--sidebar-padding)] py-1.5">
           <h2 className="font-semibold text-gray-900 text-sm">Contact</h2>
           {onToggleVisibility && (
             <Button
@@ -252,56 +275,77 @@ const Sidebar = ({
           <div className="bg-white p-[var(--sidebar-padding)]">
             {/* Header Profile */}
             <div className="flex items-start gap-[var(--sidebar-gap)] pb-3.5 mb-3.5 border-b border-gray-200">
-              <div className="relative">
-                <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center w-[calc(var(--avatar-size)*0.95)] h-[calc(var(--avatar-size)*0.95)] shadow-md">
-                  <span className="text-white font-semibold text-[calc(var(--sidebar-text-sm)*0.85)]">{customerInitial}</span>
+              <div className="flex flex-col gap-3">
+                {/* Avatar */}
+                <div className="relative">
+                  <div className="bg-gradient-to-br from-gray-100 to-gray-100 rounded-full flex items-center justify-center w-[calc(var(--avatar-size)*0.85)] h-[calc(var(--avatar-size)*0.85)] shadow-md">
+                    <span className="text-black font-semibold text-[calc(var(--sidebar-text-sm)*0.85)]">
+                      {customerInitial}
+                    </span>
+                  </div>
                 </div>
+
+                {/* Tags Label */}
+                <label className="font-sans text-xs text-gray-800 leading-relaxed font-semibold mt-2.5 ml-1 self-start">
+                  Tags
+                </label>
               </div>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2 mb-0.5">
-                  <h3 className="font-bold text-gray-900 truncate flex-1 leading-tight" style={{ fontSize: "var(--sidebar-text-sm)" }}>
-                    {conversation?.customer_name || "Unknown"}
-                  </h3>
+              <div className="flex-1 min-w-0 flex flex-col gap-3">
+                {/* Customer Name, Phone & Profile Button */}
+                <div className="flex items-center justify-between gap-2">
+                  {/* Name & Phone */}
+                  <div className="flex flex-col min-w-0">
+                    <h3
+                      className="font-bold text-gray-900 truncate leading-snug"
+                      style={{ fontSize: "var(--sidebar-text-sm)" }}
+                    >
+                      {conversation?.customer_name || "Unknown"}
+                    </h3>
+
+                    {/* Phone Number Row */}
+                    <div className="flex items-center gap-1.5 mt-0.5 text-gray-500">
+                      <span className="text-[11px] font-medium truncate leading-none pt-[1px]">
+                        {contactPhone}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Profile Action Button */}
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button onClick={() => toggleUi('showCustomerInfo', true)} className="text-gray-400 hover:text-blue-600 p-1.5 rounded-lg group">
-                        <User className="w-[15px] h-[15px]" />
+                      <button
+                        onClick={() => toggleUi("showCustomerInfo", true)}
+                        className="text-gray-400 hover:text-blue-600 h-7 w-7 flex items-center justify-center rounded-md hover:bg-blue-50 transition-all shrink-0"
+                      >
+                        <User className="w-4 h-4" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="left">Customer details</TooltipContent>
+                    <TooltipContent side="left" className="text-xs">
+                      Customer details
+                    </TooltipContent>
                   </Tooltip>
                 </div>
-                <ContactDetail icon={conversation?.platform === "whatsapp" ? Phone : IdCard} label="Phone" text={contactPhone} />
-              </div>
-            </div>
-
-            {/* Controls */}
-            <div className="space-y-3">
-              <div className="group">
-                <label className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider mb-1.5 block">Tags</label>
-                <TagDropdown
-                  assignedTags={assignedTags}
-                  allTags={allTags}
-                  isUpdatingTags={isUpdatingTags}
-                  onToggleTag={handleToggleTag}
-                  onRemoveTag={handleRemoveTag}
-                />
-              </div>
-              <div className="group">
-                <label className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider mb-1.5 block">Assigned Agent</label>
-                <AssignDropdown />
+                <div className="w-full self-start pt-1 ml-2">
+                  <TagDropdown
+                    assignedTags={assignedTags}
+                    allTags={allTags}
+                    isUpdatingTags={isUpdatingTags}
+                    onToggleTag={handleToggleTag}
+                    onRemoveTag={handleRemoveTag}
+                  />
+                </div>
               </div>
             </div>
           </div>
 
           {/* Accordion */}
-          <div className="flex-1 flex flex-col">
-            <Accordion 
-              type="single" 
-              collapsible 
-              value={uiState.accordionValue} 
-              onValueChange={(v) => toggleUi('accordionValue', v)} 
+          <div className="flex-1 flex flex-col -mt-4">
+            <Accordion
+              type="single"
+              collapsible
+              value={uiState.accordionValue}
+              onValueChange={(v) => toggleUi("accordionValue", v)}
               className="w-full"
             >
               {/* Uses orderedSections instead of ACCORDION_CONFIG to enable sorting */}
@@ -324,7 +368,9 @@ const Sidebar = ({
         {selectedData.product && (
           <ProductPreview
             product={selectedData.product}
-            onClose={() => setSelectedData(prev => ({ ...prev, product: null }))}
+            onClose={() =>
+              setSelectedData((prev) => ({ ...prev, product: null }))
+            }
             onShare={handleProductShare}
             open={!!selectedData.product}
           />
