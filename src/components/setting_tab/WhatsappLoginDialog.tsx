@@ -164,7 +164,7 @@ const WhatsAppLoginDialog = () => {
   useEffect(() => {
     // Listen for messages from popup window
     const handleMessage = (event: MessageEvent) => {
-      console.log('Received message event:', event);
+      // console.log('Received message event:', event);
       // Security check: only accept messages from Facebook
       if (event.origin !== "https://www.facebook.com" && event.origin !== "https://web.facebook.com") {
         return;
@@ -184,18 +184,18 @@ const WhatsAppLoginDialog = () => {
 
         if (data.type === 'WA_EMBEDDED_SIGNUP') {
           if (data.event === 'FINISH' || data.event === 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING' || data.data?.event === 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING') {
-            console.log("Captured WhatsApp Session Data:", data.data);
+            // console.log("Captured WhatsApp Session Data:", data.data);
             whatsappSignupDataRef.current = data.data as WhatsAppSignupData;
           } else if (data.event === 'CANCEL') {
             const { current_step } = data.data || {};
-            console.log("WhatsApp Signup Canceled at", current_step);
+            // console.log("WhatsApp Signup Canceled at", current_step);
             toast.info("Connection Canceled", {
               description: "WhatsApp setup was canceled."
             });
             setIsLoading(false);
           } else if (data.event === 'ERROR') {
             const { error_message } = data.data || {};
-            console.log('Error occurred in WhatsApp Signup:', error_message);
+            // console.log('Error occurred in WhatsApp Signup:', error_message);
             toast.error("Connection Error", {
               description: `WhatsApp setup encountered an error: ${error_message}`
             });
@@ -203,15 +203,15 @@ const WhatsAppLoginDialog = () => {
           }
         }
       } catch (e) {
-        console.log('Error processing message event', e);
+        // console.log('Error processing message event', e);
       }
     };
 
     window.addEventListener('message', handleMessage);
-    console.log('added event listener for whatsapp')
+    // console.log('added event listener for whatsapp')
     return () => {
       window.removeEventListener('message', handleMessage);
-      console.log('removed event listener for whatsapp')
+      // console.log('removed event listener for whatsapp')
     };
   }, []);
 
@@ -232,10 +232,10 @@ const WhatsAppLoginDialog = () => {
     window.FB.login((response: any) => {
       if (response.authResponse) {
         const code = response.authResponse.code;
-        console.log("FB Login Success, Code received");
+        // console.log("FB Login Success, Code received");
         handleWhatsAppCallback(code);
       } else {
-        console.log('User cancelled login or did not fully authorize.');
+        // console.log('User cancelled login or did not fully authorize.');
         setIsLoading(false);
         toast.info("Login Cancelled");
       }

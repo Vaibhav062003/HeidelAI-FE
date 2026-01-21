@@ -13,13 +13,13 @@ export function LogoutHandler() {
     if (!userId) {
       const wipeData = async () => {
         try {
-          console.log("User logged out. Wiping local data...");
+          // console.log("User logged out. Wiping local data...");
           await Promise.all([
             clearStore('conversations'),
             clearStore('messages'),
             clearStore('integrations')
           ]);
-          console.log("Local data wiped.");
+          // console.log("Local data wiped.");
         } catch (e) {
           console.error("Failed to wipe local data:", e);
         }

@@ -76,12 +76,12 @@ const PageContent = () => {
         } else {
           setError("Further steps required. Please check your email.");
           toast.error("Further steps required. Please check your email.");
-          console.log("SignIn incomplete:", signInAttempt);
+          // console.log("SignIn incomplete:", signInAttempt);
         }
       } catch (err) {
         setError("Failed to accept invitation.");
         toast.error("Failed to accept invitation.");
-        console.log("SignIn error:", err);
+        // console.log("SignIn error:", err);
       }
       setLoading(false);
     }
@@ -119,8 +119,8 @@ const PageContent = () => {
       } else {
         setError("Further steps required. Please check your email.");
         toast.error("Further steps required. Please check your email.");
-        console.log("SignUp incomplete:", signUpAttempt);
-        console.log("Missing fields:", signUpAttempt.missingFields); // Log missing fields
+        // console.log("SignUp incomplete:", signUpAttempt);
+        // console.log("Missing fields:", signUpAttempt.missingFields); // Log missing fields
       }
     } catch (err) {
       if (
@@ -136,7 +136,7 @@ const PageContent = () => {
         setError("Sign up failed.");
         toast.error("Sign up failed.");
       }
-      console.log("SignUp error:", err);
+      // console.log("SignUp error:", err);
     }
     setLoading(false);
   };
@@ -171,17 +171,17 @@ const PageContent = () => {
         } else {
           setError("Further steps required. Please check your email.");
           toast.error("Further steps required. Please check your email.");
-          console.log("Ticket incomplete:", ticketAttempt);
+          // console.log("Ticket incomplete:", ticketAttempt);
         }
       } else {
         setError("Login failed. Please check your credentials.");
         toast.error("Login failed. Please check your credentials.");
-        console.log("Login failed:", signInAttempt);
+        // console.log("Login failed:", signInAttempt);
       }
     } catch (err) {
       setError("Sign in failed.");
       toast.error("Sign in failed.");
-      console.log("SignIn error:", err);
+      // console.log("SignIn error:", err);
     }
     setLoading(false);
   };

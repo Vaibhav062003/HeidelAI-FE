@@ -157,7 +157,7 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
               setMediaId(mediaId); // Save the media_id from the response
               setMediaIdMap(prev => ({ ...prev, [uniqueKey]: mediaId }));
               setUploadSuccess(prev => ({ ...prev, [uniqueKey]: true })); // Save the media_id from the response
-              console.log("Uploaded media_id:", mediaId); // Log the media_id to the console
+              // console.log("Uploaded media_id:", mediaId); // Log the media_id to the console
             } else {
               console.error("Failed to upload media");
               setErrors(prev => ({ ...prev, [uniqueKey]: "Failed to upload media" }));

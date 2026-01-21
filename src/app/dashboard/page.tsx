@@ -14,7 +14,6 @@ import SettingsSidebar from "@/components/setting_tab/SettingsSidebar";
 import { useConversations } from "@/components/hooks/useConversations";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/inbox_button";
-import { Conversation } from "@/components/types/conversation";
 import {
   BarChart2,
   CreditCard,
@@ -173,6 +172,7 @@ const SidebarNavigation = React.memo(
     const { user } = useUser();
     const { isSignedIn, isLoaded } = useUser();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    
 
     const mainNavigationItems = useMemo(
       () => [
@@ -666,7 +666,7 @@ export default function DashboardPage() {
     useState(true);
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
   const [isPending, startTransition] = useTransition();
-  const [isNavExpanded, setIsNavExpanded] = useState(true);
+  const [isNavExpanded, setIsNavExpanded] = useState(false);
   const { conversations, updateConversation } = useConversations();
 
   const conversation = useMemo(() => {

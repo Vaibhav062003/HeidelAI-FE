@@ -541,7 +541,7 @@ const TemplateBuilders = ({ isOpen, setIsOpen, templates, setTemplates, searchTe
 
       const result = await response.json();
 
-      console.log("POST request successful:", result);
+      // console.log("POST request successful:", result);
     } catch (error) {
       if (error instanceof Error) {
         console.error("Error during POST request:", error.message);
@@ -692,7 +692,7 @@ const TemplateBuilders = ({ isOpen, setIsOpen, templates, setTemplates, searchTe
         };
       }
 
-      console.log("Sending payload:", JSON.stringify(payload, null, 2));
+      // console.log("Sending payload:", JSON.stringify(payload, null, 2));
 
       // Send POST request
       await sendPostRequest(payload);
