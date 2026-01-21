@@ -41,11 +41,11 @@ const Hero3D = () => {
   }, [text, isDeleting, wordIndex]);
 
   return (
-    <BackgroundGradient className=" min-h-[100svh] w-full flex items-center justify-center px-4 sm:px-6 md:px-10 pb-20 sm:pb-24 md:pb-28 relative overflow-hidden">
-      <div className="w-full max-w-6xl space-y-5 sm:space-y-6 relative z-10 -mt-5 sm:mt-0">
+    <BackgroundGradient className="min-h-[100svh] w-full flex items-center justify-center px-4 sm:px-6 md:px-10 pb-20 sm:pb-24 md:pb-28 relative overflow-hidden">
+      <div className="w-full max-w-6xl space-y-4 sm:space-y-6 relative z-10 -mt-5 sm:mt-0">
 
         {/* Beta Status Badge */}
-        <div className="flex justify-center mb-[-20px] relative pt-10 sm:pt-28 z-20">
+        <div className="flex justify-center mb-[-16px] sm:mb-[-20px] relative pt-10 sm:pt-28 z-20">
           <Badge className="bg-white/40 backdrop-blur-md border border-[#0080A0]/20 text-[#0080A0] px-4 py-1.5 rounded-full shadow-[0_8px_32px_rgba(0,128,160,0.1)] transition-all duration-500 hover:scale-105 hover:bg-white/60 group cursor-default">
             <div className="flex items-center h-5 text-[10px] sm:text-xs font-normal font-sans font-[800] tracking-[0.15em] uppercase">
               <span className="flex items-center gap-2">
@@ -61,42 +61,42 @@ const Hero3D = () => {
 
         {/* Partners Section - Moved to Top */}
         <div
-          className="flex flex-row items-center justify-center gap-2 sm:gap-10 lg:gap-16 max-w-4xl mx-auto pt-2 sm:pt-2 px-4 sm:px-0 font-sans"
+          className="flex flex-row items-center  justify-center gap-3 sm:gap-10 lg:gap-16 w-full max-w-4xl mx-auto pt-1 sm:pt-2 font-sans"
         >
 
           {/* Meta Partner */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-auto  sm:max-w-[200px]">
+          <div className="flex items-center">
+            <div className="flex items-center justify-center">
               <Image
                 src="/logos/meta.png"
                 alt="Meta Business"
-                width={180}   // increase base width
+                width={1800}
                 height={80}
-                className="h-[70px] sm:h-auto w-auto"
+                className="h-[80px] sm:h-[100px] w-auto ml-10"
+                style={{ objectFit: 'cover', objectPosition: 'center 70%' }}
               />
-
             </div>
           </div>
 
           {/* Microsoft Partner */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-auto  sm:max-w-[250px]">
+          <div className="flex items-center">
+            <div className="flex items-center justify-center">
               <Image
                 src="/logos/microsoft.png"
                 alt="Microsoft"
                 width={180}
                 height={80}
-                className="h-[70px] sm:h-auto w-auto mt-[-5px]"
+                className="h-[80px] sm:h-[100px] w-auto ml-5"
                 style={{ objectFit: 'cover', objectPosition: 'center 70%' }}
               />
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col items-center text-center space-y-8">
+        <div className="flex flex-col items-center text-center space-y-6 sm:space-y-8">
 
-          <div className="space-y-6 flex items-center justify-center flex-col">
-            <h1 className="font-[500] italic text-5xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-5xl mx-auto text-center leading-[1.1] tracking-tight px-4"
+          <div className="space-y-4 sm:space-y-6 flex items-center justify-center flex-col">
+            <h1 className="font-[500] italic text-4xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-5xl mx-auto text-center leading-[1.1] tracking-tight px-4"
               style={{ fontFamily: "'Awesome Serif', serif" }}>
               <span className="text-black">
                 AI that{" "}
@@ -127,7 +127,7 @@ const Hero3D = () => {
               </span>
             </p>
 
-            <div className="flex flex-col sm:flex-row pt-7 gap-4 items-center">
+            <div className="flex flex-col sm:flex-row pt-4 sm:pt-7 gap-4 items-center justify-center w-full">
               <HoverBorderGradientDemo />
             </div>
           </div>
