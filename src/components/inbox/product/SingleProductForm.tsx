@@ -62,21 +62,11 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className=" w-full max-w-full mx-auto max-h-[70vh] overflow-y-auto pr-2 space-y-6 sm:space-y-5 md:space-y-6 lg:space-y-7 px-2 sm:px-0 hide-scrollbar mt-2"
+      className="w-full max-w-full mx-auto space-y-4"
     >
-      {/* Header */}
-      <div>
-        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">
-          Create New Product
-        </h2>
-        <p className="text-sm sm:text-base text-gray-600">
-          Fill in the details below
-        </p>
-      </div>
-
       {/* Product Name */}
-      <div className="space-y-2">
-        <Label className="text-sm sm:text-base" htmlFor="product_name">
+      <div className="space-y-1.5">
+        <Label className="text-sm font-medium" htmlFor="product_name">
           Product Name
         </Label>
         <Input
@@ -84,27 +74,27 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
           name="product_name"
           required
           placeholder="Enter product name"
-          className="h-9 sm:h-10 text-sm sm:text-base rounded-md"
+          className="h-10 text-sm rounded-md"
         />
       </div>
 
       {/* Description */}
-      <div className="space-y-2">
-        <Label className="text-sm sm:text-base" htmlFor="description">
+      <div className="space-y-1.5">
+        <Label className="text-sm font-medium" htmlFor="description">
           Description
         </Label>
         <Input
           id="description"
           name="description"
           placeholder="Short description"
-          className="h-9 sm:h-10 text-sm sm:text-base rounded-md"
+          className="h-10 text-sm rounded-md"
         />
       </div>
 
       {/* Price + Stock */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <div className="space-y-2">
-          <Label className="text-sm sm:text-base" htmlFor="price">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium" htmlFor="price">
             Price (₹)
           </Label>
           <Input
@@ -114,12 +104,12 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
             step="0.01"
             required
             placeholder="0.00"
-            className="h-9 sm:h-10 text-sm sm:text-base"
+            className="h-10 text-sm"
           />
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-sm sm:text-base" htmlFor="stock">
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium" htmlFor="stock">
             Stock Quantity
           </Label>
           <Input
@@ -127,14 +117,14 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
             name="stock"
             type="number"
             placeholder="0"
-            className="h-9 sm:h-10 text-sm sm:text-base"
+            className="h-10 text-sm"
           />
         </div>
       </div>
 
       {/* Image URL */}
-      <div className="space-y-2">
-        <Label className="text-sm sm:text-base" htmlFor="image_url">
+      <div className="space-y-1.5">
+        <Label className="text-sm font-medium" htmlFor="image_url">
           Image URL (Optional)
         </Label>
         <Input
@@ -143,28 +133,28 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
           placeholder="https://example.com/image.jpg"
           value={imageUrl}
           onChange={(e) => handleImageUrlChange(e.target.value)}
-          className="h-9 sm:h-10 text-sm sm:text-base rounded-md"
+          className="h-10 text-sm rounded-md"
         />
       </div>
 
       {/* Image Preview */}
       {imagePreview && (
-        <div className="flex justify-center  object-cover transition-opacity group-hover:opacity-90">
+        <div className="flex justify-center overflow-hidden rounded-lg border border-gray-100 mt-2">
           <img
             src={imagePreview}
             alt="Preview"
-            className="w-[700px] h-[450px] object-cover transition-opacity group-hover:opacity-90"
+            className="max-w-full h-auto max-h-[200px] object-contain transition-opacity"
           />
         </div>
       )}
 
       {/* Buttons */}
-      <div className="flex gap-3 pt-1">
+      <div className="flex gap-3 pt-2">
         <Button
           type="button"
           variant="outline"
           onClick={() => setIsModalOpen(false)}
-          className="flex-1 h-9 sm:h-10 text-sm sm:text-base"
+          className="flex-1 h-10 text-sm font-medium"
         >
           Cancel
         </Button>
@@ -172,7 +162,7 @@ const SingleProductForm = ({ setIsModalOpen }: SingleProductFormProps) => {
         <Button
           type="submit"
           disabled={loading}
-          className="flex-1 h-9 sm:h-10 text-sm sm:text-base bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 shadow-sm  "
+          className="flex-1 h-10 text-sm font-medium bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 shadow-sm"
         >
           {loading ? "Creating..." : "Create Product"}
         </Button>
