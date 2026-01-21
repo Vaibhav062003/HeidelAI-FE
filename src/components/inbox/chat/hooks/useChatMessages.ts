@@ -103,7 +103,7 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
     const platform = selectedConversationId.split("_")[0];
     const tempId = `temp-${Date.now()}`;
     let context_type = null;
-    let context_obj: any = {};
+    const context_obj: any = {};
 
     if (contextMessageId) {
       context_type = "message_reply";
@@ -136,7 +136,7 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
         fileName: file.name,
         fileType: file.type,
         mode: mode,
-        context_type: context_type as "message_reply" | "shared_product" | null,
+        context_type: context_type as "message_reply" | null,
         context: context ? JSON.parse(context) : null,
       };
     } else {
@@ -151,7 +151,7 @@ export const useChatMessages = (selectedConversationId: string, user: any) => {
         type: "text",
         status: "sending",
         mode: mode,
-        context_type: context_type as "message_reply" | "shared_product" | null,
+        context_type: context_type as "message_reply" | null,
         context: context ? JSON.parse(context) : null,
       };
     }
