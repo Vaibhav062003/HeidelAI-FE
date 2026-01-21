@@ -65,7 +65,7 @@ export interface Message {
   | "document";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
-  context_type?: "message_reply" | "shared_product" | null;
+  context_type?: "message_reply" |  null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   context?: any;
   product_data?: ProductData[];
