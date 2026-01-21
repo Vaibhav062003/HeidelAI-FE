@@ -125,7 +125,7 @@ export const useSidebarLogic = (
     }
   }, [assignedTags, selectedConversationId, api]);
 
-  // Save Customer Info
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const saveCustomerInfo = useCallback(async (updatedData: any) => {
     try {
       await api.post(`/conversations/${selectedConversationId}/update_customer_info`, updatedData);
