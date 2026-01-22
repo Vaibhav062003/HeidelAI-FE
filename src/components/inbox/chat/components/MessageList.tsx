@@ -33,7 +33,7 @@ const MessageList = memo(({ messages, messagesLoading, selectedConversationId, l
     const [globalMuted, setGlobalMuted] = useState(true);
     const [activeMediaId, setActiveMediaId] = useState<string | null>(null);
 
-    const filteredMessages = mode === "private" ? messages.filter(msg => msg.mode === 'private') : messages;
+    const filteredPrivateMessages = mode === "private" ? messages.filter(msg => msg.mode === 'private') : messages;
 
     const handlePlay = (id: string, type: "reel" | "story" | "video") => {
         setActiveMediaId(id);
@@ -67,7 +67,7 @@ const MessageList = memo(({ messages, messagesLoading, selectedConversationId, l
                             <MessageSkeleton key={i} />
                         ))}
                     </div>
-                ) : filteredMessages.length === 0 && mode === "private" ? (
+                ) : filteredPrivateMessages.length === 0 && mode === "private" ? (
                     <div className="flex items-center justify-center h-full p-36">
                         <div className="text-center text-muted-foreground ">
                             <p className="text-sm mb-2">It's quiet here - no private notes yet</p>
@@ -77,7 +77,7 @@ const MessageList = memo(({ messages, messagesLoading, selectedConversationId, l
                 ) : (
                     <AnimatePresence mode="wait" initial={false}>
                         <>
-                            {filteredMessages.map((message, index) => {
+                            {filteredPrivateMessages.map((message, index) => {
                                 // ####################################################
                                 // Message Status Icon Logic
                                 // ####################################################
@@ -289,7 +289,7 @@ const MessageList = memo(({ messages, messagesLoading, selectedConversationId, l
                                                                     message={message}
                                                                     index={index}
                                                                     isLatest={isLatest}
-                                                                    isLast={index === filteredMessages.length - 1}
+                                                                    isLast={index === filteredPrivateMessages.length - 1}
                                                                     isReplyMessage={
                                                                         message.context_type == "message_reply"
                                                                     }
