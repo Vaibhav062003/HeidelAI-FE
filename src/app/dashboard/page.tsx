@@ -21,7 +21,8 @@ import {
   ContactRoundIcon,
   BotMessageSquare,
   LogOut,
-  Home,
+  LayoutDashboard,
+  MessageCircle,
   PanelLeftClose,
   PanelLeft,
 } from "lucide-react";
@@ -172,11 +173,11 @@ const SidebarNavigation = React.memo(
     const { user } = useUser();
     const { isSignedIn, isLoaded } = useUser();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    
 
     const mainNavigationItems = useMemo(
       () => [
-        { value: "inbox", icon: Home, label: "Inbox" },
+        { value: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
+        { value: "inbox", icon: MessageCircle, label: "Inbox" },
         { value: "analyticsbot", icon: BarChart2, label: "Analytics" },
         { value: "Contacts", icon: ContactRoundIcon, label: "Customers" },
       ],
@@ -296,10 +297,27 @@ const SidebarNavigation = React.memo(
                 onClick={handleOpenIntegrations}
                 className="w-full flex items-center justify-between px-2 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border-gray-100"
               >
-                <span className="text-xs font-medium text-gray-700">
-                  Link Integrations
-                </span>
-                <div className="flex items-center gap-0.5">
+                <div className="flex items-center gap-2">
+                  {/* Integration Icon */}
+                  <svg
+                    className="w-3.5 h-3.5 text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                    />
+                  </svg>
+                  <span className="text-xs font-medium text-gray-700">
+                    Let's Link
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {/* WhatsApp */}
                   <div className="w-4 h-4 rounded-sm bg-[#25D366] flex items-center justify-center">
                     <svg
                       className="w-2.5 h-2.5 text-white"
@@ -309,6 +327,8 @@ const SidebarNavigation = React.memo(
                       <path d="M20.52 3.48A11.94 11.94 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 6.01L0 24l6.15-1.58A11.94 11.94 0 0012 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.2-3.48-8.52zM12 22.05c-1.85 0-3.67-.5-5.26-1.45l-.38-.22-3.65.94.97-3.55-.25-.37A9.94 9.94 0 012.05 12c0-5.47 4.48-9.95 9.95-9.95 2.66 0 5.17 1.04 7.05 2.93a9.94 9.94 0 012.93 7.05c0 5.47-4.48 9.95-9.95 9.95zm5.6-7.88c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.2.31-.82 1.02-1.01 1.23-.18.2-.37.22-.68.07-.31-.16-1.3-.48-2.47-1.54-.91-.81-1.52-1.81-1.7-2.12-.18-.31-.02-.48.14-.63.14-.14.31-.37.47-.56.16-.18.2-.31.31-.52.1-.2.05-.38-.02-.54-.07-.16-.71-1.7-.97-2.33-.26-.63-.52-.54-.71-.55h-.6c-.2 0-.52.07-.79.38-.27.31-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.22 3.07.16.2 2.1 3.2 5.1 4.49.71.31 1.26.5 1.69.64.71.23 1.36.2 1.87.12.57-.08 1.85-.76 2.11-1.5.26-.74.26-1.38.18-1.5-.07-.12-.29-.2-.6-.36z" />
                     </svg>
                   </div>
+
+                  {/* Instagram */}
                   <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 flex items-center justify-center">
                     <svg
                       className="w-2.5 h-2.5 text-white"
@@ -318,6 +338,8 @@ const SidebarNavigation = React.memo(
                       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
                     </svg>
                   </div>
+
+                  {/* Facebook */}
                   <div className="w-4 h-4 rounded-sm bg-[#1877F2] flex items-center justify-center">
                     <svg
                       className="w-2.5 h-2.5 text-white"
@@ -327,6 +349,13 @@ const SidebarNavigation = React.memo(
                       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H9.691v-3.622h3.129V8.413c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24h-1.917c-1.504 0-1.796.715-1.796 1.763v2.31h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.593 1.324-1.324V1.325C24 .593 23.407 0 22.675 0z" />
                     </svg>
                   </div>
+
+                  {/* Telegram */}
+                  {/* <div className="w-4 h-4 rounded-sm bg-[#0088cc] flex items-center justify-center">
+  <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.87.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5 1.19-.38.04-3.92.07-6.46.07-.79 0-1.06-.08-1.36-.12z"/>
+  </svg>
+</div> */}
                 </div>
               </button>
               <div className="border-t border-gray-200" />
@@ -516,11 +545,13 @@ const SidebarNavigation = React.memo(
                       side="right"
                       className="bg-gray-800 text-white text-xs"
                     >
-                      {value === "inbox"
-                        ? "Inbox"
-                        : value === "Contacts"
-                          ? "Customers"
-                          : "Analytics"}
+                      {value === "dashboard"
+                        ? "Dashboard"
+                        : value === "inbox"
+                          ? "Inbox"
+                          : value === "Contacts"
+                            ? "Customers"
+                            : "Analytics"}
                     </TooltipContent>
                   </Tooltip>
                 ))}
@@ -641,6 +672,7 @@ export default function DashboardPage() {
   }, []);
 
   const [activeView, setActiveView] = useState<
+    | "dashboard"
     | "inbox"
     | "Automation"
     | "settings"
@@ -666,7 +698,7 @@ export default function DashboardPage() {
     useState(true);
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true);
   const [isPending, startTransition] = useTransition();
-  const [isNavExpanded, setIsNavExpanded] = useState(false);
+  const [isNavExpanded, setIsNavExpanded] = useState(true);
   const { conversations, updateConversation } = useConversations();
 
   const conversation = useMemo(() => {
@@ -767,6 +799,12 @@ export default function DashboardPage() {
 
         <main className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
           <div className="flex-1 h-full overflow-hidden relative min-h-0">
+            {activeView === "dashboard" && (
+              <div className="h-full w-full bg-gray-50/50 overflow-hidden min-h-0 min-w-0">
+                <LandingDashboard />
+              </div>
+            )}
+
             {activeView === "inbox" && (
               <div className="flex h-full bg-white min-w-0 min-h-0">
                 {isConversationListVisible && (

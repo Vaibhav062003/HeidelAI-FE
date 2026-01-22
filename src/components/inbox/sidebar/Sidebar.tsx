@@ -2,11 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import {
-  User,
-  MessageSquare,
-  X,
-} from "lucide-react";
+import { User, MessageSquare, X } from "lucide-react";
 import { Accordion } from "@/components/ui/accordion";
 import {
   Tooltip,
@@ -108,12 +104,22 @@ const Sidebar = ({
   );
 
   // Derived Data
-  const contactPhone = useMemo(
-    () =>
-      selectedConversationId?.replace(/^(instagram_|whatsapp_)/, "") ||
-      "Not Available",
-    [selectedConversationId],
-  );
+  const contactPhone = useMemo(() => {
+    if (!selectedConversationId) return "Not Available";
+
+    const rawPhone = selectedConversationId.replace(
+      /^(instagram_|whatsapp_)/,
+      "",
+    );
+
+    if (selectedConversationId.startsWith("whatsapp_")) {
+      const countryCode = rawPhone.slice(0, 2);
+      const phoneNumber = rawPhone.slice(2);
+      return `+${countryCode}-${phoneNumber}`;
+    }
+
+    return rawPhone;
+  }, [selectedConversationId]);
 
   const customerInitial = useMemo(
     () => conversation?.customer_name?.charAt(0).toUpperCase() || "U",
@@ -145,12 +151,12 @@ const Sidebar = ({
           />
         );
       case "templates":
-  return (
-    <ComingSoon
-      compact={true}
-      description="Powerful messaging templates are arriving soon to streamline your conversations."
-    />
-  );
+        return (
+          <ComingSoon
+            compact={true}
+            description="Powerful messaging templates are arriving soon to streamline your conversations."
+          />
+        );
       case "products":
         return (
           <ProductsTab
