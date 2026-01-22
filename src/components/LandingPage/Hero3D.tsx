@@ -45,7 +45,7 @@ const Hero3D = () => {
       <div className="w-full max-w-6xl space-y-4 sm:space-y-6 relative z-10 -mt-5 sm:mt-0">
 
         {/* Beta Status Badge */}
-        <div className="flex justify-center mb-[-16px] sm:mb-[-20px] relative pt-10 sm:pt-28 z-20">
+        <div className="flex justify-center mb-[-5px] sm:mb-[-20px] relative pt-10 sm:pt-24 z-20">
           <Badge className="bg-white/40 backdrop-blur-md border border-[#0080A0]/20 text-[#0080A0] px-4 py-1.5 rounded-full shadow-[0_8px_32px_rgba(0,128,160,0.1)] transition-all duration-500 hover:scale-105 hover:bg-white/60 group cursor-default">
             <div className="flex items-center h-5 text-[10px] sm:text-xs font-normal font-sans font-[800] tracking-[0.15em] uppercase">
               <span className="flex items-center gap-2">
@@ -59,35 +59,32 @@ const Hero3D = () => {
           </Badge>
         </div>
 
-        {/* Partners Section - Moved to Top */}
         <div
-          className="flex flex-row items-center  justify-center gap-3 sm:gap-10 lg:gap-16 w-full max-w-4xl mx-auto pt-1 sm:pt-2 font-sans"
+          className="flex flex-row items-center justify-center ml-4 gap-4 sm:gap-10 lg:gap-16 w-full max-w-4xl mx-auto pt-4 sm:pt-2 mb-[-20px] sm:mb-[-20px] font-sans"
         >
 
-          {/* Meta Partner */}
-          <div className="flex items-center">
-            <div className="flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-end">
+            <div className="flex items-center justify-center mr-[-5px] sm:mr-0">
               <Image
                 src="/logos/meta.png"
                 alt="Meta Business"
-                width={1800}
+                width={200}
                 height={80}
-                className="h-[80px] sm:h-[100px] w-auto ml-10"
-                style={{ objectFit: 'cover', objectPosition: 'center 70%' }}
+                className="h-[90px] sm:h-[100px] w-auto"
+                style={{ objectFit: 'contain' }}
               />
             </div>
           </div>
 
-          {/* Microsoft Partner */}
-          <div className="flex items-center">
-            <div className="flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-start">
+            <div className="flex items-center justify-center ml-[-5px] sm:ml-0">
               <Image
                 src="/logos/microsoft.png"
                 alt="Microsoft"
-                width={180}
+                width={200}
                 height={80}
-                className="h-[80px] sm:h-[100px] w-auto ml-5"
-                style={{ objectFit: 'cover', objectPosition: 'center 70%' }}
+                className="h-[90px] sm:h-[100px] w-auto"
+                style={{ objectFit: 'contain' }}
               />
             </div>
           </div>
@@ -127,7 +124,7 @@ const Hero3D = () => {
               </span>
             </p>
 
-            <div className="flex flex-col sm:flex-row pt-4 sm:pt-7 gap-4 items-center justify-center w-full">
+            <div className="flex flex-col sm:flex-row pt-12 sm:pt-7 gap-4 items-center justify-center w-full">
               <HoverBorderGradientDemo />
             </div>
           </div>
