@@ -44,16 +44,57 @@ const Hero3D = () => {
     <BackgroundGradient className="min-h-[100svh] w-full flex items-center justify-center px-4 sm:px-6 md:px-10 pb-20 sm:pb-24 md:pb-28 relative overflow-hidden">
       <div className="w-full max-w-6xl space-y-4 sm:space-y-6 relative z-10 -mt-5 sm:mt-0">
 
-        {/* Beta Status Badge */}
-        <div className="flex justify-center mb-[-5px] sm:mb-[-20px] relative pt-10 sm:pt-24 z-20">
-          <Badge className="bg-white/40 backdrop-blur-md border border-[#0080A0]/20 text-[#0080A0] px-4 py-1.5 rounded-full shadow-[0_8px_32px_rgba(0,128,160,0.1)] transition-all duration-500 hover:scale-105 hover:bg-white/60 group cursor-default">
-            <div className="flex items-center h-5 text-[10px] sm:text-xs font-normal font-sans font-[800] tracking-[0.15em] uppercase">
+        {/* Beta Status Badge Variants Test */}
+        <div className="flex flex-wrap justify-center gap-4 mb-[-5px] sm:mb-[-20px] relative pt-10 sm:pt-24 z-20">
+
+          {/* Variant 1: Glossy Dark (Matches 'Tutorial' in image) */}
+          <Badge className="bg-gradient-to-br from-[#919193] via-[#49494d] to-[#56545c] text-white px-6 py-2 rounded-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_10px_20px_rgba(0,0,0,0.3)] border-t border-white/20 transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer border-none">
+            <div className="flex items-center h-5 text-[10px] sm:text-xs font-semibold tracking-wider">
               <span className="flex items-center gap-2">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0080A0] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0080A0]"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                 </span>
-                🚀 Beta is Live Now
+                BETA IS LIVE
+              </span>
+            </div>
+          </Badge>
+
+          {/* Variant 2: Glossy Ceramic (Matches 'Chips UI' in image) */}
+          <Badge className="bg-gradient-to-b from-[#f8f9fa] via-[#e9ecef] to-[#cbd5e0] text-zinc-900 px-6 py-2 rounded-full shadow-[inset_0_1px_0_rgba(255,255,255,1),0_8px_16px_rgba(0,0,0,0.1)] border border-zinc-300/50 transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer">
+            <div className="flex items-center h-5 text-[10px] sm:text-xs font-semibold tracking-wider">
+              <span className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4a4391] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4a4391]"></span>
+                </span>
+                BETA IS LIVE
+              </span>
+            </div>
+          </Badge>
+
+          {/* Variant 3: Lavender Bordered (Matches 'Design ideas' in image) */}
+          <Badge className="bg-[#f3f4ff] border-2 border-[#7c75c3]/40 text-[#4a4391] px-6 py-1.5 rounded-full shadow-sm transition-all duration-300 hover:bg-[#e8eaff] hover:scale-105 active:scale-95 group cursor-pointer">
+            <div className="flex items-center h-5 text-[10px] sm:text-xs font-bold tracking-wider">
+              <span className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7c75c3] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#7c75c3]"></span>
+                </span>
+                BETA IS LIVE
+              </span>
+            </div>
+          </Badge>
+
+          {/* Variant 4: Glassmorphism (Purple Theme) */}
+          <Badge className="bg-white/40 backdrop-blur-md border border-[#7c75c3]/20 text-[#120e2a] px-6 py-2 rounded-full shadow-[0_8px_32px_rgba(124,117,195,0.15)] transition-all duration-300 hover:bg-white/60 hover:scale-105 active:scale-95 group cursor-pointer">
+            <div className="flex items-center h-5 text-[10px] sm:text-xs font-semibold tracking-wider">
+              <span className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4a4391] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4a4391] shadow-[0_0_8px_rgba(74,67,145,0.6)]"></span>
+                </span>
+                BETA IS LIVE
               </span>
             </div>
           </Badge>
