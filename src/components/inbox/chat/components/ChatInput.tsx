@@ -38,6 +38,8 @@ interface ChatInputProps {
     contextMessage: Message | null;
     setContextMessageId: React.Dispatch<React.SetStateAction<string | null>>;
     setContextMessage: React.Dispatch<React.SetStateAction<Message | null>>;
+    mode: "reply" | "private";
+    setMode: React.Dispatch<React.SetStateAction<"reply" | "private">>;
 }
 
 const ChatInput = ({
@@ -54,7 +56,9 @@ const ChatInput = ({
     contextMessageId,
     contextMessage,
     setContextMessageId,
-    setContextMessage
+    setContextMessage,
+    mode,
+    setMode
 }: ChatInputProps) => {
 
     const {
@@ -80,7 +84,7 @@ const ChatInput = ({
 
 
     // const [audioURL, setAudioURL] = useState<string | null>(null);
-    const [mode, setMode] = useState<"reply" | "private">("reply");
+    // const [mode, setMode] = useState<"reply" | "private">("reply");
     // const [isRecording, setIsRecording] = useState(false);
 
 
