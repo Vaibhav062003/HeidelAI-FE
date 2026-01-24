@@ -574,9 +574,6 @@ const ChatHeader = ({
                   View Customer Info
                 </DropdownMenuItem>
               )}
-              {/* <DropdownMenuItem onClick={() => setShowCustomerInfo(true)}>
-            View Customer Info
-        </DropdownMenuItem> */}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

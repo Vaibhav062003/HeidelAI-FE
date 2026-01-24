@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
+import React, { useState, useMemo, useCallback, memo } from "react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { User, MessageSquare, X } from "lucide-react";
+import { User, X } from "lucide-react";
 import { Accordion } from "@/components/ui/accordion";
 import {
   Tooltip,
@@ -36,8 +36,6 @@ import ComingSoon from "@/components/shared/ComingSoon";
 import { WhatsAppTemplate } from "@/components/types/template";
 import { Conversation } from "@/components/types/conversation";
 import { Product } from "@/components/types/product";
-// import { useApi } from "@/lib/session_api";
-// import { ApiContact } from "@/components/types/contacts";
 
 interface SidebarProps {
   selectedConversationId: string;
