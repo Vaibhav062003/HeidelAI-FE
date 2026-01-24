@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import React from 'react'
+import { ChevronRight } from 'lucide-react'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: React.ReactNode
@@ -21,8 +22,7 @@ export const Button: React.FC<ButtonProps> = ({ icon, children, ...props }) => (
   >
     {icon}
     <span>{children}</span>
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-    </svg>
+    <ChevronRight className="w-4 h-4" />
   </button>
 )
+

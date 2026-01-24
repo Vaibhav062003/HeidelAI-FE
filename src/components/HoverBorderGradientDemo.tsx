@@ -15,7 +15,6 @@ import { systemPrompt } from "@/components/config/chatSystemPrompt";
 import { Message, storeMessage } from "@/components/services/chatService";
 import ReactMarkdown from "react-markdown";
 import { Toaster, toast as sonnerToast } from 'sonner';
-import { ChevronRight } from "lucide-react";
 
 export function HoverBorderGradientDemo() {
 
@@ -205,7 +204,7 @@ export function HoverBorderGradientDemo() {
             <Button
               className="flex justify-center items-center w-[110px] h-[38px] sm:w-[140px] sm:h-[46px] group relative bg-gradient-to-r from-[#ff8c00] via-[#ff5722] to-[#ff1744] text-white border-none text-base sm:text-xl rounded-2xl shadow-[0_20px_50px_-15px_rgba(255,87,34,0.5)] hover:shadow-[0_30px_60px_-15px_rgba(255,87,34,0.6)] transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-95 before:!hidden overflow-hidden pl-2"
             >
-              <span className="relative z-10 pr-2 font-normal tracking-tight">Join Beta</span>
+              <span className="relative z-10 font-inter pr-2 font-normal tracking-tight">Let's Start</span>
             </Button>
           </Drawer.Trigger>
           <Drawer.Portal>
@@ -215,7 +214,7 @@ export function HoverBorderGradientDemo() {
                 <div aria-hidden className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-4" />
 
                 <Drawer.Title className="text-2xl lg:text-3xl md:text-3xl font-semibold text-black text-center">
-                  Join Beta
+                  Let's Start
                 </Drawer.Title>
                 <p className="text-neutral-600 px-4 lg:px-0 text-xs lg:text-base text-center mt-2">
                   Sign up for our beta program to get access

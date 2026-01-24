@@ -215,7 +215,7 @@ export function ScheduleDemo({ trigger }: { trigger?: React.ReactNode }) {
           <Drawer.Trigger asChild className="focus-visible:border-none">
             {trigger ? trigger : (
               <button className="inline-flex items-center px-6 py-4 bg-transparent bg-white text-gray-900 text-base font-medium rounded-xl hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg">
-                Join Beta
+                Let's Start
                 <ArrowRight className="w-4 h-4 ml-2" />
               </button>
             )}
@@ -227,7 +227,7 @@ export function ScheduleDemo({ trigger }: { trigger?: React.ReactNode }) {
                 <div aria-hidden className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-4" />
 
                 <Drawer.Title className="text-2xl lg:text-3xl md:text-3xl font-semibold text-black text-center">
-                  Join Beta
+                  Let's Start
                 </Drawer.Title>
                 <p className="text-neutral-600 px-4 lg:px-0 text-xs lg:text-base text-center mt-2">
                   Sign up for our beta program to get access

@@ -5,7 +5,6 @@ import { Badge } from '@/components/LandingPage/ui/badge';
 import { HoverBorderGradientDemo } from '@/components/HoverBorderGradientDemo';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image'
-import CountDownTimer from './CountDownTimer';
 import { ChevronRight } from 'lucide-react';
 import BackgroundGradient from './ui/BackgroundGradient';
 
@@ -45,23 +44,27 @@ const Hero3D = () => {
       <div className="w-full max-w-6xl space-y-4 sm:space-y-6 relative z-10 -mt-5 sm:mt-0">
         <div className="flex flex-wrap justify-center gap-4 mb-[-5px] sm:mb-[-20px] relative pt-0 sm:pt-24 z-20">
 
-          <Badge className="bg-white/40 backdrop-blur-md border border-[#7c75c3]/20 text-[#120e2a] px-8 py-2 rounded-full shadow-[0_8px_32px_rgba(124,117,195,0.15)] transition-all duration-300 hover:bg-white/60 hover:scale-105 active:scale-95 group cursor-pointer">
-            <div className="flex items-center h-5 text-[10px] sm:text-xs font-semibold tracking-wider">
-              <span className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4a4391] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4a4391] shadow-[0_0_8px_rgba(74,67,145,0.6)]"></span>
-                </span>
-                BETA IS LIVE
+          <div className="backdrop-blur-md bg-gray-300/20 px-4 py-2 rounded-full shadow-[0_8px_20px_rgba(0,0,0,0.08)] transition-all duration-300 pointer-events-none select-none">
+            <div className="flex items-center gap-1.5 h-6 text-sm font-medium">
+              <span
+                className="font-normal bg-clip-text text-transparent animate-gradient-rotate"
+                style={{
+                  backgroundImage: 'linear-gradient(90deg, #000 0%, #000 40%, #ff8c00 45%, #ff5722 50%, #ff1744 55%, #000 60%, #000 100%)',
+                  backgroundSize: '200% 100%'
+                }}
+              >
+                Beta is live now
               </span>
+              <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center ml-1 shadow-sm">
+                <ChevronRight className="w-3 h-3 text-white" />
+              </div>
             </div>
-          </Badge>
+          </div>
         </div>
 
         <div
           className="flex flex-row items-center justify-center ml-4 gap-4 sm:gap-10 lg:gap-16 w-full max-w-4xl mx-auto pt-4 sm:pt-2 mb-[-20px] sm:mb-[-20px] font-sans"
         >
-
           <div className="flex-1 flex items-center justify-end">
             <div className="flex items-center justify-center mr-[-5px] sm:mr-0">
               <Image
@@ -123,7 +126,7 @@ const Hero3D = () => {
               </span>
             </p>
 
-            <div className="flex flex-col sm:flex-row pt-12 sm:pt-7 gap-4 items-center justify-center w-full">
+            <div className="flex flex-col ml-3 sm:flex-row pt-12 sm:pt-7 gap-4 items-center justify-center w-full">
               <HoverBorderGradientDemo />
             </div>
           </div>

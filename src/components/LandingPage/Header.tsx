@@ -388,7 +388,7 @@ const Header = () => {
 												: ' bg-gradient-to-r from-[#ff8c00] via-[#ff5722] to-[#ff1744] text-white border-none  shadow-[0_20px_50px_-15px_rgba(255,87,34,0.5)] hover:shadow-[0_30px_60px_-15px_rgba(255,87,34,0.6)] transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-95 before:!hidden overflow-hidden  '
 										)}
 									>
-										<span>Join Beta</span>
+										<span>Let's Start</span>
 									</Button>
 								} />
 							</div>
