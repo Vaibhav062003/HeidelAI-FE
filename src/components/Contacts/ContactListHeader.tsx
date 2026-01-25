@@ -53,7 +53,7 @@ export const ContactListHeader = ({
   const filterTriggerRef = useRef<HTMLButtonElement>(null);
 
   const handleMessageSend = (data: MessageData) => {
-    console.log("Message sent:", data);
+    // console.log("Message sent:", data);
     setIsMessageComposerOpen(false);
   };
 

@@ -1,7 +1,7 @@
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const RepliedMessagePreview = ({ repliedMessage, currentMessage }: { repliedMessage: any, currentMessage:any }) => {
-  console.log("RepliedMessagePreview props:", { repliedMessage, currentMessage });
+  // console.log("RepliedMessagePreview props:", { repliedMessage, currentMessage });
   if (!repliedMessage) return null;
   const isAgent = repliedMessage.role === "agent";
   const isAgentCurrentMessage = currentMessage.role === "customer";

@@ -4,7 +4,7 @@ interface SessionTokenResponse {
 }
 
 export const getSessionToken = async (sessionId: string): Promise<string> => {
-  console.log("Requesting session token for sessionId:", sessionId);
+  // console.log("Requesting session token for sessionId:", sessionId);
 
   const response = await fetch(`https://api.clerk.com/v1/sessions/${sessionId}/tokens`, {
     method: 'POST',

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import AnalyticsCard from "./AnalyticsCard";
 import { useApi } from "@/lib/session_api";
+import AssignDropdown from "./AssignToAgent";
 
 interface AnalyticsSectionProps {
   selectedConversationId: string | null;
@@ -45,7 +46,7 @@ const AnalyticsSection: React.FC<AnalyticsSectionProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [backendReturnsNull, setBackendReturnsNull] = useState(false);
-  const api = useApi()
+  const api = useApi();
 
   useEffect(() => {
     const fetchAssignment = async () => {
@@ -61,7 +62,7 @@ const AnalyticsSection: React.FC<AnalyticsSectionProps> = ({
 
         const res = await api.get(
           `/api/conversations/${selectedConversationId}`,
-          { params: { agent_username: currentAgentUsername } }
+          { params: { agent_username: currentAgentUsername } },
         );
 
         const assignmentBlock = res.data;
@@ -105,7 +106,7 @@ const AnalyticsSection: React.FC<AnalyticsSectionProps> = ({
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
-      }
+      },
     );
   }, [assignment]);
 
@@ -120,7 +121,7 @@ const AnalyticsSection: React.FC<AnalyticsSectionProps> = ({
 
     const sorted = [...assignment.assignment_history].sort(
       (a, b) =>
-        new Date(a.assigned_at).getTime() - new Date(b.assigned_at).getTime()
+        new Date(a.assigned_at).getTime() - new Date(b.assigned_at).getTime(),
     );
 
     const entries: Array<{
@@ -232,6 +233,11 @@ const AnalyticsSection: React.FC<AnalyticsSectionProps> = ({
   // Main content
   return (
     <div className="space-y-3 px-[var(--sidebar-padding)] py-[var(--sidebar-padding)]">
+      <div className="space-y-3">
+        <div className="group">
+          <AssignDropdown />
+        </div>
+      </div>
       {/* Analytics Cards */}
       <div className="space-y-2">
         <AnalyticsCard

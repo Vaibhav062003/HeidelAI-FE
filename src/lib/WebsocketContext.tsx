@@ -79,7 +79,7 @@ export const WebSocketProvider = ({ children }: any) => {
             );
 
             ws.onopen = () => {
-                console.log("✅ WS Connected");
+                // console.log("✅ WS Connected");
             };
 
             ws.onmessage = (event) => {
@@ -95,7 +95,7 @@ export const WebSocketProvider = ({ children }: any) => {
             };
 
             ws.onclose = () => {
-                console.log("❌ WS Closed. Attempting to reconnect in 3s...");
+                // console.log("❌ WS Closed. Attempting to reconnect in 3s...");
                 wsRef.current = null;
 
                 // 2. Schedule reconnection
@@ -129,7 +129,7 @@ export const WebSocketProvider = ({ children }: any) => {
             if (document.visibilityState === "visible") {
                 // If tab becomes visible and WS is dead, reconnect immediately
                 if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
-                    console.log("👀 Tab focused: Reconnecting WebSocket...");
+                    // console.log("👀 Tab focused: Reconnecting WebSocket...");
                     connect();
                 }
             }

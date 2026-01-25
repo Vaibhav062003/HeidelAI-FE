@@ -128,7 +128,7 @@ const TalkToDataTab = () => {
     ws.current = new WebSocket('wss://backend-chatbot.koyeb.app/ws');
     
     ws.current.onopen = () => {
-      console.log('WebSocket connection opened');
+      // console.log('WebSocket connection opened');
     };
 
     ws.current.onmessage = (event) => {
@@ -152,7 +152,7 @@ const TalkToDataTab = () => {
     };
 
     ws.current.onclose = () => {
-      console.log('WebSocket connection closed');
+      // console.log('WebSocket connection closed');
       setTimeout(initializeWebSocket, 5000);
     };
   };
