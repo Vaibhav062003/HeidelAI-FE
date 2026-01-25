@@ -44,19 +44,19 @@ const Hero3D = () => {
       <div className="w-full max-w-6xl space-y-4 sm:space-y-6 relative z-10 -mt-5 sm:mt-0">
         <div className="flex flex-wrap justify-center gap-4 mb-[-5px] sm:mb-[-20px] relative pt-0 sm:pt-24 z-20">
 
-          <div className="backdrop-blur-md bg-gray-300/20 px-4 py-2 rounded-full shadow-[0_8px_20px_rgba(0,0,0,0.08)] transition-all duration-300 pointer-events-none select-none">
+          <div className="bg-white border border-gray-200 px-4 py-2 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-300 pointer-events-none select-none">
             <div className="flex items-center gap-1.5 h-6 text-sm font-medium">
               <span
-                className="font-normal bg-clip-text text-transparent animate-gradient-rotate"
+                className="font-semibold bg-clip-text text-transparent animate-gradient-rotate"
                 style={{
-                  backgroundImage: 'linear-gradient(90deg, #000 0%, #000 40%, #ff8c00 45%, #ff5722 50%, #ff1744 55%, #000 60%, #000 100%)',
+                  backgroundImage: 'linear-gradient(90deg, #000 0%, #000 15%, #ff8c00 35%, #ff5722 50%, #ff1744 65%, #000 85%, #000 100%)',
                   backgroundSize: '200% 100%'
                 }}
               >
                 Beta is live now
               </span>
-              <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center ml-1 shadow-sm">
-                <ChevronRight className="w-3 h-3 text-white" />
+              <div className="w-5 h-5 rounded-full bg-gray-150 flex items-center justify-center ml-1 shadow-sm">
+                <ChevronRight className="w-3 h-3 text-gray-600" />
               </div>
             </div>
           </div>
