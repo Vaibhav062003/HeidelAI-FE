@@ -77,9 +77,9 @@ export default function ReminderDialog({
         trigger_time: selectedDateTime.toISOString(),
         conversation_id,
       }
-      console.log("set reminder data", data)
+      // console.log("set reminder data", data)
       const response = await api.post('https://heidelai-2.koyeb.app/reminders', data)
-      console.log("set reminder response", response)
+      // console.log("set reminder response", response)
 
       if (response.status !== 200) {
         throw new Error('Failed to set reminder');
@@ -106,7 +106,7 @@ export default function ReminderDialog({
       toast.error("Failed to set reminder", {
         description: "Please try again later",
       });
-      console.log('Error setting reminder:', error);
+      // console.log('Error setting reminder:', error);
     } finally {
       setIsSubmitting(false);
     }

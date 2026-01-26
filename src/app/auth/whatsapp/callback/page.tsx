@@ -26,14 +26,14 @@ function WhatsAppCallbackContent() {
   useEffect(() => {
     // Listen for messages from popup window
     const handleMessage = (event: MessageEvent) => {
-      console.log("Received message event from WhatsApp window in callback page:", event);
+      // console.log("Received message event from WhatsApp window in callback page:", event);
 
       // Allow messages from self (for auth callback) and facebook (for embedded signup events)
       const isSelf = event.origin === window.location.origin;
       const isFacebook = event.origin === "https://www.facebook.com" || event.origin === "https://web.facebook.com";
 
       if (!isSelf && !isFacebook) {
-        console.log("Ignored message from unknown origin in callback page:", event.origin);
+        // console.log("Ignored message from unknown origin in callback page:", event.origin);
         return;
       };
 
@@ -47,17 +47,17 @@ function WhatsAppCallbackContent() {
       // Check for WA_EMBEDDED_SIGNUP events
       if (data && data.type === 'WA_EMBEDDED_SIGNUP') {
         if (data.event === 'FINISH') {
-          console.log("Captured WhatsApp Session Data in callback page:", data.data);
+          // console.log("Captured WhatsApp Session Data in callback page:", data.data);
           whatsappSignupDataRef.current = data.data;
         } else if (data.event === 'CANCEL') {
           const {current_step} = data.data;
-          console.log("WhatsApp Signup Canceled at callback page:", current_step);
+          // console.log("WhatsApp Signup Canceled at callback page:", current_step);
           toast.info("Connection Canceled", {
             description: "WhatsApp setup was canceled."
           });
         } else if(data.event == 'ERROR') {
           const {error_message} = data.data;
-          console.log('Error occured in WhatsApp Signup in callback page:', error_message);
+          // console.log('Error occured in WhatsApp Signup in callback page:', error_message);
           toast.error("Connection Error", {
             description: `WhatsApp setup encountered an error: ${error_message}`
           });
@@ -67,23 +67,23 @@ function WhatsAppCallbackContent() {
 
       // Handle auth data from popup
       if (isSelf && data && data.type === 'WHATSAPP_AUTH_CALLBACK') {
-        console.log("Processing WhatsApp auth callback data in callback page:", data);
+        // console.log("Processing WhatsApp auth callback data in callback page:", data);
         const { code, state } = data;
-        console.log("Extracted state values:", {
-          popupReturned: state,
-          expectedLocal: sessionStorage.getItem("whatsapp_auth_state"),
-        });
+        // console.log("Extracted state values:", {
+        //   popupReturned: state,
+        //   expectedLocal: sessionStorage.getItem("whatsapp_auth_state"),
+        // });
         if (code && state === sessionStorage.getItem("whatsapp_auth_state")) {          
-          console.log("State matches, handling WhatsApp callback in callback page");
+          // console.log("State matches, handling WhatsApp callback in callback page");
         }
       };
     };
     
     window.addEventListener('message', handleMessage);
-    console.log('added event listener for whatsapp in callback')
+    // console.log('added event listener for whatsapp in callback')
     return () => {
       window.removeEventListener('message', handleMessage);
-      console.log('removed event listener for whatsapp in callback')
+      // console.log('removed event listener for whatsapp in callback')
     };
   }, []);
 

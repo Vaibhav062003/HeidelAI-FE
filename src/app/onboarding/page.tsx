@@ -755,7 +755,7 @@ const OnboardingFlow: React.FC = () => {
           name: orgName,
         });
 
-        console.log("Created organisation: ", org);
+        // console.log("Created organisation: ", org);
 
         // Store the org ID for later use
         orgId = org?.id;
@@ -763,7 +763,7 @@ const OnboardingFlow: React.FC = () => {
         // Now that we have an active session, we can set the active organization
         if (orgId) {
           await clerk.setActive({ organization: orgId });
-          console.log("Set organization as active:", orgId);
+          // console.log("Set organization as active:", orgId);
         }
 
       } catch (orgError) {
@@ -796,7 +796,7 @@ const OnboardingFlow: React.FC = () => {
                 role: "org:member",
               });
 
-              console.log(`Invitation sent to ${member.email}`);
+              // console.log(`Invitation sent to ${member.email}`);
 
               await new Promise(resolve => setTimeout(resolve, 300));
             } catch (individualInviteError) {
@@ -865,7 +865,7 @@ const OnboardingFlow: React.FC = () => {
 
   // Log the current state of userData whenever it changes
   useEffect(() => {
-    console.log("Current user data:", userData);
+    // console.log("Current user data:", userData);
   }, [userData]);
 
   const handleSkip = () => {

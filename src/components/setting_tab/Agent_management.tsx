@@ -167,8 +167,8 @@ export const TeamManagement = () => {
         const response = await api.delete(`/api/clerk/delete-member?user_id=${userId}`);
 
         const resData = response?.data ?? response;
-        console.log('delete-member response:', response);
-        console.log('delete-member data:', resData);
+        // console.log('delete-member response:', response);
+        // console.log('delete-member data:', resData);
 
         if (response?.status === 200 || resData?.status === 200 || resData?.ok || resData?.success) {
           setMembers((prev) => prev.filter(m => m.userId !== userId));

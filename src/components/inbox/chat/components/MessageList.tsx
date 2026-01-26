@@ -70,8 +70,8 @@ const MessageList = memo(({ messages, messagesLoading, selectedConversationId, l
                 ) : filteredPrivateMessages.length === 0 && mode === "private" ? (
                     <div className="flex items-center justify-center h-full p-36">
                         <div className="text-center text-muted-foreground ">
-                            <p className="text-sm mb-2">It's quiet here - no private notes yet</p>
-                            <p className="text-sm">please start by creating one</p>
+                            <p className="text-sm mb-2">It&apos;s quiet here - no private notes yet</p>
+                            <p className="text-sm">Please start by creating one</p>
                         </div>
                     </div>
                 ) : (

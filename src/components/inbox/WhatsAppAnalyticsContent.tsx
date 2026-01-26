@@ -132,7 +132,7 @@ const WhatsAppAnalyticsContent = ({ selectedConversationId }: { selectedConversa
         if (!response.ok) throw new Error('Failed to fetch analytics data');
         
         const rawData: WhatsAppAnalytics = await response.json();
-        console.log("Raw API response:", rawData);
+        // console.log("Raw API response:", rawData);
         
         // Check if we have data
         if (!rawData.raw_data || !rawData.raw_data.data || rawData.raw_data.data.length === 0) {
