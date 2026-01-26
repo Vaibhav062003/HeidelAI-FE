@@ -42,10 +42,10 @@ const Hero3D = () => {
   return (
     <BackgroundGradient className="min-h-[100svh] w-full flex items-center justify-center px-4 sm:px-6 md:px-10 pb-20 sm:pb-24 md:pb-28 relative overflow-hidden">
       <div className="w-full max-w-6xl space-y-4 sm:space-y-6 relative z-10 -mt-5 sm:mt-0">
-        <div className="flex flex-wrap justify-center gap-4 mb-[-5px] sm:mb-[-20px] relative pt-0 sm:pt-24 z-20">
+        <div className="flex flex-wrap justify-center relative gap-4 mb-[-5px] sm:mb-[-20px] pt-0 sm:pt-24 z-20">
 
-          <div className="bg-white border border-gray-200 px-4 py-2 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-300 pointer-events-none select-none">
-            <div className="flex items-center gap-1.5 h-6 text-sm font-medium">
+          <div className="bg-white/40 backdrop-blur-md border  border-white/20 px-4 py-2 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-all duration-300 pointer-events-none select-none">
+            <div className="flex items-center gap-3 h-6 text-sm font-medium">
               <span
                 className="font-semibold bg-clip-text text-transparent animate-gradient-rotate"
                 style={{
@@ -55,8 +55,9 @@ const Hero3D = () => {
               >
                 Beta is live now
               </span>
-              <div className="w-5 h-5 rounded-full bg-gray-150 flex items-center justify-center ml-1 shadow-sm">
-                <ChevronRight className="w-3 h-3 text-gray-600" />
+              <div className="w-[1px] h-3 bg-black/10" />
+              <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-sm">
+                <ChevronRight className="w-3 h-3 text-black" />
               </div>
             </div>
           </div>
