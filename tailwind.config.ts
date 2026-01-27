@@ -100,6 +100,10 @@ export default {
             backgroundPosition: "var(--bg-size) 0",
           },
         },
+        "gradient-rotate": {
+          "0%": { backgroundPosition: "200% 0%" },
+          "100%": { backgroundPosition: "-200% 0%" },
+        },
         marquee: {
           '0%': { transform: 'translateX(0%)' },
           '100%': { transform: 'translateX(-100%)' }
@@ -110,10 +114,12 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "float": "float 3s ease-in-out infinite",
         gradient: "gradient 8s linear infinite",
+        "gradient-rotate": "gradient-rotate 6s linear infinite",
         marquee: 'marquee var(--duration) linear infinite',
       },
       fontFamily: {
         sans: ["var(--font-inter)", "ui-sans-serif", "system-ui"],
+        inter: ["var(--font-inter)", "ui-sans-serif", "system-ui"],
         serif: ["var(--font-instrument-serif)", "serif"],
       },
       fontSize: {
