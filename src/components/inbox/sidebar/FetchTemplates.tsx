@@ -1,458 +1,181 @@
-"use client";
-
-import React, { useMemo } from "react";
+import { Plus, Search, LayoutTemplate, FileText, Loader2 } from "lucide-react";
 import useTemplates from "./hooks/fetchTemplate";
-import { WhatsAppTemplate } from "@/components/types/template";
-import {
-    CircleAlert,
-    Sparkles,
-    Layers,
-    ChevronDown,
-    MessageSquare,
-    Search,
-    Plus
-} from "lucide-react";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { TemplatePreview, PreviewButton } from "../templateUI/TemplatePreview";
-import { Button as TemplateButton } from "@/components/types/template_types";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 import { useRole } from "@/contexts/RoleContext";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { memo, useCallback, useEffect, useState } from "react";
+import { WhatsAppTemplateDialog } from "../WhatsAppTemplateDialog";
 import TemplateBuilders from "../TemplateBuilders";
+import { WhatsAppTemplate } from "../../types/template";
+const LoadingState = () => (
+    <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-primary/40" />
+    </div>
+);
 
-const FetchTemplates = () => {
-    const { data: templates, isLoading, error } = useTemplates();
-    const [allTemplates, setAllTemplates] = React.useState<WhatsAppTemplate[]>([]);
-    const [selectedTemplate, setSelectedTemplate] = React.useState<WhatsAppTemplate | null>(null);
-    const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
-    const [searchQuery, setSearchQuery] = React.useState("");
-    const [isBuilderOpen, setIsBuilderOpen] = React.useState(false);
-    const { isAdmin } = useRole();
+const EmptyState = ({ message }: { message: string }) => (
+    <div className="px-3 py-6 text-xs text-gray-400 text-center border-2 border-dashed border-gray-50 rounded-xl">
+        {message}
+    </div>
+);
 
-    React.useEffect(() => {
-        if (templates) {
-            setAllTemplates(templates);
-        }
-    }, [templates]);
-
-    // Mock formatting function for TemplatePreview
-    const getFormatedText = (text: string, type: "header" | "body") => {
-        if (!text) return "";
-        // Basic formatting logic similar to build
-        let formatted = text
-            .replace(/\*(.*?)\*/g, "<strong>$1</strong>")
-            .replace(/_(.*?)_/g, "<em>$1</em>")
-            .replace(/~(.*?)~/g, "<del>$1</del>")
-            .replace(/```(.*?)```/g, "<code>$1</code>");
-
-        if (type === "body") return formatted;
-        return <span dangerouslySetInnerHTML={{ __html: formatted }} />;
-    };
-
-    const handleSelectTemplate = (template: WhatsAppTemplate) => {
-        setSelectedTemplate(template);
-        setIsPreviewOpen(true);
-    };
-
-    const normalizedPreviewData = useMemo(() => {
-        if (!selectedTemplate) return null;
-
-        const components = selectedTemplate.components || [];
-        const headerComp = components.find(c => c.type === 'HEADER');
-        const bodyComp = components.find(c => c.type === 'BODY');
-        const footerComp = components.find(c => c.type === 'FOOTER');
-        const buttonsComp = components.find(c => c.type === 'BUTTONS');
-
-        // Extract Header
-        let headerContent = headerComp?.text || "";
-        let headerType = (headerComp?.format?.toLowerCase() as any) || "none";
-
-        if (!headerContent && selectedTemplate.header) {
-            if (typeof selectedTemplate.header === 'string') {
-                headerContent = selectedTemplate.header;
-                headerType = "text";
-            } else if (typeof selectedTemplate.header === 'object') {
-                headerContent = (selectedTemplate.header as any).content || "";
-                headerType = (selectedTemplate.header as any).type?.toLowerCase() || "none";
-            }
-        }
-
-        // Extract Body
-        let messageBody = bodyComp?.text || selectedTemplate.body || "";
-
-        // Handle Variable Replacement in Body
-        const bodyParams = (selectedTemplate as any).body_params;
-        if (Array.isArray(bodyParams)) {
-            bodyParams.forEach((param, index) => {
-                const placeholder = `{{${index + 1}}}`;
-                messageBody = messageBody.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), param);
-            });
-        }
-
-        // Extract Footer
-        const footerText = footerComp?.text || selectedTemplate.footer || "";
-
-        // Extract Buttons
-        let buttons: PreviewButton[] = [];
-        if (buttonsComp?.buttons) {
-            buttons = buttonsComp.buttons.map((b, i) => ({ id: i.toString(), text: b.text }));
-        } else {
-            const rawButtons = (selectedTemplate as any).buttons || (selectedTemplate as any).button;
-            if (Array.isArray(rawButtons)) {
-                buttons = rawButtons.map((b, i) => ({ id: i.toString(), text: b.text }));
-            } else if (rawButtons && typeof rawButtons === 'object') {
-                buttons = [{ id: '0', text: (rawButtons as any).text }];
-            }
-        }
-
-        return {
-            headerType,
-            headerContent,
-            messageBody,
-            footer: footerText,
-            buttons
-        };
-    }, [selectedTemplate]);
-
-    const groupedTemplates = useMemo(() => {
-        if (!allTemplates) return { prebuilt: [], custom: [] };
-
-        const filtered = allTemplates.filter((t: WhatsAppTemplate) =>
-            t.name?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-
-        return {
-            prebuilt: filtered.filter((t: WhatsAppTemplate) => t.type === 'PREBUILT'),
-            custom: filtered.filter((t: WhatsAppTemplate) => t.type === 'USER_CREATED'),
-        };
-    }, [allTemplates, searchQuery]);
-
-    const getStatusColor = (status?: string) => {
-        const s = status?.toUpperCase() || "";
-        switch (s) {
-            case "APPROVED": return "bg-green-500/10 text-green-600 border-green-200";
-            case "PENDING": return "bg-amber-500/10 text-amber-600 border-amber-200";
-            case "REJECTED": return "bg-red-500/10 text-red-600 border-red-200";
-            default: return "bg-gray-500/10 text-gray-600 border-gray-200";
-        }
-    };
-
-    const TemplateItem = ({ template }: { template: WhatsAppTemplate }) => (
-        <div className="flex items-center justify-between w-full gap-3 py-0.5">
-            <div className="flex items-center gap-2 min-w-0">
-                <MessageSquare className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                <span className="truncate text-xs font-medium text-gray-700">
-                    {template.name?.replace(/_/g, ' ') || 'Unnamed'}
-                </span>
+const TemplateCard = memo(({ template, onClick }: { template: any; onClick: (t: any) => void }) => (
+    <Card
+        className="mb-2 cursor-pointer transition-all hover:border-primary/50 hover:bg-accent/50 group border-gray-100 shadow-sm"
+        onClick={() => onClick(template)}
+    >
+        <CardHeader className="p-3">
+            <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-primary/10 transition-colors">
+                    <FileText className="h-4 w-4 text-gray-500 group-hover:text-primary transition-colors" />
+                </div>
+                <CardTitle className="text-xs font-medium text-gray-700 leading-tight">
+                    {template.name}
+                </CardTitle>
             </div>
-            <Badge
-                variant="outline"
-                className={cn("h-4 px-1 text-[9px] font-medium border rounded-full shrink-0", getStatusColor(template.status))}
-            >
-                {template.status?.toLowerCase() || 'unknown'}
-            </Badge>
-        </div>
+        </CardHeader>
+    </Card>
+));
+TemplateCard.displayName = "TemplateCard";
+
+const FetchTemplates = ({ selectedConversationId }: { selectedConversationId?: string }) => {
+    const [isOpened, setIsOpened] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const { data, isLoading } = useTemplates({ enabled: isOpened || searchQuery.length > 0 });
+    const isAdmin = useRole();
+    const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [isTemplateBuilderOpen, setIsTemplateBuilderOpen] = useState(false);
+    const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
+    const [searchTemplate, setSearchTemplate] = useState("");
+    const [accordionValue, setAccordionValue] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (searchQuery.length > 0) {
+            setAccordionValue(["prebuilt", "user"]);
+        }
+    }, [searchQuery]);
+
+    useEffect(() => {
+        if (data) {
+            setTemplates(data);
+        }
+    }, [data]);
+
+    const filteredData = data?.filter((t: any) =>
+        t.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const prebuilt = filteredData?.filter((t: any) => t.type === "PREBUILT");
+    const userCreated = filteredData?.filter((t: any) => t.type === "USER_CREATED");
+
+    const handleTemplateClick = useCallback((template: any) => {
+        setSelectedTemplate(template);
+        setIsPreviewOpen(true);
+    }, []);
+
     return (
-        <div className="flex flex-col gap-4 p-3 bg-white/50 backdrop-blur-sm rounded-xl">
-            {/* Search and Add Section */}
-            <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+        <div className="flex flex-col gap-4 py-2">
+            {/* Search */}
+            <div className="flex flex-row px-4">
+                <div className="relative group flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 group-focus-within:text-primary transition-colors" />
                     <Input
                         placeholder="Search templates..."
+                        className="pl-9 h-9 text-sm bg-gray-50/50 border-gray-100 focus-visible:ring-primary/20 focus-visible:border-primary transition-all rounded-lg"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-9 pl-8 text-xs bg-white border-gray-200 focus:border-blue-300 focus:ring-blue-100"
                     />
                 </div>
-                {isAdmin && (
-                    <Button
-                        size="icon"
-                        variant="outline"
-                        className="h-9 w-9 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 text-blue-600 shrink-0"
-                        onClick={() => setIsBuilderOpen(true)}
-                    >
-                        <Plus className="w-4 h-4" />
-                    </Button>
-                )}
+                <div className="pl-2">
+                    {isAdmin && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    size="icon"
+                                    variant="outline"
+                                    className="h-9 w-9 border-gray-100 hover:bg-primary/5 hover:text-primary transition-colors"
+                                    onClick={() => setIsTemplateBuilderOpen(true)}
+                                >
+                                    <Plus className="h-5 w-5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Add new template</TooltipContent>
+                        </Tooltip>
+                    )}
+                </div>
             </div>
 
-            {isLoading ? (
-                <div className="space-y-4">
-                    <div className="h-9 w-full bg-gray-100 animate-pulse rounded-md" />
-                    <div className="h-9 w-full bg-gray-100 animate-pulse rounded-md" />
-                </div>
-            ) : error ? (
-                <div className="p-4 text-center">
-                    <CircleAlert className="w-8 h-8 text-red-400 mx-auto mb-2" />
-                    <p className="text-xs text-gray-500">Failed to load templates</p>
-                </div>
-            ) : (
-                <>
-                    {/* Custom Templates Dropdown */}
-                    <div className="space-y-1.5">
-                        <label className="text-[11px] font-semibold text-gray-500 flex items-center gap-1.5 px-1 uppercase tracking-wider">
-                            <Sparkles className="w-3 h-3 text-blue-500" />
-                            Custom Templates
-                        </label>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="w-full h-9 justify-between text-xs font-normal border-gray-200 hover:border-blue-200 hover:bg-blue-50/30 transition-all px-3"
-                                >
-                                    <span className="text-gray-500">Select custom template...</span>
-                                    <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[200px]" align="start">
-                                <DropdownMenuLabel className="text-[10px] font-bold text-gray-400 uppercase tracking-tight px-2 py-1.5">
-                                    Available Custom Templates
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuGroup className="max-h-[300px] overflow-y-auto p-1">
-                                    {groupedTemplates.custom.length > 0 ? (
-                                        groupedTemplates.custom.map((t: WhatsAppTemplate) => (
-                                            <DropdownMenuItem
-                                                key={t.id || t.name}
-                                                className="focus:bg-blue-50 cursor-pointer rounded-md"
-                                                onSelect={() => handleSelectTemplate(t)}
-                                            >
-                                                <TemplateItem template={t} />
-                                            </DropdownMenuItem>
-                                        ))
-                                    ) : (
-                                        <div className="p-4 text-center italic text-gray-400 text-[10px]">
-                                            No custom templates found
-                                        </div>
-                                    )}
-                                </DropdownMenuGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-
-                    {/* Prebuilt Templates Dropdown */}
-                    <div className="space-y-1.5">
-                        <label className="text-[11px] font-semibold text-gray-500 flex items-center gap-1.5 px-1 uppercase tracking-wider">
-                            <Layers className="w-3 h-3 text-purple-500" />
+            <div className="px-4 overflow-y-auto max-h-[calc(100vh-250px)] custom-scrollbar">
+                <Accordion
+                    type="multiple"
+                    value={accordionValue}
+                    onValueChange={(value) => {
+                        setAccordionValue(value);
+                        if (value.length > 0) setIsOpened(true);
+                    }}
+                    className="w-full space-y-2"
+                >
+                    {/* Prebuilt Templates */}
+                    <AccordionItem value="prebuilt" className="border-none">
+                        <AccordionTrigger className="hover:no-underline py-2 text-[11px] font-bold text-gray-600 uppercase tracking-widest">
                             Prebuilt Templates
-                        </label>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="w-full h-9 justify-between text-xs font-normal border-gray-200 hover:border-purple-200 hover:bg-purple-50/30 transition-all px-3"
-                                >
-                                    <span className="text-gray-500">Select prebuilt template...</span>
-                                    <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[200px]" align="start">
-                                <DropdownMenuLabel className="text-[10px] font-bold text-gray-400 uppercase tracking-tight px-2 py-1.5">
-                                    Prebuilt Library
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuGroup className="max-h-[300px] overflow-y-auto p-1">
-                                    {groupedTemplates.prebuilt.length > 0 ? (
-                                        groupedTemplates.prebuilt.map((t: WhatsAppTemplate) => (
-                                            <DropdownMenuItem
-                                                key={t.id || t.name}
-                                                className="focus:bg-purple-50 cursor-pointer rounded-md"
-                                                onSelect={() => handleSelectTemplate(t)}
-                                            >
-                                                <TemplateItem template={t} />
-                                            </DropdownMenuItem>
-                                        ))
-                                    ) : (
-                                        <div className="p-4 text-center italic text-gray-400 text-[10px]">
-                                            No prebuilt templates found
-                                        </div>
-                                    )}
-                                </DropdownMenuGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </>
-            )}
-            <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-gray-500 flex items-center gap-1.5 px-1 uppercase tracking-wider">
-                    <Sparkles className="w-3 h-3 text-blue-500" />
-                    Custom Templates
-                </label>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="outline"
-                            className="w-full h-9 justify-between text-xs font-normal border-gray-200 hover:border-blue-200 hover:bg-blue-50/30 transition-all px-3"
-                        >
-                            <span className="text-gray-500">Select custom template...</span>
-                            <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[200px]" align="start">
-                        <DropdownMenuLabel className="text-[10px] font-bold text-gray-400 uppercase tracking-tight px-2 py-1.5">
-                            Available Custom Templates
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup className="max-h-[300px] overflow-y-auto p-1">
-                            {groupedTemplates.custom.length > 0 ? (
-                                groupedTemplates.custom.map((t: WhatsAppTemplate) => (
-                                    <DropdownMenuItem
-                                        key={t.id || t.name}
-                                        className="focus:bg-blue-50 cursor-pointer rounded-md"
-                                        onSelect={() => handleSelectTemplate(t)}
-                                    >
-                                        <TemplateItem template={t} />
-                                    </DropdownMenuItem>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-2">
+                            {isLoading ? (
+                                <LoadingState />
+                            ) : prebuilt?.length ? (
+                                prebuilt.map((template: any) => (
+                                    <TemplateCard key={template.id} template={template} onClick={handleTemplateClick} />
                                 ))
                             ) : (
-                                <div className="p-4 text-center italic text-gray-400 text-[10px]">
-                                    No custom templates found
-                                </div>
+                                <EmptyState message="No prebuilt templates found" />
                             )}
-                        </DropdownMenuGroup>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
+                        </AccordionContent>
+                    </AccordionItem>
 
-            {/* Prebuilt Templates Dropdown */}
-            <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-gray-500 flex items-center gap-1.5 px-1 uppercase tracking-wider">
-                    <Layers className="w-3 h-3 text-purple-500" />
-                    Prebuilt Templates
-                </label>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="outline"
-                            className="w-full h-9 justify-between text-xs font-normal border-gray-200 hover:border-purple-200 hover:bg-purple-50/30 transition-all px-3"
-                        >
-                            <span className="text-gray-500">Select prebuilt template...</span>
-                            <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[200px]" align="start">
-                        <DropdownMenuLabel className="text-[10px] font-bold text-gray-400 uppercase tracking-tight px-2 py-1.5">
-                            Prebuilt Library
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup className="max-h-[300px] overflow-y-auto p-1">
-                            {groupedTemplates.prebuilt.length > 0 ? (
-                                groupedTemplates.prebuilt.map((t: WhatsAppTemplate) => (
-                                    <DropdownMenuItem
-                                        key={t.id || t.name}
-                                        className="focus:bg-purple-50 cursor-pointer rounded-md"
-                                        onSelect={() => handleSelectTemplate(t)}
-                                    >
-                                        <TemplateItem template={t} />
-                                    </DropdownMenuItem>
+                    {/* User Created Templates */}
+                    <AccordionItem value="user" className="border-none">
+                        <AccordionTrigger className="hover:no-underline py-2 text-[11px] font-bold text-gray-600 uppercase tracking-widest">
+                            Your Templates
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-2">
+                            {isLoading ? (
+                                <LoadingState />
+                            ) : userCreated?.length ? (
+                                userCreated.map((template: any) => (
+                                    <TemplateCard key={template.id} template={template} onClick={handleTemplateClick} />
                                 ))
                             ) : (
-                                <div className="p-4 text-center italic text-gray-400 text-[10px]">
-                                    No prebuilt templates found
-                                </div>
+                                <EmptyState message="No custom templates yet" />
                             )}
-                        </DropdownMenuGroup>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
             </div>
 
-            {/* Preview Dialog */}
-            <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-                <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden gap-0">
-                    <DialogHeader className="p-4 border-b bg-gray-50/50">
-                        <DialogTitle className="text-sm font-semibold flex items-center gap-2">
-                            <MessageSquare className="w-4 h-4 text-blue-600" />
-                            {selectedTemplate?.name?.replace(/_/g, ' ') || 'Template Preview'}
-                        </DialogTitle>
-                    </DialogHeader>
+            <WhatsAppTemplateDialog
+                template={selectedTemplate}
+                isOpen={isPreviewOpen}
+                onClose={() => setIsPreviewOpen(false)}
+                selectedConversationId={selectedConversationId}
+            />
 
-                    <div className="p-6 bg-white overflow-y-auto max-h-[60vh]">
-                        {selectedTemplate && normalizedPreviewData && (
-                            <TemplatePreview
-                                headerType={normalizedPreviewData.headerType}
-                                headerContent={normalizedPreviewData.headerContent}
-                                previewFile={null}
-                                messageBody={normalizedPreviewData.messageBody}
-                                footer={normalizedPreviewData.footer}
-                                button={normalizedPreviewData.buttons}
-                                getFormatedText={getFormatedText}
-                                templateType={selectedTemplate.template || 'custom'}
-                                templateName={selectedTemplate.name}
-                                language={selectedTemplate.language}
-                                setLanguage={() => { }}
-                                languages={[selectedTemplate.language]}
-                                codeDeliveryMethod="copy_code"
-                                setCodeDeliveryMethod={() => { }}
-                                addSecurityRecommendation={false}
-                                setAddSecurityRecommendation={() => { }}
-                                addExpirationTime={false}
-                                setAddExpirationTime={() => { }}
-                                validityPeriod=""
-                                setValidityPeriod={() => { }}
-                                autofillText=""
-                                setAutofillText={() => { }}
-                                copyCodeText=""
-                                setCopyCodeText={() => { }}
-                                apps={[]}
-                                setApps={() => { }}
-                                customValidityPeriod={false}
-                                setCustomValidityPeriod={() => { }}
-                                validityPeriods={[]}
-                            />
-                        )}
-                    </div>
-
-                    <DialogFooter className="p-4 bg-gray-50/50 border-t flex-row gap-2 mt-0">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => setIsPreviewOpen(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            size="sm"
-                            className="flex-1 bg-blue-600 hover:bg-blue-700"
-                            onClick={() => {
-                                console.log("Sending template:", selectedTemplate?.name);
-                                setIsPreviewOpen(false);
-                            }}
-                        >
-                            Send Template
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Template Builder Dialog */}
             <TemplateBuilders
-                isOpen={isBuilderOpen}
-                setIsOpen={setIsBuilderOpen}
-                templates={allTemplates}
-                setTemplates={setAllTemplates}
-                searchTemplate={searchQuery}
-                setSearchTemplate={setSearchQuery}
+                isOpen={isTemplateBuilderOpen}
+                setIsOpen={setIsTemplateBuilderOpen}
+                templates={templates}
+                setTemplates={setTemplates}
+                searchTemplate={searchTemplate}
+                setSearchTemplate={setSearchTemplate}
             />
         </div>
     );

@@ -22,7 +22,7 @@ interface WhatsAppTemplateContentProps {
   onLocationSelect: (location: { lat: number; lng: number; address: string }) => void; // Add this prop
 }
 
-export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { onInputChange: (key: string, value: string) => void }> = ({ template, onInputChange, languageCode, setMediaId, setPreviewFile, onLocationSelect }) => {
+export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { onInputChange: (key: string, value: string) => void }> = React.memo(({ template, onInputChange, languageCode, setMediaId, setPreviewFile, onLocationSelect }) => {
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const [localPreviewFiles, setLocalPreviewFiles] = useState<{ [key: string]: string | null }>({});
   const [isUploading, setIsUploading] = useState<{ [key: string]: boolean }>({});
@@ -31,6 +31,7 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
   const [uploadSuccess, setUploadSuccess] = useState<{ [key: string]: boolean }>({});
 
   const calculateInputWidth = (text: string, fontSize: number = 14): number => {
+    if (typeof document === 'undefined') return 100;
     const span = document.createElement("span");
     span.style.visibility = "hidden";
     span.style.position = "absolute";
@@ -44,6 +45,7 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
   };
 
   const calculateHeaderInputWidth = (text: string): number => {
+    if (typeof document === 'undefined') return 100;
     const span = document.createElement('span');
     span.style.visibility = 'hidden';
     span.style.position = 'absolute';
@@ -177,8 +179,9 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
         setMediaId(null);
         setMediaIdMap(prev => ({ ...prev, [uniqueKey]: null }));
         setUploadSuccess(prev => ({ ...prev, [uniqueKey]: false }));
-        if (fileInputRefs.current[uniqueKey]) {
-          fileInputRefs.current[uniqueKey].value = "";
+        const input = fileInputRefs.current[uniqueKey];
+        if (input) {
+          input.value = "";
         }
       };
 
@@ -226,7 +229,7 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
               {component.format === "IMAGE" && localPreviewFiles[uniqueKey] && (
                 <div className="flex flex-col">
                   <img
-                    src={localPreviewFiles[uniqueKey]}
+                    src={localPreviewFiles[uniqueKey] ?? undefined}
                     alt="Header"
                     className="w-full h-auto max-h-[300px] object-contain rounded-md"
                   />
@@ -252,7 +255,7 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
               {component.format === "VIDEO" && localPreviewFiles[uniqueKey] && (
                 <div>
                   <video controls className="w-full rounded-md max-h-[100px] object-contain">
-                    <source src={localPreviewFiles[uniqueKey]} type="video/mp4" />
+                    <source src={localPreviewFiles[uniqueKey] ?? undefined} type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
                   {uploadSuccess[uniqueKey] && mediaIdMap[uniqueKey] && (
@@ -286,7 +289,7 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
                       </div>
                     </div>
                     <a
-                      href={localPreviewFiles[uniqueKey]}
+                      href={localPreviewFiles[uniqueKey] ?? undefined}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-2 w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm py-2 rounded transition-colors"
@@ -327,7 +330,7 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
     if (component.format === "LOCATION") {
       return (
         <div className="mb-4">
-          <Map onLocationSelect={onLocationSelect}/>
+          <Map onLocationSelect={onLocationSelect} />
         </div>
       );
     }
@@ -445,26 +448,112 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
     );
   };
 
+  // A generic processText function to handle variables and markdown for fallback
+  const processTextForFallback = (text: string, exampleValues: string[], isHeader: boolean) => {
+    const parts = text.split(/(\{\{\d+\}\})|(\*\*.*?\*\*)|(_.*?_)|(~~.*?~~)|(`.*?`)/g);
+
+    return parts.map((part, idx) => {
+      if (!part) return null;
+
+      const varMatch = part.match(/\{\{(\d+)\}\}/);
+      if (varMatch) {
+        const varIndex = parseInt(varMatch[1]) - 1;
+        const exampleValue = exampleValues[varIndex] || '';
+        return (
+          <input
+            key={idx}
+            type="text"
+            defaultValue={exampleValue}
+            placeholder={exampleValue}
+            className={`inline-block px-1 mx-1 border border-gray-300 rounded focus:outline-none focus:border-[#25D366] ${isHeader ? 'text-base' : 'text-sm'}`}
+            style={{ width: `${calculateInputWidth(exampleValue)}px` }}
+            onChange={(e) => onInputChange(`${isHeader ? 'header' : 'body'}_${varIndex}`, e.target.value)}
+          />
+        );
+      }
+
+      // Process markdown
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={idx}>{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith('_') && part.endsWith('_')) {
+        return <em key={idx}>{part.slice(1, -1)}</em>;
+      }
+      if (part.startsWith('~~') && part.endsWith('~~')) {
+        return <del key={idx}>{part.slice(2, -2)}</del>;
+      }
+      if (part.startsWith('`') && part.endsWith('`')) {
+        return <code key={idx}>{part.slice(1, -1)}</code>;
+      }
+
+      return <span key={idx}>{part}</span>;
+    });
+  };
+
   return (
 
 
     <ScrollArea className="max-h-[400px] overflow-y-auto">
       <div className="bg-[#f6f2e0aa] min-h-[300px] p-4">
         <div className="max-w-[600px] mx-auto bg-white rounded-lg shadow-sm p-4 space-y-3">
-          {template.components?.map((component, index) => (
-            <div key={index} className="message-bubble">
-              {component.type === "CAROUSEL" && 'cards' in component ? renderCarousel(component as { type: string; cards: any[] }) : (
-                <>
-                  {renderHeader(component, index, index)}
-                  {renderBody(component, index)}
-                  {renderFooter(component)}
-                  {component.buttons && renderButtons({ type: component.type, buttons: component.buttons.filter(button => button && button.text) })}
-                </>
+          {template.components && template.components.length > 0 ? (
+            template.components.map((component, index) => (
+              <div key={index} className="message-bubble">
+                {component.type === "CAROUSEL" && 'cards' in component ? renderCarousel(component as { type: string; cards: any[] }) : (
+                  <>
+                    {renderHeader(component, index, index)}
+                    {renderBody(component, index)}
+                    {renderFooter(component)}
+                    {component.buttons && renderButtons({ type: component.type, buttons: component.buttons.filter(button => button && button.text) })}
+                  </>
+                )}
+              </div>
+            ))
+          ) : (
+            /* Fallback for Prebuilt Templates with traditional structure */
+            <div className="message-bubble">
+              {template.header && (
+                <h3 className="text-[16px] font-semibold text-[#1a1a1a] mb-3">
+                  {processTextForFallback(
+                    typeof template.header === 'string'
+                      ? template.header
+                      : (template.header as any)?.content || '',
+                    template.header_params || [],
+                    true
+                  )}
+                </h3>
+              )}
+              {template.body && (
+                <div className="text-gray-800 mb-4">
+                  {template.body.split('\n').filter(Boolean).map((paragraph, idx) => (
+                    <p key={idx} className={idx < (template.body?.split('\n').filter(Boolean).length || 0) - 1 ? 'mb-2' : ''}>
+                      {processTextForFallback(paragraph, template.body_params || [], false)}
+                    </p>
+                  ))}
+                </div>
+              )}
+              {template.footer && (
+                <p className="text-[13px] text-gray-500 italic mb-2">{template.footer}</p>
+              )}
+              {template.buttons && template.buttons.length > 0 && (
+                <div className="flex flex-col gap-2 w-full">
+                  {template.buttons.map((button: any, index: number) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      className="text-blue-500"
+                    >
+                      {button.text}
+                    </Button>
+                  ))}
+                </div>
               )}
             </div>
-          ))}
+          )}
         </div>
       </div>
     </ScrollArea>
   );
-};
+});
+
+WhatsAppTemplateContent.displayName = "WhatsAppTemplateContent";

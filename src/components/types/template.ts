@@ -17,7 +17,7 @@ export interface WhatsAppTemplate {
 
   template?: 'custom' | 'catalog' | 'one-time_Passcode';
 
-  header?: {
+  header?: string | {
     type: 'none' | 'text' | 'media' | 'location';
     content?: string;
   };
@@ -26,21 +26,14 @@ export interface WhatsAppTemplate {
 
   footer?: string;
 
-  button?: {
+  buttons?: {
     id: string;
-    type: 'reply' | 'url' | 'phone' | 'copy';
+    type: 'reply' | 'url' | 'phone' | 'copy' | 'REPLY' | 'URL' | 'PHONE_NUMBER' | 'COPY' | 'QUICK_REPLY';
     text: string;
     content?: string;
-  };
-
-  variable?: {
-    id: string;
-    name: string;
-    type: 'text' | 'number';
-    example: string;
-    section: 'body';
   }[];
 
+  header_params?: string[];
   body_params?: string[];
   body_param_types?: ('TEXT' | 'NUMBER')[];
 
@@ -76,7 +69,7 @@ export interface WhatsAppTemplateComponent {
   text?: string;
 
   buttons?: {
-    type: 'PHONE_NUMBER' | 'URL' | 'QUICK_REPLY';
+    type: 'PHONE_NUMBER' | 'URL' | 'QUICK_REPLY' | 'COPY' | 'REPLY';
     text: string;
     value?: string;
   }[];

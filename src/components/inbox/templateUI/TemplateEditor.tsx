@@ -17,7 +17,7 @@ import EmojiPicker, { EmojiClickData } from "emoji-picker-react"
 
 import { AppSetup, Button, Variable } from "@/components/types/template_types";
 
-import { insertFormatting } from "./textFormatting";
+import { insertFormatting, insertEmoji } from "./textFormatting";
 import FileUploadHandler from './FileUploadHandler';
 
 
@@ -151,12 +151,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     { packageName: "", signatureHash: "" },
   ]);
   const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
-  const [text, setText] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleEmojiSelect = (emoji: any) => {
-    // Append selected emoji to message body
-    setMessageBody(messageBody + emoji.emoji);
-    setEmojiPickerVisible(false); // Optionally hide picker after selection
+  const handleEmojiSelect = (emoji: string) => {
+    insertEmoji(textareaRef, emoji, messageBody, setMessageBody);
+    setEmojiPickerVisible(false);
   };
 
   const validityPeriods = [
@@ -194,143 +193,35 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     setApps(newApps);
   };
 
-  interface Selection {
-    baseNode: Node | null;
-    baseOffset: number;
-    extentNode: Node | null;
-    extentOffset: number;
-  }
-  // textFormatting.ts
-  const FORMAT_MARKERS = {
-    bold: { start: "**", end: "**" },
-    italic: { start: "_", end: "_" },
-    strikethrough: { start: "~~", end: "~~" },
-    monospace: { start: "`", end: "`" },
-  } as const;
-
-  // const insertFormatting = (
-  //   format: keyof typeof FORMAT_MARKERS,
-  //   messageBody: string,
-  //   setMessageBody: (value: string) => void
-  // ) => {
-  //   const textarea = document.querySelector("textarea");
-  //   if (!textarea) return;
-
-  //   const start = textarea.selectionStart;
-  //   const end = textarea.selectionEnd;
-
-  //   // If there's no text selected, preserve cursor position
-  //   if (start === end) {
-  //     const marker = FORMAT_MARKERS[format];
-  //     const newText =
-  //       messageBody.slice(0, start) +
-  //       marker.start +
-  //       marker.end +
-  //       messageBody.slice(end);
-
-  //     setMessageBody(newText);
-
-  //     // Set cursor position between markers
-  //     setTimeout(() => {
-  //       textarea.selectionStart = start + marker.start.length;
-  //       textarea.selectionEnd = start + marker.start.length;
-  //       textarea.focus();
-  //     }, 0);
-  //     return;
-  //   }
-
-  //   const selectedText = messageBody.substring(start, end);
-  //   const marker = FORMAT_MARKERS[format];
-
-  //   // Check if selection already has this formatting
-  //   const hasFormatting =
-  //     selectedText.startsWith(marker.start) &&
-  //     selectedText.endsWith(marker.end);
-
-  //   let newText;
-  //   if (hasFormatting) {
-  //     // Remove formatting
-  //     newText =
-  //       messageBody.slice(0, start) +
-  //       selectedText.slice(marker.start.length, -marker.end.length) +
-  //       messageBody.slice(end);
-  //   } else {
-  //     // Add formatting
-  //     newText =
-  //       messageBody.slice(0, start) +
-  //       marker.start +
-  //       selectedText +
-  //       marker.end +
-  //       messageBody.slice(end);
-  //   }
-
-  //   setMessageBody(newText);
-
-  //   // Preserve selection
-  //   setTimeout(() => {
-  //     const newSelectionStart = start;
-  //     const newSelectionEnd = hasFormatting
-  //       ? end - (marker.start.length + marker.end.length)
-  //       : end + (marker.start.length + marker.end.length);
-
-  //     textarea.selectionStart = newSelectionStart;
-  //     textarea.selectionEnd = newSelectionEnd;
-  //     textarea.focus();
-  //   }, 0);
-  // };
-
-  // // Convert Markdown to HTML for preview
-  // const getFormattedText = (
-  //   text: string,
-  //   type: "header" | "body"
-  // ): React.ReactNode => {
-  //   // Replace newlines with <br /> first
-  //   let formattedText = text.replace(/\n/g, "<br />");
-
-  //   // Convert Markdown to HTML
-  //   formattedText = formattedText
-  //     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // Bold
-  //     .replace(/_(.*?)_/g, "<em>$1</em>") // Italic
-  //     .replace(/~~(.*?)~~/g, "<del>$1</del>") // Strikethrough
-  //     .replace(/`(.*?)`/g, "<code>$1</code>"); // Monospace
-
-  //   // Handle variables if present
-  //   formattedText = formattedText.replace(
-  //     /{{(\w+)}}/g,
-  //     '<span class="text-blue-500">{{$1}}</span>'
-  //   );
-
-  //   return formattedText;
-  // };
-
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   return (
     <div className="text-sm space-y-4 sm:space-y-6 overflow-y-auto hide-scrollbar">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="space-y-1.5">
+          <label className="block text-sm font-semibold text-gray-700">
             Template name
           </label>
           <input
             type="text"
             value={templateName}
             onChange={(e) => setTemplateName(e.target.value)}
-            placeholder="Enter a template name"
-            className="w-full p-2 border rounded-md"
+            placeholder="e.g., welcome_message"
+            className="w-full p-2.5 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
             maxLength={512}
           />
-          <div className="text-xs text-gray-500 mt-1">
-            {templateName.length} / 512
+          <div className="flex justify-end">
+            <span className="text-[10px] text-gray-400 font-medium">
+              {templateName.length} / 512
+            </span>
           </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="space-y-1.5">
+          <label className="block text-sm font-semibold text-gray-700">
             Language
           </label>
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="w-full p-2 border rounded-md"
+            className="w-full p-2.5 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none cursor-pointer"
           >
             {languages.map((lang) => (
               <option key={lang} value={lang}>
@@ -344,19 +235,22 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         <>
           {/* Header Section */}
           {/* Header Section with Variables */}
-          <div className="border p-3 sm:p-4 rounded-lg bg-gray-50/50">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-              <h3 className="text-md font-semibold">Header (Optional)</h3>
+          <div className="border p-4 sm:p-5 rounded-xl bg-white shadow-sm border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+              <div>
+                <h3 className="text-base font-bold text-gray-800">Header</h3>
+                <p className="text-xs text-gray-500">Add a title or use media for your message</p>
+              </div>
               <button
                 onClick={() => {
                   setNewVariable({ ...newVariable, section: "header" });
                   setShowVariableModal(true);
                 }}
                 disabled={headerVariables.length >= 5}
-                className="text-blue-500 hover:text-blue-600 disabled:text-gray-400 text-sm flex items-center gap-1 w-fit"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Plus size={16} />
-                Add Header Variable
+                <Plus size={14} />
+                Add Variable
               </button>
             </div>
 
@@ -414,16 +308,24 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 </select>
 
                 {headerType === "text" && (
-                  <input
-                    type="text"
-                    value={headerContent || ""}
-                    onChange={(e) => {
-                      setHeaderContent(e.target.value);
-                      setHeader(e.target.value); // Sync header
-                    }}
-                    className="w-full p-2 border rounded-md"
-                    placeholder="Enter header text"
-                  />
+                  <div className="space-y-1">
+                    <input
+                      type="text"
+                      value={headerContent || ""}
+                      onChange={(e) => {
+                        setHeaderContent(e.target.value);
+                        setHeader(e.target.value); // Sync header
+                      }}
+                      className="w-full p-2.5 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                      placeholder="Enter header text"
+                      maxLength={60}
+                    />
+                    <div className="flex justify-end">
+                      <span className="text-[10px] text-gray-400 font-medium">
+                        {header.length} / 60
+                      </span>
+                    </div>
+                  </div>
                 )}
 
                 {(headerType === "image" ||
@@ -451,25 +353,25 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                   </div>
                 )}
               </div>
-              <div className="text-xs text-gray-500 mt-1">
-                {header.length} / 60
-              </div>
             </div>
           </div>
 
-          <div className="border p-3 sm:p-4 rounded-lg bg-gray-50/50">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-              <h3 className="text-sm font-semibold">Message Body Section</h3>
+          <div className="border p-4 sm:p-5 rounded-xl bg-white shadow-sm border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+              <div>
+                <h3 className="text-base font-bold text-gray-800">Body</h3>
+                <p className="text-xs text-gray-500">The main content of your message</p>
+              </div>
               <button
                 onClick={() => {
                   setNewVariable({ ...newVariable, section: "body" });
                   setShowVariableModal(true);
                 }}
                 disabled={bodyVariables.length >= 5}
-                className="text-blue-500 hover:text-blue-600 disabled:text-gray-400 text-sm flex items-center gap-1 w-fit"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Plus size={16} />
-                Add Body Variable
+                <Plus size={14} />
+                Add Variable
               </button>
             </div>
 
@@ -508,106 +410,100 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             </div>
 
             {/* Message Body Input */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Message Body
-              </label>
-              <div className="relative">
-                <textarea
-                  ref={textareaRef}
-                  value={messageBody}
-                  onChange={(e) => setMessageBody(e.target.value)}
-                  onInput={(e) => setText(e.currentTarget.textContent || "")}
-                  placeholder="Enter your message"
-                  className="w-full p-2 border rounded-md h-32 bg-white"
-                  maxLength={1024}
-                />
-
-
-                <div className="absolute bottom-2 right-2 flex items-center gap-2">
-                  {/* Emoji Picker Toggle */}
-                  <div className="relative">
-                    <button
-                      className="p-2 text-gray-500 hover:text-gray-700"
-                      onClick={() => setEmojiPickerVisible((prev) => !prev)}
-                      aria-label="Toggle emoji picker"
-                    >
-                      <Smile size={16} />
-                    </button>
-                    {emojiPickerVisible && (
-                      <div className="absolute mt-2 z-50 bg-white border rounded shadow-lg">
-                        <EmojiPicker
-                          onEmojiClick={(emoji: EmojiClickData) => {
-                            handleEmojiSelect(emoji.emoji)
-                          }}
-                        />
-
-                      </div>
-                    )}
-                  </div>
-
+            <div className="space-y-1">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Message Body
+                </label>
+                <div className="flex items-center gap-1.5 p-1 bg-white border rounded-md shadow-sm">
                   <button
-                    onClick={() =>
-                      insertFormatting("bold", messageBody, setMessageBody)
-                    }
-                    className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                    onClick={() => insertFormatting("bold", textareaRef, messageBody, setMessageBody)}
+                    className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                     title="Bold"
                   >
                     <Bold size={16} />
                   </button>
                   <button
-                    onClick={() =>
-                      insertFormatting("italic", messageBody, setMessageBody)
-                    }
-                    className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                    onClick={() => insertFormatting("italic", textareaRef, messageBody, setMessageBody)}
+                    className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                     title="Italic"
                   >
                     <Italic size={16} />
                   </button>
                   <button
-                    onClick={() =>
-                      insertFormatting(
-                        "strikethrough",
-                        messageBody,
-                        setMessageBody
-                      )
-                    }
-                    className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                    onClick={() => insertFormatting("strikethrough", textareaRef, messageBody, setMessageBody)}
+                    className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                     title="Strikethrough"
                   >
                     <Strikethrough size={16} />
                   </button>
                   <button
-                    onClick={() =>
-                      insertFormatting("monospace", messageBody, setMessageBody)
-                    }
-                    className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                    onClick={() => insertFormatting("monospace", textareaRef, messageBody, setMessageBody)}
+                    className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                     title="Monospace"
                   >
                     <Code size={16} />
                   </button>
+                  <div className="w-px h-4 bg-gray-200 mx-0.5" />
+                  <div className="relative">
+                    <button
+                      className={`p-1.5 rounded transition-colors ${emojiPickerVisible ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'}`}
+                      onClick={() => setEmojiPickerVisible((prev) => !prev)}
+                      title="Emojis"
+                    >
+                      <Smile size={16} />
+                    </button>
+                    {emojiPickerVisible && (
+                      <div className="absolute right-0 bottom-full mb-2 z-[100] shadow-2xl border rounded-xl overflow-hidden">
+                        <EmojiPicker
+                          onEmojiClick={(emoji: EmojiClickData) => handleEmojiSelect(emoji.emoji)}
+                          width={320}
+                          height={400}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="text-xs text-gray-500 mt-1">
-                {messageBody.length} / 1024
+
+              <div className="relative group">
+                <textarea
+                  ref={textareaRef}
+                  value={messageBody}
+                  onChange={(e) => setMessageBody(e.target.value)}
+                  placeholder="Enter your message content here..."
+                  className="w-full p-4 border rounded-xl h-48 bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none leading-relaxed"
+                  maxLength={1024}
+                />
+                <div className="absolute bottom-3 right-4">
+                  <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${messageBody.length > 900 ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-500'
+                    }`}>
+                    {messageBody.length} / 1024
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Footer Section */}
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Footer (Optional)
-            </label>
-            <input
-              type="text"
-              placeholder="Enter footer text"
-              className="w-full p-2 border rounded-md"
-              value={footer}
-              onChange={(e) => setFooter(e.target.value)}
-              maxLength={60}
-            />
-            <div className="text-[11px] text-gray-500">{footer.length}/60</div>
+          <div className="border p-4 sm:p-5 rounded-xl bg-white shadow-sm border-gray-200 space-y-4">
+            <div>
+              <h3 className="text-base font-bold text-gray-800">Footer (Optional)</h3>
+              <p className="text-xs text-gray-500">Add a short line of text at the bottom of your message</p>
+            </div>
+            <div className="space-y-1">
+              <input
+                type="text"
+                placeholder="e.g., Reply STOP to opt-out"
+                className="w-full p-2.5 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                value={footer}
+                onChange={(e) => setFooter(e.target.value)}
+                maxLength={60}
+              />
+              <div className="flex justify-end">
+                <span className="text-[10px] text-gray-400 font-medium">{footer.length}/60</span>
+              </div>
+            </div>
           </div>
 
           {/* Buttons Section */}

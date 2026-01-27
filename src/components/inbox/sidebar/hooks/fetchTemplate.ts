@@ -1,7 +1,7 @@
 import { useApi } from "@/lib/session_api";
 import { useQuery } from "@tanstack/react-query";
 
-const useTemplates = () => {
+const useTemplates = (options?: { enabled?: boolean }) => {
     const api = useApi();
 
     return useQuery({
@@ -27,6 +27,7 @@ const useTemplates = () => {
                 throw error;
             }
         },
+        enabled: options?.enabled ?? true,
     });
 };
 
