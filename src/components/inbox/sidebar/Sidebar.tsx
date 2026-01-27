@@ -26,16 +26,17 @@ import ProductsTab from "../Product";
 import CustomerInfo from "../CustomerInfo";
 import ConversationSummary from "../ConversationSummary";
 import TemplateBuilders from "../TemplateBuilders";
+
 import { WhatsAppTemplateDialog } from "../WhatsAppTemplateDialog";
 import AnalyticsSection from "../AnalyticsSection";
 import AccordionSection from "./AccordionSection";
 import TagDropdown from "./TagDropdown";
-import ComingSoon from "@/components/shared/ComingSoon";
 
 // Types & Libs
 import { WhatsAppTemplate } from "@/components/types/template";
 import { Conversation } from "@/components/types/conversation";
 import { Product } from "@/components/types/product";
+import FetchTemplates from "./FetchTemplates";
 
 interface SidebarProps {
   selectedConversationId: string;
@@ -83,6 +84,10 @@ const Sidebar = ({
 
   const handleProductSelect = useCallback((product: Product) => {
     setSelectedData((prev) => ({ ...prev, product }));
+  }, []);
+
+  const handleTemplateSelect = useCallback((template: WhatsAppTemplate) => {
+    setSelectedData((prev) => ({ ...prev, template }));
   }, []);
 
   const handleProductShare = useCallback(
@@ -150,10 +155,7 @@ const Sidebar = ({
         );
       case "templates":
         return (
-          <ComingSoon
-            compact={true}
-            description="Powerful messaging templates are arriving soon to streamline your conversations."
-          />
+          <FetchTemplates />
         );
       case "products":
         return (
@@ -185,7 +187,7 @@ const Sidebar = ({
           isOpen={uiState.showTemplateBuilder}
           setIsOpen={(v) => toggleUi("showTemplateBuilder", v)}
           templates={templates}
-          setTemplates={() => {}}
+          setTemplates={() => { }}
           searchTemplate={uiState.searchTemplate}
           setSearchTemplate={(v) => toggleUi("searchTemplate", v)}
         />
