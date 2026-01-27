@@ -27,6 +27,9 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://heidelai.com'),
+  alternates: {
+    canonical: '/'
+  },
   title: {
     default: 'HeidelAI - AI-Powered Customer Engagement & Analytics Platform',
     template: '%s | HeidelAI'
@@ -46,10 +49,13 @@ export const metadata: Metadata = {
   authors: [{ name: 'HeidelAI' }],
   icons: {
     icon: '/heidelai.png',
+    apple: '/heidelai.png',
   },
   openGraph: {
     title: 'HeidelAI - AI-Powered Customer Engagement & Analytics Platform',
     description: 'Transform your business with HeidelAI\'s AI-powered tools for customer engagement, real-time analytics, and smart chatbots.',
+    url: 'https://heidelai.com',
+    siteName: 'HeidelAI',
     images: ['/heidelai_mockup.png'],
     type: 'website'
   },

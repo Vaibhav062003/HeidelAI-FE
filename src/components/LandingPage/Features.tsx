@@ -165,6 +165,7 @@ const FunnelIcon: React.FC<{ icon: InputIcon }> = ({ icon }) => {
           width={32}
           height={32}
           className="w-full h-full object-contain"
+          loading="lazy"
           unoptimized
         />
       </div>
