@@ -1,4 +1,4 @@
-import { Plus, Search, LayoutTemplate, FileText, Loader2 } from "lucide-react";
+import { Plus, Search, FileText, Loader2 } from "lucide-react";
 import useTemplates from "./hooks/fetchTemplate";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -27,7 +27,7 @@ const EmptyState = ({ message }: { message: string }) => (
     </div>
 );
 
-const TemplateCard = memo(({ template, onClick }: { template: any; onClick: (t: any) => void }) => (
+const TemplateCard = memo(({ template, onClick }: { template: WhatsAppTemplate; onClick: (t: WhatsAppTemplate) => void }) => (
     <Card
         className="mb-2 cursor-pointer transition-all hover:border-primary/50 hover:bg-accent/50 group border-gray-100 shadow-sm"
         onClick={() => onClick(template)}
@@ -51,7 +51,7 @@ const FetchTemplates = ({ selectedConversationId }: { selectedConversationId?: s
     const [searchQuery, setSearchQuery] = useState("");
     const { data, isLoading } = useTemplates({ enabled: isOpened || searchQuery.length > 0 });
     const isAdmin = useRole();
-    const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
+    const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [isTemplateBuilderOpen, setIsTemplateBuilderOpen] = useState(false);
     const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
@@ -70,14 +70,14 @@ const FetchTemplates = ({ selectedConversationId }: { selectedConversationId?: s
         }
     }, [data]);
 
-    const filteredData = data?.filter((t: any) =>
+    const filteredData = data?.filter((t: WhatsAppTemplate) =>
         t.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const prebuilt = filteredData?.filter((t: any) => t.type === "PREBUILT");
-    const userCreated = filteredData?.filter((t: any) => t.type === "USER_CREATED");
+    const prebuilt = filteredData?.filter((t: WhatsAppTemplate) => t.type === "PREBUILT");
+    const userCreated = filteredData?.filter((t: WhatsAppTemplate) => t.type === "USER_CREATED");
 
-    const handleTemplateClick = useCallback((template: any) => {
+    const handleTemplateClick = useCallback((template: WhatsAppTemplate) => {
         setSelectedTemplate(template);
         setIsPreviewOpen(true);
     }, []);
@@ -133,7 +133,7 @@ const FetchTemplates = ({ selectedConversationId }: { selectedConversationId?: s
                             {isLoading ? (
                                 <LoadingState />
                             ) : prebuilt?.length ? (
-                                prebuilt.map((template: any) => (
+                                prebuilt.map((template: WhatsAppTemplate) => (
                                     <TemplateCard key={template.id} template={template} onClick={handleTemplateClick} />
                                 ))
                             ) : (
@@ -151,7 +151,7 @@ const FetchTemplates = ({ selectedConversationId }: { selectedConversationId?: s
                             {isLoading ? (
                                 <LoadingState />
                             ) : userCreated?.length ? (
-                                userCreated.map((template: any) => (
+                                userCreated.map((template: WhatsAppTemplate) => (
                                     <TemplateCard key={template.id} template={template} onClick={handleTemplateClick} />
                                 ))
                             ) : (

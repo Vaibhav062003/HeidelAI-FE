@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { WhatsAppTemplate } from "../types/template";
 import { WhatsAppTemplateContent } from "./WhatsApptemplateContent";
-import { Share2, Upload, X } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { useApi } from "@/lib/session_api";
 import { toast } from "sonner";
 
@@ -16,7 +16,6 @@ interface WhatsAppTemplateDialogProps {
   template: WhatsAppTemplate | null;
   isOpen: boolean;
   onClose: () => void;
-  onSend?: () => void;
   selectedConversationId?: string;
   languageCode?: string;
 }
@@ -25,7 +24,6 @@ export const WhatsAppTemplateDialog = ({
   template,
   isOpen,
   onClose,
-  onSend,
   selectedConversationId,
   languageCode,
 }: WhatsAppTemplateDialogProps) => {
@@ -106,7 +104,7 @@ export const WhatsAppTemplateDialog = ({
       } else {
         toast.error("Failed to send message");
       }
-    } catch (error) {
+    } catch {
       toast.error("Error sending message");
     }
     // console.log("Payload:", JSON.stringify(payload));
@@ -119,7 +117,26 @@ export const WhatsAppTemplateDialog = ({
   ) => {
     const [messagingProduct, recipientPhoneNumber] =
       selectedConversationId.split("_");
-    const components: any[] = [];
+    const components: {
+      type: string;
+      parameters?: Array<{
+        type: string;
+        text?: string;
+        image?: { id: string | null };
+        video?: { id: string | null };
+        document?: { id: string | null };
+        location?: {
+          longitude: number;
+          latitude: number;
+          name: string;
+          address: string;
+        };
+        payload?: string;
+        phone_number?: string;
+      }>;
+      sub_type?: string;
+      index?: string;
+    }[] = [];
 
     if (template.components && template.components.length > 0) {
       // Header Component
@@ -189,7 +206,7 @@ export const WhatsAppTemplateDialog = ({
           : [];
 
         const updatedBodyTextValues = bodyTextValues?.map(
-          (value: any, index: number) => variables[`body_${index}`] || value
+          (value: string, index: number) => variables[`body_${index}`] || value
         );
 
         components.push({
