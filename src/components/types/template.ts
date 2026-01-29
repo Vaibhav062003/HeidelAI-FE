@@ -28,7 +28,7 @@ export interface WhatsAppTemplate {
 
   buttons?: {
     id: string;
-    type: 'reply' | 'url' | 'phone' | 'copy' | 'REPLY' | 'URL' | 'PHONE_NUMBER' | 'COPY' | 'QUICK_REPLY';
+    type: 'REPLY' | 'URL' | 'PHONE_NUMBER' | 'COPY' | 'QUICK_REPLY';
     text: string;
     content?: string;
   }[];
