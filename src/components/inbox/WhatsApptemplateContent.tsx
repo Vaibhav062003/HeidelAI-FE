@@ -229,7 +229,7 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
               {component.format === "IMAGE" && localPreviewFiles[uniqueKey] && (
                 <div className="flex flex-col">
                   <img
-                    src={localPreviewFiles[uniqueKey] ?? undefined}
+                    src={localPreviewFiles[uniqueKey] || ""}
                     alt="Header"
                     className="w-full h-auto max-h-[300px] object-contain rounded-md"
                   />
@@ -537,7 +537,7 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
               )}
               {template.buttons && template.buttons.length > 0 && (
                 <div className="flex flex-col gap-2 w-full">
-                  {template.buttons.map((button: any, index: number) => (
+                  {template.buttons.map((button: WhatsAppTemplate['buttons'][number], index: number) => (
                     <Button
                       key={index}
                       variant="outline"

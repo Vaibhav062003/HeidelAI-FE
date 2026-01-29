@@ -34,7 +34,12 @@ export const ButtonModal: React.FC<ButtonModalProps> = ({
               </label>
               <select
                 value={newButton.type}
-                onChange={(e) => setNewButton({ ...newButton, type: e.target.value as Button['type'] })}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === 'reply' || value === 'url' || value === 'phone' || value === 'copy') {
+                    setNewButton({ ...newButton, type: value });
+                  }
+                }}
                 className="w-full p-2 border rounded-md"
               >
                 <option value="reply">Quick Reply</option>

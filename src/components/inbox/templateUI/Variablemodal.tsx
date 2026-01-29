@@ -49,7 +49,12 @@ export const VariableModal: React.FC<VariableModalProps> = ({
               </label>
               <select
                 value={newVariable.type}
-                onChange={(e) => setNewVariable({ ...newVariable, type: e.target.value as Variable['type'] })}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === 'text' || value === 'number') {
+                    setNewVariable({ ...newVariable, type: value });
+                  }
+                }}
                 className="w-full p-2 border rounded-md"
               >
                 <option value="text">Text</option>
