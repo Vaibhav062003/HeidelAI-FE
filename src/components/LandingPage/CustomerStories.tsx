@@ -54,7 +54,7 @@ const CustomerStories = () => {
                         </div>
                         <div className="flex items-center gap-3 relative z-10">
                             <div>
-                                <cite className="not-italic text-sm font-bold text-gray-800">Sam Patel</cite>
+                                <div className="text-sm font-bold text-gray-800">Sam Patel</div>
                                 <p className="text-xs text-gray-400 font-semibold">VP of Marketing</p>
                             </div>
                         </div>
@@ -82,7 +82,7 @@ const CustomerStories = () => {
                         </div>
                         <div className="flex items-center gap-3 relative z-10">
                             <div>
-                                <cite className="not-italic text-sm font-bold text-gray-800">Even Hayes</cite>
+                                <div className="text-sm font-bold text-gray-800">Even Hayes</div>
                                 <p className="text-xs text-gray-400 font-semibold">Head of Growth</p>
                             </div>
                         </div>

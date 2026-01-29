@@ -1,8 +1,8 @@
-import { Badge } from "@/components/LandingPage/ui/badge";
-import { Button } from "@/components/LandingPage/ui/button";
-import { Card, CardContent } from "@/components/LandingPage/ui/card";
-import { BarChart3, CloudIcon, ShoppingBag } from "lucide-react";
-import React from "react";
+import { Badge } from '@/components/LandingPage/ui/badge';
+import { Button } from '@/components/LandingPage/ui/button';
+import { Card, CardContent } from '@/components/LandingPage/ui/card';
+import { BarChart3, CloudIcon, ShoppingBag } from 'lucide-react';
+import React from 'react';
 
 export default function Template() {
   // Data for the lead analysis card
