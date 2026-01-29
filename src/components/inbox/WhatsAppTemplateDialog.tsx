@@ -254,9 +254,9 @@ export const WhatsAppTemplateDialog = ({
       }
     } else {
       // Fallback for prebuilt templates
-      const headerText = typeof template.header === 'string'
+      const headerText = typeof template.header === "string"
         ? template.header
-        : template.header?.content || "";
+        : template.header?.content;
 
       if (headerText) {
         const headerParamsCount = headerText.match(/\{\{\d+\}\}/g)?.length || 0;
