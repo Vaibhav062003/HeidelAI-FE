@@ -90,13 +90,7 @@ export const WhatsAppTemplateDialog = ({
     try {
       const response = await api.post(
         "https://egenie-whatsapp.koyeb.app/api/send_whatsapp_template",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
+        payload
       );
 
       if (response.status === 200) {

@@ -253,38 +253,7 @@ const TemplateBuilders = ({ isOpen, setIsOpen, templates, setTemplates, searchTe
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadTemplates = async () => {
-      try {
-        setLoading(true);
-
-        const response = await fetch('/api/fetchTemplate');
-
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (result && result.data) {
-          setTemplates(result.data);
-        } else {
-          console.error("Invalid response format:", result);
-          setError("Invalid response format from server");
-        }
-
-      } catch (err) {
-        console.error("Error in fetch:", err);
-        setError(err instanceof Error ? err.message : "Fetch error");
-      } finally {
-        setLoading(false);
-
-      }
-    };
-    loadTemplates();
-  }, []);
+  // redundant fetch removed as templates are passed via props
 
 
 
