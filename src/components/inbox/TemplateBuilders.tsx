@@ -493,34 +493,6 @@ const TemplateBuilders = ({ isOpen, setIsOpen, templates, setTemplates, searchTe
   //   console.log(JSON.stringify(data, null, 2));
   // };
 
-  const sendPostRequest = async (data: any) => {
-    const url = "https://egenie-whatsapp.koyeb.app/api/create_whatsapp_template"; // Replace with your actual URL
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json", // Replace with your actual token
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorDetails = await response.json(); // Try to get error details from the server
-        throw new Error(`HTTP error! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
-      }
-
-      const result = await response.json();
-
-      console.log("POST request successful:", result);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error("Error during POST request:", error.message);
-      } else {
-        console.error("Error during POST request:", error);
-      }
-    }
-  };
-
   const exportData = async () => {
     try {
       // Map language to ISO code
@@ -662,7 +634,7 @@ const TemplateBuilders = ({ isOpen, setIsOpen, templates, setTemplates, searchTe
         };
       }
 
-      console.log("Sending payload:", JSON.stringify(payload, null, 2));
+      // console.log("Sending payload:", JSON.stringify(payload, null, 2));
 
       // Send POST request
       await sendPostRequest(payload);

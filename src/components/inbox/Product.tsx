@@ -136,7 +136,7 @@ const ProductsTab = ({
     setLoading(true);
     try {
       const response = await api.get(`/api/products`);
-      console.log('Fetched products:', response.data);
+      // console.log('Fetched products:', response.data);
 
       if (response.status !== 200) {
         setError('Failed to fetch products');
