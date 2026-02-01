@@ -1,8 +1,8 @@
 import { Badge } from '@/components/LandingPage/ui/badge';
-import { Button } from "@/components/LandingPage/ui/button";
-import { Card, CardContent } from "@/components/LandingPage/ui/card";
-import { BarChart3, CloudIcon, ShoppingBag } from "lucide-react";
-import React from "react";
+import { Button } from '@/components/LandingPage/ui/button';
+import { Card, CardContent } from '@/components/LandingPage/ui/card';
+import { BarChart3, CloudIcon, ShoppingBag } from 'lucide-react';
+import React from 'react';
 
 export default function Template() {
   // Data for the lead analysis card
@@ -192,11 +192,11 @@ export default function Template() {
               <div className="absolute w-full h-full top-0 left-0 bg-gradient-to-r from-purple-600 to-indigo-700 rounded-3xl" />
               <div className="absolute w-[378px] h-[167px] top-[229px] left-[89px] bg-[#ffffff10] rounded-full blur-md" />
               <div className="relative w-[452px] flex-[0_0_auto] mt-12 text-center">
-                <h3 className="text-white text-xl mb-2">HeidelAI</h3>
-                <h1 className="text-white text-5xl font-bold leading-tight">
+                <p className="text-white text-xl mb-2 font-medium">HeidelAI</p>
+                <h2 className="text-white text-5xl font-bold leading-tight">
                   Your AI Sales &<br />
                   Support Engine
-                </h1>
+                </h2>
               </div>
             </div>
           </div>
