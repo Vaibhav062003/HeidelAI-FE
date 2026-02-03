@@ -4,7 +4,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import {
-  Clock, MessageSquare, MessageCircle, CheckCircle,
+  Clock, MessageSquare, CheckCircle,
   Activity, BarChart3, Globe, Users
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
