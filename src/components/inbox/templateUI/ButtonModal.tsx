@@ -38,6 +38,10 @@ export const ButtonModal: React.FC<ButtonModalProps> = ({
                   const value = e.target.value;
                   if (value === 'reply' || value === 'url' || value === 'phone' || value === 'copy') {
                     setNewButton({ ...newButton, type: value });
+                  } else {
+                    // Handle unexpected button type values explicitly to avoid silent failures
+                    // eslint-disable-next-line no-console
+                    console.error('Unexpected button type value received:', value);
                   }
                 }}
                 className="w-full p-2 border rounded-md"

@@ -311,7 +311,7 @@ export const WhatsAppTemplateDialog = ({
 
           components.push({
             type: "button",
-            sub_type: (type === "REPLY" || type === "QUICK_REPLY") ? "quick_reply" : type.toLowerCase(),
+            sub_type: (type === "REPLY" || type === "QUICK_REPLY") ? "QUICK_REPLY" : type,
             index: index.toString(),
             parameters: parameters,
           });

@@ -53,6 +53,9 @@ export const VariableModal: React.FC<VariableModalProps> = ({
                   const value = e.target.value;
                   if (value === 'text' || value === 'number') {
                     setNewVariable({ ...newVariable, type: value });
+                  } else {
+                    console.warn(`Unexpected variable type value: ${value}, falling back to 'text'.`);
+                    setNewVariable({ ...newVariable, type: 'text' });
                   }
                 }}
                 className="w-full p-2 border rounded-md"

@@ -30,7 +30,6 @@ const EmptyState = ({ message }: { message: string }) => (
 );
 
 const TemplateCard = memo(({ template, onClick }: { template: WhatsAppTemplate; onClick: (t: WhatsAppTemplate) => void }) => {
-    const isUserCreated = template.type === 'USER_CREATED';
 
     const getCategoryIcon = (category: string) => {
         switch (category) {
