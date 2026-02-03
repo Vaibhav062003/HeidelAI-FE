@@ -153,8 +153,8 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleEmojiSelect = (emoji: string) => {
-    insertEmoji(textareaRef, emoji, messageBody, setMessageBody);
+  const handleEmojiSelect = (emojiString: string) => {
+    insertEmoji(textareaRef, emojiString, messageBody, setMessageBody);
     setEmojiPickerVisible(false);
   };
 
