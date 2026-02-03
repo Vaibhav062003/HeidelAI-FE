@@ -12,8 +12,12 @@ const useTemplates = (options?: { enabled?: boolean }) => {
                 const res = await api.get("/api/whatsapp/templates");
                 // console.log(res.data.templates.prebuilt)
                 const templatesData = res.data.templates || {};
-                const userCreated = Array.isArray(templatesData.user_created) ? templatesData.user_created.map((t: WhatsAppTemplate) => ({ ...t, type: 'USER_CREATED' })) : [];
-                const prebuilt = Array.isArray(templatesData.prebuilt) ? templatesData.prebuilt.map((t: WhatsAppTemplate) => ({ ...t, type: 'PREBUILT' })) : [];
+                const userCreated = Array.isArray(templatesData.user_created)
+                    ? templatesData.user_created.map((t: WhatsAppTemplate) => ({ ...t, type: t.type ?? "USER_CREATED" }))
+                    : [];
+                const prebuilt = Array.isArray(templatesData.prebuilt)
+                    ? templatesData.prebuilt.map((t: WhatsAppTemplate) => ({ ...t, type: t.type ?? "PREBUILT" }))
+                    : [];
 
                 const allTemplates = [...userCreated, ...prebuilt];
 
