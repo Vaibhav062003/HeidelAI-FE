@@ -31,16 +31,20 @@ export const insertTextAtCursor = (
   }, 0);
 };
 
+type EmojiInput = string | { emoji: string };
+
 export const insertEmoji = (
   textareaRef: RefObject<HTMLTextAreaElement | null>,
-  emoji: string,
+  emoji: EmojiInput,
   currentValue: string,
   setValue: (value: string) => void
 ) => {
   const textarea = textareaRef.current;
   if (!textarea) return;
 
-  insertTextAtCursor(textarea, emoji, currentValue, setValue);
+  const emojiChar = typeof emoji === "string" ? emoji : emoji.emoji;
+
+  insertTextAtCursor(textarea, emojiChar, currentValue, setValue);
 };
 
 export const insertFormatting = (
