@@ -289,7 +289,7 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
                       </div>
                     </div>
                     <a
-                      href={localPreviewFiles[uniqueKey] ?? undefined}
+                      href={localPreviewFiles[uniqueKey] || "#"}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-2 w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm py-2 rounded transition-colors"
