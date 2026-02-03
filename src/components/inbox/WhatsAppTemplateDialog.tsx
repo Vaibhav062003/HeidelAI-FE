@@ -86,24 +86,24 @@ export const WhatsAppTemplateDialog = ({
 
   const api = useApi();
 
-  const sendMessage = async (payload: Record<string, unknown>) => {
-    try {
-      const response = await api.post(
-        "https://egenie-whatsapp.koyeb.app/api/send_whatsapp_template",
-        payload
-      );
+  // const sendMessage = async (payload: Record<string, unknown>) => {
+  //   try {
+  //     const response = await api.post(
+  //       "https://egenie-whatsapp.koyeb.app/api/send_whatsapp_template",
+  //       payload
+  //     );
 
-      if (response.status === 200) {
-        toast.success("Message sent successfully!");
-      } else {
-        toast.error("Failed to send message");
-      }
-    } catch (error) {
-      console.error("Error sending WhatsApp template message:", error);
-      toast.error("Error sending message");
-    }
-    onClose();
-  };
+  //     if (response.status === 200) {
+  //       toast.success("Message sent successfully!");
+  //     } else {
+  //       toast.error("Failed to send message");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error sending WhatsApp template message:", error);
+  //     toast.error("Error sending message");
+  //   }
+  //   onClose();
+  // };
 
   const constructPayload = (
     template: WhatsAppTemplate,
@@ -392,7 +392,7 @@ export const WhatsAppTemplateDialog = ({
                   template,
                   selectedConversationId
                 );
-                sendMessage(payload); // Send the payload to the endpoint
+                // sendMessage(payload); // Send the payload to the endpoint
               }
             }}
             disabled={isButtonDisabled()}
