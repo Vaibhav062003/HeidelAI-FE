@@ -132,12 +132,12 @@ const FetchTemplates = ({ selectedConversationId }: { selectedConversationId?: s
         }
     }, [data]);
 
-    const filteredData = data?.filter((t: WhatsAppTemplate) =>
+    const filteredData = templates.filter((t: WhatsAppTemplate) =>
         t.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const prebuilt = filteredData?.filter((t: WhatsAppTemplate) => t.type === "PREBUILT");
-    const userCreated = filteredData?.filter((t: WhatsAppTemplate) => t.type === "USER_CREATED");
+    const prebuilt = filteredData.filter((t: WhatsAppTemplate) => t.type === "PREBUILT");
+    const userCreated = filteredData.filter((t: WhatsAppTemplate) => t.type === "USER_CREATED");
 
     const handleTemplateClick = useCallback((template: WhatsAppTemplate) => {
         setSelectedTemplate(template);
