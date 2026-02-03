@@ -102,7 +102,6 @@ export const WhatsAppTemplateDialog = ({
       console.error("Error sending WhatsApp template message:", error);
       toast.error("Error sending message");
     }
-    // console.log("Payload:", JSON.stringify(payload));
     onClose();
   };
 
