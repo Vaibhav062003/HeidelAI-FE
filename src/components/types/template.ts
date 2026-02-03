@@ -1,7 +1,7 @@
 export interface WhatsAppTemplate {
   id?: string;
 
-  type: 'USER_CREATED' | 'PREBUILT';
+  type?: 'USER_CREATED' | 'PREBUILT';
 
   name: string;
   code: string;
