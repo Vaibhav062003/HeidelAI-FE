@@ -29,23 +29,6 @@ const EmptyState = ({ message }: { message: string }) => (
     </div>
 );
 
-const StatusBadge = ({ status }: { status: WhatsAppTemplate['status'] }) => {
-    const configs = {
-        APPROVED: { icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
-        PENDING: { icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
-        REJECTED: { icon: XCircle, color: "text-red-600", bg: "bg-red-50" }
-    };
-    const config = configs[status] || configs.PENDING;
-    const Icon = config.icon;
-
-    return (
-        <Badge variant="outline" className={cn("flex items-center gap-1.5 py-0.5 px-2 text-[10px] font-bold tracking-tight border-0 shadow-none transition-all duration-300 whitespace-nowrap", config.bg, config.color)}>
-            <Icon className="h-3 w-3 shrink-0" />
-            {status}
-        </Badge>
-    );
-};
-
 const TemplateCard = memo(({ template, onClick }: { template: WhatsAppTemplate; onClick: (t: WhatsAppTemplate) => void }) => {
     const isUserCreated = template.type === 'USER_CREATED';
 
