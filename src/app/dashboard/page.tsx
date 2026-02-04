@@ -884,10 +884,8 @@ export default function DashboardPage() {
             {activeView === "settings" && <SettingsSidebar />}
 
             {activeView === "Automation" && (
-              <div className="h-full w-full overflow-y-auto bg-white min-h-0 min-w-0">
-                <div className="p-4 sm:p-6 max-w-7xl mx-auto">
-                  <AutomationHub />
-                </div>
+              <div className="h-full w-full min-h-0 min-w-0">
+                <AutomationHub />
               </div>
             )}
           </div>

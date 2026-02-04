@@ -94,11 +94,15 @@ export default function AutomationHub() {
       <main className="flex-1 relative overflow-hidden">
         {view === 'dashboard' ? (
           <DashboardView onOpenAutomation={(id) => {
-            setActiveWorkflowName(id === 'new' ? 'New Automation' : 'Welcome Sequence');
+            setActiveWorkflowName(id === 'new' ? 'Untitled' : 'Untitled');
             setView('editor');
           }} />
         ) : (
-          <EditorView onBack={() => setView('dashboard')} />
+          <EditorView
+            onBack={() => setView('dashboard')}
+            flowName={activeWorkflowName}
+            onFlowNameChange={setActiveWorkflowName}
+          />
         )}
       </main>
 

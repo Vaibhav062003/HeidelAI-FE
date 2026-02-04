@@ -1,43 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
 import SidebarSettings from "./SidebarSettings";
 import { AddStepMenu } from "./Popups";
-import { 
-  Zap, 
-  MessageSquare, 
-  GitBranch, 
-  MousePointerClick, 
-  Play, 
-  Save, 
-  Eye, 
-  ArrowLeft 
-} from 'lucide-react';
+import { exportFlowToJSON, validateFlowBeforeSave, type EditorNode } from "./flowExport";
+import { STEP_SECTIONS, STEP_BY_ID, StepIcon } from "./stepDefinitions";
+import { Play, Save, Eye, ArrowLeft, Undo2, Redo2, Monitor, MoreVertical, Pencil, HelpCircle, ChevronRight } from 'lucide-react';
 
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
 
-interface Node {
-  id: string;
-  type: "trigger" | "action" | "logic";
-  app?: "instagram" | "whatsapp" | "email" | "ai";
-  label: string;
-  description?: string;
-  x: number;
-  y: number;
-  data: any;
-}
+interface Node extends EditorNode {}
 
 interface Connection {
   from: string;
   to: string;
 }
 
-interface ToolbarButtonProps {
-  icon: React.ReactNode;
-  label: string;
-  color?: string;
-  onClick: () => void;
-}
 
 interface FlowStepProps {
   node: Node;
@@ -64,42 +42,25 @@ const NODE_STYLES = {
 // HELPER FUNCTIONS
 // ============================================================================
 
+// Trigger node has "Then" at bottom center; other nodes have output on right center
 const getBezierPath = (from: Node, to: Node): string => {
-  // Output handle on right edge, vertically centered
-  const startX = from.x + NODE_WIDTH + 6;
-  const startY = from.y + NODE_HEIGHT / 2;
-
-  // Input handle on left edge, at top (40px from top)
+  const isFromTrigger = from.type === 'trigger';
+  const startX = isFromTrigger ? from.x + NODE_WIDTH / 2 : from.x + NODE_WIDTH + 6;
+  const startY = isFromTrigger ? from.y + NODE_HEIGHT + 6 : from.y + NODE_HEIGHT / 2;
   const endX = to.x - 6;
   const endY = to.y + 40;
-
-  // Calculate control points for smooth curve
   const dx = endX - startX;
   const cpOffset = Math.max(Math.abs(dx) * 0.5, 100);
-
-  const cp1X = startX + cpOffset;
-  const cp1Y = startY;
+  const cp1X = startX + (isFromTrigger ? 0 : cpOffset);
+  const cp1Y = startY + (isFromTrigger ? cpOffset : 0);
   const cp2X = endX - cpOffset;
   const cp2Y = endY;
-
   return `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`;
 };
 
 // ============================================================================
 // CHILD COMPONENTS
 // ============================================================================
-
-const ToolbarButton = ({ icon, label, color, onClick }: ToolbarButtonProps) => (
-  <button 
-    onClick={onClick}
-    className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all hover:scale-110 hover:shadow-md group relative ${color || 'text-slate-400 hover:bg-slate-50'}`}
-  >
-    {icon}
-    <div className="absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-      {label}
-    </div>
-  </button>
-);
 
 const AppIcon = ({ app }: { app?: string }) => {
   if (app === "instagram") {
@@ -154,6 +115,23 @@ const AppIcon = ({ app }: { app?: string }) => {
   );
 };
 
+const NodeTypeIcon = ({ node }: { node: Node }) => {
+  const stepId = node.data?.stepId as string | undefined;
+  const stepDef = stepId ? STEP_BY_ID[stepId] : null;
+  if (stepDef) {
+    return (
+      <div className={`p-1.5 rounded-xl flex items-center justify-center ${stepDef.bgColor} shrink-0`}>
+        <StepIcon step={stepDef} size="w-5 h-5" />
+      </div>
+    );
+  }
+  return (
+    <div className="p-1.5 rounded-xl flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 shrink-0">
+      <AppIcon app={node.app} />
+    </div>
+  );
+};
+
 const FlowStep = ({ node, isSelected, onMouseDown, onAddLink, onDelete }: FlowStepProps) => {
   const isTrigger = node.type === "trigger";
   const currentStyle = NODE_STYLES[node.type] || NODE_STYLES.action;
@@ -169,16 +147,17 @@ const FlowStep = ({ node, isSelected, onMouseDown, onAddLink, onDelete }: FlowSt
       {/* Header */}
       <div className="p-4 flex items-center justify-between gap-3 border-b border-slate-100/50">
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className="p-1.5 rounded-xl flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 shrink-0">
-            <AppIcon app={node.app} />
-          </div>
+          <NodeTypeIcon node={node} />
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold text-slate-400 leading-none mb-1 uppercase tracking-tight truncate">
+            <p className="text-sm font-bold text-slate-800 leading-none mb-0.5 truncate">
               {node.label}
             </p>
-            <p className="text-xs font-bold text-slate-800 leading-tight break-words line-clamp-2">
+            <p className="text-xs text-slate-600 leading-tight break-words line-clamp-2">
               {node.description || "Set up step"}
             </p>
+            {node.type === 'trigger' && (node.data?.triggerSubtitle as string) && (
+              <p className="text-[11px] text-slate-500 mt-0.5">{node.data.triggerSubtitle as string}</p>
+            )}
           </div>
         </div>
         {isSelected && (
@@ -205,25 +184,37 @@ const FlowStep = ({ node, isSelected, onMouseDown, onAddLink, onDelete }: FlowSt
       <div className="p-4">
         <div className="w-full py-3 px-4 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center bg-white/50 hover:bg-white transition-colors">
           {isTrigger ? (
-            <span className="text-xs font-bold text-blue-500">+ New Trigger</span>
+            <span className="text-xs font-bold text-indigo-600">+ New Trigger</span>
           ) : (
-            <span className="text-[11px] text-slate-400 font-bold">Edit Content</span>
+            <span className="text-[11px] text-slate-400 font-bold">Add a text</span>
           )}
         </div>
       </div>
 
-      {/* Output Handle */}
-      <div className="absolute -right-3 top-1/2 -translate-y-1/2 flex items-center group z-10">
-        <button
-          onClick={onAddLink}
-          className="w-6 h-6 bg-white border-2 border-slate-300 rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-sm hover:border-indigo-500 hover:shadow-md"
-        >
-          <div className="w-2 h-2 bg-slate-300 rounded-full group-hover:bg-indigo-500" />
-        </button>
-        <div className="absolute left-full ml-3 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[9px] px-2 py-1 rounded font-bold uppercase pointer-events-none whitespace-nowrap shadow-xl">
-          Next Step
+      {/* Output Handle – trigger: "Then" at bottom center; others: right center */}
+      {isTrigger ? (
+        <div className="absolute left-1/2 -translate-x-1/2 -bottom-3 flex flex-col items-center group z-10">
+          <button
+            onClick={onAddLink}
+            className="w-6 h-6 bg-slate-200 border-2 border-slate-300 rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-sm hover:border-indigo-500 hover:bg-slate-100"
+          >
+            <div className="w-2 h-2 bg-slate-500 rounded-full group-hover:bg-indigo-500" />
+          </button>
+          <span className="text-[10px] font-semibold text-slate-500 mt-1 uppercase">Then</span>
         </div>
-      </div>
+      ) : (
+        <div className="absolute -right-3 top-1/2 -translate-y-1/2 flex items-center group z-10">
+          <button
+            onClick={onAddLink}
+            className="w-6 h-6 bg-white border-2 border-slate-300 rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-sm hover:border-indigo-500 hover:shadow-md"
+          >
+            <div className="w-2 h-2 bg-slate-300 rounded-full group-hover:bg-indigo-500" />
+          </button>
+          <div className="absolute left-full ml-3 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[9px] px-2 py-1 rounded font-bold uppercase pointer-events-none whitespace-nowrap shadow-xl">
+            Next Step
+          </div>
+        </div>
+      )}
 
       {/* Input Handle */}
       {!isTrigger && (
@@ -237,26 +228,42 @@ const FlowStep = ({ node, isSelected, onMouseDown, onAddLink, onDelete }: FlowSt
 // MAIN COMPONENT
 // ============================================================================
 
-export default function EditorView({ onBack }: { onBack: () => void }) {
-  // State Management
+const DEFAULT_FLOW_ID = `flow_${Date.now().toString(36)}`;
+
+interface EditorViewProps {
+  onBack: () => void;
+  flowName?: string;
+  onFlowNameChange?: (name: string) => void;
+}
+
+export default function EditorView({ onBack, flowName: flowNameProp, onFlowNameChange }: EditorViewProps) {
+  const [flowId, setFlowId] = useState(DEFAULT_FLOW_ID);
+  const [flowNameLocal, setFlowNameLocal] = useState('Untitled');
+  const flowName = flowNameProp !== undefined ? flowNameProp : flowNameLocal;
+  const setFlowName = (v: string) => {
+    setFlowNameLocal(v);
+    onFlowNameChange?.(v);
+  };
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [nodes, setNodes] = useState<Node[]>([
     {
       id: "n-start",
       type: "trigger",
-      label: "When...",
-      description: "User comments on your Post or Reel",
+      label: "Comment on Post",
+      description: "User comments on your post or reel",
       x: 200,
       y: 300,
-      data: {},
+      data: { stepId: 'trigger_comment', triggerType: 'instagram_comment', triggerConfig: { keywords: [] } },
     },
     {
       id: "n-ig",
       type: "action",
       app: "instagram",
-      label: "Send Message",
+      label: "Send Text",
+      description: "Send a text message",
       x: 600,
       y: 300,
-      data: { text: "" },
+      data: { stepId: 'content_text', text: "" },
     },
   ]);
 
@@ -272,6 +279,7 @@ export default function EditorView({ onBack }: { onBack: () => void }) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [activePortId, setActivePortId] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -392,24 +400,31 @@ export default function EditorView({ onBack }: { onBack: () => void }) {
     });
   };
 
-  const addNode = (type: string, app?: string) => {
+  const addNode = (type: string, app?: string, logicType?: string, extra?: Partial<Node['data']>) => {
     const id = `node-${Date.now()}`;
+    const baseLabel =
+      type === "action"
+        ? app === "instagram"
+          ? "Send Message"
+          : app === "whatsapp"
+          ? "WhatsApp Message"
+          : "Action"
+        : logicType === "delay"
+        ? "Wait"
+        : logicType === "condition"
+        ? "Condition"
+        : logicType === "randomizer"
+        ? "Randomizer"
+        : "Logic Step";
     const newNode: Node = {
       id,
-      type: type as any,
-      app: app as any,
-      label:
-        type === "action"
-          ? app === "instagram"
-            ? "Instagram"
-            : app === "whatsapp"
-            ? "WhatsApp"
-            : "Action"
-          : "Logic Step",
-      description: type === "action" ? "Send Message" : "Perform Logic",
+      type: type as Node['type'],
+      app: app as Node['app'],
+      label: baseLabel,
+      description: type === "action" ? "Send Message" : logicType === "delay" ? "Wait before next step" : "Perform Logic",
       x: nodes.length > 0 ? nodes[nodes.length - 1].x + 400 : 200,
       y: nodes.length > 0 ? nodes[nodes.length - 1].y : 300,
-      data: {},
+      data: logicType ? { logicType: logicType as 'delay' | 'condition' | 'randomizer' | 'ai' | 'actions', delayAmount: 5, delayUnit: 'minutes' as const, ...extra } : { ...extra },
     };
 
     setNodes((prev) => [...prev, newNode]);
@@ -422,86 +437,233 @@ export default function EditorView({ onBack }: { onBack: () => void }) {
     setShowAddMenu(false);
   };
 
+  const addNodeByStepId = (stepId: string) => {
+    const step = STEP_BY_ID[stepId];
+    if (!step) return;
+    const lastNode = nodes[nodes.length - 1];
+    const x = lastNode ? lastNode.x + 400 : 200;
+    const y = lastNode ? lastNode.y : 300;
+    const id = `node-${Date.now()}`;
+    const newNode: Node = {
+      id,
+      type: step.type,
+      app: step.app,
+      label: step.label,
+      description: step.description,
+      x,
+      y,
+      data: {
+        stepId,
+        triggerType: step.triggerType,
+        triggerConfig: step.triggerType ? { keywords: [] } : undefined,
+        logicType: step.logicType as 'delay' | 'condition' | 'randomizer' | 'ai' | 'actions' | undefined,
+        contentKind: step.contentKind,
+        actionType: step.actionType,
+        delayAmount: 5,
+        delayUnit: 'minutes' as const,
+      },
+    };
+    setNodes((prev) => [...prev, newNode]);
+    if (activePortId) {
+      setConnections((prev) => [...prev, { from: activePortId, to: id }]);
+      setActivePortId(null);
+    }
+    setShowAddMenu(false);
+  };
+
+  const handleSave = async () => {
+    const edges = connections.map((c) => ({ from: c.from, to: c.to }));
+    const validation = validateFlowBeforeSave(nodes, edges);
+    if (!validation.valid) {
+      console.warn('Flow validation failed:', validation.errors);
+      setSaveStatus('error');
+      return;
+    }
+    setSaveStatus('saving');
+    try {
+      const flowDocument = exportFlowToJSON(nodes, edges, {
+        flowId,
+        flowName,
+        status: 'draft',
+        includeUiConfig: true,
+      });
+      console.log('Saving to MongoDB (payload):', flowDocument);
+      // POST to backend when API is ready:
+      // await fetch('/api/flows/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(flowDocument) });
+      setSaveStatus('saved');
+    } catch (err) {
+      console.error('Save failed:', err);
+      setSaveStatus('error');
+    }
+  };
+
   // Render
-  return (
+return (
     <div className="h-full w-full flex flex-col bg-[#F8FAFC] overflow-hidden relative font-sans">
-      {/* Top Bar */}
-      <div className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
-        <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors">
+      {/* Top Bar (Unchanged) */}
+      <div className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-20">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-              <span>Automations</span>
-              <span>/</span>
-              <span>My New Flow</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-slate-500">Automations</span>
+            <span className="text-slate-300">›</span>
+            <div className="flex items-center gap-1.5">
+              <input
+                value={flowName}
+                onChange={(e) => setFlowName(e.target.value)}
+                className="text-sm font-semibold text-slate-900 bg-transparent border-none outline-none focus:ring-0 w-28 min-w-0"
+                placeholder="Untitled"
+              />
+              <Pencil className="w-3.5 h-3.5 text-slate-400" />
             </div>
-            <h1 className="text-sm font-bold text-slate-900">Untitled Automation</h1>
           </div>
+          <span className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wide">
+            DRAFT
+          </span>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-full">
-            <div className="w-2 h-2 rounded-full bg-amber-400" />
-            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Draft</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1">
+            {saveStatus === 'saved' ? (
+              <span className="text-sm font-medium text-emerald-600 flex items-center gap-1.5">
+                <span className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-white text-[10px]">✓</span>
+                Saved
+              </span>
+            ) : (
+              <button onClick={handleSave} className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1.5">
+                <Save className="w-4 h-4" /> Save
+              </button>
+            )}
+            <button className="p-1.5 rounded-lg text-slate-300 hover:text-slate-500 disabled:opacity-50" title="Undo">
+              <Undo2 className="w-4 h-4" />
+            </button>
+            <button className="p-1.5 rounded-lg text-slate-300 hover:text-slate-500 disabled:opacity-50" title="Redo">
+              <Redo2 className="w-4 h-4" />
+            </button>
           </div>
-          <div className="h-6 w-px bg-slate-200 mx-2" />
-          <button className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:text-slate-900 text-xs font-bold transition-colors">
-            <Eye className="w-4 h-4" /> Preview
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-sm transition-all">
-            <Play className="w-4 h-4 fill-current" /> Set Live
-          </button>
-          <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
-            <Save className="w-5 h-5" />
-          </button>
+          <div className="h-5 w-px bg-slate-200" />
+          <div className="flex items-center gap-2">
+            <button className="flex items-center gap-1.5 px-3 py-2 border border-indigo-200 bg-white text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-50">
+              <Monitor className="w-4 h-4" />
+              Preview
+              <span className="text-slate-400">▾</span>
+            </button>
+            <button className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold">
+              <Play className="w-4 h-4 fill-current" />
+              Set Live
+            </button>
+            <button className="p-2 rounded-lg text-slate-400 hover:bg-slate-100">
+              <MoreVertical className="w-5 h-5" />
+            </button>
+          </div>
+          <a
+            href="#"
+            onClick={(e) => { e.preventDefault(); onBack(); }}
+            className="text-sm text-slate-500 hover:text-slate-700 ml-2"
+          >
+            Go To Basic Builder
+          </a>
         </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Left Toolbar */}
-        <div className="w-16 bg-white border-r border-slate-200 flex flex-col items-center py-6 gap-6 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-          <ToolbarButton
-            icon={<Zap className="w-6 h-6" />}
-            label="Trigger"
-            color="text-blue-500 bg-blue-50"
-            onClick={() => addNode('trigger')}
-          />
-          <div className="w-8 h-px bg-slate-100" />
-          <ToolbarButton
-            icon={<MessageSquare className="w-6 h-6" />}
-            label="Message"
-            color="text-purple-500 bg-purple-50"
-            onClick={() => addNode('action', 'instagram')}
-          />
-          <ToolbarButton
-            icon={<GitBranch className="w-6 h-6" />}
-            label="Condition"
-            color="text-orange-500 bg-orange-50"
-            onClick={() => addNode('logic', 'condition')}
-          />
-          <ToolbarButton
-            icon={<MousePointerClick className="w-6 h-6" />}
-            label="Action"
-            color="text-emerald-500 bg-emerald-50"
-            onClick={() => addNode('action', 'email')}
-          />
+        
+        {/* ================================================================= */}
+        {/* 1. COLLAPSIBLE SIDEBAR CONTAINER */}
+        {/* ================================================================= */}
+        <div
+          className={`h-full flex-none transition-all duration-300 ease-out relative z-20 overflow-hidden ${
+            sidebarOpen ? 'w-64' : 'w-0'
+          }`}
+        >
+          {/* INNER CONTENT WRAPPER (Fixed Width)
+             We keep this width fixed at w-64 so the text doesn't wrap/squish while the 
+             parent container (above) shrinks to 0.
+          */}
+          <div className="w-64 h-full bg-white border-r border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+            <div className="px-4 py-4 border-b border-slate-100">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Add Step</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Click to add to canvas</p>
+            </div>
+            
+            {/* The List of Steps (Add Menu Content) */}
+            <div className="flex-1 overflow-y-auto py-3">
+              {STEP_SECTIONS.map((section) => (
+                <div key={section.title} className="mb-6">
+                  <h4 className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    {section.title}
+                  </h4>
+                  <div className="space-y-0.5">
+                    {section.steps.map((step) => (
+                      <button
+                        key={step.id}
+                        type="button"
+                        onClick={() => addNodeByStepId(step.id)}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50 transition-colors border-l-2 border-transparent hover:border-indigo-400"
+                      >
+                        <div className={`p-1.5 rounded-lg shrink-0 ${step.bgColor}`}>
+                          <StepIcon step={step} size="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-slate-800 truncate flex items-center gap-1.5">
+                            {step.label}
+                            {(step as { pro?: boolean }).pro && (
+                              <span className="shrink-0 px-1.5 py-0.5 bg-indigo-100 text-indigo-600 text-[9px] font-bold rounded uppercase">PRO</span>
+                            )}
+                          </p>
+                          <p className="text-[11px] text-slate-500 truncate">{step.description}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Settings Sidebar */}
+        {/* ================================================================= */}
+        {/* 2. TOGGLE BUTTON (Outside the Container) */}
+        {/* ================================================================= */}
+        <button
+          type="button"
+          onClick={() => setSidebarOpen((open) => !open)}
+          // Dynamically position the button based on sidebar state (left-64 vs left-0)
+          className={`absolute top-24 z-30 w-6 h-10 rounded-r-full bg-white border border-l-0 border-slate-200 shadow-md flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition-all duration-300 ease-out focus:outline-none ${
+            sidebarOpen ? 'left-64' : 'left-0'
+          }`}
+        >
+          <ChevronRight
+            className={`w-4 h-4 transition-transform duration-300 ${sidebarOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+
+        {/* ================================================================= */}
+        {/* 3. SETTINGS SIDEBAR (Right Panel) */}
+        {/* ================================================================= */}
         <div
-          className={`absolute left-16 top-0 bottom-0 w-[320px] bg-white border-r border-slate-200 z-30 transition-transform duration-300 shadow-2xl ${
+          className={`absolute top-0 bottom-0 w-[340px] bg-white border-r border-slate-200 z-30 transition-all duration-300 shadow-2xl ${
+            sidebarOpen ? 'left-64' : 'left-0'
+          } ${
             selectedNodeId ? "translate-x-0" : "-translate-x-full"
           }`}
         >
           <SidebarSettings
             node={nodes.find((n) => n.id === selectedNodeId)}
             onClose={() => setSelectedNodeId(null)}
+            onUpdateNode={(nodeId, dataPartial) => {
+              setNodes((prev) =>
+                prev.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, ...dataPartial } } : n))
+              );
+            }}
           />
         </div>
 
-        {/* Canvas */}
+        {/* ================================================================= */}
+        {/* 4. CANVAS */}
+        {/* ================================================================= */}
         <div
           ref={canvasRef}
           onMouseDown={handleMouseDown}
@@ -512,127 +674,50 @@ export default function EditorView({ onBack }: { onBack: () => void }) {
         >
           <div
             className="absolute inset-0 pointer-events-none transition-transform duration-75 ease-out origin-top-left"
-            style={{
-              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            }}
+            style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
           >
-            {/* Connection Lines */}
+            {/* Connections & Nodes (Same as before) */}
             <svg className="absolute inset-0 w-[10000px] h-[10000px]">
-              <defs>
-                <marker
-                  id="arrow"
-                  viewBox="0 0 10 10"
-                  refX="9"
-                  refY="5"
-                  markerWidth="6"
-                  markerHeight="6"
-                  orient="auto"
-                >
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" />
-                </marker>
-              </defs>
+              <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" /></marker></defs>
               {connections.map((conn, idx) => {
                 const fromNode = nodes.find((n) => n.id === conn.from);
                 const toNode = nodes.find((n) => n.id === conn.to);
                 if (!fromNode || !toNode) return null;
-
-                return (
-                  <path
-                    key={idx}
-                    d={getBezierPath(fromNode, toNode)}
-                    stroke="#94a3b8"
-                    strokeWidth="2.5"
-                    fill="none"
-                    markerEnd="url(#arrow)"
-                    className="transition-all"
-                  />
-                );
+                return <path key={idx} d={getBezierPath(fromNode, toNode)} stroke="#94a3b8" strokeWidth="2.5" fill="none" markerEnd="url(#arrow)" className="transition-all" />;
               })}
             </svg>
-
-            {/* Nodes */}
             {nodes.map((node) => (
               <FlowStep
                 key={node.id}
                 node={node}
                 isSelected={selectedNodeId === node.id}
-                onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => startDrag(e, node.id)}
-                onAddLink={(e: React.MouseEvent<HTMLButtonElement>) => {
-                  e.stopPropagation();
-                  setActivePortId(node.id);
-                  setShowAddMenu(true);
-                }}
+                onMouseDown={(e) => startDrag(e, node.id)}
+                onAddLink={(e) => { e.stopPropagation(); setActivePortId(node.id); setShowAddMenu(true); }}
                 onDelete={() => {
                   setNodes((prev) => prev.filter((n) => n.id !== node.id));
-                  setConnections((prev) =>
-                    prev.filter((c) => c.from !== node.id && c.to !== node.id)
-                  );
+                  setConnections((prev) => prev.filter((c) => c.from !== node.id && c.to !== node.id));
                   setSelectedNodeId(null);
                 }}
               />
             ))}
           </div>
 
-          {/* Zoom Info Bar */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md border border-slate-200 px-4 py-2 rounded-full shadow-sm text-[11px] font-bold text-slate-500 flex items-center gap-3">
-            <span className="text-slate-400">Zoom: {Math.round(zoom * 100)}%</span>
-            <div className="w-px h-3 bg-slate-200" />
-            <button onClick={autoFit} className="hover:text-[#2185FF] transition-colors">
-              🎯 Auto-Center
-            </button>
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none flex items-center gap-2 px-3 py-2 bg-amber-100/90 border border-amber-200 rounded-lg shadow-sm text-[11px] font-medium text-amber-900">
+            <span className="text-base">👆</span> Tap some step to edit
           </div>
 
-          {/* Floating Controls */}
-          <div className="absolute top-1/2 -translate-y-1/2 right-6 flex flex-col gap-4 items-center">
-            <button
-              onClick={() => {
-                setActivePortId(null);
-                setShowAddMenu(true);
-              }}
-              className="w-14 h-14 bg-[#2185FF] text-white rounded-full shadow-xl shadow-blue-100 flex items-center justify-center text-4xl font-light hover:scale-110 active:scale-95 transition-all"
-            >
-              +
-            </button>
-
-            <div className="flex flex-col bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden p-1 gap-1">
-              <button
-                onClick={() => setZoom((z) => Math.min(z + 0.1, 2))}
-                className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-lg text-slate-400"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setZoom((z) => Math.max(z - 0.1, 0.2))}
-                className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-lg text-slate-400"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 12h-15" />
-                </svg>
-              </button>
+          <div className="absolute top-1/2 -translate-y-1/2 right-6 flex flex-col gap-3 items-center pointer-events-auto">
+            <button onClick={() => { setActivePortId(null); setShowAddMenu(true); }} className="w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-200 flex items-center justify-center text-3xl font-light hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all">+</button>
+            <div className="flex flex-col bg-white border border-slate-200 rounded-xl shadow-md overflow-hidden p-1 gap-0.5">
+               <button onClick={autoFit} className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-lg text-slate-500" title="Fit view"><span className="text-lg">✦</span></button>
+               <button onClick={() => setZoom((z) => Math.min(z + 0.1, 2))} className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-lg text-slate-500"><span className="text-lg font-medium">+</span></button>
+               <button onClick={() => setZoom((z) => Math.max(z - 0.1, 0.2))} className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-lg text-slate-500"><span className="text-lg font-medium">−</span></button>
             </div>
-
-            <button className="w-10 h-10 bg-white border border-slate-200 rounded-lg shadow-sm flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
-                />
-              </svg>
-            </button>
+            <button className="w-10 h-10 bg-slate-700 text-white rounded-full shadow-md flex items-center justify-center hover:bg-slate-800 transition-colors" title="Help"><HelpCircle className="w-5 h-5" /></button>
           </div>
         </div>
 
-        {/* Add Step Menu */}
-        {showAddMenu && (
-          <AddStepMenu
-            onClose={() => setShowAddMenu(false)}
-            onSelect={addNode}
-          />
-        )}
+        {showAddMenu && <AddStepMenu onClose={() => setShowAddMenu(false)} onSelectStep={addNodeByStepId} onSelect={addNode} isFirstStep={nodes.find((n) => n.id === activePortId)?.type === 'trigger'} />}
       </div>
     </div>
   );

@@ -1,8 +1,11 @@
 import React from 'react';
+import { STEP_SECTIONS, StepIcon } from './stepDefinitions';
 
 interface AddStepMenuProps {
   onClose: () => void;
-  onSelect: (type: string, app?: string) => void;
+  onSelect?: (type: string, app?: string, logicType?: string) => void;
+  onSelectStep?: (stepId: string) => void;
+  isFirstStep?: boolean;
 }
 
 // App Icon Component (reuse from before)
@@ -92,7 +95,18 @@ const LogicIcon = ({ type, size = 'w-6 h-6' }: { type: string; size?: string }) 
   return null;
 };
 
-export function AddStepMenu({ onClose, onSelect }: AddStepMenuProps) {
+export function AddStepMenu({ onClose, onSelect, onSelectStep, isFirstStep }: AddStepMenuProps) {
+  const handleStepClick = (stepId: string) => {
+    if (onSelectStep) {
+      onSelectStep(stepId);
+    } else if (onSelect) {
+      const section = STEP_SECTIONS.flatMap((s) => s.steps).find((s) => s.id === stepId);
+      if (section) {
+        onSelect(section.type, section.app, section.logicType);
+      }
+    }
+  };
+
   return (
     <>
       {/* Backdrop */}
@@ -101,11 +115,10 @@ export function AddStepMenu({ onClose, onSelect }: AddStepMenuProps) {
         onClick={onClose}
       />
       
-      {/* Right Sidebar Panel */}
+      {/* Right Sidebar Panel – Choose Next Step (same list as left sidebar) */}
       <div className="fixed right-0 top-0 h-full w-[420px] bg-white shadow-2xl z-[1000] animate-in slide-in-from-right duration-300 overflow-y-auto">
-        {/* Header */}
         <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900">Choose Next Step</h2>
+          <h2 className="text-lg font-bold text-slate-900">{isFirstStep ? 'Choose first step 👋' : 'Choose Next Step'}</h2>
           <button 
             onClick={onClose}
             className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
@@ -116,89 +129,39 @@ export function AddStepMenu({ onClose, onSelect }: AddStepMenuProps) {
           </button>
         </div>
 
-        {/* Content */}
         <div className="p-6 space-y-8">
-          {/* Starting Step Section */}
-          <MenuSection 
-            title="Starting Step"
-            items={[
-              { label: 'Trigger', desc: 'Start automation on event', type: 'trigger', iconType: 'trigger' }
-            ]}
-            onSelect={onSelect}
-          />
-
-          {/* Content Section */}
-          <MenuSection 
-            title="Content"
-            items={[
-              { label: 'Instagram', desc: 'Send DM or reply to comments', type: 'action', app: 'instagram' },
-              { label: 'WhatsApp', desc: 'Send WhatsApp message', type: 'action', app: 'whatsapp' },
-              { label: 'Channel', desc: 'Multi-channel message', type: 'action', app: 'email' }
-            ]}
-            onSelect={onSelect}
-          />
-
-          {/* AI Section */}
-          <MenuSection 
-            title="AI"
-            items={[
-              { label: 'AI Step', desc: 'Let AI handle conversations for you', type: 'logic', logicType: 'ai', badge: 'AI' }
-            ]}
-            onSelect={onSelect}
-          />
-
-          {/* Logic Section */}
-          <MenuSection 
-            title="Logic"
-            items={[
-              { label: 'Condition', desc: 'Branch based on criteria', type: 'logic', logicType: 'condition' },
-              { label: 'Delay', desc: 'Wait before next step', type: 'logic', logicType: 'delay' }
-            ]}
-            onSelect={onSelect}
-          />
+          {STEP_SECTIONS.map((section) => (
+            <div key={section.title}>
+              <h3 className="text-sm font-bold text-slate-900 mb-3">{section.title}</h3>
+              <div className="space-y-2">
+                {section.steps.map((step) => (
+                  <button
+                    key={step.id}
+                    onClick={() => handleStepClick(step.id)}
+                    className="w-full px-4 py-3 border-2 border-dashed border-slate-200 rounded-xl hover:border-slate-300 hover:bg-slate-50 transition-all group text-left flex items-center gap-3"
+                  >
+                    <div className={`p-1.5 rounded-lg shrink-0 ${step.bgColor}`}>
+                      <StepIcon step={step} size="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors flex items-center gap-2">
+                        {step.label}
+                        {(step as { pro?: boolean }).pro && (
+                          <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-600 text-[9px] font-bold rounded uppercase">PRO</span>
+                        )}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-0.5">{step.description}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </>
   );
 }
-
-const MenuSection = ({ title, items, onSelect }: any) => (
-  <div>
-    <h3 className="text-sm font-bold text-slate-900 mb-3">{title}</h3>
-    <div className="space-y-2">
-      {items.map((item: any) => (
-        <button
-          key={item.label}
-          onClick={() => onSelect(item.type, item.app)}
-          className="w-full px-4 py-3 border-2 border-dashed border-slate-200 rounded-xl hover:border-slate-300 hover:bg-slate-50 transition-all group text-left flex items-center gap-3"
-        >
-          <div className="shrink-0">
-            {item.app ? (
-              <AppIcon app={item.app} />
-            ) : (
-              <LogicIcon type={item.iconType || item.logicType} />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
-                {item.label}
-              </p>
-              {item.badge && (
-                <span className="px-2 py-0.5 bg-slate-900 text-white text-[9px] font-bold uppercase rounded">
-                  {item.badge}
-                </span>
-              )}
-            </div>
-            {item.desc && (
-              <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
-            )}
-          </div>
-        </button>
-      ))}
-    </div>
-  </div>
-);
 
 export function ConnectChannelModal({ onClose }: { onClose: () => void }) {
   const channels = [
