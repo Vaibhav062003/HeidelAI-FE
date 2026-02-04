@@ -51,8 +51,8 @@ export const initDB = (): Promise<IDBDatabase> => {
  * @param data - The data to store
  */
 export const storeData = async <T>(
-  storeName: keyof typeof DB_CONFIG.stores, 
-  key: string, 
+  storeName: keyof typeof DB_CONFIG.stores,
+  key: string,
   data: T
 ): Promise<void> => {
   try {

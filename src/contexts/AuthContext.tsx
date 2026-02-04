@@ -101,7 +101,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       // Handle token refresh events
       if (event === 'TOKEN_REFRESHED') {
-        console.log('Token refreshed');
+        // console.log('Token refreshed');
       }
     });
 
@@ -126,13 +126,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       companyName: string
     ): Promise<{ success: boolean; error?: string }> => {
       try {
-        console.log("Attempting signup for:", email);
+        // console.log("Attempting signup for:", email);
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
           password,
         });
         
-        console.log("Auth response:", JSON.stringify(authData), authError);
+        // console.log("Auth response:", JSON.stringify(authData), authError);
         
         if (authError) {
           console.error("Detailed auth error:", authError);

@@ -124,7 +124,7 @@ export const ContactForm: React.FC<ContactFormModalProps> = ({
             throw new Error("Failed to update categories");
           }
 
-          console.log("Categories updated successfully");
+          // console.log("Categories updated successfully");
 
         } catch (error) {
           console.error("Error updating categories:", error);

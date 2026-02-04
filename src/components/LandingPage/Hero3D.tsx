@@ -5,7 +5,6 @@ import { Badge } from '@/components/LandingPage/ui/badge';
 import { HoverBorderGradientDemo } from '@/components/HoverBorderGradientDemo';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image'
-import CountDownTimer from './CountDownTimer';
 import { ChevronRight } from 'lucide-react';
 import BackgroundGradient from './ui/BackgroundGradient';
 
@@ -41,62 +40,63 @@ const Hero3D = () => {
   }, [text, isDeleting, wordIndex]);
 
   return (
-    <BackgroundGradient className=" min-h-[100svh] w-full flex items-center justify-center px-4 sm:px-6 md:px-10 pb-20 sm:pb-24 md:pb-28 relative overflow-hidden">
-      <div className="w-full max-w-6xl space-y-5 sm:space-y-6 relative z-10 -mt-5 sm:mt-0">
+    <BackgroundGradient className="min-h-[100svh] w-full flex items-center justify-center px-4 sm:px-6 md:px-10 pb-20 sm:pb-24 md:pb-28 relative overflow-hidden">
+      <div className="w-full max-w-6xl space-y-4 sm:space-y-6 relative z-10 -mt-5 sm:mt-0">
+        <div className="flex flex-wrap justify-center relative gap-4 mb-[-5px] sm:mb-[-20px] pt-0 sm:pt-24 z-20">
 
-        {/* Beta Status Badge */}
-        <div className="flex justify-center mb-[-20px] relative pt-10 sm:pt-28 z-20">
-          <Badge className="bg-white/40 backdrop-blur-md border border-[#0080A0]/20 text-[#0080A0] px-4 py-1.5 rounded-full shadow-[0_8px_32px_rgba(0,128,160,0.1)] transition-all duration-500 hover:scale-105 hover:bg-white/60 group cursor-default">
-            <div className="flex items-center h-5 text-[10px] sm:text-xs font-normal font-sans font-[800] tracking-[0.15em] uppercase">
-              <span className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0080A0] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0080A0]"></span>
-                </span>
-                🚀 Beta is Live Now
+          <div className="bg-white/40 backdrop-blur-md border  border-white/20 px-4 py-2 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-all duration-300 pointer-events-none select-none">
+            <div className="flex items-center gap-3 h-6 text-sm font-medium">
+              <span
+                className="font-semibold bg-clip-text text-transparent animate-gradient-rotate"
+                style={{
+                  backgroundImage: 'linear-gradient(90deg, #000 0%, #000 15%, #ff8c00 35%, #ff5722 50%, #ff1744 65%, #000 85%, #000 100%)',
+                  backgroundSize: '200% 100%'
+                }}
+              >
+                Beta is live now
               </span>
+              <div className="w-[1px] h-3 bg-black/10" />
+              <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-sm">
+                <ChevronRight className="w-3 h-3 text-black" />
+              </div>
             </div>
-          </Badge>
+          </div>
         </div>
 
-        {/* Partners Section - Moved to Top */}
         <div
-          className="flex flex-row items-center justify-center gap-2 sm:gap-10 lg:gap-16 max-w-4xl mx-auto pt-2 sm:pt-2 px-4 sm:px-0 font-sans"
+          className="flex flex-row items-center justify-center ml-4 gap-4 sm:gap-10 lg:gap-16 w-full max-w-4xl mx-auto pt-4 sm:pt-2 mb-[-20px] sm:mb-[-20px] font-sans"
         >
-
-          {/* Meta Partner */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-auto  sm:max-w-[200px]">
+          <div className="flex-1 flex items-center justify-end">
+            <div className="flex items-center justify-center mr-[-5px] sm:mr-0">
               <Image
                 src="/logos/meta.png"
                 alt="Meta Business"
-                width={180}   // increase base width
+                width={200}
                 height={80}
-                className="h-[70px] sm:h-auto w-auto"
+                className="h-[90px] sm:h-[100px] w-auto"
+                style={{ objectFit: 'contain' }}
               />
-
             </div>
           </div>
 
-          {/* Microsoft Partner */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-auto  sm:max-w-[250px]">
+          <div className="flex-1 flex items-center justify-start">
+            <div className="flex items-center justify-center ml-[-5px] sm:ml-0">
               <Image
                 src="/logos/microsoft.png"
                 alt="Microsoft"
-                width={180}
+                width={200}
                 height={80}
-                className="h-[70px] sm:h-auto w-auto mt-[-5px]"
-                style={{ objectFit: 'cover', objectPosition: 'center 70%' }}
+                className="h-[90px] sm:h-[100px] w-auto"
+                style={{ objectFit: 'contain' }}
               />
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col items-center text-center space-y-8">
+        <div className="flex flex-col items-center text-center space-y-6 sm:space-y-8">
 
-          <div className="space-y-6 flex items-center justify-center flex-col">
-            <h1 className="font-[500] italic text-5xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-5xl mx-auto text-center leading-[1.1] tracking-tight px-4"
+          <div className="space-y-4 sm:space-y-6 flex items-center justify-center flex-col">
+            <h1 className="font-[500] italic text-4xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-5xl mx-auto text-center leading-[1.1] tracking-tight px-4"
               style={{ fontFamily: "'Awesome Serif', serif" }}>
               <span className="text-black">
                 AI that{" "}
@@ -127,7 +127,7 @@ const Hero3D = () => {
               </span>
             </p>
 
-            <div className="flex flex-col sm:flex-row pt-7 gap-4 items-center">
+            <div className="flex flex-col ml-3 sm:flex-row pt-12 sm:pt-7 gap-4 items-center justify-center w-full">
               <HoverBorderGradientDemo />
             </div>
           </div>

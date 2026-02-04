@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useApi } from "@/lib/session_api";
 
 const AssignDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,10 +27,11 @@ const AssignDropdown: React.FC = () => {
         onClick={() => setIsOpen((open) => !open)}
         className={`w-full flex items-center justify-between gap-2 px-4 py-2 rounded-lg bg-white shadow-sm hover:bg-gray-50 transition-all duration-150 font-sans text-xs font-medium`}
       >
-        {activeTab === "assign" ? "Transfer" : "History"}
+        {activeTab === "assign" ? "Assign to Agent" : "History"}
         <svg
-          className={`h-3 w-3 text-gray-500 transition-transform duration-200 ${isOpen ? "rotate-180" : ""
-            }`}
+          className={`h-3 w-3 text-gray-500 transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
           fill="none"
           viewBox="0 0 20 20"
         >
@@ -53,20 +53,22 @@ const AssignDropdown: React.FC = () => {
           {/* Tab selectors */}
           <div className="flex border-b border-gray-100">
             <button
-              className={`flex-1 py-2 text-xs font-medium focus:outline-none ${activeTab === "history"
-                ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
-                : "text-gray-700 hover:bg-gray-50"
-                }`}
+              className={`flex-1 py-2 text-xs font-medium focus:outline-none ${
+                activeTab === "history"
+                  ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
+                  : "text-gray-700 hover:bg-gray-50"
+              }`}
               onClick={() => setActiveTab("history")}
               tabIndex={0}
             >
               History
             </button>
             <button
-              className={`flex-1 py-2 text-xs font-medium focus:outline-none ${activeTab === "assign"
-                ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
-                : "text-gray-700 hover:bg-gray-50"
-                }`}
+              className={`flex-1 py-2 text-xs font-medium focus:outline-none ${
+                activeTab === "assign"
+                  ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
+                  : "text-gray-700 hover:bg-gray-50"
+              }`}
               onClick={() => setActiveTab("assign")}
               tabIndex={0}
             >

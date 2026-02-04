@@ -33,14 +33,15 @@ const ChatView = ({
 }: ChatViewProps) => {
   const { user } = useUser();
   const { setAttachments, handleDrop, isDragging, setIsDragging } = useFileHandler();
-  const { messages, setMessages, messagesLoading, setTypingUsers, sendMessage, typingUsers, contextMessageId, setContextMessageId, contextMessage, setContextMessage } = useChatMessages(selectedConversationId, user);
+  const { messages, setMessages, messagesLoading, setTypingUsers, sendMessage, typingUsers, contextMessageId, setContextMessageId, contextMessage, setContextMessage, formatSharedProduct } = useChatMessages(selectedConversationId, user);
   const { message, setMessage } = useMessage();
   const { conversation, setConversation, setIsResolved, setIsFollowUp, setIsOpen } = useConversation({ initialConversation, selectedConversationId });
   const { sendWsMessage } = useMainWebSocket();
   const [conversationStatus, setConversationStatus] = useState<"open" | "closed" | "follow-up">("open");
-
+  const [mode, setMode] = useState<"reply" | "private">("reply");
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const lastSharedProductRef = useRef<boolean>(false);
 
   // Auto scroll to bottom on new message
   useEffect(() => {
@@ -51,6 +52,16 @@ const ChatView = ({
       });
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (sharedProduct && !lastSharedProductRef.current) {
+      setMessage(formatSharedProduct(sharedProduct))
+      lastSharedProductRef.current = true;
+    } else if (!sharedProduct) {
+      lastSharedProductRef.current = false;
+    }
+  }, [sharedProduct]);
+
 
   const saveCustomerInfo = async (updatedData: {
     name: string;
@@ -95,6 +106,7 @@ const ChatView = ({
       type: "join_conversation",
       conversation_id: selectedConversationId,
     });
+    setMode('reply');
 
     getOrCreateChatClientId();
     setMessages([]);
@@ -107,6 +119,8 @@ const ChatView = ({
         conversation_id: selectedConversationId,
       });
     };
+
+
   }, [selectedConversationId]);
 
   useEffect(() => {
@@ -204,6 +218,7 @@ const ChatView = ({
               setContextMessageId={setContextMessageId}
               setContextMessage={setContextMessage}
               textAreaRef={textareaRef}
+              mode={mode}
             />
 
             {/* Input Section */}
@@ -222,6 +237,8 @@ const ChatView = ({
               contextMessage={contextMessage}
               setContextMessage={setContextMessage}
               setContextMessageId={setContextMessageId}
+              mode={mode}
+              setMode={setMode}
             />
 
           </Card>

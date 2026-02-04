@@ -143,7 +143,7 @@ const extractAgentProductText = (content: string): string | null => {
     const match = content.match(/send_product_request_from_agent=\((.*?)\)=/);
 
     if (match && match[1]) {
-      console.log("match", match[1]);
+      // console.log("match", match[1]);
 
       return match[1];
     }

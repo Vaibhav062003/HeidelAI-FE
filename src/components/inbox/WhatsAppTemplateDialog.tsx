@@ -83,14 +83,14 @@ export const WhatsAppTemplateDialog = ({
       );
 
       if (response.ok) {
-        console.log("Message sent successfully!");
+        // console.log("Message sent successfully!");
       } else {
         console.error("Failed to send message");
       }
     } catch (error) {
       console.error("Error sending message:", error);
     }
-    console.log("Payload:", JSON.stringify(payload));
+    // console.log("Payload:", JSON.stringify(payload));
     onClose();
   };
 

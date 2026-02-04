@@ -106,7 +106,7 @@ const TagSidebar = ({
   };
 
   const handleMessageSend = (data: { tag?: string; platform: "whatsapp" | "instagram"; template: string; }) => {
-    console.log("Message sent:", data);
+    // console.log("Message sent:", data);
     setIsMessageComposerOpen(false);
     setSelectedTagForMessage("");
   };
