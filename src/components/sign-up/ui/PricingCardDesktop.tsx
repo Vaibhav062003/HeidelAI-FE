@@ -1,7 +1,6 @@
 import { Card } from '@/components/LandingPage/ui/card';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { set } from 'zod';
 import { AnimatedPrice } from './AnimatedPrice';
 
 export interface PricingCardProps {
