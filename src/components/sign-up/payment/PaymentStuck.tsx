@@ -1,4 +1,4 @@
-import { ChevronLeft, CreditCard, Phone } from "lucide-react";
+import { ChevronLeft, CreditCard } from "lucide-react";
 
 interface PaymentStuckProps {
     setStep: React.Dispatch<React.SetStateAction<"BASIC" | "PASSWORD" | "OTP" | "PLAN" | "PHONE_NUMBER" | "SCHEDULE_CALL" | "PAYMENT" | "SUCCESS" | "FLOW_COMPLETED">>;
