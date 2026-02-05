@@ -1,5 +1,4 @@
 import { Card } from '@/components/LandingPage/ui/card';
-import { Button } from '@/components/LandingPage/ui/button';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { set } from 'zod';
