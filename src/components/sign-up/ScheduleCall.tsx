@@ -1,4 +1,4 @@
-import { ArrowRight, Calendar, CheckCircle, ChevronLeft, Phone } from "lucide-react";
+import { CheckCircle, ChevronLeft, Phone } from "lucide-react";
 import { useState } from "react";
 import { useCalendlyEventListener, PopupModal } from "react-calendly";
 
