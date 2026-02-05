@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { cn } from "../cn"; // Adjust path if needed
 import { PricingCardDesktop } from "./ui/PricingCardDesktop";
-import { Loader2, Check, Circle, CheckCircle2 } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import { PricingCardMobile } from "./ui/PricingCardMobile";
 
 const plans = [
