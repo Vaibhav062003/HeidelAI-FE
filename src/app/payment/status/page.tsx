@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import PaymentLoader from "@/components/sign-up/payment/PaymentLoader";
 import { AlertCircle, CheckCircle, HelpCircle } from "lucide-react";
@@ -9,7 +9,7 @@ import { toast } from "sonner"; // Assuming you use sonner/toast
 // Ensure this matches your backend URL config
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export default function PaymentStatusPage() {
+function PaymentStatusContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -146,5 +146,20 @@ export default function PaymentStatusPage() {
         <PaymentLoader />
         <p className="text-zinc-500 text-sm mt-8 animate-pulse">Verifying payment status...</p>
     </div>
+  );
+}
+
+export default function PaymentStatusPage() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+            <PaymentLoader />
+            <p className="text-zinc-500 text-sm mt-8 animate-pulse">Verifying payment status...</p>
+        </div>
+      }
+    >
+      <PaymentStatusContent />
+    </Suspense>
   );
 }
