@@ -1,5 +1,5 @@
 import 'react-phone-number-input/style.css' // Import standard styles
-import PhoneInput, { PhoneNumber } from 'react-phone-number-input'
+import PhoneInput from 'react-phone-number-input'
 import { Loader2 } from 'lucide-react'
 
 interface PhoneNumberInputProps {
