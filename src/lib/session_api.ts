@@ -9,7 +9,7 @@ export const useApi = () => {
 
   const api = useMemo(() => {
     return axios.create({
-      baseURL: "http://localhost:8000", // Adjust baseURL as needed
+      baseURL: process.env.NEXT_PUBLIC_API_URL
     });
   }, []);
 
