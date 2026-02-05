@@ -9,7 +9,7 @@ export const useApi = () => {
 
   const api = useMemo(() => {
     return axios.create({
-      baseURL: "https://egenie-whatsapp.koyeb.app",
+      baseURL: "http://localhost:8000", // Adjust baseURL as needed
     });
   }, []);
 

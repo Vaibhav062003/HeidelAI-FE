@@ -127,3 +127,44 @@
 .scrollbar-thumb-slate-400:hover::-webkit-scrollbar-thumb {
   background-color: #94a3b8;
 }
+
+
+
+/* 1. The Container: Split the children */
+.PhoneInput {
+  display: flex;
+  gap: 0.25rem; /* Space between the Flag box and Number box */
+  align-items: center;
+}
+
+/* 2. The Flag Box (Country Selector) */
+.PhoneInputCountry {
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 0.5rem;     /* rounded-lg */
+  padding: 0 12px;           /* Comfortable click area */
+  background-color: white;
+  height: 42px;              /* Match standard input height */
+  display: flex;
+  align-items: center;
+  position: relative;
+  transition: all 0.2s;
+  gap: 0.25rem; /* Space between flag and arrow */
+}
+
+.PhoneInputCountry:focus-within {
+  ring: 2px;
+  border-color: #3b82f6; /* blue-500 */
+  box-shadow: 0 0 0 2px #bfdbfe; /* blue-200 */
+}
+
+/* 3. The Number Box (Input field) */
+.PhoneInputInput {
+  height: 42px;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  padding: 0 16px;
+  width: 100%;
+  outline: none;
+  transition: all 0.2s;
+}
+
