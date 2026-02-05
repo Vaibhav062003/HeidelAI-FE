@@ -1,6 +1,6 @@
 import { ArrowRight, Calendar, CheckCircle, ChevronLeft, Phone } from "lucide-react";
 import { useState } from "react";
-import { InlineWidget, useCalendlyEventListener, PopupModal } from "react-calendly";
+import { useCalendlyEventListener, PopupModal } from "react-calendly";
 
 interface ScheduleCallProps {
   formData: {
