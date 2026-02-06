@@ -19,7 +19,7 @@ import { BasicStep } from '@/components/sign-up/BasicStep';
 
 
 export type Step = "BASIC" | "PASSWORD" | "OTP" | "PLAN" | "PHONE_NUMBER" | "SCHEDULE_CALL" | "PAYMENT" | "SUCCESS" | "FLOW_COMPLETED";
-const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const NEXT_PUBLIC_API_URL = "https://api.heidelai.com"; 
 
 export default function SignupFlow() {
   const router = useRouter();

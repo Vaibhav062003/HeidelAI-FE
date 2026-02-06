@@ -7,7 +7,7 @@ import { Step } from "@/app/sign-up/page";
 import { SignUpResource } from "@clerk/types";
 import { toast } from "sonner";
 
-const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const NEXT_PUBLIC_API_URL = "https://api.heidelai.com";
 
 interface BasicStepProps {
     signUp?: SignUpResource;
@@ -66,7 +66,8 @@ export const BasicStep = ({signUp, isSignUpLoaded, loading, setLoading, googleLo
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Error initializing");
+        console.error("API RESPONSE", data);
+        if (!res.ok) console.error("API ERROR", data);
 
         // THE BACKEND DICTATES THE NEXT STEP
         setStep(data.next_step as Step);
@@ -74,6 +75,7 @@ export const BasicStep = ({signUp, isSignUpLoaded, loading, setLoading, googleLo
         } catch (err) {
         if (err instanceof Error) {
             toast.error(err.message);
+            console.error(err.message);
         } else {
             toast.error("An unknown error occurred");
         }
