@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { cn } from "@/components/cn"; // Adjust path as needed
 import { CheckCircle2, Circle } from "lucide-react";
 import { AnimatedPrice } from "./AnimatedPrice";

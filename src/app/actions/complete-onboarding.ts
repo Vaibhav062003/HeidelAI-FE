@@ -3,7 +3,6 @@
 
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { onboardingSchema } from "@/lib/schemas";
-import { redirect } from "next/navigation";
 
 export async function completeOnboardingAction(rawData: any) {
   // 1. Verify Authentication

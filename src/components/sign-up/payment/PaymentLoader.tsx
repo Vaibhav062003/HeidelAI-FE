@@ -1,5 +1,5 @@
 // components/PaymentLoader.tsx
-import { Loader2, ShieldCheck, Banknote } from "lucide-react";
+import { ShieldCheck, Banknote } from "lucide-react";
 
 export default function PaymentLoader() {
   return (

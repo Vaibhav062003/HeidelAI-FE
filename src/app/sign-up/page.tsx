@@ -24,7 +24,7 @@ const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost
 export default function SignupFlow() {
   const router = useRouter();
   const { signUp, isLoaded: isSignUpLoaded } = useSignUp();
-  const { session, setActive } = useClerk();
+  const { setActive } = useClerk();
   const { user, isLoaded: isUserLoaded, isSignedIn } = useUser();
 
   const [rootElement, setRootElement] = useState<HTMLElement | null>(null);
