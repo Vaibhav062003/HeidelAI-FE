@@ -10,7 +10,6 @@ import { WhatsAppTemplate } from "../types/template";
 import { WhatsAppTemplateContent } from "./WhatsApptemplateContent";
 import { Share2 } from "lucide-react";
 import { useApi } from "@/lib/session_api";
-import { toast } from "sonner";
 
 interface WhatsAppTemplateDialogProps {
   template: WhatsAppTemplate | null;
