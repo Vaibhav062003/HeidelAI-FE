@@ -516,7 +516,12 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
                   {processTextForFallback(
                     typeof template.header === 'string'
                       ? template.header
-                      : (template.header as any)?.content || '',
+                      : (typeof template.header === 'object' &&
+                         template.header !== null &&
+                         'content' in template.header &&
+                         typeof template.header.content === 'string'
+                           ? template.header.content
+                           : ''),
                     template.header_params || [],
                     true
                   )}

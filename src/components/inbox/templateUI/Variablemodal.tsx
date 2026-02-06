@@ -54,7 +54,7 @@ export const VariableModal: React.FC<VariableModalProps> = ({
                   if (value === 'text' || value === 'number') {
                     setNewVariable({ ...newVariable, type: value });
                   } else {
-                    console.warn(`Unexpected variable type value: ${value}, falling back to 'text'.`);
+                    console.error(`Unexpected variable type value: ${value}, falling back to 'text'.`);
                     setNewVariable({ ...newVariable, type: 'text' });
                   }
                 }}
