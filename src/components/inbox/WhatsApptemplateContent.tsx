@@ -523,15 +523,19 @@ export const WhatsAppTemplateContent: React.FC<WhatsAppTemplateContentProps & { 
                   )}
                 </h3>
               )}
-              {template.body && (
-                <div className="text-gray-800 mb-4">
-                  {template.body.split('\n').filter(Boolean).map((paragraph, idx) => (
-                    <p key={idx} className={idx < (template.body?.split('\n').filter(Boolean).length || 0) - 1 ? 'mb-2' : ''}>
-                      {processTextForFallback(paragraph, template.body_params || [], false)}
-                    </p>
-                  ))}
-                </div>
-              )}
+              {template.body && (() => {
+                const bodyLines = template.body.split('\n').filter(Boolean);
+                const lastIndex = bodyLines.length - 1;
+                return (
+                  <div className="text-gray-800 mb-4">
+                    {bodyLines.map((paragraph, idx) => (
+                      <p key={idx} className={idx < lastIndex ? 'mb-2' : ''}>
+                        {processTextForFallback(paragraph, template.body_params || [], false)}
+                      </p>
+                    ))}
+                  </div>
+                );
+              })()}
               {template.footer && (
                 <p className="text-[13px] text-gray-500 italic mb-2">{template.footer}</p>
               )}
