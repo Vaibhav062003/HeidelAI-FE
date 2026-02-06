@@ -15,9 +15,10 @@ import { ScheduleCall } from '@/components/sign-up/ScheduleCall';
 import Link from 'next/link';
 import { PaymentStuck } from '@/components/sign-up/payment/PaymentStuck';
 import { useRouter } from 'next/navigation';
+import { BasicStep } from '@/components/sign-up/BasicStep';
 
 
-type Step = "BASIC" | "PASSWORD" | "OTP" | "PLAN" | "PHONE_NUMBER" | "SCHEDULE_CALL" | "PAYMENT" | "SUCCESS" | "FLOW_COMPLETED";
+export type Step = "BASIC" | "PASSWORD" | "OTP" | "PLAN" | "PHONE_NUMBER" | "SCHEDULE_CALL" | "PAYMENT" | "SUCCESS" | "FLOW_COMPLETED";
 const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function SignupFlow() {
@@ -152,57 +153,7 @@ export default function SignupFlow() {
     initUser();
   }, [isUserLoaded, isSignedIn, user, step, formData, signUp]);
 
-  const handleBasicSubmit = async (provider: 'email' | 'google' = 'email') => {
-    if (!isSignUpLoaded || !signUp) return;
-
-    if (provider === 'google') {
-      signUpWith('oauth_google');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      await signUp.create({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        emailAddress: formData.email,
-      });
-
-      console.log('created signUp', signUp);
-
-      // Mock API Call
-      const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/signup/init`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          email: formData.email,
-          provider,
-          clerk_signup_id: signUp.id,
-          clerk_user_id: signUp.createdUserId
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Error initializing");
-
-      // THE BACKEND DICTATES THE NEXT STEP
-      setStep(data.next_step as Step);
-
-    } catch (err) {
-      if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("An unknown error occurred");
-      }
-    } finally {
-      setLoading(false);
-      setGoogleLoading(false)
-    }
-  };
+  
 
   const handlePasswordSubmit = async () => {
     if (!signUp) return;
@@ -252,6 +203,10 @@ export default function SignupFlow() {
       console.log("completeSignUp", completeSignUp);
 
       if (completeSignUp.status === 'complete') {
+        await setActive({
+          session: completeSignUp.createdSessionId,
+        });
+
         const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/signup/verify-otp`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -304,7 +259,7 @@ export default function SignupFlow() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail);
 
-      if (data.org_id && data.session_id) {
+      if (data.org_id) {
         // Plan does not require payment
         console.log("Current User", user)
         // setActive({ organization: data.org_id });
@@ -396,71 +351,18 @@ export default function SignupFlow() {
 
         {/* STEP 1: BASIC */}
         {step === "BASIC" && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h1 className=" text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-12">Get started for free</h1>
-            <button
-              onClick={() => handleBasicSubmit('google')}
-              disabled={googleLoading}
-              className="w-full py-2.5 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg font-medium transition-colors flex justify-center items-center gap-2"
-            >
-              {googleLoading ? <Loader2 className="animate-spin" /> :
-                <>
-                  <Image height={48} width={48} src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />
-                  Continue with Google
-                </>
-              }
-            </button>
-
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
-              <div className="relative flex justify-center text-sm"><span className="px-2 bg-white text-gray-500">or</span></div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="First Name" placeholder="Jane"
-                value={formData.firstName}
-                autoComplete='first-name'
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, firstName: e.target.value })}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleBasicSubmit(); }}
-              />
-              <Input
-                label="Last Name" placeholder="Doe"
-                value={formData.lastName}
-                autoComplete='last-name'
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, lastName: e.target.value })}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleBasicSubmit(); }}
-              />
-            </div>
-            <Input
-              label="Email" type="email" placeholder="jane@company.com"
-              value={formData.email}
-              autoComplete='email'
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleBasicSubmit(); }}
-            />
-
-
-
-            <button
-              onClick={() => handleBasicSubmit('email')}
-              disabled={loading || !formData.email}
-              className="w-full py-2.5 mt-6 bg-black hover:bg-zinc-700 text-white hover:cursor-pointer rounded-lg font-medium transition-colors flex justify-center items-center"
-            >
-              {loading ? <Loader2 className="animate-spin" /> : "Continue"}
-            </button>
-
-
-            <p className='text-xs sm:text-sm text-gray-600 mt-6 text-center'>By creating an account, you agree to the&nbsp;
-              <Link href="/terms-of-service" className="text-gray-600 hover:text-gray-900 underline">
-                Terms of Service
-              </Link>
-              &nbsp;and&nbsp;
-              <Link href="/privacy-policy" className="text-gray-600 hover:text-gray-900 underline">
-                Privacy Policy
-              </Link>.
-            </p>
-          </div>
+          <BasicStep 
+            formData={formData}
+            setFormData={setFormData}
+            setStep={setStep}
+            loading={loading}
+            googleLoading={googleLoading}
+            signUp={signUp}
+            isSignUpLoaded={isSignUpLoaded}
+            setLoading={setLoading}
+            setGoogleLoading={setGoogleLoading}
+            signUpWith={signUpWith}
+          />
         )}
 
         {/* STEP 2: PASSWORD */}
