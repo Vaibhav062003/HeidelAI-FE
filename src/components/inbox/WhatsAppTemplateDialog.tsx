@@ -344,7 +344,7 @@ export const WhatsAppTemplateDialog = ({
     const headerComponent = template?.components?.find(
       (c) => c.type === "HEADER"
     );
-    if (!headerComponent) return false; // Allow if no header
+    if (!headerComponent) return true; // Disable if no header is present when components exist
 
     if (headerComponent.format === "TEXT") {
       return false;
