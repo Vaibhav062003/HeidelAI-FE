@@ -1,4 +1,4 @@
-import { Plus, Search, FileText, Loader2, Megaphone, Settings, ShieldCheck, Clock, CheckCircle2, XCircle, Globe } from "lucide-react";
+import { Plus, Search, Loader2, Megaphone, Settings, ShieldCheck, Globe } from "lucide-react";
 import useTemplates from "./hooks/fetchTemplate";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -90,9 +90,6 @@ const TemplateCard = memo(({ template, onClick }: { template: WhatsAppTemplate; 
 TemplateCard.displayName = "TemplateCard";
 
 const FetchTemplates = ({ selectedConversationId }: { selectedConversationId?: string }) => {
-    if (!selectedConversationId) {
-        return null;
-    }
     const [isOpened, setIsOpened] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const { data, isLoading } = useTemplates({ enabled: isOpened || searchQuery.length > 0 });
@@ -127,6 +124,10 @@ const FetchTemplates = ({ selectedConversationId }: { selectedConversationId?: s
         setSelectedTemplate(template);
         setIsPreviewOpen(true);
     }, []);
+
+    if (!selectedConversationId) {
+        return null;
+    }
 
     return (
         <div className="flex flex-col gap-4 py-2 w-full max-w-full overflow-hidden">

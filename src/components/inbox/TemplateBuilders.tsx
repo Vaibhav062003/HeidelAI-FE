@@ -634,10 +634,6 @@ const TemplateBuilders = ({ isOpen, setIsOpen, templates, setTemplates, searchTe
         };
       }
 
-      // console.log("Sending payload:", JSON.stringify(payload, null, 2));
-
-      // Send POST request
-      await sendPostRequest(payload);
     } catch (error) {
       if (error instanceof Error) {
         console.error("Error during exportData:", error.message);
