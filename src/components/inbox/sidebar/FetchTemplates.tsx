@@ -91,6 +91,9 @@ const TemplateCard = memo(({ template, onClick }: { template: WhatsAppTemplate; 
 TemplateCard.displayName = "TemplateCard";
 
 const FetchTemplates = ({ selectedConversationId }: { selectedConversationId?: string }) => {
+    if (!selectedConversationId) {
+        return null;
+    }
     const [isOpened, setIsOpened] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const { data, isLoading } = useTemplates({ enabled: isOpened || searchQuery.length > 0 });
