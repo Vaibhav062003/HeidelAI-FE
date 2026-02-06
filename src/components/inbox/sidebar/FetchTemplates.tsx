@@ -11,7 +11,6 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { memo, useCallback, useEffect, useState } from "react";
 import { WhatsAppTemplateDialog } from "../WhatsAppTemplateDialog";
 import TemplateBuilders from "../TemplateBuilders";
