@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
+import { Search } from 'lucide-react';
 import { STEP_SECTIONS, StepIcon } from './stepDefinitions';
+
+const TRIGGER_SECTIONS = STEP_SECTIONS.filter((s) => s.category === 'trigger');
 
 interface AddStepMenuProps {
   onClose: () => void;
@@ -160,6 +163,125 @@ export function AddStepMenu({ onClose, onSelect, onSelectStep, isFirstStep }: Ad
         </div>
       </div>
     </>
+  );
+}
+
+export interface TriggerSelectionModalProps {
+  onClose: () => void;
+  onSelectTrigger: (stepId: string) => void;
+}
+
+export function TriggerSelectionModal({ onClose, onSelectTrigger }: TriggerSelectionModalProps) {
+  const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState(TRIGGER_SECTIONS[0]?.title ?? 'Instagram');
+
+  const filteredSteps = useMemo(() => {
+    const section = TRIGGER_SECTIONS.find((s) => s.title === activeCategory);
+    if (!section) return [];
+    let steps = section.steps;
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      steps = steps.filter(
+        (s) =>
+          s.label.toLowerCase().includes(q) ||
+          s.description.toLowerCase().includes(q)
+      );
+    }
+    return steps;
+  }, [activeCategory, search]);
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-[2px] z-[1000] flex items-center justify-center p-6 animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden border border-slate-200">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-4 shrink-0">
+          <h2 className="text-xl font-bold text-slate-900">Start automation when...</h2>
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search in Instagram"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            />
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors shrink-0"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex flex-1 min-h-0">
+          <aside className="w-48 border-r border-slate-100 p-3 space-y-0.5 shrink-0 bg-slate-50/50">
+            {TRIGGER_SECTIONS.map((section) => (
+              <button
+                key={section.title}
+                type="button"
+                onClick={() => setActiveCategory(section.title)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-colors ${
+                  activeCategory === section.title
+                    ? 'bg-slate-100 text-slate-900'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                }`}
+              >
+                {section.title === 'Instagram' ? (
+                  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
+                    <rect x="2" y="2" width="20" height="20" rx="5" fill="url(#ig-trigger)" />
+                    <circle cx="12" cy="12" r="4" stroke="white" strokeWidth="2" fill="none" />
+                    <circle cx="17.5" cy="6.5" r="1.5" fill="white" />
+                    <defs>
+                      <linearGradient id="ig-trigger" x1="2" y1="22" x2="22" y2="2">
+                        <stop offset="0%" stopColor="#FD5949" />
+                        <stop offset="50%" stopColor="#D6249F" />
+                        <stop offset="100%" stopColor="#285AEB" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                ) : (
+                  <span className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-xs">👤</span>
+                )}
+                {section.title}
+              </button>
+            ))}
+          </aside>
+
+          <main className="flex-1 overflow-y-auto p-5">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Triggers</h3>
+            <p className="text-sm text-slate-500 mb-4">Specific event that starts your automation.</p>
+            <div className="space-y-2">
+              {filteredSteps.map((step) => (
+                <button
+                  key={step.id}
+                  type="button"
+                  onClick={() => onSelectTrigger(step.id)}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/30 transition-all text-left group"
+                >
+                  <div className={`p-2 rounded-xl shrink-0 ${step.bgColor}`}>
+                    <StepIcon step={step} size="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 flex items-center gap-2">
+                      {step.label}
+                      {(step as { pro?: boolean }).pro && (
+                        <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-600 text-[9px] font-bold rounded uppercase">PRO</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-0.5">{step.description}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+            {filteredSteps.length === 0 && (
+              <p className="text-sm text-slate-500 py-8 text-center">No triggers match your search.</p>
+            )}
+          </main>
+        </div>
+      </div>
+    </div>
   );
 }
 

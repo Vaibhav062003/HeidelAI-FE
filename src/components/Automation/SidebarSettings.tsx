@@ -49,7 +49,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
     loadTriggerPosts();
   }, [node?.id, node?.type]);
 
-  // Fetch Instagram media from IndexedDB (same source as Settings – integrations)
+  // Fetch Instagram media
   useEffect(() => {
     if (!node || node.app !== 'instagram' || !showMediaPicker) return;
     const load = async () => {
@@ -85,7 +85,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
 
   return (
     <div className="flex flex-col h-full bg-white">
-      {/* Sidebar Header – screenshot: step name with pencil, colored by type */}
+      {/* Sidebar Header */}
       <div className={`h-14 flex items-center justify-between px-5 border-b border-white/50 shrink-0 rounded-t-xl ${headerBg} ${headerText}`}>
         <div className="flex items-center gap-2">
           <h3 className="font-bold text-base">{node.label}</h3>
@@ -101,7 +101,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
 
       {/* Sidebar Content */}
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
-        {/* Send Message – screenshot: "Send as Private Reply", "Enter your text...", "+ Add Button", "+ Add Quick Reply" */}
+        {/* Send Message */}
         {isSendMessage && (
           <>
             <p className="text-sm text-slate-700">
@@ -134,7 +134,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
           </>
         )}
 
-        {/* Condition – screenshot: "Does the contact match all of the following conditions?", "+ Condition", search, tabs */}
+        {/* Condition */}
         {isCondition && (
           <>
             <p className="text-sm text-slate-700">
@@ -184,7 +184,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
           </>
         )}
 
-        {/* Actions node – screenshot: "Perform following actions:", "+ Action", "Choose Next Step" */}
+        {/* Actions node */}
         {isActionsPanel && (
           <>
             <p className="text-sm text-slate-700">Perform following actions:</p>
@@ -297,7 +297,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
                 value={node.data?.text ?? ''}
                 onChange={(e) => update({ text: e.target.value })}
               />
-              {/* Instagram media: same source as Settings (IndexedDB integrations) */}
+              {/* Instagram media */}
               <div className="space-y-2">
                 <label className="text-xs font-medium text-slate-500 block">Media (optional)</label>
                 {node.data?.media_url ? (

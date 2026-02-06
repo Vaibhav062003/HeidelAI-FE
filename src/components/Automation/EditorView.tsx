@@ -1,13 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import SidebarSettings from "./SidebarSettings";
-import { AddStepMenu } from "./Popups";
-import { exportFlowToJSON, validateFlowBeforeSave, type EditorNode } from "./flowExport";
+import { AddStepMenu, TriggerSelectionModal } from "./Popups";
+import { validateFlowBeforeSave, type EditorNode } from "./flowExport";
+import { buildFlowDetails } from "./automationFlowSchema";
 import { STEP_SECTIONS, STEP_BY_ID, StepIcon } from "./stepDefinitions";
+import { useApi } from "@/lib/session_api";
+import { toast } from "sonner";
 import { Play, Save, Eye, ArrowLeft, Undo2, Redo2, Monitor, MoreVertical, Pencil, HelpCircle, ChevronRight } from 'lucide-react';
-
-// ============================================================================
-// TYPE DEFINITIONS
-// ============================================================================
 
 interface Node extends EditorNode {}
 
@@ -25,10 +24,6 @@ interface FlowStepProps {
   onDelete: () => void;
 }
 
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
 const NODE_WIDTH = 260;
 const NODE_HEIGHT = 140;
 
@@ -37,10 +32,6 @@ const NODE_STYLES = {
   action: "bg-white border-slate-200 hover:border-indigo-300",
   logic: "bg-amber-50/80 border-amber-100 hover:border-amber-300"
 };
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
 
 // Trigger node has "Then" at bottom center; other nodes have output on right center
 const getBezierPath = (from: Node, to: Node): string => {
@@ -58,9 +49,6 @@ const getBezierPath = (from: Node, to: Node): string => {
   return `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`;
 };
 
-// ============================================================================
-// CHILD COMPONENTS
-// ============================================================================
 
 const AppIcon = ({ app }: { app?: string }) => {
   if (app === "instagram") {
@@ -224,20 +212,19 @@ const FlowStep = ({ node, isSelected, onMouseDown, onAddLink, onDelete }: FlowSt
   );
 };
 
-// ============================================================================
 // MAIN COMPONENT
-// ============================================================================
-
 const DEFAULT_FLOW_ID = `flow_${Date.now().toString(36)}`;
 
 interface EditorViewProps {
   onBack: () => void;
+  flowId?: string;
   flowName?: string;
   onFlowNameChange?: (name: string) => void;
 }
 
-export default function EditorView({ onBack, flowName: flowNameProp, onFlowNameChange }: EditorViewProps) {
-  const [flowId, setFlowId] = useState(DEFAULT_FLOW_ID);
+export default function EditorView({ onBack, flowId: flowIdProp, flowName: flowNameProp, onFlowNameChange }: EditorViewProps) {
+  const api = useApi();
+  const [flowId, setFlowId] = useState(flowIdProp ?? DEFAULT_FLOW_ID);
   const [flowNameLocal, setFlowNameLocal] = useState('Untitled');
   const flowName = flowNameProp !== undefined ? flowNameProp : flowNameLocal;
   const setFlowName = (v: string) => {
@@ -245,31 +232,13 @@ export default function EditorView({ onBack, flowName: flowNameProp, onFlowNameC
     onFlowNameChange?.(v);
   };
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [nodes, setNodes] = useState<Node[]>([
-    {
-      id: "n-start",
-      type: "trigger",
-      label: "Comment on Post",
-      description: "User comments on your post or reel",
-      x: 200,
-      y: 300,
-      data: { stepId: 'trigger_comment', triggerType: 'instagram_comment', triggerConfig: { keywords: [] } },
-    },
-    {
-      id: "n-ig",
-      type: "action",
-      app: "instagram",
-      label: "Send Text",
-      description: "Send a text message",
-      x: 600,
-      y: 300,
-      data: { stepId: 'content_text', text: "" },
-    },
-  ]);
+  const [showTriggerModal, setShowTriggerModal] = useState(false);
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
 
-  const [connections, setConnections] = useState<Connection[]>([
-    { from: "n-start", to: "n-ig" },
-  ]);
+  useEffect(() => {
+    if (flowIdProp != null && flowIdProp !== '') setFlowId(flowIdProp);
+  }, [flowIdProp]);
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -473,34 +442,47 @@ export default function EditorView({ onBack, flowName: flowNameProp, onFlowNameC
 
   const handleSave = async () => {
     const edges = connections.map((c) => ({ from: c.from, to: c.to }));
-    const validation = validateFlowBeforeSave(nodes, edges);
-    if (!validation.valid) {
-      console.warn('Flow validation failed:', validation.errors);
-      setSaveStatus('error');
-      return;
+    if (nodes.length > 0) {
+      const validation = validateFlowBeforeSave(nodes, edges);
+      if (!validation.valid) {
+        toast.error(validation.errors[0] ?? 'Flow validation failed');
+        setSaveStatus('error');
+        return;
+      }
     }
     setSaveStatus('saving');
     try {
-      const flowDocument = exportFlowToJSON(nodes, edges, {
+      const flow_details = buildFlowDetails(nodes, edges, {
         flowId,
         flowName,
         status: 'draft',
-        includeUiConfig: true,
+        version: 1,
       });
-      console.log('Saving to MongoDB (payload):', flowDocument);
-      // POST to backend when API is ready:
-      // await fetch('/api/flows/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(flowDocument) });
+      if (flowId && flowId !== 'new') {
+        await api.patch(`/api/automation_flows/${flowId}`, flow_details);
+      } else {
+        const response = await api.post('/api/automation_flows', flow_details);
+        if (response.data?.id) setFlowId(String(response.data.id));
+      }
       setSaveStatus('saved');
-    } catch (err) {
+      toast.success('Flow saved successfully');
+    } catch (err: unknown) {
       console.error('Save failed:', err);
       setSaveStatus('error');
+      const message = (err as { response?: { data?: { message?: string }; status?: number } })?.response?.data?.message ?? 'Failed to save flow';
+      toast.error(message);
     }
+  };
+
+  const handleSelectTrigger = (stepId: string) => {
+    addNodeByStepId(stepId);
+    setShowTriggerModal(false);
   };
 
   // Render
 return (
     <div className="h-full w-full flex flex-col bg-[#F8FAFC] overflow-hidden relative font-sans">
-      {/* Top Bar (Unchanged) */}
+      {/* Top Bar */}
       <div className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-20">
         <div className="flex items-center gap-3">
           <button onClick={onBack} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors">
@@ -570,18 +552,13 @@ return (
 
       <div className="flex-1 flex overflow-hidden relative">
         
-        {/* ================================================================= */}
-        {/* 1. COLLAPSIBLE SIDEBAR CONTAINER */}
-        {/* ================================================================= */}
+        {/* COLLAPSIBLE SIDEBAR CONTAINER */}
         <div
           className={`h-full flex-none transition-all duration-300 ease-out relative z-20 overflow-hidden ${
             sidebarOpen ? 'w-64' : 'w-0'
           }`}
         >
-          {/* INNER CONTENT WRAPPER (Fixed Width)
-             We keep this width fixed at w-64 so the text doesn't wrap/squish while the 
-             parent container (above) shrinks to 0.
-          */}
+          {/* INNER CONTENT WRAPPER */}
           <div className="w-64 h-full bg-white border-r border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
             <div className="px-4 py-4 border-b border-slate-100">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Add Step</h3>
@@ -624,9 +601,7 @@ return (
           </div>
         </div>
 
-        {/* ================================================================= */}
-        {/* 2. TOGGLE BUTTON (Outside the Container) */}
-        {/* ================================================================= */}
+        {/* TOGGLE BUTTON (Outside the Container) */}
         <button
           type="button"
           onClick={() => setSidebarOpen((open) => !open)}
@@ -640,9 +615,7 @@ return (
           />
         </button>
 
-        {/* ================================================================= */}
-        {/* 3. SETTINGS SIDEBAR (Right Panel) */}
-        {/* ================================================================= */}
+        {/* SETTINGS SIDEBAR (Right Panel) */}
         <div
           className={`absolute top-0 bottom-0 w-[340px] bg-white border-r border-slate-200 z-30 transition-all duration-300 shadow-2xl ${
             sidebarOpen ? 'left-64' : 'left-0'
@@ -661,9 +634,7 @@ return (
           />
         </div>
 
-        {/* ================================================================= */}
-        {/* 4. CANVAS */}
-        {/* ================================================================= */}
+        {/* CANVAS */}
         <div
           ref={canvasRef}
           onMouseDown={handleMouseDown}
@@ -676,7 +647,7 @@ return (
             className="absolute inset-0 pointer-events-none transition-transform duration-75 ease-out origin-top-left"
             style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
           >
-            {/* Connections & Nodes (Same as before) */}
+            {/* Connections & Nodes */}
             <svg className="absolute inset-0 w-[10000px] h-[10000px]">
               <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" /></marker></defs>
               {connections.map((conn, idx) => {
@@ -718,6 +689,7 @@ return (
         </div>
 
         {showAddMenu && <AddStepMenu onClose={() => setShowAddMenu(false)} onSelectStep={addNodeByStepId} onSelect={addNode} isFirstStep={nodes.find((n) => n.id === activePortId)?.type === 'trigger'} />}
+        {showTriggerModal && <TriggerSelectionModal onClose={() => setShowTriggerModal(false)} onSelectTrigger={handleSelectTrigger} />}
       </div>
     </div>
   );

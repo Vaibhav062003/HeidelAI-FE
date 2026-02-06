@@ -1,13 +1,3 @@
-/**
- * Flow Export Utility – PRD MongoDB-Native Schema
- * Converts Visual Builder state (nodes + edges) to the Flow JSON document
- * for the Mongo-Only execution engine (flows collection).
- */
-
-// ============================================================================
-// TYPES (MongoDB Flow Schema)
-// ============================================================================
-
 export interface FlowTriggerConfig {
   post_id?: string;
   keywords?: string[];
@@ -58,9 +48,7 @@ export interface FlowDocument {
   nodes: Record<string, FlowNodePayload>;
 }
 
-// ============================================================================
-// EDITOR NODE SHAPE (Visual Builder internal)
-// ============================================================================
+// EDITOR NODE SHAPE
 
 export interface EditorNode {
   id: string;
@@ -92,10 +80,6 @@ export interface EditorEdge {
   to: string;
 }
 
-// ============================================================================
-// HELPER: Find target node for a source (single output = next_node_id)
-// ============================================================================
-
 function findNextNodeId(sourceId: string, edges: EditorEdge[]): string | null {
   const edge = edges.find((e) => e.from === sourceId);
   return edge ? edge.to : null;
@@ -111,9 +95,7 @@ function findConditionPaths(sourceId: string, edges: EditorEdge[]): ConditionPat
   return { true: trueEdge.to, false: falseEdge.to };
 }
 
-// ============================================================================
 // EXPORT: Frontend state -> Backend JSON (PRD Schema)
-// ============================================================================
 
 export function exportFlowToJSON(
   nodes: EditorNode[],
@@ -145,7 +127,7 @@ export function exportFlowToJSON(
   }
 
   for (const node of nodes) {
-    // CASE A: Trigger (entry point) -> triggers array
+    // Trigger (entry point) -> triggers array
     if (node.type === 'trigger') {
       const startNodeId = findNextNodeId(node.id, edges);
       const triggerType =
@@ -160,7 +142,7 @@ export function exportFlowToJSON(
       continue;
     }
 
-    // CASE B: Logic node – delay
+    // Logic node – delay
     if (node.type === 'logic' && node.data.logicType === 'delay') {
       const nextNodeId = findNextNodeId(node.id, edges);
       flowDocument.nodes[node.id] = {
@@ -179,7 +161,7 @@ export function exportFlowToJSON(
       continue;
     }
 
-    // CASE C: Logic node – condition (If/Else)
+    // Logic node – condition (If/Else)
     if (node.type === 'logic' && node.data.logicType === 'condition') {
       const paths = findConditionPaths(node.id, edges);
       flowDocument.nodes[node.id] = {
@@ -199,7 +181,7 @@ export function exportFlowToJSON(
       continue;
     }
 
-    // CASE D: Action – message (Instagram, WhatsApp, etc.)
+    // Action – message (Instagram, WhatsApp, etc.)
     if (node.type === 'action' && (node.app === 'instagram' || node.app === 'whatsapp' || node.app === 'email')) {
       const nextNodeId = findNextNodeId(node.id, edges);
       flowDocument.nodes[node.id] = {
@@ -219,7 +201,7 @@ export function exportFlowToJSON(
       continue;
     }
 
-    // CASE E: Generic logic (e.g. randomizer, AI) – treat as single next
+    // Generic logic (e.g. randomizer, AI) – treat as single next
     if (node.type === 'logic') {
       const nextNodeId = findNextNodeId(node.id, edges);
       flowDocument.nodes[node.id] = {
@@ -252,9 +234,7 @@ export function exportFlowToJSON(
   return flowDocument;
 }
 
-// ============================================================================
 // VALIDATION: Prevent saving "broken" flows (PRD requirement)
-// ============================================================================
 
 export interface FlowValidationResult {
   valid: boolean;

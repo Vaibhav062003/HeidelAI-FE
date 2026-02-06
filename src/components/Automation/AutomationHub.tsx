@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import DashboardView from './DashboardView';
-import EditorView from './EditorView'; // This is the component from the previous step
+import EditorView from './EditorView'; 
 import { ConnectChannelModal, TemplatesModal } from './Popups';
 import { LayoutGrid, Plus, Zap, Settings, Bell, ChevronDown } from 'lucide-react';
 
@@ -10,7 +10,8 @@ export default function AutomationHub() {
   const [view, setView] = useState<ViewState>('dashboard');
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
-  const [activeWorkflowName, setActiveWorkflowName] = useState('New Automation');
+  const [activeFlowId, setActiveFlowId] = useState<string>('new');
+  const [activeWorkflowName, setActiveWorkflowName] = useState('Untitled');
 
   return (
     <div className="flex flex-col h-screen w-full bg-[#F8FAFC] text-slate-900 font-sans overflow-hidden selection:bg-indigo-100">
@@ -93,13 +94,15 @@ export default function AutomationHub() {
       {/* Main Workspace Area */}
       <main className="flex-1 relative overflow-hidden">
         {view === 'dashboard' ? (
-          <DashboardView onOpenAutomation={(id) => {
-            setActiveWorkflowName(id === 'new' ? 'Untitled' : 'Untitled');
+          <DashboardView onOpenAutomation={(id, name) => {
+            setActiveFlowId(id);
+            setActiveWorkflowName(name ?? 'Untitled');
             setView('editor');
           }} />
         ) : (
           <EditorView
             onBack={() => setView('dashboard')}
+            flowId={activeFlowId}
             flowName={activeWorkflowName}
             onFlowNameChange={setActiveWorkflowName}
           />

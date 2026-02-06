@@ -1,8 +1,3 @@
-/**
- * Shared step/block definitions for Automation Builder (ManyChat-style).
- * Used by left sidebar, Add Step menu, and node labels.
- */
-
 import React from 'react';
 import {
   Zap,
@@ -39,12 +34,27 @@ export interface StepDef {
 
 export const STEP_SECTIONS: { title: string; category: StepCategory; steps: StepDef[] }[] = [
   {
-    title: 'Triggers',
+    title: 'Instagram',
     category: 'trigger',
     steps: [
-      { id: 'trigger_comment', label: 'Comment on Post', description: 'User comments on your post or reel', type: 'trigger', triggerType: 'instagram_comment', icon: Zap, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+      { id: 'trigger_comment', label: 'Post or Reel Comments', description: 'User comments on your Post or Reel', type: 'trigger', triggerType: 'instagram_comment', icon: Zap, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+      { id: 'trigger_story_reply', label: 'Story Reply', description: 'User replies to your Story', type: 'trigger', triggerType: 'story_reply', icon: MessageSquare, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+      { id: 'trigger_instagram_message', label: 'Instagram Message', description: 'User sends a message', type: 'trigger', triggerType: 'instagram_message', icon: MessageSquare, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+      { id: 'trigger_instagram_ads', label: 'Instagram Ads', description: 'User clicks an Instagram Ad', type: 'trigger', triggerType: 'instagram_ads', icon: Zap, color: 'text-blue-600', bgColor: 'bg-blue-50', pro: true },
+      { id: 'trigger_live_comments', label: 'Live Comments', description: 'User comments on your Live', type: 'trigger', triggerType: 'live_comments', icon: MessageSquare, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+      { id: 'trigger_ref_url', label: 'Instagram Ref URL', description: 'User clicks a referral link', type: 'trigger', triggerType: 'ref_url', icon: Zap, color: 'text-blue-600', bgColor: 'bg-blue-50' },
       { id: 'trigger_keyword', label: 'Keyword in DM', description: 'Message contains a keyword', type: 'trigger', triggerType: 'keyword', icon: MessageSquare, color: 'text-blue-600', bgColor: 'bg-blue-50' },
       { id: 'trigger_default', label: 'Default Reply', description: 'When no other trigger matches', type: 'trigger', triggerType: 'default', icon: Zap, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+    ],
+  },
+  {
+    title: 'Contact Events',
+    category: 'trigger',
+    steps: [
+      { id: 'trigger_webhook', label: 'Webhook', description: 'Trigger via HTTP request', type: 'trigger', triggerType: 'webhook', icon: Globe, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+      { id: 'trigger_schedule', label: 'Schedule / Timer', description: 'Time-based triggers', type: 'trigger', triggerType: 'schedule', icon: Clock, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+      { id: 'trigger_form', label: 'Form Submission', description: 'When user submits a form', type: 'trigger', triggerType: 'form', icon: FileInput, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+      { id: 'trigger_manual', label: 'Manual Trigger', description: 'Manually initiated flows', type: 'trigger', triggerType: 'manual', icon: Zap, color: 'text-blue-600', bgColor: 'bg-blue-50' },
     ],
   },
   {
