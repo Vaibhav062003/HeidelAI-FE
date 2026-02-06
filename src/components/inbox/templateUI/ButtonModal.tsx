@@ -1,6 +1,7 @@
 import { Button } from '@/components/types/template_types';
 import React from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 
 
@@ -42,6 +43,7 @@ export const ButtonModal: React.FC<ButtonModalProps> = ({
                     // Handle unexpected button type values explicitly to avoid silent failures
                     // eslint-disable-next-line no-console
                     console.error('Unexpected button type value received:', value);
+                    toast.error("Unexpected button type value received")
                   }
                 }}
                 className="w-full p-2 border rounded-md"
