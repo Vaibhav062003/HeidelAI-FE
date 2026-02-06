@@ -7,7 +7,6 @@ import { FileText, MapPin } from "lucide-react";
 import { Upload, X, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
-// import Map from "./Map";
 import dynamic from 'next/dynamic'
 
 const Map = dynamic(() => import('./Map'), {
