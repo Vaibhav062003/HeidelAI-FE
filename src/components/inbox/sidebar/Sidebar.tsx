@@ -25,17 +25,16 @@ import ProductPreview from "../PreviewProduct";
 import ProductsTab from "../Product";
 import CustomerInfo from "../CustomerInfo";
 import ConversationSummary from "../ConversationSummary";
-import TemplateBuilders from "../TemplateBuilders";
-import { WhatsAppTemplateDialog } from "../WhatsAppTemplateDialog";
+
+
 import AnalyticsSection from "../AnalyticsSection";
 import AccordionSection from "./AccordionSection";
 import TagDropdown from "./TagDropdown";
-import ComingSoon from "@/components/shared/ComingSoon";
 
 // Types & Libs
-import { WhatsAppTemplate } from "@/components/types/template";
 import { Conversation } from "@/components/types/conversation";
 import { Product } from "@/components/types/product";
+import FetchTemplates from "./FetchTemplates";
 
 interface SidebarProps {
   selectedConversationId: string;
@@ -58,23 +57,19 @@ const Sidebar = ({
     conversation,
     allTags,
     assignedTags,
-    templates,
     isUpdatingTags,
     handleToggleTag,
     saveCustomerInfo,
   } = useSidebarLogic(selectedConversationId, passedConversation);
 
   const [uiState, setUiState] = useState({
-    showTemplateBuilder: false,
     showCustomerInfo: false,
     accordionValue: "summary",
-    searchTemplate: "",
   });
 
   const [selectedData, setSelectedData] = useState<{
     product: Product | null;
-    template: WhatsAppTemplate | null;
-  }>({ product: null, template: null });
+  }>({ product: null });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const toggleUi = (key: keyof typeof uiState, value: any) => {
@@ -150,10 +145,7 @@ const Sidebar = ({
         );
       case "templates":
         return (
-          <ComingSoon
-            compact={true}
-            description="Powerful messaging templates are arriving soon to streamline your conversations."
-          />
+          <FetchTemplates selectedConversationId={selectedConversationId} />
         );
       case "products":
         return (
@@ -179,32 +171,7 @@ const Sidebar = ({
     <TooltipProvider>
       <style>{FLUID_STYLES}</style>
 
-      {/* --- Modals --- */}
-      {uiState.showTemplateBuilder && (
-        <TemplateBuilders
-          isOpen={uiState.showTemplateBuilder}
-          setIsOpen={(v) => toggleUi("showTemplateBuilder", v)}
-          templates={templates}
-          setTemplates={() => {}}
-          searchTemplate={uiState.searchTemplate}
-          setSearchTemplate={(v) => toggleUi("searchTemplate", v)}
-        />
-      )}
 
-      {selectedData.template && (
-        <WhatsAppTemplateDialog
-          template={selectedData.template}
-          isOpen={!!selectedData.template}
-          onClose={() =>
-            setSelectedData((prev) => ({ ...prev, template: null }))
-          }
-          onSend={() =>
-            setSelectedData((prev) => ({ ...prev, template: null }))
-          }
-          selectedConversationId={selectedConversationId}
-          languageCode={selectedData.template.language}
-        />
-      )}
 
       <Dialog
         open={uiState.showCustomerInfo}

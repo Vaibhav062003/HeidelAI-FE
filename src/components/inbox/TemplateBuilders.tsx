@@ -10,6 +10,7 @@ import { ButtonModal } from "./templateUI/ButtonModal";
 import { AppSetup, Button, Variable } from "../types/template_types";
 import Catlog from "./templateUI/CatlogTemplate";
 import AuthTemplate from "./templateUI/AuthTemplate";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 
 type TemplateBuildersProps = {
@@ -252,38 +253,7 @@ const TemplateBuilders = ({ isOpen, setIsOpen, templates, setTemplates, searchTe
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadTemplates = async () => {
-      try {
-        setLoading(true);
-
-        const response = await fetch('/api/fetchTemplate');
-
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (result && result.data) {
-          setTemplates(result.data);
-        } else {
-          console.error("Invalid response format:", result);
-          setError("Invalid response format from server");
-        }
-
-      } catch (err) {
-        console.error("Error in fetch:", err);
-        setError(err instanceof Error ? err.message : "Fetch error");
-      } finally {
-        setLoading(false);
-
-      }
-    };
-    loadTemplates();
-  }, []);
+  // redundant fetch removed as templates are passed via props
 
 
 
@@ -523,34 +493,6 @@ const TemplateBuilders = ({ isOpen, setIsOpen, templates, setTemplates, searchTe
   //   console.log(JSON.stringify(data, null, 2));
   // };
 
-  const sendPostRequest = async (data: any) => {
-    const url = "https://egenie-whatsapp.koyeb.app/api/create_whatsapp_template"; // Replace with your actual URL
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json", // Replace with your actual token
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorDetails = await response.json(); // Try to get error details from the server
-        throw new Error(`HTTP error! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
-      }
-
-      const result = await response.json();
-
-      // console.log("POST request successful:", result);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error("Error during POST request:", error.message);
-      } else {
-        console.error("Error during POST request:", error);
-      }
-    }
-  };
-
   const exportData = async () => {
     try {
       // Map language to ISO code
@@ -707,26 +649,21 @@ const TemplateBuilders = ({ isOpen, setIsOpen, templates, setTemplates, searchTe
   // Helper function to send POST request
 
 
-  if (!isOpen) return null;
-
   return (
-    <div className="relative">
-      {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-2 sm:p-4">
-          <div className="bg-white rounded-lg w-full max-w-4xl h-[90vh] md:h-[60vh] lg:h-[70vh] flex flex-col overflow-hidden hide-scrollbar shadow-2xl">
+    <>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden border-none shadow-2xl">
+          <div className="bg-white w-full h-[100vh] md:h-[75vh] lg:h-[80vh] flex flex-col overflow-hidden hide-scrollbar">
             {/* header */}
             <div className="border-b p-4">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
+                <DialogTitle className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                   <span className="font-semibold">Set up a template</span>
-                </div>
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X size={20} />
-                </button>
+                </DialogTitle>
+                <DialogDescription className="sr-only">
+                  Create and configure your WhatsApp message templates.
+                </DialogDescription>
               </div>
               <div className="text-sm flex flex-wrap gap-4">
                 <div className="flex items-center gap-2">
@@ -1025,10 +962,9 @@ const TemplateBuilders = ({ isOpen, setIsOpen, templates, setTemplates, searchTe
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
-      {/* Variable Modal */}
       {showVariableModal && (
         <VariableModal
           newVariable={newVariable}
@@ -1038,7 +974,6 @@ const TemplateBuilders = ({ isOpen, setIsOpen, templates, setTemplates, searchTe
         />
       )}
 
-      {/* Button Modal */}
       {showButtonModal && (
         <ButtonModal
           newButton={newButton}
@@ -1047,7 +982,7 @@ const TemplateBuilders = ({ isOpen, setIsOpen, templates, setTemplates, searchTe
           addButton={addButton}
         />
       )}
-    </div>
+    </>
   );
 };
 

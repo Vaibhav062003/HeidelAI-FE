@@ -3,6 +3,7 @@ import { useApi } from "@/lib/session_api";
 import { Conversation } from "@/components/types/conversation";
 import { WhatsAppTemplate } from "@/components/types/template";
 import { ApiContact } from "@/components/types/contacts";
+import useTemplates from "./fetchTemplate";
 
 export const useSidebarLogic = (
   selectedConversationId: string,
@@ -14,8 +15,9 @@ export const useSidebarLogic = (
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [assignedTags, setAssignedTags] = useState<string[]>([]);
-  const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
-  
+
+  const { data: templates = [] } = useTemplates();
+
   const [isUpdatingTags, setIsUpdatingTags] = useState(false);
 
   // Sync Conversation
@@ -29,7 +31,7 @@ export const useSidebarLogic = (
   // Fetch Contact Tags 
   useEffect(() => {
     if (!selectedConversationId) return;
-    
+
     const fetchContactTags = async () => {
       try {
         const response = await api.get("/api/contacts");
@@ -66,34 +68,6 @@ export const useSidebarLogic = (
     fetchAllTags();
   }, [api]);
 
-  // Load Templates
-  useEffect(() => {
-    const loadTemplates = async () => {
-      const cached = sessionStorage.getItem("whatsapp_templates");
-      if (cached) {
-        try {
-          setTemplates(JSON.parse(cached));
-          return;
-        } catch (e) {
-          console.error("Cache parse error:", e);
-        }
-      }
-
-      try {
-        const response = await fetch("/api/fetchTemplate");
-        if (!response.ok) throw new Error("Failed to fetch templates");
-        const result = await response.json();
-        
-        if (result?.data) {
-          setTemplates(result.data);
-          sessionStorage.setItem("whatsapp_templates", JSON.stringify(result.data));
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    loadTemplates();
-  }, []);
 
   // Action: Toggle Tag
   const handleToggleTag = useCallback(async (tag: string) => {
@@ -125,7 +99,7 @@ export const useSidebarLogic = (
     }
   }, [assignedTags, selectedConversationId, api]);
 
-   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const saveCustomerInfo = useCallback(async (updatedData: any) => {
     try {
       await api.post(`/conversations/${selectedConversationId}/update_customer_info`, updatedData);
