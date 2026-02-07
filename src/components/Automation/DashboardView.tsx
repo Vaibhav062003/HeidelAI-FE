@@ -113,6 +113,20 @@ export default function DashboardView({ onOpenAutomation }: DashboardViewProps) 
       )
     : flows;
 
+  // While backend is not implemented, show a single dummy flow
+  // so that the user can still open the EditorView.
+  const hasRealFlows = filteredFlows.length > 0;
+  const displayedFlows: AutomationFlow[] = hasRealFlows
+    ? filteredFlows
+    : [
+        {
+          id: 'demo-flow',
+          name: 'Untitled',
+          description: 'Sample automation (demo only)',
+          status: 'draft',
+        },
+      ];
+
   const openCreateModal = () => {
     setCreateName('');
     setCreateDescription('');
@@ -306,7 +320,7 @@ export default function DashboardView({ onOpenAutomation }: DashboardViewProps) 
               </div>
             ) : isGridView ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredFlows.map((flow) => (
+                {displayedFlows.map((flow) => (
                   <div
                     key={flow.id}
                     onClick={() => onOpenAutomation(flow.id, flow.name ?? 'Untitled')}
@@ -333,9 +347,6 @@ export default function DashboardView({ onOpenAutomation }: DashboardViewProps) 
                     <p className="text-xs text-slate-500">{formatDate(flow.updated_at ?? flow.created_at)}</p>
                   </div>
                 ))}
-                {filteredFlows.length === 0 && (
-                  <p className="col-span-full text-center text-slate-500 py-12">No automations yet. Create one to get started.</p>
-                )}
               </div>
             ) : (
               <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -361,7 +372,7 @@ export default function DashboardView({ onOpenAutomation }: DashboardViewProps) 
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredFlows.map((flow) => (
+                    {displayedFlows.map((flow) => (
                       <tr
                         key={flow.id}
                         className="hover:bg-slate-50/80 cursor-pointer transition-colors"

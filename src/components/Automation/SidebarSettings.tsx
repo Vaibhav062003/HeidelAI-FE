@@ -49,7 +49,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
     loadTriggerPosts();
   }, [node?.id, node?.type]);
 
-  // Fetch Instagram media
+  // Fetch Instagram media from IndexedDB (same source as Settings – integrations)
   useEffect(() => {
     if (!node || node.app !== 'instagram' || !showMediaPicker) return;
     const load = async () => {
@@ -85,7 +85,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
 
   return (
     <div className="flex flex-col h-full bg-white">
-      {/* Sidebar Header */}
+      {/* Sidebar Header – screenshot: step name with pencil, colored by type */}
       <div className={`h-14 flex items-center justify-between px-5 border-b border-white/50 shrink-0 rounded-t-xl ${headerBg} ${headerText}`}>
         <div className="flex items-center gap-2">
           <h3 className="font-bold text-base">{node.label}</h3>
@@ -101,7 +101,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
 
       {/* Sidebar Content */}
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
-        {/* Send Message */}
+        {/* Send Message – screenshot: "Send as Private Reply", "Enter your text...", "+ Add Button", "+ Add Quick Reply" */}
         {isSendMessage && (
           <>
             <p className="text-sm text-slate-700">
@@ -134,7 +134,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
           </>
         )}
 
-        {/* Condition */}
+        {/* Condition – screenshot: "Does the contact match all of the following conditions?", "+ Condition", search, tabs */}
         {isCondition && (
           <>
             <p className="text-sm text-slate-700">
@@ -184,7 +184,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
           </>
         )}
 
-        {/* Actions node */}
+        {/* Actions node – screenshot: "Perform following actions:", "+ Action", "Choose Next Step" */}
         {isActionsPanel && (
           <>
             <p className="text-sm text-slate-700">Perform following actions:</p>
@@ -297,7 +297,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
                 value={node.data?.text ?? ''}
                 onChange={(e) => update({ text: e.target.value })}
               />
-              {/* Instagram media */}
+              {/* Instagram media: same source as Settings (IndexedDB integrations) */}
               <div className="space-y-2">
                 <label className="text-xs font-medium text-slate-500 block">Media (optional)</label>
                 {node.data?.media_url ? (
@@ -479,7 +479,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
                 <label className="text-xs font-medium text-slate-600 block">Tag name</label>
                 <input
                   type="text"
-                  value={node.data?.tagName ?? ''}
+                  value={(node.data?.tagName as string) ?? ''}
                   onChange={(e) => update({ tagName: e.target.value })}
                   placeholder="e.g. VIP, Lead"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
@@ -495,7 +495,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
                 <label className="text-xs font-medium text-slate-600 block">Field name</label>
                 <input
                   type="text"
-                  value={node.data?.fieldName ?? ''}
+                  value={(node.data?.fieldName as string) ?? ''}
                   onChange={(e) => update({ fieldName: e.target.value })}
                   placeholder="e.g. email, phone"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
@@ -503,7 +503,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
                 <label className="text-xs font-medium text-slate-600 block">Value</label>
                 <input
                   type="text"
-                  value={node.data?.fieldValue ?? ''}
+                  value={(node.data?.fieldValue as string) ?? ''}
                   onChange={(e) => update({ fieldValue: e.target.value })}
                   placeholder="Value or {{variable}}"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
@@ -519,14 +519,14 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
                 <label className="text-xs font-medium text-slate-600 block">URL</label>
                 <input
                   type="url"
-                  value={node.data?.apiUrl ?? ''}
+                  value={(node.data?.apiUrl as string) ?? ''}
                   onChange={(e) => update({ apiUrl: e.target.value })}
                   placeholder="https://api.example.com/webhook"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 />
                 <label className="text-xs font-medium text-slate-600 block">Method</label>
                 <select
-                  value={node.data?.apiMethod ?? 'POST'}
+                  value={(node.data?.apiMethod as string) ?? 'POST'}
                   onChange={(e) => update({ apiMethod: e.target.value })}
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 >
@@ -537,7 +537,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
                 </select>
                 <label className="text-xs font-medium text-slate-600 block">JSON Body (optional)</label>
                 <textarea
-                  value={node.data?.apiBody ?? ''}
+                  value={(node.data?.apiBody as string) ?? ''}
                   onChange={(e) => update({ apiBody: e.target.value })}
                   placeholder='{"key": "value"}'
                   rows={3}
@@ -598,7 +598,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
               {node.data?.contentKind === 'card' && (
                 <input
                   type="text"
-                  value={node.data?.cardTitle ?? ''}
+                  value={(node.data?.cardTitle as string) ?? ''}
                   onChange={(e) => update({ cardTitle: e.target.value })}
                   placeholder="Card title"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20"
@@ -607,7 +607,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
               {node.data?.contentKind === 'audio' && (
                 <input
                   type="text"
-                  value={node.data?.audioUrl ?? ''}
+                  value={(node.data?.audioUrl as string) ?? ''}
                   onChange={(e) => update({ audioUrl: e.target.value })}
                   placeholder="Audio URL"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20"

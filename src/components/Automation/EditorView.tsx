@@ -212,7 +212,10 @@ const FlowStep = ({ node, isSelected, onMouseDown, onAddLink, onDelete }: FlowSt
   );
 };
 
+// ============================================================================
 // MAIN COMPONENT
+// ============================================================================
+
 const DEFAULT_FLOW_ID = `flow_${Date.now().toString(36)}`;
 
 interface EditorViewProps {
@@ -224,7 +227,7 @@ interface EditorViewProps {
 
 export default function EditorView({ onBack, flowId: flowIdProp, flowName: flowNameProp, onFlowNameChange }: EditorViewProps) {
   const api = useApi();
-  const [flowId, setFlowId] = useState(flowIdProp ?? DEFAULT_FLOW_ID);
+  const [flowId, setFlowId] = useState(DEFAULT_FLOW_ID);
   const [flowNameLocal, setFlowNameLocal] = useState('Untitled');
   const flowName = flowNameProp !== undefined ? flowNameProp : flowNameLocal;
   const setFlowName = (v: string) => {
@@ -235,10 +238,6 @@ export default function EditorView({ onBack, flowId: flowIdProp, flowName: flowN
   const [showTriggerModal, setShowTriggerModal] = useState(false);
   const [nodes, setNodes] = useState<Node[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
-
-  useEffect(() => {
-    if (flowIdProp != null && flowIdProp !== '') setFlowId(flowIdProp);
-  }, [flowIdProp]);
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -482,7 +481,7 @@ export default function EditorView({ onBack, flowId: flowIdProp, flowName: flowN
   // Render
 return (
     <div className="h-full w-full flex flex-col bg-[#F8FAFC] overflow-hidden relative font-sans">
-      {/* Top Bar */}
+      {/* Top Bar (Unchanged) */}
       <div className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-20">
         <div className="flex items-center gap-3">
           <button onClick={onBack} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors">
@@ -552,13 +551,18 @@ return (
 
       <div className="flex-1 flex overflow-hidden relative">
         
-        {/* COLLAPSIBLE SIDEBAR CONTAINER */}
+        {/* ================================================================= */}
+        {/* 1. COLLAPSIBLE SIDEBAR CONTAINER */}
+        {/* ================================================================= */}
         <div
           className={`h-full flex-none transition-all duration-300 ease-out relative z-20 overflow-hidden ${
             sidebarOpen ? 'w-64' : 'w-0'
           }`}
         >
-          {/* INNER CONTENT WRAPPER */}
+          {/* INNER CONTENT WRAPPER (Fixed Width)
+             We keep this width fixed at w-64 so the text doesn't wrap/squish while the 
+             parent container (above) shrinks to 0.
+          */}
           <div className="w-64 h-full bg-white border-r border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
             <div className="px-4 py-4 border-b border-slate-100">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Add Step</h3>
@@ -601,7 +605,9 @@ return (
           </div>
         </div>
 
-        {/* TOGGLE BUTTON (Outside the Container) */}
+        {/* ================================================================= */}
+        {/* 2. TOGGLE BUTTON (Outside the Container) */}
+        {/* ================================================================= */}
         <button
           type="button"
           onClick={() => setSidebarOpen((open) => !open)}
@@ -615,7 +621,9 @@ return (
           />
         </button>
 
-        {/* SETTINGS SIDEBAR (Right Panel) */}
+        {/* ================================================================= */}
+        {/* 3. SETTINGS SIDEBAR (Right Panel) */}
+        {/* ================================================================= */}
         <div
           className={`absolute top-0 bottom-0 w-[340px] bg-white border-r border-slate-200 z-30 transition-all duration-300 shadow-2xl ${
             sidebarOpen ? 'left-64' : 'left-0'
@@ -634,7 +642,9 @@ return (
           />
         </div>
 
-        {/* CANVAS */}
+        {/* ================================================================= */}
+        {/* 4. CANVAS */}
+        {/* ================================================================= */}
         <div
           ref={canvasRef}
           onMouseDown={handleMouseDown}
@@ -643,11 +653,28 @@ return (
           onWheel={handleWheel}
           className="flex-1 h-full outline-none relative overflow-hidden select-none canvas-container"
         >
-          <div
-            className="absolute inset-0 pointer-events-none transition-transform duration-75 ease-out origin-top-left"
-            style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
-          >
-            {/* Connections & Nodes */}
+          {nodes.length === 0 ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#F8FAFC]">
+              <p className="text-slate-500 text-sm font-medium mb-4">Start building your automation</p>
+              <p className="text-slate-400 text-xs mb-6 max-w-sm text-center">
+                A Trigger is an event that starts your Automation. Click to add a Trigger.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowTriggerModal(true)}
+                className="flex items-center gap-2 px-6 py-3 border-2 border-dashed border-indigo-300 rounded-xl bg-indigo-50/80 text-indigo-700 font-bold text-sm hover:bg-indigo-100 hover:border-indigo-400 transition-colors"
+              >
+                <span className="text-lg">+</span>
+                New Trigger
+              </button>
+            </div>
+          ) : (
+            <>
+              <div
+                className="absolute inset-0 pointer-events-none transition-transform duration-75 ease-out origin-top-left"
+                style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
+              >
+            {/* Connections & Nodes (Same as before) */}
             <svg className="absolute inset-0 w-[10000px] h-[10000px]">
               <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" /></marker></defs>
               {connections.map((conn, idx) => {
@@ -671,21 +698,23 @@ return (
                 }}
               />
             ))}
-          </div>
+              </div>
 
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none flex items-center gap-2 px-3 py-2 bg-amber-100/90 border border-amber-200 rounded-lg shadow-sm text-[11px] font-medium text-amber-900">
-            <span className="text-base">👆</span> Tap some step to edit
-          </div>
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none flex items-center gap-2 px-3 py-2 bg-amber-100/90 border border-amber-200 rounded-lg shadow-sm text-[11px] font-medium text-amber-900">
+                <span className="text-base">👆</span> Tap some step to edit
+              </div>
 
-          <div className="absolute top-1/2 -translate-y-1/2 right-6 flex flex-col gap-3 items-center pointer-events-auto">
-            <button onClick={() => { setActivePortId(null); setShowAddMenu(true); }} className="w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-200 flex items-center justify-center text-3xl font-light hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all">+</button>
-            <div className="flex flex-col bg-white border border-slate-200 rounded-xl shadow-md overflow-hidden p-1 gap-0.5">
-               <button onClick={autoFit} className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-lg text-slate-500" title="Fit view"><span className="text-lg">✦</span></button>
-               <button onClick={() => setZoom((z) => Math.min(z + 0.1, 2))} className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-lg text-slate-500"><span className="text-lg font-medium">+</span></button>
-               <button onClick={() => setZoom((z) => Math.max(z - 0.1, 0.2))} className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-lg text-slate-500"><span className="text-lg font-medium">−</span></button>
-            </div>
-            <button className="w-10 h-10 bg-slate-700 text-white rounded-full shadow-md flex items-center justify-center hover:bg-slate-800 transition-colors" title="Help"><HelpCircle className="w-5 h-5" /></button>
-          </div>
+              <div className="absolute top-1/2 -translate-y-1/2 right-6 flex flex-col gap-3 items-center pointer-events-auto">
+                <button onClick={() => { setActivePortId(null); setShowAddMenu(true); }} className="w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-200 flex items-center justify-center text-3xl font-light hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all">+</button>
+                <div className="flex flex-col bg-white border border-slate-200 rounded-xl shadow-md overflow-hidden p-1 gap-0.5">
+                  <button onClick={autoFit} className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-lg text-slate-500" title="Fit view"><span className="text-lg">✦</span></button>
+                  <button onClick={() => setZoom((z) => Math.min(z + 0.1, 2))} className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-lg text-slate-500"><span className="text-lg font-medium">+</span></button>
+                  <button onClick={() => setZoom((z) => Math.max(z - 0.1, 0.2))} className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-lg text-slate-500"><span className="text-lg font-medium">−</span></button>
+                </div>
+                <button className="w-10 h-10 bg-slate-700 text-white rounded-full shadow-md flex items-center justify-center hover:bg-slate-800 transition-colors" title="Help"><HelpCircle className="w-5 h-5" /></button>
+              </div>
+            </>
+          )}
         </div>
 
         {showAddMenu && <AddStepMenu onClose={() => setShowAddMenu(false)} onSelectStep={addNodeByStepId} onSelect={addNode} isFirstStep={nodes.find((n) => n.id === activePortId)?.type === 'trigger'} />}

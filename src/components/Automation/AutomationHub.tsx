@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import DashboardView from './DashboardView';
-import EditorView from './EditorView'; 
+import EditorView from './EditorView'; // This is the component from the previous step
 import { ConnectChannelModal, TemplatesModal } from './Popups';
 import { LayoutGrid, Plus, Zap, Settings, Bell, ChevronDown } from 'lucide-react';
 
