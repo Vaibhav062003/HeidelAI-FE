@@ -82,27 +82,28 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebPage",
-            "name": "HeidelAI - AI Sales & Support Engine",
-            "description": "Unify every social platform with intelligent AI that handles operations and scales revenue.",
-            "url": "https://heidelai.com",
-            "inLanguage": "en-US",
-            "isPartOf": { "@id": "https://heidelai.com/#website" }
-          })
-        }}
-      />
-      {/* Google Tag Manager placed here per Next.js docs */}
-      {process.env.NODE_ENV === "production" && (
-        <GoogleTagManager
-          gtmId={process.env.NEXT_PUBLIC_GTM_ID ?? ""}
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebPage",
+              "name": "HeidelAI - AI Sales & Support Engine",
+              "description": "Unify every social platform with intelligent AI that handles operations and scales revenue.",
+              "url": "https://heidelai.com",
+              "inLanguage": "en-US",
+              "isPartOf": { "@id": "https://heidelai.com/#website" }
+            })
+          }}
         />
-      )}
-
+        {/* Google Tag Manager in head per Next.js docs */}
+        {process.env.NODE_ENV === "production" && (
+          <GoogleTagManager
+            gtmId={process.env.NEXT_PUBLIC_GTM_ID ?? ""}
+          />
+        )}
+      </head>
       <body
         className={`${inter.variable} ${instrumentSerif.variable} antialiased bg-white text-black font-sans`}
       >

@@ -276,8 +276,8 @@ const Header = () => {
 								<Image
 									height={10}
 									width={10}
-									src="/heidelai.png"
 									alt="Heidel AI Logo"
+									src="/heidelai.png"
 									className="w-8 h-8 object-contain"
 								/>
 								<span
