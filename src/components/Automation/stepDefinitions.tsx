@@ -1,7 +1,3 @@
-/**
- * Shared step/block definitions for Automation Builder (ManyChat-style).
- * Used by left sidebar, Add Step menu, and node labels.
- */
 
 import React from 'react';
 import {

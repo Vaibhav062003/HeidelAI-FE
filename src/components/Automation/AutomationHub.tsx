@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import DashboardView from './DashboardView';
-import EditorView from './EditorView'; // This is the component from the previous step
+import EditorView from './EditorView'; 
 import { ConnectChannelModal, TemplatesModal } from './Popups';
 import { LayoutGrid, Plus, Zap, Settings, Bell, ChevronDown } from 'lucide-react';
 
@@ -81,13 +81,6 @@ export default function AutomationHub() {
           >
             <Settings className="w-3 h-3" /> Connect Channel
           </button>
-          
-          <div className="flex items-center gap-2 pl-4 border-l border-slate-200 cursor-pointer hover:opacity-80 transition-opacity">
-            <div className="w-9 h-9 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full border border-slate-200 overflow-hidden">
-               <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Felix" alt="User" />
-            </div>
-            <ChevronDown className="w-4 h-4 text-slate-400" />
-          </div>
         </div>
       </header>
 

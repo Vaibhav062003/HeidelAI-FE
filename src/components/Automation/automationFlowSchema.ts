@@ -2,10 +2,8 @@ import type { FlowDocument } from './flowExport';
 import { exportFlowToJSON } from './flowExport';
 import type { EditorNode, EditorEdge } from './flowExport';
 
-/** Status of the flow in the system */
 export type FlowStatusEnum = 'draft' | 'active' | 'archived' | 'published';
 
-/** How the flow is triggered */
 export type TriggerTypeEnum = 'manual' | 'webhook' | 'schedule' | 'event' | 'instagram_comment' | 'keyword' | 'default';
 
 export interface AutomationFlowDetails {

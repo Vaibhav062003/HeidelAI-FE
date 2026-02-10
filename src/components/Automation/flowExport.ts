@@ -1,12 +1,3 @@
-/**
- * Flow Export Utility – PRD MongoDB-Native Schema
- * Converts Visual Builder state (nodes + edges) to the Flow JSON document
- * for the Mongo-Only execution engine (flows collection).
- */
-
-// ============================================================================
-// TYPES (MongoDB Flow Schema)
-// ============================================================================
 
 export interface FlowTriggerConfig {
   post_id?: string;
@@ -58,10 +49,6 @@ export interface FlowDocument {
   nodes: Record<string, FlowNodePayload>;
 }
 
-// ============================================================================
-// EDITOR NODE SHAPE (Visual Builder internal)
-// ============================================================================
-
 export interface EditorNode {
   id: string;
   type: 'trigger' | 'action' | 'logic';
@@ -92,9 +79,7 @@ export interface EditorEdge {
   to: string;
 }
 
-// ============================================================================
 // HELPER: Find target node for a source (single output = next_node_id)
-// ============================================================================
 
 function findNextNodeId(sourceId: string, edges: EditorEdge[]): string | null {
   const edge = edges.find((e) => e.from === sourceId);
@@ -110,10 +95,6 @@ function findConditionPaths(sourceId: string, edges: EditorEdge[]): ConditionPat
   const falseEdge = outEdges[1];
   return { true: trueEdge.to, false: falseEdge.to };
 }
-
-// ============================================================================
-// EXPORT: Frontend state -> Backend JSON (PRD Schema)
-// ============================================================================
 
 export function exportFlowToJSON(
   nodes: EditorNode[],
@@ -252,9 +233,7 @@ export function exportFlowToJSON(
   return flowDocument;
 }
 
-// ============================================================================
-// VALIDATION: Prevent saving "broken" flows (PRD requirement)
-// ============================================================================
+// VALIDATION: Prevent saving "broken" flows
 
 export interface FlowValidationResult {
   valid: boolean;

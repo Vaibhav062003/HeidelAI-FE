@@ -11,7 +11,7 @@ interface AddStepMenuProps {
   isFirstStep?: boolean;
 }
 
-// App Icon Component (reuse from before)
+// App Icon Component
 const AppIcon = ({ app, size = 'w-6 h-6' }: { app?: string; size?: string }) => {
   if (app === 'instagram') {
     return (
