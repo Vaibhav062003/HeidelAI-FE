@@ -8,7 +8,7 @@ import { useApi } from "@/lib/session_api";
 import { toast } from "sonner";
 import { Play, Save, Eye, ArrowLeft, Undo2, Redo2, Monitor, MoreVertical, Pencil, HelpCircle, ChevronRight } from 'lucide-react';
 
-interface Node extends EditorNode {}
+type Node = EditorNode;
 
 interface Connection {
   from: string;
@@ -33,7 +33,6 @@ const NODE_STYLES = {
   logic: "bg-amber-50/80 border-amber-100 hover:border-amber-300"
 };
 
-// Trigger node has "Then" at bottom center; other nodes have output on right center
 const getBezierPath = (from: Node, to: Node): string => {
   const isFromTrigger = from.type === 'trigger';
   const startX = isFromTrigger ? from.x + NODE_WIDTH / 2 : from.x + NODE_WIDTH + 6;
@@ -179,7 +178,7 @@ const FlowStep = ({ node, isSelected, onMouseDown, onAddLink, onDelete }: FlowSt
         </div>
       </div>
 
-      {/* Output Handle – trigger: "Then" at bottom center; others: right center */}
+      {/* trigger: "Then" at bottom center; others: right center */}
       {isTrigger ? (
         <div className="absolute left-1/2 -translate-x-1/2 -bottom-3 flex flex-col items-center group z-10">
           <button
@@ -212,10 +211,7 @@ const FlowStep = ({ node, isSelected, onMouseDown, onAddLink, onDelete }: FlowSt
   );
 };
 
-// ============================================================================
 // MAIN COMPONENT
-// ============================================================================
-
 const DEFAULT_FLOW_ID = `flow_${Date.now().toString(36)}`;
 
 interface EditorViewProps {
@@ -481,7 +477,7 @@ export default function EditorView({ onBack, flowId: flowIdProp, flowName: flowN
   // Render
 return (
     <div className="h-full w-full flex flex-col bg-[#F8FAFC] overflow-hidden relative font-sans">
-      {/* Top Bar (Unchanged) */}
+      {/* Top Bar */}
       <div className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-20">
         <div className="flex items-center gap-3">
           <button onClick={onBack} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors">
@@ -551,18 +547,13 @@ return (
 
       <div className="flex-1 flex overflow-hidden relative">
         
-        {/* ================================================================= */}
-        {/* 1. COLLAPSIBLE SIDEBAR CONTAINER */}
-        {/* ================================================================= */}
+        {/* COLLAPSIBLE SIDEBAR CONTAINER */}
         <div
           className={`h-full flex-none transition-all duration-300 ease-out relative z-20 overflow-hidden ${
             sidebarOpen ? 'w-64' : 'w-0'
           }`}
         >
-          {/* INNER CONTENT WRAPPER (Fixed Width)
-             We keep this width fixed at w-64 so the text doesn't wrap/squish while the 
-             parent container (above) shrinks to 0.
-          */}
+          {/* INNER CONTENT WRAPPER */}
           <div className="w-64 h-full bg-white border-r border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
             <div className="px-4 py-4 border-b border-slate-100">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Add Step</h3>
@@ -605,9 +596,7 @@ return (
           </div>
         </div>
 
-        {/* ================================================================= */}
         {/* 2. TOGGLE BUTTON (Outside the Container) */}
-        {/* ================================================================= */}
         <button
           type="button"
           onClick={() => setSidebarOpen((open) => !open)}
@@ -621,11 +610,11 @@ return (
           />
         </button>
 
-        {/* ================================================================= */}
         {/* 3. SETTINGS SIDEBAR (Right Panel) */}
-        {/* ================================================================= */}
         <div
-          className={`absolute top-0 bottom-0 w-[340px] bg-white border-r border-slate-200 z-30 transition-all duration-300 shadow-2xl ${
+          className={`absolute top-0 bottom-0 w-[340px] bg-white border-r border-slate-200 transition-all duration-300 shadow-2xl ${
+            selectedNodeId ? "z-30" : "z-10"
+          } ${
             sidebarOpen ? 'left-64' : 'left-0'
           } ${
             selectedNodeId ? "translate-x-0" : "-translate-x-full"
@@ -642,9 +631,7 @@ return (
           />
         </div>
 
-        {/* ================================================================= */}
         {/* 4. CANVAS */}
-        {/* ================================================================= */}
         <div
           ref={canvasRef}
           onMouseDown={handleMouseDown}
@@ -674,7 +661,7 @@ return (
                 className="absolute inset-0 pointer-events-none transition-transform duration-75 ease-out origin-top-left"
                 style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
               >
-            {/* Connections & Nodes (Same as before) */}
+            {/* Connections & Nodes */}
             <svg className="absolute inset-0 w-[10000px] h-[10000px]">
               <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" /></marker></defs>
               {connections.map((conn, idx) => {

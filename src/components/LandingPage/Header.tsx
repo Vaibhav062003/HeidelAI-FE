@@ -257,7 +257,7 @@ const Header = () => {
 						)
 					)}
 				>
-					<div className="relative flex flex-wrap items-center justify-between gap-6 py-4 lg:gap-0 lg:py-4">
+					<div className="relative flex flex-wrap items-center justify-between gap-6 py-2 lg:gap-0 lg:py-4">
 						<div className="flex w-full justify-between lg:w-auto">
 							<Link
 								href="/"
@@ -276,8 +276,8 @@ const Header = () => {
 								<Image
 									height={10}
 									width={10}
-									src="/heidelai.png"
 									alt="Heidel AI Logo"
+									src="/heidelai.png"
 									className="w-8 h-8 object-contain"
 								/>
 								<span

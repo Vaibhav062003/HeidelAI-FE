@@ -16,7 +16,7 @@ import {
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react"
 
 
-import { insertFormatting } from "./textFormatting";
+import { insertFormatting, insertEmoji } from "./textFormatting";
 import { Input } from "@/components/ui/input";
 
 type Variable = {
@@ -85,8 +85,8 @@ export const Catalog: React.FC<CatalogProps> = ({
   const [showCatalog, setShowCatalog] = useState(false);
 
   const handleEmojiSelect = (emoji: any) => {
-    // Append selected emoji to message body
-    setMessageBody(messageBody + emoji.emoji);
+    // Append selected emoji to message body at cursor position
+    insertEmoji(textareaRef, emoji, messageBody, setMessageBody);
     setEmojiPickerVisible(false); // Optionally hide picker after selection
   };
 
@@ -342,7 +342,7 @@ export const Catalog: React.FC<CatalogProps> = ({
 
                 <button
                   onClick={() =>
-                    insertFormatting("bold", messageBody, setMessageBody)
+                    insertFormatting("bold", textareaRef, messageBody, setMessageBody)
                   }
                   className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
                   title="Bold"
@@ -351,7 +351,7 @@ export const Catalog: React.FC<CatalogProps> = ({
                 </button>
                 <button
                   onClick={() =>
-                    insertFormatting("italic", messageBody, setMessageBody)
+                    insertFormatting("italic", textareaRef, messageBody, setMessageBody)
                   }
                   className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
                   title="Italic"
@@ -362,6 +362,7 @@ export const Catalog: React.FC<CatalogProps> = ({
                   onClick={() =>
                     insertFormatting(
                       "strikethrough",
+                      textareaRef,
                       messageBody,
                       setMessageBody
                     )
@@ -373,7 +374,7 @@ export const Catalog: React.FC<CatalogProps> = ({
                 </button>
                 <button
                   onClick={() =>
-                    insertFormatting("monospace", messageBody, setMessageBody)
+                    insertFormatting("monospace", textareaRef, messageBody, setMessageBody)
                   }
                   className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
                   title="Monospace"

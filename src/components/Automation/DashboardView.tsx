@@ -113,8 +113,7 @@ export default function DashboardView({ onOpenAutomation }: DashboardViewProps) 
       )
     : flows;
 
-  // While backend is not implemented, show a single dummy flow
-  // so that the user can still open the EditorView.
+  //  dummy flow
   const hasRealFlows = filteredFlows.length > 0;
   const displayedFlows: AutomationFlow[] = hasRealFlows
     ? filteredFlows
@@ -256,14 +255,6 @@ export default function DashboardView({ onOpenAutomation }: DashboardViewProps) 
               <LayoutGrid className="w-4 h-4 text-slate-600" />
               My Automations
             </button>
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 text-sm">
-              <span className="w-4 h-4 rounded bg-slate-200" />
-              Basic
-            </button>
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 text-sm">
-              <span className="w-4 h-4">▶</span>
-              Sequences
-            </button>
           </nav>
         </aside>
 
@@ -283,13 +274,13 @@ export default function DashboardView({ onOpenAutomation }: DashboardViewProps) 
                     className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
                 </div>
-                <button
+                {/* <button
                   type="button"
                   className="flex items-center gap-2 px-3 py-2 border-2 border-dashed border-slate-300 rounded-lg text-sm font-medium text-slate-600 hover:border-indigo-400 hover:text-indigo-600"
                 >
                   <FolderPlus className="w-4 h-4" />
                   New Folder
-                </button>
+                </button> */}
               </div>
               <div className="flex items-center gap-3">
                 <button type="button" className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700">
@@ -358,14 +349,13 @@ export default function DashboardView({ onOpenAutomation }: DashboardViewProps) 
                       </th>
                       <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
                         <span className="inline-flex items-center gap-1">
-                          Name <ChevronsUpDown className="w-4 h-4" />
+                          Name
                         </span>
                       </th>
                       <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Runs</th>
-                      <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">CTR</th>
                       <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
                         <span className="inline-flex items-center gap-1">
-                          Modified <ChevronsUpDown className="w-4 h-4" />
+                          Modified
                         </span>
                       </th>
                       <th className="px-4 py-3 w-12" />
@@ -392,7 +382,6 @@ export default function DashboardView({ onOpenAutomation }: DashboardViewProps) 
                             <p className="text-sm text-slate-500 mt-0.5 line-clamp-1">{flow.description}</p>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-500">—</td>
                         <td className="px-4 py-3 text-sm text-slate-500">—</td>
                         <td className="px-4 py-3 text-sm text-slate-500">{formatDate(flow.updated_at ?? flow.created_at)}</td>
                         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>

@@ -9,7 +9,7 @@ export const useApi = () => {
 
   const api = useMemo(() => {
     return axios.create({
-      baseURL: "https://egenie-whatsapp.koyeb.app",
+      baseURL: process.env.NEXT_PUBLIC_API_URL
     });
   }, []);
 

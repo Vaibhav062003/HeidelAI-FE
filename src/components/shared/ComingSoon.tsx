@@ -37,7 +37,7 @@ const ComingSoon: React.FC<ComingSoonProps> = ({
     return (
         <div className="flex flex-col items-center justify-center text-center p-6 md:p-12 bg-white/60 backdrop-blur-sm rounded-3xl w-full max-w-4xl mx-auto min-h-[50vh]">
             <div className="max-w-2xl space-y-6 md:space-y-8">
-                <div className="mx-auto bg-orange-100 rounded-full p-5 md:p-6 w-fit animate-bounce">
+                <div className="mx-auto bg-orange-100 rounded-full p-5 md:p-6 w-fit ">
                     <Construction className="h-10 w-10 md:h-12 md:w-12 text-orange-600" />
                 </div>
                 <div className="space-y-4">

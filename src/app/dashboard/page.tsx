@@ -14,6 +14,7 @@ import SettingsSidebar from "@/components/setting_tab/SettingsSidebar";
 import { useConversations } from "@/components/hooks/useConversations";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/inbox_button";
+import Image from "next/image";
 import {
   BarChart2,
   CreditCard,
@@ -244,9 +245,11 @@ const SidebarNavigation = React.memo(
                 <DropdownMenuTrigger asChild>
                   <button className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors group">
                     <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0">
-                      <img
+                      <Image
                         src="/heidelai.png"
                         alt="HeidelAI Logo"
+                        width={28}
+                        height={28}
                         className="w-full h-full object-contain"
                       />
                     </div>
@@ -313,7 +316,7 @@ const SidebarNavigation = React.memo(
                     />
                   </svg>
                   <span className="text-xs font-medium text-gray-700">
-                    Let's Link
+                    Let&apos;s Link
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -370,9 +373,11 @@ const SidebarNavigation = React.memo(
                     className="w-10 h-10 rounded flex items-center justify-center hover:bg-gray-100 transition-all p-1"
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   >
-                    <img
+                    <Image
                       src="/heidelai.png"
                       alt="HeidelAI Logo"
+                      width={28}
+                      height={28}
                       className="w-full h-full object-contain"
                     />
                   </button>

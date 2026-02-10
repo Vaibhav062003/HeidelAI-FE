@@ -4,7 +4,7 @@ import CatalogPreview from "./CatlogPreview";
 import { AuthPreview } from "./AuthPreview";
 
 
-interface Button {
+export interface PreviewButton {
   id: string;
   text: string;
 }
@@ -20,7 +20,7 @@ interface TemplatePreviewProps {
   previewFile: string | null;
   messageBody: string;
   footer: string;
-  button: Button[];
+  button: PreviewButton[];
   getFormatedText: (text: string, type: "header" | "body") => React.ReactNode;
   templateType: string;
   templateName?: string;
