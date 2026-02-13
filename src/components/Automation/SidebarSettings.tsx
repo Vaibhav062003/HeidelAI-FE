@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Trash2, Copy, Info, ImageIcon, Loader2, Pencil, Search } from 'lucide-react';
+import { Trash2, Copy, Info, ImageIcon, Loader2, Pencil, Search } from 'lucide-react';
 import { getData, DB_KEYS } from '@/lib/indexedDB';
 import type { EditorNode } from './flowExport';
 
@@ -74,7 +74,7 @@ export default function SidebarSettings({ node, onClose, onUpdateNode }: Sidebar
   const update = (partial: Partial<EditorNode['data']>) => {
     onUpdateNode?.(node.id, partial);
   };
-
+  const contentKind = node?.data?.contentKind as 'text' | 'image' | 'card' | 'audio' | undefined;
   const isSendMessage = node.app === 'instagram' && (!node.data?.contentKind || node.data?.contentKind === 'text');
   const isCondition = node.type === 'logic' && node.data?.logicType === 'condition';
   const isActionsPanel = node.label === 'Actions' || node.data?.logicType === 'actions';

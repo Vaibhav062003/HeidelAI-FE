@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import DashboardView from './DashboardView';
 import EditorView from './EditorView'; 
 import { ConnectChannelModal, TemplatesModal } from './Popups';
-import { LayoutGrid, Plus, Zap, Settings, Bell, ChevronDown } from 'lucide-react';
+import { LayoutGrid, Plus, Zap, Settings, Bell } from 'lucide-react';
 
 export type ViewState = 'dashboard' | 'editor';
 

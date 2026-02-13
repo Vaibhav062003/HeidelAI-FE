@@ -6,7 +6,7 @@ import { buildFlowDetails } from "./automationFlowSchema";
 import { STEP_SECTIONS, STEP_BY_ID, StepIcon } from "./stepDefinitions";
 import { useApi } from "@/lib/session_api";
 import { toast } from "sonner";
-import { Play, Save, Eye, ArrowLeft, Undo2, Redo2, Monitor, MoreVertical, Pencil, HelpCircle, ChevronRight } from 'lucide-react';
+import { Play, Save, ArrowLeft, Undo2, Redo2, Monitor, MoreVertical, Pencil, HelpCircle, ChevronRight } from 'lucide-react';
 
 type Node = EditorNode;
 
